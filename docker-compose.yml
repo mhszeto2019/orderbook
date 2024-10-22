@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  okx_spotprice_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      - ENV=production
+    volumes:
+      - .:/app
+    command: ["gunicorn", "-k", "gevent", "-w", "1", "--max-requests", "1000", "--max-requests-jitter", "100", "-b", "0.0.0.0:5002", "app.okx.okx_spotprice_server:app"]
+
+  okx_orderbook_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ENV=production
+    volumes:
+      - .:/app
+    # command: ["gunicorn", "-k", "gevent", "-w", "1", "--max-requests", "1000", "--max-requests-jitter", "100", "-b", "0.0.0.0:5000", "app.okx.okx_orderbook_server:app"]
+    # command: ["gunicorn", "-k", "eventlet", "-w", "1", "--max-requests", "1000", "--max-requests-jitter", "100", "-b", "0.0.0.0:5000", "app.okx.okx_orderbook_server:app"]
+    command: ["gunicorn", "-k", "gevent", "-w", "1", "--max-requests", "1000", "--max-requests-jitter", "100", "--timeout", "60", "-b", "0.0.0.0:5000", "app.okx.okx_orderbook_server:app"]
+
+  # okx_fundingrate_server:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5004:5004"
+  #   environment:
+  #     - ENV=production
+  #   volumes:
+  #     - .:/app
+  #   command: ["gunicorn", "-k", "gevent", "-w", "3", "--max-requests", "1000", "--max-requests-jitter", "100", "-b", "0.0.0.0:5004", "app.okx.okx_fundingrate_server:app"]

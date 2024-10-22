@@ -1,0 +1,50 @@
+0000000000000000000000000000000000000000 da43000c3a60ab33a8f7b8924e85ff2662415717 mhszeto2019 <brennanstmh@gmail.com> 1726564550 +0800	commit (initial): first commit
+da43000c3a60ab33a8f7b8924e85ff2662415717 c74a2a39be02713a0ac2c05b80fbee8405455b04 mhszeto2019 <brennanstmh@gmail.com> 1726565928 +0800	commit: first push
+c74a2a39be02713a0ac2c05b80fbee8405455b04 d2d679bbdea78b2ea20fc3905626e0677b18fbb6 mhszeto2019 <brennanstmh@gmail.com> 1727060334 +0800	pull: Fast-forward
+d2d679bbdea78b2ea20fc3905626e0677b18fbb6 ddf7185ae22aa08c7acf5e197145dd8f77c30780 mhszeto2019 <brennanstmh@gmail.com> 1727068642 +0800	commit: update websockets
+ddf7185ae22aa08c7acf5e197145dd8f77c30780 aea781d52907f09b9aaeef294dd11c3235c9c3bc mhszeto2019 <brennanstmh@gmail.com> 1727076239 +0800	commit: update severs
+aea781d52907f09b9aaeef294dd11c3235c9c3bc 9641fc0b7897afd95e5db5b26b9e9db956f70efb mhszeto2019 <brennanstmh@gmail.com> 1727157782 +0800	commit: new spotprice server
+9641fc0b7897afd95e5db5b26b9e9db956f70efb fb33b3c52999d1d82768ccbcacf4b07919aa39af mhszeto2019 <brennanstmh@gmail.com> 1727165433 +0800	commit: new labelling of names
+fb33b3c52999d1d82768ccbcacf4b07919aa39af 3b50c5f3c46c2190598e0c1f734c40b791dade02 mhszeto2019 <brennanstmh@gmail.com> 1727321445 +0800	pull: Fast-forward
+3b50c5f3c46c2190598e0c1f734c40b791dade02 e6e74d38d005057704ca004059ad2e5d55e2e142 mhszeto2019 <brennanstmh@gmail.com> 1727331718 +0800	commit: remove config paths
+e6e74d38d005057704ca004059ad2e5d55e2e142 f43d2bd7ccb6de80f850c76bc9b3ab65c1333892 mhszeto2019 <brennanstmh@gmail.com> 1727335042 +0800	commit: added colors to ask and bids
+f43d2bd7ccb6de80f850c76bc9b3ab65c1333892 c7c166303f59e8dc98620dc671a5827e81fa8842 mhszeto2019 <brennanstmh@gmail.com> 1727335128 +0800	commit: remove config
+c7c166303f59e8dc98620dc671a5827e81fa8842 39318c2fc0afce25d6f6f60a6c1f5a449f91850b mhszeto2019 <brennanstmh@gmail.com> 1727342816 +0800	commit: change architecture
+39318c2fc0afce25d6f6f60a6c1f5a449f91850b 46f165b46c22cc1bfe048561d2fb3fafc06dcdf3 mhszeto2019 <brennanstmh@gmail.com> 1727342851 +0800	commit: change architecture
+46f165b46c22cc1bfe048561d2fb3fafc06dcdf3 a1e278b88d0a037805fefde5f145b27e47b7dc81 mhszeto2019 <brennanstmh@gmail.com> 1727688337 +0800	commit: Fixed null issues
+a1e278b88d0a037805fefde5f145b27e47b7dc81 1f39f9fb10eb22a1ebaf32814082419963ec0293 mhszeto2019 <brennanstmh@gmail.com> 1727689747 +0800	commit: Multiple currrencies with drop down
+1f39f9fb10eb22a1ebaf32814082419963ec0293 9c53fafb770506c22ce551da2248fac43beb6ad4 mhszeto2019 <brennanstmh@gmail.com> 1727758238 +0800	commit: transferred price and orderbook components
+9c53fafb770506c22ce551da2248fac43beb6ad4 476dff1bf44ff5d8f63dfcaa178388c31a6a6905 mhszeto2019 <brennanstmh@gmail.com> 1727760704 +0800	commit: pulled htx data
+476dff1bf44ff5d8f63dfcaa178388c31a6a6905 3a4dcd7d3cc28109e978f90483538ec8b40c715a mhszeto2019 <brennanstmh@gmail.com> 1727856336 +0800	commit: solved ping problem for htx
+3a4dcd7d3cc28109e978f90483538ec8b40c715a 4ae55bf29b3756ce886ee75be9ca39c7921f26b4 mhszeto2019 <brennanstmh@gmail.com> 1727860431 +0800	commit: created test.jsx to retrieve data directly from websockets
+4ae55bf29b3756ce886ee75be9ca39c7921f26b4 638857f86290205ff89bd4a8517a2044cbb93d35 mhszeto2019 <brennanstmh@gmail.com> 1727950005 +0800	commit: multicurrency client working
+638857f86290205ff89bd4a8517a2044cbb93d35 014f3256557906385f6780d478a1618f5c2d554f mhszeto2019 <brennanstmh@gmail.com> 1728020344 +0800	commit: add working ws class
+014f3256557906385f6780d478a1618f5c2d554f 498be486a382ddbc84e5787b0ea1fc4597d054ab mhszeto2019 <brennanstmh@gmail.com> 1728034745 +0800	commit: set ping interval to none
+498be486a382ddbc84e5787b0ea1fc4597d054ab 109dc5eb6c2738ea27b11a4f052af5101e27c09e mhszeto2019 <brennanstmh@gmail.com> 1728290224 +0800	commit: obtained futures prices from htx
+109dc5eb6c2738ea27b11a4f052af5101e27c09e fb081168298d0355ef02303609f720076d5d32bd mhszeto2019 <brennanstmh@gmail.com> 1728295484 +0800	commit: working swap data from htx
+fb081168298d0355ef02303609f720076d5d32bd 30a3c914647008f155e4d4ab8c53872c200c0901 mhszeto2019 <brennanstmh@gmail.com> 1728373287 +0800	commit: fixing orderbook
+30a3c914647008f155e4d4ab8c53872c200c0901 9a06dabfa2a8227e19afff0972c6a95377874dea mhszeto2019 <brennanstmh@gmail.com> 1728380588 +0800	commit: ladderbook for htx isbroken
+9a06dabfa2a8227e19afff0972c6a95377874dea 93b1731363248367ccc306c4070aa2ab29a177d3 mhszeto2019 <brennanstmh@gmail.com> 1728448968 +0800	commit: refactored ws classes
+93b1731363248367ccc306c4070aa2ab29a177d3 ae732da6c31a92ef63a3c6cc07f7a2756acb6415 mhszeto2019 <brennanstmh@gmail.com> 1728453634 +0800	commit: fixed fundingrates
+ae732da6c31a92ef63a3c6cc07f7a2756acb6415 93b1731363248367ccc306c4070aa2ab29a177d3 mhszeto2019 <brennanstmh@gmail.com> 1728461663 +0800	reset: moving to HEAD~1
+93b1731363248367ccc306c4070aa2ab29a177d3 9a06dabfa2a8227e19afff0972c6a95377874dea mhszeto2019 <brennanstmh@gmail.com> 1728461669 +0800	reset: moving to HEAD~1
+9a06dabfa2a8227e19afff0972c6a95377874dea 30a3c914647008f155e4d4ab8c53872c200c0901 mhszeto2019 <brennanstmh@gmail.com> 1728461673 +0800	reset: moving to HEAD~1
+30a3c914647008f155e4d4ab8c53872c200c0901 fb081168298d0355ef02303609f720076d5d32bd mhszeto2019 <brennanstmh@gmail.com> 1728461842 +0800	reset: moving to HEAD~1
+fb081168298d0355ef02303609f720076d5d32bd ae732da6c31a92ef63a3c6cc07f7a2756acb6415 mhszeto2019 <brennanstmh@gmail.com> 1728464043 +0800	pull: Fast-forward
+ae732da6c31a92ef63a3c6cc07f7a2756acb6415 b099a430d6e548275c0af730aff17c3c1fc1a15d mhszeto2019 <brennanstmh@gmail.com> 1728633654 +0800	commit: created index.html
+b099a430d6e548275c0af730aff17c3c1fc1a15d f0981dadd0ab179bf2449c30e92c85a8924e0cf1 mhszeto2019 <brennanstmh@gmail.com> 1728641020 +0800	commit: working html
+f0981dadd0ab179bf2449c30e92c85a8924e0cf1 69d79949b16fe8fd4b7022d1e9c8d850836ac660 mhszeto2019 <brennanstmh@gmail.com> 1728886251 +0800	commit: refactored websocket class
+69d79949b16fe8fd4b7022d1e9c8d850836ac660 6b3ad65b0255260c07dccd5683c5b25e75e3c65f mhszeto2019 <brennanstmh@gmail.com> 1728897072 +0800	commit: separate working tables
+6b3ad65b0255260c07dccd5683c5b25e75e3c65f 4255880b4a6c8185db32b4b696c99614a439f4da mhszeto2019 <brennanstmh@gmail.com> 1728897781 +0800	commit: refactored into individual js
+4255880b4a6c8185db32b4b696c99614a439f4da d8e09b606add5d3e1646757f40c04893502e539d mhszeto2019 <brennanstmh@gmail.com> 1728973089 +0800	commit: add dockerfile
+d8e09b606add5d3e1646757f40c04893502e539d 44ff768b6b1663dc26d94f0b01febefea3e2981b mhszeto2019 <brennanstmh@gmail.com> 1728987533 +0800	commit: created bash script to start apps
+44ff768b6b1663dc26d94f0b01febefea3e2981b 050a6e83a79c9e19f9a55e1a2e139c6ace92daef mhszeto2019 <brennanstmh@gmail.com> 1729053901 +0800	commit: refactored servers
+050a6e83a79c9e19f9a55e1a2e139c6ace92daef 659b2d923c45a20a45d6123b9460ee77cf062c01 mhszeto2019 <brennanstmh@gmail.com> 1729057048 +0800	commit: created second orderbook
+659b2d923c45a20a45d6123b9460ee77cf062c01 1f0ce02a86bd508bc5865c0dbcb2c93b62bde8be mhszeto2019 <brennanstmh@gmail.com> 1729063177 +0800	commit: update fundingrate api for htx
+1f0ce02a86bd508bc5865c0dbcb2c93b62bde8be 7a0e55a223ee6b15b8223194ca8cd76294d141a8 mhszeto2019 <brennanstmh@gmail.com> 1729067763 +0800	commit: creating new cols for bidprice askprice
+7a0e55a223ee6b15b8223194ca8cd76294d141a8 5d4637474f347bc944a7569343daf2e915216008 mhszeto2019 <brennanstmh@gmail.com> 1729069912 +0800	commit: updated columns
+5d4637474f347bc944a7569343daf2e915216008 bd87c3cbf1ba1990deab03101c054f862940385a mhszeto2019 <brennanstmh@gmail.com> 1729156861 +0800	commit: funding rate for htx is up
+bd87c3cbf1ba1990deab03101c054f862940385a 9bf444f6d6eeefe50d2a8c9aad98cfc9325ca38d mhszeto2019 <brennanstmh@gmail.com> 1729157729 +0800	commit: clean up folders before moving to ordering system
+9bf444f6d6eeefe50d2a8c9aad98cfc9325ca38d 339747202407db8c89dec96cff361b9c4e9177f2 mhszeto2019 <brennanstmh@gmail.com> 1729160371 +0800	commit: 17oct update
+339747202407db8c89dec96cff361b9c4e9177f2 6cdaa08e705fa586361df5e7594c3a90daa86fd0 mhszeto2019 <brennanstmh@gmail.com> 1729243468 +0800	commit: cleaned up html
+6cdaa08e705fa586361df5e7594c3a90daa86fd0 6123823d8acd6926211bd36b15dce82805dde7c5 mhszeto2019 <brennanstmh@gmail.com> 1729495802 +0800	commit: added okx class

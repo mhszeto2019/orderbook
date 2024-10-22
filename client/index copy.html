@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Price Updates</title>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <script src="./websocket_client/js/main.js"></script>
+    <script src="./websocket_client/js/order.js"></script>
+    <script src="./websocket_client/js/orderbook.js"></script>
+
+  
+
+</head>
+
+<body>
+    <h1>WebSocket Price Updates</h1>
+    <div class="flex-container" >
+        <div class="live-prices-section">
+            <h2>Live Prices</h2>
+            <table class="livePricesTable">
+                <thead>
+                    <tr>
+                        <th>Exchange</th>
+                        <th>CCY</th>
+                        <th>Last Price</th>
+                        <th>Bid Price</th>
+                        <th>Ask Price</th>
+                        <th>Funding Rate / Next Funding Time</th>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="live-data-table-body">
+                    <!-- Live prices data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="orderbook-area">
+            <div class="orderbook-section">
+                <h2>Order Book</h2>
+                <div id="selected-info">
+                    <p>Exchange: <span id="selected-exchange-1">Not Selected</span></p>
+                    <p>Currency: <span id="selected-ccy-1">Not Selected</span></p>
+                </div>
+                <div class="orderbook-scroll-container">
+                    <table class="orderBookTable">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-data-table-body-1">
+                            <!-- Order book data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="orderbook-section">
+                <h2>Order Book 2</h2>
+                <div id="selected-info">
+                    <p>Exchange: <span id="selected-exchange-2">Not Selected</span></p>
+                    <p>Currency: <span id="selected-ccy-2">Not Selected</span></p>
+                </div>
+                <div class="orderbook-scroll-container">
+                    <table class="orderBookTable">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-data-table-body-2">
+                            <!-- Order book data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDER MANAGEMENT SYSTEM SECTION -->
+    <div class="tab-container">
+        <h2>Order Management System</h2>
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="assets-positions">Assets & Positions</div>
+            <div class="tab" data-tab="open-orders">Open Orders</div>
+            <div class="tab" data-tab="transaction-history">Transaction History</div>
+            <div class="tab" data-tab="transaction-records">Transaction Records</div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content active" id="assets-positions">
+            <h3>Assets and Positions</h3>
+            <p>Content for assets and positions will be displayed here.</p>
+        </div>
+
+        <div class="tab-content" id="open-orders">
+            <h3>Open Orders</h3>
+            <p>Content for open orders will be displayed here.</p>
+        </div>
+
+        <div class="tab-content" id="transaction-history">
+            <h3>Transaction History</h3>
+            <p>Content for transaction history will be displayed here.</p>
+        </div>
+
+        <div class="tab-content" id="transaction-records">
+            <h3>Transaction Records</h3>
+            <p>Content for transaction records will be displayed here.</p>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to the clicked tab
+                tab.classList.add('active');
+
+                // Hide all tab contents
+                tabContents.forEach(content => content.classList.remove('active'));
+                // Show the content related to the clicked tab
+                const tabContent = document.getElementById(tab.dataset.tab);
+                tabContent.classList.add('active');
+            });
+        });
+
+    </script>
+</body>
+</html>
