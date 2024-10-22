@@ -22,6 +22,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*",async_mode='gevent')
 CORS(app)  # Enable CORS for all origins
+<<<<<<< HEAD
 
 config_source = 'okx_live_trade'
 apiKey = config[config_source]['apiKey']
@@ -29,11 +30,14 @@ secretKey = config[config_source]['secretKey']
 passphrase = config[config_source]['passphrase']
 
 
+=======
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
 import random
 def privateCallback(message):
     print("privateCallback", message)
 
 def emitToclient(message):
+<<<<<<< HEAD
     print("MESSAGE",message)
     json_msg = json.loads(message)
     event = json_msg.get('event',None)
@@ -302,10 +306,67 @@ def emitToclient(message):
     # chosen_data = data_to_test[num]
     # print(chosen_data)
     socketio.emit('oms',data_to_client)
+=======
+    # print(message)
+    json_msg = json.loads(message)
+    data_to_client = "Loading ..."
+    
+    if json_msg.get('arg',None):
+        print(json_msg.get('event',None))
+        
+        channel = json_msg.get('arg',"logging")['channel']
+        print(channel) 
+        data_to_client = json_msg.get('data')
+#     message ={
+#     "arg": {
+#         "channel": "balance_and_position",
+#         "uid": "77982378738415879"
+#     },
+#     "data": [{
+#         "pTime": "1597026383085",
+#         "eventType": "snapshot",
+#         "balData": [{
+#             "ccy": "BTC",
+#             "cashBal": "1",
+#             "uTime": "1597026383085"
+#         }],
+#         "posData": [{
+#             "posId": "1111111111",
+#             "tradeId": "2",
+#             "instId": "BTC-USD-191018",
+#             "instType": "FUTURES",
+#             "mgnMode": "cross",
+#             "posSide": "long",
+#             "pos": f'{random.randint(3, 9)}',
+#             "ccy": "BTC",
+#             "posCcy": "",
+#             "avgPx": "3320",
+#             "uTIme": f'{random.randint(3, 9)}'
+#         }],
+#         "trades": [{
+#             "instId": "BTC-USD-191018",
+#             "tradeId": "2",
+#         }]
+#     }]
+# }
+        
+        socketio.emit(channel,json.dumps(data_to_client))
+
+config_source = 'okx_live_trade'
+
+apiKey = config[config_source]['apiKey']
+secretKey = config[config_source]['secretKey']
+passphrase = config[config_source]['passphrase']
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
 
 ws = None
 
 loop = asyncio.get_event_loop()  
+<<<<<<< HEAD
+=======
+
+# Queue to handle messages (optional, but useful if multiple consumers are needed)
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
 message_queue = asyncio.Queue()
 
 # WebSocket listener function
@@ -325,6 +386,7 @@ async def handle_message(message):
     # Process the incoming message
     print(f"Received message: {message}")
     # You can add additional processing logic here, e.g., logging, database, etc.
+<<<<<<< HEAD
 
 # Your WebSocket connection and subscription logic
 async def main():
@@ -334,6 +396,55 @@ async def main():
         apiKey = apiKey,
         passphrase=passphrase,
         secretKey=secretKey,
+=======
+
+
+# Your WebSocket connection and subscription logic
+async def main():
+    # url = "wss://wspap.okx.com:8443/ws/v5/private"
+    global ws
+    url = "wss://ws.okx.com:8443/ws/v5/private"
+    ws = WsPrivateAsync(
+        # apiKey="cfa32491-8e93-4537-9106-e2a36305a936",
+        # passphrase="Trade@1998",
+        # secretKey="434E8A9CC1A729DB292C0819AAE8FBAF",
+        apiKey = apiKey,
+        passphrase=passphrase,
+        secretKey=secretKey,
+        url=url,
+        useServerTime=False
+    )
+    await ws.start()
+    args = []
+    # arg1 = {"channel": "account", "ccy": "USDT"}
+    # arg1 = {"channel": "balance", "ccy": "USD"}
+
+    # arg2 = {"channel": "orders", "instType": "ANY"}
+    # arg3 = {"channel": "balance_and_position"}
+    # arg1 = {"channel": "positions","instType":"FUTURES"}
+    arg1 = {"channel": "account","ccy":"USDT"}
+
+    
+    args.append(arg1)
+    # args.append(arg2)
+    # args.append(arg3)
+
+    await ws.subscribe(args, callback=emitToclient)
+    # await listen_to_websocket()
+    # Keep the WebSocket connection alive
+    while True:
+        await asyncio.sleep(60)  # Adjust the sleep time as necessary
+# Your WebSocket connection and subscription logic
+
+async def unsubscribe():
+    # url = "wss://wspap.okx.com:8443/ws/v5/private"
+    global ws
+    url = "wss://ws.okx.com:8443/ws/v5/private"
+    ws = WsPrivateAsync(
+        apiKey=apiKey,
+        passphrase=passphrase,
+        secretKey=secretKey,
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
         url=url,
         useServerTime=False
     )
@@ -373,8 +484,14 @@ async def unsubscribe():
     arg3 = {"channel": "balance_and_position"}
     args.append(arg1)
     args.append(arg2)
-    args.append(arg3)
+    # args.append(arg3)
 
+<<<<<<< HEAD
+=======
+    # await ws.unsubscribe(args, callback=privateCallback)
+
+    # await listen_to_websocket()
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
     # Keep the WebSocket connection alive
     while True:
         await asyncio.sleep(60)  # Adjust the sleep time as necessary
@@ -398,8 +515,14 @@ async def disconnect_websocket():
         await ws.stop()  # Custom logic to stop your WebSocket instance
         ws = None
     
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
 @socketio.on('connect')
 def start_websocket():
+
     thread = threading.Thread(target=run_websocket)
     thread.start()
     return jsonify({"status": "WebSocket started"}), 200

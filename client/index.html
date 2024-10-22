@@ -6,8 +6,14 @@
     <title>WebSocket Price Updates</title>
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <link rel="stylesheet" href="index.css">
+<<<<<<< HEAD
     <script src="./websocket_client/js/orders_positions.js" type="module"></script>
     <script src="./websocket_client/js/transaction_history.js" ></script>
+=======
+    <script src="./websocket_client/js/assets_positions.js"></script>
+
+    <!-- <script src="./websocket_client/js/open_order.js"></script> -->
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
 
  
     <script src="./websocket_client/js/main.js"></script>
@@ -146,6 +152,7 @@
 
         <!-- Tab Content -->
         <div class="tab-content active" id="assets-positions">
+<<<<<<< HEAD
             <!-- Timestamp container -->
             <div id="data-timestamp-positions" style="text-align: right; font-size: 0.9em; color: gray;">
                 Last updated: <span id="last-updated-positions">-</span>
@@ -167,12 +174,27 @@
                       </tr>
                 </thead>
                 <tbody id="oms-open-positions-body" >
+=======
+            <table id="oms-assets-positions-table">
+                <thead>
+                    <tr>
+                        <th>Currency</th>
+                        <th>Cash Balance</th>
+                        <th>Instrument ID</th>
+                        <th>Position</th>
+                        <th>Average Price</th>
+                        <th>Position Side</th>
+                    </tr>
+                </thead>
+                <tbody id="oms-assets-positions-body">
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
                     <!-- Data will be dynamically inserted here -->
                 </tbody>
             </table>
         </div>
 
         <div class="tab-content" id="open-orders">
+<<<<<<< HEAD
             <div id="data-timestamp-orders" style="text-align: right; font-size: 0.9em; color: gray;">
                 Last updated: <span id="last-updated-orders">-</span>
             </div>
@@ -190,12 +212,26 @@
                         <th>Avg fill spread</th>
                         <th>Actions</th>
 
+=======
+            <table id="oms-open-orders-table">
+                <thead>
+                    <tr>
+                        <th>Currency</th>
+                        <th>Cash Balance</th>
+                        <th>Instrument ID</th>
+                        <th>Position</th>
+                        <th>Average Price</th>
+                        <th>Position Side</th>
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
                     </tr>
                 </thead>
                 <tbody id="oms-open-orders-body">
                     <!-- Data will be dynamically inserted here -->
                 </tbody>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4d917a6 (working flaskTest but need to fix unsubscribe)
             </table>
         </div>
 
