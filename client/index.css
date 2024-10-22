@@ -93,7 +93,7 @@ body {
     border: 1px solid #ddd;
 }
 
-.orderBookTable th {
+.orderBookTable  th {
     background-color: #f0f0f0;
     color: #555;
     font-weight: bold;

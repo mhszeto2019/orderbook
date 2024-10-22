@@ -6,7 +6,9 @@
     <title>WebSocket Price Updates</title>
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <link rel="stylesheet" href="index.css">
-    <script src="./websocket_client/js/open_order.js"></script>
+    <script src="./websocket_client/js/assets_positions.js"></script>
+
+    <!-- <script src="./websocket_client/js/open_order.js"></script> -->
 
     <!-- <script src="./websocket_client/js/main.js"></script>
     <script src="./websocket_client/js/order.js"></script>
@@ -99,13 +101,39 @@
 
         <!-- Tab Content -->
         <div class="tab-content active" id="assets-positions">
-            <h3>Assets and Positions</h3>
-            <p>Content for assets and positions will be displayed here.</p>
+            <table id="oms-assets-positions-table">
+                <thead>
+                    <tr>
+                        <th>Currency</th>
+                        <th>Cash Balance</th>
+                        <th>Instrument ID</th>
+                        <th>Position</th>
+                        <th>Average Price</th>
+                        <th>Position Side</th>
+                    </tr>
+                </thead>
+                <tbody id="oms-assets-positions-body">
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+            </table>
         </div>
 
         <div class="tab-content" id="open-orders">
-            <h3>Open Orders</h3>
-            <p>Content for open orders will be displayed here.</p>
+            <table id="oms-open-orders-table">
+                <thead>
+                    <tr>
+                        <th>Currency</th>
+                        <th>Cash Balance</th>
+                        <th>Instrument ID</th>
+                        <th>Position</th>
+                        <th>Average Price</th>
+                        <th>Position Side</th>
+                    </tr>
+                </thead>
+                <tbody id="oms-open-orders-body">
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+            </table>
         </div>
 
         <div class="tab-content" id="transaction-history">
