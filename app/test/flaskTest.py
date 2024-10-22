@@ -22,55 +22,23 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)  # Enable CORS for all origins
+
 import random
 def privateCallback(message):
     print("privateCallback", message)
 
 def emitToclient(message):
-    # print(message)
     json_msg = json.loads(message)
+    print(json_msg)
     data_to_client = "Loading ..."
     
-    if json_msg.get('arg',None):
-        print(json_msg.get('event',None))
-        
-        channel = json_msg.get('arg',"logging")['channel']
-        print(channel) 
+    if json_msg.get('arg'):
+        channel = json_msg.get('arg',"Loading ...")['channel']
         data_to_client = json_msg.get('data')
-#     message ={
-#     "arg": {
-#         "channel": "balance_and_position",
-#         "uid": "77982378738415879"
-#     },
-#     "data": [{
-#         "pTime": "1597026383085",
-#         "eventType": "snapshot",
-#         "balData": [{
-#             "ccy": "BTC",
-#             "cashBal": "1",
-#             "uTime": "1597026383085"
-#         }],
-#         "posData": [{
-#             "posId": "1111111111",
-#             "tradeId": "2",
-#             "instId": "BTC-USD-191018",
-#             "instType": "FUTURES",
-#             "mgnMode": "cross",
-#             "posSide": "long",
-#             "pos": f'{random.randint(3, 9)}',
-#             "ccy": "BTC",
-#             "posCcy": "",
-#             "avgPx": "3320",
-#             "uTIme": f'{random.randint(3, 9)}'
-#         }],
-#         "trades": [{
-#             "instId": "BTC-USD-191018",
-#             "tradeId": "2",
-#         }]
-#     }]
-# }
         
-        socketio.emit(channel,json.dumps(data_to_client))
+    else:
+        data_to_client = None
+    socketio.emit('oms',json.dumps(data_to_client))
 
 config_source = 'okx_live_trade'
 
@@ -81,8 +49,6 @@ passphrase = config[config_source]['passphrase']
 ws = None
 
 loop = asyncio.get_event_loop()  
-
-# Queue to handle messages (optional, but useful if multiple consumers are needed)
 message_queue = asyncio.Queue()
 
 # WebSocket listener function
@@ -125,9 +91,9 @@ async def main():
     # arg1 = {"channel": "balance", "ccy": "USD"}
 
     # arg2 = {"channel": "orders", "instType": "ANY"}
-    # arg3 = {"channel": "balance_and_position"}
-    # arg1 = {"channel": "positions","instType":"FUTURES"}
-    arg1 = {"channel": "account","ccy":"USDT"}
+    arg3 = {"channel": "balance_and_position"}
+    arg1 = {"channel": "positions","instType":"FUTURES"}
+    # arg1 = {"channel": "account","ccy":"USDT"}
 
     
     args.append(arg1)
@@ -135,7 +101,6 @@ async def main():
     # args.append(arg3)
 
     await ws.subscribe(args, callback=emitToclient)
-    # await listen_to_websocket()
     # Keep the WebSocket connection alive
     while True:
         await asyncio.sleep(60)  # Adjust the sleep time as necessary
@@ -159,11 +124,7 @@ async def unsubscribe():
     arg3 = {"channel": "balance_and_position"}
     args.append(arg1)
     args.append(arg2)
-    # args.append(arg3)
 
-    # await ws.unsubscribe(args, callback=privateCallback)
-
-    # await listen_to_websocket()
     # Keep the WebSocket connection alive
     while True:
         await asyncio.sleep(60)  # Adjust the sleep time as necessary
@@ -187,8 +148,6 @@ async def disconnect_websocket():
         await ws.stop()  # Custom logic to stop your WebSocket instance
         ws = None
     
-
-
 @socketio.on('connect')
 def start_websocket():
 
@@ -220,6 +179,5 @@ def home():
 
 if __name__ == '__main__':
     # Start the Flask app
-    # app.run(debug=True, use_reloader=False)
     socketio.run(app)
 

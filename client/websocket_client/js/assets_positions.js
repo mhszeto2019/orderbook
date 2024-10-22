@@ -1,5 +1,5 @@
 const order_management_sockets = {
-    asset_positions: io('http://localhost:5021', {
+    oms: io('http://localhost:5021', {
         transports: ['websocket'],
         // debug: false // Disable debug logging
     }),
@@ -11,12 +11,12 @@ Object.entries(order_management_sockets).forEach(([name, socket]) => {
     socket.on('connect', () => console.log(`Connected to ${name} WebSocket`));
 });
 
-order_management_sockets.asset_positions.onAny((event, message) => handlePriceUpdate(event, message));
+order_management_sockets.oms.onAny((event, message) => handlePriceUpdate(event, message));
+
 
 
 function handlePriceUpdate(event,message){
     json_message = JSON.parse(message)
-
     console.log(json_message)
     
     // Assuming message contains the required data, modify according to your data structure
