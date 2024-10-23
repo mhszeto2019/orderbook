@@ -1,0 +1,13 @@
+# Disable directory listing
+Options -Indexes
+
+# Allow access to only static file types
+<FilesMatch "\.(html|htm|css|js|jpg|jpeg|png|gif|svg|ico)$">
+    Require all granted
+</FilesMatch>
+
+# Deny access to sensitive files (e.g., Python scripts, configs)
+<FilesMatch "\.(py|ini|conf|json|log|sql|env)$">
+    Require all denied
+</FilesMatch>
+
