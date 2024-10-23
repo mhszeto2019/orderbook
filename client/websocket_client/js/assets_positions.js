@@ -1,7 +1,14 @@
+
+const hostname = window.location.hostname;
+// const hostname = "192.168.0.235"
+console.log("HELLLLLLLLLLLL")
+console.log(hostname)
+
+
 const order_management_sockets = {
-    oms: io('http://localhost:5021', {
+    oms: io(`http://${hostname}:5021`, {
         transports: ['websocket'],
-        // debug: false // Disable debug logging
+        debug: true // Disable debug logging
     }),
 
 };

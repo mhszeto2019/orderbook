@@ -1,21 +1,25 @@
+// const isRemote = window.location.hostname !== 'localhost'; 
+const hostname = window.location.hostname;
+console.log(hostname)
+
 const sockets = {
-    okx: io('http://localhost:5002', {
+    okx: io(`http://${hostname}:5002`, {
         transports: ['websocket'],
         // debug: false // Disable debug logging
     }),
-    htx: io('http://localhost:5012', {
+    htx: io(`http://${hostname}:5012`, {
         transports: ['websocket'],
         // debug: false // Disable debug logging
     }),
-    fundingRate: io('http://localhost:5001', {
+    fundingRate: io(`http://${hostname}:5001`, {
         transports: ['websocket'],
         // debug: false // Disable debug logging
     }),
-    okx_orderBook: io('http://localhost:5000', {
+    okx_orderBook: io(`http://${hostname}:5000`, {
         transports: ['websocket'],
         // debug: false // Disable debug logging
     }),
-    htx_orderBook: io('http://localhost:5010', {
+    htx_orderBook: io(`http://${hostname}:5010`, {
         transports: ['websocket'],
         // debug: false // Disable debug logging
     })
@@ -48,6 +52,11 @@ Object.entries(sockets).forEach(([name, socket]) => {
 });
 
 // Unified handler for all price updates
+sockets.okx.on('connect_error', (error) => {
+    console.error("Connection error for OKX:", error);
+});
+
+
 sockets.okx.onAny((event, message) => handlePriceUpdate(event, message));
 sockets.htx.onAny((event, message) => handlePriceUpdate(event, message));
 sockets.fundingRate.onAny((event, message) => handleFundingRateUpdate(event, message));

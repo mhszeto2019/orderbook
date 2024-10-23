@@ -23,6 +23,13 @@ socketio = SocketIO(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)  # Enable CORS for all origins
 
+config_source = 'okx_live_trade'
+
+apiKey = config[config_source]['apiKey']
+secretKey = config[config_source]['secretKey']
+passphrase = config[config_source]['passphrase']
+
+
 import random
 def privateCallback(message):
     print("privateCallback", message)
@@ -40,11 +47,6 @@ def emitToclient(message):
         data_to_client = None
     socketio.emit('oms',json.dumps(data_to_client))
 
-config_source = 'okx_live_trade'
-
-apiKey = config[config_source]['apiKey']
-secretKey = config[config_source]['secretKey']
-passphrase = config[config_source]['passphrase']
 
 ws = None
 
@@ -72,6 +74,7 @@ async def handle_message(message):
 
 # Your WebSocket connection and subscription logic
 async def main():
+    print("SUBSCRIBED")
     # url = "wss://wspap.okx.com:8443/ws/v5/private"
     global ws
     url = "wss://ws.okx.com:8443/ws/v5/private"
@@ -90,7 +93,7 @@ async def main():
     # arg1 = {"channel": "account", "ccy": "USDT"}
     # arg1 = {"channel": "balance", "ccy": "USD"}
 
-    # arg2 = {"channel": "orders", "instType": "ANY"}
+    arg2 = {"channel": "orders", "instType": "ANY"}
     arg3 = {"channel": "balance_and_position"}
     arg1 = {"channel": "positions","instType":"FUTURES"}
     # arg1 = {"channel": "account","ccy":"USDT"}
@@ -150,7 +153,6 @@ async def disconnect_websocket():
     
 @socketio.on('connect')
 def start_websocket():
-
     thread = threading.Thread(target=run_websocket)
     thread.start()
     return jsonify({"status": "WebSocket started"}), 200
@@ -179,5 +181,5 @@ def home():
 
 if __name__ == '__main__':
     # Start the Flask app
-    socketio.run(app)
+    socketio.run(app,host='0.0.0.0')
 

@@ -178,15 +178,17 @@ async def okx_websocket():
 def run_okx_client():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(okx_websocket())
+    loop.run_until_complete(okx_websocket()) 
 
 @app.route('/')
 def index():
     return "OKX WebSocket price Flask Server Running"
+
 def handle_shutdown(signal, frame):
     print("Shutting down...")
     socketio.stop()  # Stop socketio
     sys.exit(0)
+
 
 
 @socketio.on('connect')
@@ -206,4 +208,4 @@ if __name__ == '__main__':
     # Start WebSocket client in a background thread
     # threading.Thread(target=run_okx_client).start()
     # Run Flask server
-    socketio.run(app, host='127.0.0.1', port=5002, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=5002)
