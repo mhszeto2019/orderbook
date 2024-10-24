@@ -27,7 +27,7 @@ CORS(app)  # Enable CORS for all origins
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
 
-from .Websocket_class import WsLivePrices, Ws_orderbook, WsFutures, WsSwaps,Ws_orderbook_swaps
+from Websocket_class import WsLivePrices, Ws_orderbook, WsFutures, WsSwaps,Ws_orderbook_swaps
 
 # print('*****************\nstart Spot ws.\n')
 host = 'api.huobi.pro'
