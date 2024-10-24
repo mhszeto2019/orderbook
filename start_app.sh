@@ -10,6 +10,7 @@ export CONFIG_PATH=/project/config_folder
 # Change to the application directory (optional)
 # cd /project/app/okx
 
+gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5021 -w 1 app.test.flaskTest:app
 
 gunicorn -k gevent -w 1 --max-requests 1000 --max-requests-jitter 100 -b 0.0.0.0:5000 app.okx2.okx_orderbook_server:app &
 

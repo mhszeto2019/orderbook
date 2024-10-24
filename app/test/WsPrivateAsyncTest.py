@@ -51,8 +51,6 @@ async def main():
     args3 = [arg1, arg3]
     await ws.unsubscribe(args, callback=privateCallback)
 
-   
-    
 
 if __name__ == '__main__':
     asyncio.run(main())
