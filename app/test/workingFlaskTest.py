@@ -19,8 +19,7 @@ config.read(config_file_path)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*",async_mode='gevent')
 CORS(app)  # Enable CORS for all origins
 
 config_source = 'okx_live_trade'
@@ -90,8 +89,6 @@ async def main():
     )
     await ws.start()
     args = []
-    # arg1 = {"channel": "account", "ccy": "USDT"}
-    # arg1 = {"channel": "balance", "ccy": "USD"}
 
     arg2 = {"channel": "orders", "instType": "ANY"}
     arg3 = {"channel": "balance_and_position"}
@@ -179,7 +176,7 @@ def start_websocket():
 def home():
     return "Flask app is running!", 200
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # Start the Flask app
-    socketio.run(app,host='0.0.0.0')
+    # socketio.run(app,host='0.0.0.0')
 

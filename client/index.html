@@ -89,7 +89,7 @@
 
     <!-- ORDER MANAGEMENT SYSTEM SECTION -->
     <div class="tab-container">
-        <h2>Order Management System</h2>
+        <h2>Order Management System (Prototype)</h2>
         <!-- Tabs -->
         <div class="tabs">
             <div class="tab active" data-tab="assets-positions">Assets & Positions</div>
@@ -100,33 +100,40 @@
 
         <!-- Tab Content -->
         <div class="tab-content active" id="assets-positions">
-            <table id="oms-assets-positions-table">
+            <table id="oms-open-positions-table" class="oms-table">
                 <thead>
                     <tr>
-                        <th>Currency</th>
-                        <th>Cash Balance</th>
                         <th>Instrument ID</th>
-                        <th>Position</th>
-                        <th>Average Price</th>
+                        <th>Leverage</th>
                         <th>Position Side</th>
-                    </tr>
+                        <th>Available Position</th>
+                        <th>ADL</th>
+                        <th>Liquidation Price</th>
+                        <th>Liquidation-Price Difference</th>
+                        <th>Profit and Loss (PnL)</th>
+                      </tr>
                 </thead>
-                <tbody id="oms-assets-positions-body">
+                <tbody id="oms-open-positions-body" >
                     <!-- Data will be dynamically inserted here -->
                 </tbody>
             </table>
         </div>
 
         <div class="tab-content" id="open-orders">
-            <table id="oms-open-orders-table">
+            <table id="oms-open-orders-table" class="oms-table">
                 <thead>
                     <tr>
-                        <th>Currency</th>
-                        <th>Cash Balance</th>
-                        <th>Instrument ID</th>
-                        <th>Position</th>
-                        <th>Average Price</th>
-                        <th>Position Side</th>
+                        <th>Placed Time</th>
+                        <th>Filled Time</th>
+                        <th>Side(limit)</th>
+                        <th>Limit</th>
+                        <th>Market</th>
+                        <th>Spread</th>
+                        <th>Amount</th>
+                        <th>Filled</th>
+                        <th>Avg fill spread</th>
+                        <th>Actions</th>
+
                     </tr>
                 </thead>
                 <tbody id="oms-open-orders-body">

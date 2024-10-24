@@ -305,3 +305,26 @@ body {
             border-bottom: 3px solid #007bff;
         }
     }
+
+    .oms-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+  
+      .oms-table th, .oms-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+  
+      .oms-table th {
+        background-color: #f2f2f2;
+        text-align: left;
+      }
+  
+      .oms-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+  
+      .oms-table tbody tr:hover {
+        background-color: #f1f1f1;
+      }
