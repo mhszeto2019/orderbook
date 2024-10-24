@@ -7,7 +7,7 @@ import asyncio
 
 
 import os
-from okx.websocket_okx.WsPrivateAsync import WsPrivateAsync
+from okx.websocket.WsPrivateAsync import WsPrivateAsync
 
 import json
 import configparser
