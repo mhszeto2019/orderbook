@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Price Updates</title>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <script src="./websocket_client/js/orders_positions.js" type="module"></script>
+    <script src="./websocket_client/js/transaction_history.js" ></script>
+
+ 
+    <script src="./websocket_client/js/main.js"></script>
+    <script src="./websocket_client/js/order.js"></script>
+    <script src="./websocket_client/js/orderbook.js"></script>
+
+</head>
+
+<body>
+    <h1>WebSocket Price Updates</h1>
+    <div class="flex-container" >
+
+        <div class="live-prices-section">
+            <h2>Live Prices</h2>
+            <table class="livePricesTable">
+                <thead>
+                    <tr>
+                        <th>Exchange</th>
+                        <th>CCY</th>
+                        <th>Last Price</th>
+                        <th>Bid Price</th>
+                        <th>Ask Price</th>
+                        <th>Funding Rate / Next Funding Time</th>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="live-data-table-body">
+                    <!-- Live prices data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section for User Input -->
+        <div class="user-input-section">
+                <h2>Place Order</h2>
+                <form id="order-form">
+                    <div class="input-group">
+                        <label for="order-type-input">Price:</label>
+                        <input type="number" id="order-type-input" placeholder="Order Type" required>
+    
+                    </div>
+    
+                    <div class="input-group">
+                        <label for="currency-input">Price:</label>
+                        <input type="number" id="currency-input" placeholder="Currency" required>
+                    </div>
+    
+                    <div class="input-group">
+                        <label for="price-input">Price:</label>
+                        <input type="number" id="price-input" placeholder="Price" required>
+                    </div>
+            
+                    <div class="input-group">
+                        <label for="spread-input">Spread:</label>
+                        <input type="number" id="spread-input" placeholder="Spread" required>
+                    </div>
+            
+                    <div class="input-group">
+                        <label for="qty-input">Quantity:</label>
+                        <input type="number" id="qty-input" placeholder="Quantity" required>
+                    </div>
+            
+                    <div class="action-buttons">
+                        <button type="button" id="buy-button">Buy</button>
+                        <button type="button" id="sell-button">Sell</button>
+                    </div>
+                </form>
+            
+        </div>
+        
+
+
+        <div class="orderbook-area">
+
+                
+
+            <div class="orderbook-section">
+                <h2>Order Book</h2>
+                <div id="selected-info">
+                    <p>Exchange: <span id="selected-exchange-1">Not Selected</span></p>
+                    <p>Currency: <span id="selected-ccy-1">Not Selected</span></p>
+                </div>
+                <div class="orderbook-scroll-container">
+                    <table class="orderBookTable">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-data-table-body-1">
+                            <!-- Order book data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="orderbook-section">
+                <h2>Order Book 2</h2>
+                <div id="selected-info">
+                    <p>Exchange: <span id="selected-exchange-2">Not Selected</span></p>
+                    <p>Currency: <span id="selected-ccy-2">Not Selected</span></p>
+                </div>
+                <div class="orderbook-scroll-container">
+                    <table class="orderBookTable">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-data-table-body-2">
+                            <!-- Order book data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ORDER MANAGEMENT SYSTEM SECTION -->
+    <div class="tab-container">
+        <h2>Order Management System (Prototype)</h2>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="assets-positions">Assets & Positions</div>
+            <div class="tab" data-tab="open-orders">Open Orders</div>
+            <div class="tab" data-tab="transaction-history">Transaction History</div>
+            <div class="tab" data-tab="transaction-records">Transaction Records</div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content active" id="assets-positions">
+            <!-- Timestamp container -->
+            <div id="data-timestamp-positions" style="text-align: right; font-size: 0.9em; color: gray;">
+                Last updated: <span id="last-updated-positions">-</span>
+            </div>
+         
+            <table id="oms-open-positions-table" class="oms-table">
+                <thead>
+                    <tr>
+                        <th>Instrument ID</th>
+                        <th>Leverage</th>
+                        <th>Position Side</th>
+                        <th>Available Position</th>
+                        <th>ADL</th>
+                        <th>Liquidation Price</th>
+                        <th>Liquidation-Price Difference</th>
+                        <th>Profit and Loss (PnL)</th>
+                        <th>Timestamp</th>
+
+                      </tr>
+                </thead>
+                <tbody id="oms-open-positions-body" >
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-content" id="open-orders">
+            <div id="data-timestamp-orders" style="text-align: right; font-size: 0.9em; color: gray;">
+                Last updated: <span id="last-updated-orders">-</span>
+            </div>
+            <table id="oms-open-orders-table" class="oms-table">
+                <thead>
+                    <tr>
+                        <th>Placed Time</th>
+                        <th>Filled Time</th>
+                        <th>Side(limit)</th>
+                        <th>Limit</th>
+                        <th>Market</th>
+                        <th>Spread</th>
+                        <th>Amount</th>
+                        <th>Filled</th>
+                        <th>Avg fill spread</th>
+                        <th>Actions</th>
+
+                    </tr>
+                </thead>
+                <tbody id="oms-open-orders-body">
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+
+            </table>
+        </div>
+
+        <div class="tab-content" id="transaction-history">
+            <div style="text-align: right;">
+                <button id="txn-history-refresh-btn" onclick="refreshTransactionHistory()"></button>
+            </div>
+            <div id="data-timestamp-txn-history" style="text-align: right; font-size: 0.9em; color: gray;">
+                Last updated: <span id="last-updated-txn-history">-</span>
+            </div>
+           
+            
+            <table id="oms-open-txn-history-table" class="oms-table">
+                <thead>
+                    <tr>
+                        <th>CCY</th>
+                        <th>Filled Price</th>
+                        <th>Filled Size</th>
+                        <th>Filled Time</th>
+                        <th>Trade Type</th>
+                        <th>Fee</th>
+                        <th>Fee ccy</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="oms-open-txn-history-body">
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+
+            </table>
+        </div>
+
+        <div class="tab-content" id="transaction-records">
+            <h3>Transaction Records</h3>
+            <p>Content for transaction records will be displayed here.</p>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to the clicked tab
+                tab.classList.add('active');
+
+                // Hide all tab contents
+                tabContents.forEach(content => content.classList.remove('active'));
+                // Show the content related to the clicked tab
+                const tabContent = document.getElementById(tab.dataset.tab);
+                tabContent.classList.add('active');
+            });
+        });
+        
+    </script>
+</body>
+</html>

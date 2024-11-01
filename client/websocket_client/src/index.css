@@ -1,0 +1,89 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+/* src/App.css */
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px; /* Space between elements */
+  justify-content: center; /* Center content */
+}
+
+.flex-item {
+  flex: 5 1;
+  min-width: 300px; /* Ensure each item is at least 300px wide */
+  margin: 10px;
+  max-height: 300px; /* Set a maximum height for scrollable area */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border: 1px solid #ccc; /* Optional: add border for clarity */
+  border-radius: 5px; /* Optional: round the corners */
+  padding: 10px; /* Optional: add padding */
+}
+
+@media (max-width: 768px) {
+  .flex-container {
+    flex-direction: column;
+    align-items: center; /* Center items on smaller screens */
+  }
+
+  .flex-item {
+    width: 80%; /* Make each item take full width on smaller screens */
+  }
+}
+
+  /* Prevent word wrapping in the CCY column */
+.nowrap {
+  white-space: nowrap;
+}
+  
+.ladder-orderbook {
+  margin: 30px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+}
+
+table {
+  width: 50%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 4px;
+}
+
+th {
+  background-color: #f2f2f2;
+
+}
+
+.btc-usdt-bid, .btc-usdc-bid {
+  background-color: #e6ffe6; /* Light green */
+}
+
+.btc-usdt-ask, .btc-usdc-ask {
+  background-color: #ffe6e6; /* Light red */
+}
+
+.orderbook_bids{
+  color:green
+}
+
+.orderbook_asks{
+  color:red
+}
+
+

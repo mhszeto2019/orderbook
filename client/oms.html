@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Price Updates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<script src="./websocket_client/js/spread_order.js"></script>
+
+<body class="container py-4">
+    <h1 class="text-center mb-4">WebSocket Price Updates</h1>
+
+    <!-- User Input Section -->
+    <div class="card p-4 mb-4">
+        <h2 class="text-center">Place Order</h2>
+        <form id="order-form">
+            <div class="row g-2">
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="order-type-input" class="form-label">Order Type:</label>
+                    <select id="order-type-input" class="form-select" required>
+                        <option value="" disabled selected>Select Order Type</option>
+                        <!-- <option value="market">Market</option> -->
+                        <option value="limit">Limit</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="currency-input" class="form-label">Currency Pair:</label>
+                    <select id="currency-input" class="form-select" required>
+                        <option value="" disabled selected>Select Currency Pair</option>
+                        <option value="BTCUSD">BTCUSD</option>
+                        <option value="BTCUSDT">BTCUSDT</option>
+                    </select>
+                </div>
+                
+
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="price-input" class="form-label">Price:</label>
+                    <input type="number" id="price-input" class="form-control" placeholder="Price" required>
+                </div>
+
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="spread-input" class="form-label">Spread:</label>
+                    <input type="number" id="spread-input" class="form-control" placeholder="Spread" required>
+                </div>
+
+                <div class="col-12 mb-3">
+                    <label for="qty-input" class="form-label">Quantity:</label>
+                    <input type="number" id="qty-input" class="form-control" placeholder="Quantity" required>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+     
+
+                <button type="submit" id="buy-button" value='buy' class="btn btn-success w-100 me-1" ><label>Buy</label></button>
+                <button type="submit" id="sell-button" value='sell' class="btn btn-danger w-100 ms-1" >Sell</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Order Management System Section -->
+    <div class="card p-4">
+        <h2 class="text-center">Order Management System (Prototype)</h2>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs flex-wrap" id="omsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#assets-positions" type="button" role="tab">Assets & Positions</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#open-orders" type="button" role="tab">Open Orders</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transaction-history" type="button" role="tab">Transaction History</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transaction-records" type="button" role="tab">Transaction Records</button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <!-- Assets & Positions Tab -->
+            <div class="tab-pane fade show active" id="assets-positions" role="tabpanel">
+                <p class="text-end text-muted">Last updated: <span id="last-updated-positions">-</span></p>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Instrument ID</th>
+                                <th>Leverage</th>
+                                <th>Position Side</th>
+                                <th>Available Position</th>
+                                <th>ADL</th>
+                                <th>Liquidation Price</th>
+                                <th>Diff</th>
+                                <th>PnL</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="oms-open-positions-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Open Orders Tab -->
+            <div class="tab-pane fade" id="open-orders" role="tabpanel">
+                <p class="text-end text-muted">Last updated: <span id="last-updated-orders">-</span></p>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Placed Time</th>
+                                <th>Filled Time</th>
+                                <th>Side</th>
+                                <th>Limit</th>
+                                <th>Market</th>
+                                <th>Spread</th>
+                                <th>Amount</th>
+                                <th>Filled</th>
+                                <th>Avg Fill Spread</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="oms-open-orders-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Transaction History Tab -->
+            <div class="tab-pane fade" id="transaction-history" role="tabpanel">
+                <p class="text-end text-muted">Last updated: <span id="last-updated-txn-history">-</span></p>
+                <button id="txn-history-refresh-btn" class="btn btn-primary btn-sm float-end mb-2">Refresh</button>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>CCY</th>
+                                <th>Filled Price</th>
+                                <th>Filled Size</th>
+                                <th>Filled Time</th>
+                                <th>Trade Type</th>
+                                <th>Fee</th>
+                                <th>Fee CCY</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="oms-open-txn-history-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Transaction Records Tab -->
+            <div class="tab-pane fade" id="transaction-records" role="tabpanel">
+                <h3>Transaction Records</h3>
+                <p>Content for transaction records will be displayed here.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

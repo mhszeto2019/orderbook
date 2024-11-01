@@ -1,0 +1,33 @@
+version: 1
+disable_existing_loggers: False
+
+formatters:
+  standard:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: standard
+    stream: ext://sys.stdout  # Log to console
+
+  file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: standard
+    filename: logs/app.log  # Log to file in 'logs' folder
+    encoding: utf8
+
+loggers:
+  # Define the main logger configuration
+  my_app:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: no
+
+root:
+  level: WARNING
+  handlers: [console]
+
+ 
