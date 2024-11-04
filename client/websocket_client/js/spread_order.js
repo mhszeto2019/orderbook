@@ -85,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle order form submission
     document.getElementById('order-form').onsubmit = async (event) => {
         event.preventDefault();
+        const leadingExchange = document.getElementById('leading-exchange-input').value;
+        const laggingExchange = document.getElementById('lagging-exchange-input').value;
 
         const orderType = document.getElementById('order-type-input').value;
         const currency = document.getElementById('currency-input').value;
@@ -92,9 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const spread = document.getElementById('spread-input').value;
         const qty = document.getElementById('qty-input').value;
         const direction = event.submitter.value;
-        
+        console.log(leadingExchange,
+            laggingExchange,
+            orderType,
+            currency,
+            price,
+            spread,
+            qty,
+            direction)
         // Create order object
         const orderData = {
+            leadingExchange,
+            laggingExchange,
             orderType,
             currency,
             price,

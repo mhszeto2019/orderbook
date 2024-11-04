@@ -16,7 +16,7 @@ r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=
 def place_order():
     # Get the order data from the request
     order_data = request.json
-
+    print(order_data)
     # Save the order data to Redis
     r.set('order_data_key', json.dumps(order_data))  # Replace 'order_data_key' with your desired key
 

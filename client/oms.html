@@ -15,7 +15,32 @@
     <div class="card p-4 mb-4">
         <h2 class="text-center">Place Order</h2>
         <form id="order-form">
+            
+       
+
             <div class="row g-2">
+
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="leading-exchange-input" class="form-label">Leading:</label>
+                    <select id="leading-exchange-input" class="form-select" required>
+                        <option value="" disabled selected>Select Exchange</option>
+                        <!-- <option value="market">Market</option> -->
+                        <option value="htx">HTX</option>
+                        <option value="okx">OKX</option>
+                    </select>
+                </div>
+    
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="lagging-exchange-input" class="form-label">Lagging</label>
+                    <select id="lagging-exchange-input" class="form-select" required>
+                        <option value="" disabled selected>Select Exchange</option>
+                        <!-- <option value="market">Market</option> -->
+                        <option value="htx">HTX</option>
+                        <option value="okx">OKX</option>
+
+                    </select>
+                </div> 
+
                 <div class="col-12 col-md-6 mb-3">
                     <label for="order-type-input" class="form-label">Order Type:</label>
                     <select id="order-type-input" class="form-select" required>
