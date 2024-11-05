@@ -27,7 +27,7 @@ import json
 import gzip
 from datetime import datetime
 from decimal import Decimal
-
+import requests
 htx_data = None
 
 class RedisSubscriber:
@@ -42,7 +42,7 @@ class RedisSubscriber:
         print(self.subscribed_channel)
 
         self.pubsub.subscribe(**{self.subscribed_channel: self.handle_message})
-        print(f"Subscribed to Redis channel: {self.subscribed_channel}")
+        # print(f"Subscribed to Redis channel: {self.subscribed_channel}")
 
         # Listen for messages
         self.listen()
@@ -60,47 +60,89 @@ class RedisSubscriber:
         """Handle incoming messages from Redis."""
         order_data = json.loads(message['data'])
         self.redis_data = order_data
-        print("Received order update from Redis:", order_data)
+        # print("Received order update from Redis:", order_data)
 
-orderupdates_redis_subscriber = RedisSubscriber('order_updates')
+
+class MatchingEngine:
+    def __init__(self, orderupdates_subscriber, htxbbo_subscriber,okxbbo_subscriber):
+        self.orderupdates_subscriber = orderupdates_subscriber
+        self.htxbbo_subscriber = htxbbo_subscriber
+        self.okxbbo_subscriber = okxbbo_subscriber
+
+    def start(self):
+        """Start the matching process."""
+        while True:
+            self.check_for_matches()
+            time.sleep(1)  # Adjust the frequency of checking
+
+    def check_for_matches(self):
+        """Check for matches between user criteria and trading data."""
+        print("Order DATA",self.orderupdates_subscriber.redis_data)
+        print("HTX DATA",self.htxbbo_subscriber.redis_data)
+        print("OKX DATA",self.okxbbo_subscriber.redis_data)
+
+        # user_criteria = self.user_input_subscriber.get_user_criteria()
+        # trading_data = self.trading_data_subscriber.get_trading_data()
+
+        # # Example of matching logic
+        # if user_criteria and trading_data:
+        #     if trading_data['symbol'] == user_criteria.get('symbol') and trading_data['price'] <= user_criteria.get('price'):
+        #         print("Match found! Executing trade...")
+                # self.execute_trade(trading_data)
+        if  self.orderupdates_subscriber.redis_data.get('leadingExchange'):
+            self.execute_trade('hello')
+            
+
+    def execute_trade(self, trade_data):
+        """Execute trade based on matched data."""
+        # Integrate with the trading execution system here
+        print("TRADE EXECUTING")
+        self.orderupdates_subscriber.redis_data = {}
+        print(f"Trade executed for: {trade_data}")
+
+
+
+
+
+orderupdates_redis_subscriber = RedisSubscriber(subscribed_channel='order_updates')
 okxbbo_redis_subscriber = RedisSubscriber('okxbbo_channel')
 htxbbo_redis_subscriber = RedisSubscriber('htxbbo_channel')
 
+matching_engine = MatchingEngine(orderupdates_redis_subscriber, okxbbo_redis_subscriber,htxbbo_redis_subscriber)
 
-
-# Comparison logic
-def compare_prices(huobi_data, okx_data):
-    """Compare prices from Huobi and OKX."""
-    # Check if we have valid data from both brokers
-    # print(huobi_data,type(huobi_data),okx_data,type(okx_data))
-    if huobi_data.get('tick') and okx_data:
+# # Comparison logic
+# def compare_prices(huobi_data, okx_data):
+#     """Compare prices from Huobi and OKX."""
+#     # Check if we have valid data from both brokers
+#     # print(huobi_data,type(huobi_data),okx_data,type(okx_data))
+#     if huobi_data.get('tick') and okx_data:
         
-        huobi_ask,huobi_askSz,huobi_bid,huobi_bidDz = Decimal(huobi_data['tick']['ask'][0]),Decimal(huobi_data['tick']['ask'][1]),Decimal(huobi_data['tick']['bid'][0]),Decimal(huobi_data['tick']['bid'][1])  # Adjust based on actual data structure
-        okx_ask,okx_askSz,okx_bid,okx_bidSz = Decimal(okx_data['data'][0]['asks'][0][0]),Decimal(okx_data['data'][0]['asks'][0][1]),Decimal(okx_data['data'][0]['bids'][0][0]),Decimal(okx_data['data'][0]['bids'][0][1])  # Adjust for OKX data structure
-        redis_dict = redis_subscriber.redis_data
+#         huobi_ask,huobi_askSz,huobi_bid,huobi_bidDz = Decimal(huobi_data['tick']['ask'][0]),Decimal(huobi_data['tick']['ask'][1]),Decimal(huobi_data['tick']['bid'][0]),Decimal(huobi_data['tick']['bid'][1])  # Adjust based on actual data structure
+#         okx_ask,okx_askSz,okx_bid,okx_bidSz = Decimal(okx_data['data'][0]['asks'][0][0]),Decimal(okx_data['data'][0]['asks'][0][1]),Decimal(okx_data['data'][0]['bids'][0][0]),Decimal(okx_data['data'][0]['bids'][0][1])  # Adjust for OKX data structure
+#         redis_dict = redis_subscriber.redis_data
 
-        redis_leading_exchange = redis_dict['leadingExchange']
-        redis_lagging_exchange = redis_dict['laggingExchange']
-        redis_spread = redis_dict['spread']
-        redis_direction = redis_dict['direction']
-        redis_qty = redis_dict['qty']
-        # print(huobi_ask,huobi_bid,okx_ask,okx_askSz,okx_bid,okx_bidSz)
-        # print(Decimal(huobi_ask),Decimal(okx_bid))
-        # print(redis_subscriber.redis_data)
+#         redis_leading_exchange = redis_dict['leadingExchange']
+#         redis_lagging_exchange = redis_dict['laggingExchange']
+#         redis_spread = redis_dict['spread']
+#         redis_direction = redis_dict['direction']
+#         redis_qty = redis_dict['qty']
+#         # print(huobi_ask,huobi_bid,okx_ask,okx_askSz,okx_bid,okx_bidSz)
+#         # print(Decimal(huobi_ask),Decimal(okx_bid))
+#         # print(redis_subscriber.redis_data)
 
-        epsilon = 1e-5
-        print(huobi_ask,'-',huobi_bid,'-',okx_ask,'-',okx_bid)
+#         epsilon = 1e-5
+#         print(huobi_ask,'-',huobi_bid,'-',okx_ask,'-',okx_bid)
 
-        if abs(huobi_ask - okx_bid) < epsilon:
-            print("Prices are the same, hold.")
-        elif huobi_ask < okx_bid:
-            print("Huobi is cheaper, consider buying on HTX and sell on OKX.")
-        elif huobi_bid > okx_ask:
-            print("OKX is cheaper, consider buying on OKX and sell on HTX.")
-        else:
-            # print(huobi_ask,'-',huobi_bid,'-',okx_ask,'-',okx_bid)
-            # logger.info(huobi_ask,'-',huobi_bid,'-',okx_ask,'-',okx_bid)
-            logger.info(f"{huobi_ask} - {huobi_bid} - {okx_ask} - {okx_bid} - {redis_subscriber.redis_data}")
+#         if abs(huobi_ask - okx_bid) < epsilon:
+#             print("Prices are the same, hold.")
+#         elif huobi_ask < okx_bid:
+#             print("Huobi is cheaper, consider buying on HTX and sell on OKX.")
+#         elif huobi_bid > okx_ask:
+#             print("OKX is cheaper, consider buying on OKX and sell on HTX.")
+#         else:
+#             # print(huobi_ask,'-',huobi_bid,'-',okx_ask,'-',okx_bid)
+#             # logger.info(huobi_ask,'-',huobi_bid,'-',okx_ask,'-',okx_bid)
+#             logger.info(f"{huobi_ask} - {huobi_bid} - {okx_ask} - {okx_bid} - {redis_subscriber.redis_data}")
 
             
 # Callback for Huobi
@@ -116,6 +158,9 @@ def huobi_callback(price_depth_event):
     huobi_data = price_depth_event  # Store the latest Huobi data
     # compare_prices(huobi_data, json.loads(okx_client.okx_data))  # Compare with OKX data
 
+def runorderupdatessubscriber():
+
+    orderupdates_redis_subscriber.start()
 
 def runokxsubscriber():
     okxbbo_redis_subscriber.start()
@@ -123,21 +168,26 @@ def runokxsubscriber():
 def runhtxsubscriber():
     htxbbo_redis_subscriber.start()
 
-def runorderupdatessubscriber():
-    orderupdates_redis_subscriber.start()
+def mainComparingengine():
+    matching_engine.start()
 
 # Start the event loop for Huobi in a thread
 if __name__ == '__main__':
-    okx_redis_thread = threading.Thread(target=runokxsubscriber)
-    okx_redis_thread.start()
 
-    # Start the Redis subscriber in a separate thread
+        # Start the Redis subscriber in a separate thread
     orderupdate_redis_thread = threading.Thread(target=runorderupdatessubscriber)
     orderupdate_redis_thread.start()
 
+    okx_redis_thread = threading.Thread(target=runokxsubscriber)
+    okx_redis_thread.start()
+
+    htx_redis_thread = threading.Thread(target=runhtxsubscriber)
+    htx_redis_thread.start()
+
     # Start the HTTX WebSocket client in the main thread
-    asyncio.run(runhtxsubscriber())
+    asyncio.run(mainComparingengine())
 
     # Wait for the Huobi thread to finish (this may block indefinitely)
     okx_redis_thread.join()
     orderupdate_redis_thread.join()
+    # Keep the main thread alive to allow the subscriber to continue running
