@@ -9,8 +9,8 @@ class OKXWebSocketClient:
     def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
         self.url = url
         self.ws = None
-        self.args = []
-        
+        self.subscribed_pairs = []  # To keep track of subscribed pairs
+
     async def start(self):
         """Start the WebSocket connection."""
         self.ws = WsPublicAsync(url=self.url)
@@ -19,13 +19,16 @@ class OKXWebSocketClient:
     async def subscribe(self, channel, inst_id, callback):
         """Subscribe to a specific channel and instrument ID."""
         arg = {"channel": channel, "instId": inst_id}
-        self.args.append(arg)
-        await self.ws.subscribe(self.args, callback)
+        self.subscribed_pairs.append(inst_id)  # Track the subscription
+        await self.ws.subscribe([arg], callback)  # Subscribe using the args list
 
-    async def run(self, channel, inst_id, callback):
-        """Run the WebSocket client, subscribing to the given channel."""
+    async def run(self, currency_pairs, callback):
+        """Run the WebSocket client, subscribing to the given currency pairs."""
         await self.start()
-        await self.subscribe(channel, inst_id, callback)
+        
+        # Subscribe to all specified currency pairs
+        for pair in currency_pairs:
+            await self.subscribe("bbo-tbt", pair, callback)
 
         # Keep the connection alive
         try:
@@ -41,7 +44,7 @@ class OKXWebSocketClient:
         """Unsubscribe from all channels."""
         if self.ws:
             print("Unsubscribing from all channels...")
-            await self.ws.unsubscribe(self.args, self.publicCallback)
+            await self.ws.unsubscribe(self.subscribed_pairs)
 
     async def close(self):
         """Close the WebSocket connection."""
@@ -55,38 +58,33 @@ class OKXWebSocketClient:
         json_data = json.loads(message)
         if json_data.get('data'):
             currency_pair = json_data["arg"]["instId"]
-
             redis_key = f"okxbbo:{currency_pair}"
             print(redis_key)
+
             # Prepare a dictionary of the fields to store
             redis_data = {
-            "currency":currency_pair,
-            "channel": json_data["arg"]["channel"],
-            "ask_price": json_data["data"][0]["asks"][0][0],  # Renamed for consistency
-            "ask_size": json_data["data"][0]["asks"][0][1],   # Renamed for consistency
-            "bid_price": json_data["data"][0]["bids"][0][0],  # Renamed for consistency
-            "bid_size": json_data["data"][0]["bids"][0][1],   # Renamed for consistency
-            "timestamp": json_data["data"][0]["ts"],
-            "sequence_id": json_data["data"][0]["seqId"]
-            }   
+                "currency": currency_pair,
+                "channel": json_data["arg"]["channel"],
+                "ask_price": json_data["data"][0]["asks"][0][0],  # Renamed for consistency
+                "ask_size": json_data["data"][0]["asks"][0][1],   # Renamed for consistency
+                "bid_price": json_data["data"][0]["bids"][0][0],  # Renamed for consistency
+                "bid_size": json_data["data"][0]["bids"][0][1],   # Renamed for consistency
+                "timestamp": json_data["data"][0]["ts"],
+                "sequence_id": json_data["data"][0]["seqId"]
+            }
 
-            print(redis_data)
-            # "ask_additional_info": json_data["data"][0]["asks"][0][2:],  # Renamed for consistency
-
-            # redis_data = json.dumps(redis_data)
+            # Store data in Redis
             redis_client.hset(redis_key, mapping=redis_data)
             print("Data stored in Redis.")
             stored_data = redis_client.hgetall(redis_key)
             print("Stored data in Redis:", stored_data)
-            print("publicCallback", message)
 
 # Example usage
 async def main():
     client = OKXWebSocketClient()
-    await client.run("bbo-tbt", "BTC-USDC", client.publicCallback)
+    # List of currency pairs to subscribe to
+    currency_pairs = ["BTC-USDC", "BTC-USDT"]  # Add more pairs as needed
+    await client.run(currency_pairs, client.publicCallback)
 
 if __name__ == '__main__':
     asyncio.run(main())
-
-
-

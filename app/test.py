@@ -1,99 +1,154 @@
+import threading
 import asyncio
-import tkinter as tk
-import websockets
+import time
+import json
+import gzip
+import redis
+from okx.websocket.WsPublicAsync import WsPublicAsync
+import websocket
+from datetime import datetime
+from decimal import Decimal
 
-# Set your WebSocket URLs for both exchanges
-EXCHANGE_1_URL = "wss://example.com/exchange1"
-EXCHANGE_2_URL = "wss://example.com/exchange2"
+class RedisClient:
+    """Handles Redis storage and retrieval for WebSocket data."""
+    def __init__(self, host='localhost', port=6379):
+        self.redis = redis.Redis(host=host, port=port, decode_responses=True)
 
-class WebSocketClient:
-    def __init__(self, url):
+    def update_price(self, exchange, currency_pair, price):
+        """Store the latest price and timestamp for a given exchange and currency pair in a Redis hash."""
+        key = f"prices:{currency_pair}"
+        timestamp = datetime.now().isoformat()
+        self.redis.hset(key, mapping={f"{exchange}_price": price, f"{exchange}_timestamp": timestamp})
+
+    def get_prices(self, currency_pair):
+        """Retrieve the latest prices and timestamps for both exchanges for a given currency pair."""
+        key = f"prices:{currency_pair}"
+        return self.redis.hgetall(key)
+
+class HTXWebSocketClient(threading.Thread):
+    def __init__(self, host, path, currency_pair, redis_client):
+        super().__init__()
+        self._host = host
+        self._path = path
+        self.currency_pair = currency_pair
+        self._ws = None
+        self.redis_client = redis_client
+
+    def run(self):
+        self.open()
+
+    def open(self):
+        url = f'wss://{self._host}{self._path}'
+        self._ws = websocket.WebSocketApp(url,
+                                          on_open=self._on_open,
+                                          on_message=self._on_msg,
+                                          on_close=self._on_close,
+                                          on_error=self._on_error)
+        self._ws.run_forever()
+
+    def _on_open(self, ws):
+        print(f"HTX WebSocket connected for {self.currency_pair}")
+        sub_str = {'sub': f'market.{self.currency_pair}.bbo'}
+        self._ws.send(json.dumps(sub_str))
+
+    def _on_msg(self, ws, message):
+        plain = gzip.decompress(message).decode()
+        jdata = json.loads(plain)
+        if 'ping' in jdata:
+            self._ws.send(plain.replace('ping', 'pong'))
+        elif 'tick' in jdata:
+            price = jdata['tick']['bid']  # Get the bid price
+            self.redis_client.update_price("HTX", self.currency_pair, price)
+            print(f"Updated HTX price in Redis for {self.currency_pair}: {price}")
+
+    def _on_close(self, ws):
+        print("HTX WebSocket closed.")
+
+    def _on_error(self, ws, error):
+        print("HTX WebSocket error:", error)
+
+class OKXWebSocketClient(threading.Thread):
+    def __init__(self, url, currency_pair, redis_client):
+        super().__init__()
         self.url = url
-        self.data = None
+        self.currency_pair = currency_pair
+        self.redis_client = redis_client
+        self.ws = WsPublicAsync(url=self.url)
 
-    async def listen_to_data(self, data_queue):
-        """Connects to the WebSocket and listens for incoming data."""
-        async with websockets.connect(self.url) as ws:
-            while True:
-                data = await ws.recv()
-                print(f"Data from {self.url}: {data}")
-                self.data = data
-                await data_queue.put((self.url, data))  # Send data to shared queue
+    async def _connect(self):
+        await self.ws.start()
 
+    async def subscribe(self):
+        arg = {"channel": "bbo-tbt", "instId": self.currency_pair}
+        await self.ws.subscribe([arg], self.publicCallback)
 
-class TradingApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Trading App")
+    def publicCallback(self, message):
+        if 'bbo' in message:
+            price = message['bbo']['bidPx']  # Get the bid price
+            self.redis_client.update_price("OKX", self.currency_pair, price)
+            print(f"Updated OKX price in Redis for {self.currency_pair}: {price}")
 
-        # Initialize the target value with an empty string
-        self.target_value = tk.StringVar()
-        self.current_target = None  # Holds the updated target for comparisons
+    def run(self):
+        asyncio.run(self._connect())
+        asyncio.run(self.subscribe())
 
-        # UI Elements
-        tk.Label(root, text="Target Value:").pack()
-        target_entry = tk.Entry(root, textvariable=self.target_value)
-        target_entry.pack()
-        
-        # Bind the entry box to an update method
-        self.target_value.trace_add("write", self.update_target_value)
+def check_price_match(redis_client, currency_pair, threshold=0.01, max_age=5):
+    """Check if the prices from HTX and OKX match within a given threshold and time frame."""
+    data = redis_client.get_prices(currency_pair)
+    if not data:
+        return
 
-        # Status label to show matches
-        self.status = tk.Label(root, text="Status: Waiting for match...")
-        self.status.pack()
+    htx_price = data.get("HTX_price")
+    okx_price = data.get("OKX_price")
+    htx_timestamp = data.get("HTX_timestamp")
+    okx_timestamp = data.get("OKX_timestamp")
 
-        # Start the WebSocket listeners
-        self.data_queue = asyncio.Queue()
-        asyncio.create_task(self.start_websockets())
-        asyncio.create_task(self.process_data())
+    if htx_price and okx_price and htx_timestamp and okx_timestamp:
+        # Convert prices and timestamps to compare
+        htx_price, okx_price = Decimal(htx_price), Decimal(okx_price)
+        htx_time = datetime.fromisoformat(htx_timestamp)
+        okx_time = datetime.fromisoformat(okx_timestamp)
 
-    def update_target_value(self, *args):
-        """Update the current target for comparison when the UI value changes."""
-        try:
-            self.current_target = float(self.target_value.get())  # convert to float for precision comparison
-            self.status.config(text=f"Target value updated to: {self.current_target}")
-        except ValueError:
-            self.status.config(text="Invalid target input; please enter a number.")
+        # Check if both prices are recent
+        now = datetime.now()
+        if (now - htx_time).seconds <= max_age and (now - okx_time).seconds <= max_age:
+            price_diff = abs(htx_price - okx_price)
+            if price_diff <= threshold:
+                print("Price match detected. Initiating trade.")
+                trigger_trade(htx_price, okx_price)
+            else:
+                print("Prices do not match within threshold.")
+        else:
+            print("Prices are outdated and cannot be compared.")
 
-    async def start_websockets(self):
-        """Start the WebSocket clients to listen to both exchanges."""
-        self.exchange1 = WebSocketClient(EXCHANGE_1_URL)
-        self.exchange2 = WebSocketClient(EXCHANGE_2_URL)
+def trigger_trade(htx_price, okx_price):
+    """Simulate a trade execution when price criteria match."""
+    print(f"Trade executed at HTX price: {htx_price} and OKX price: {okx_price}")
 
-        await asyncio.gather(
-            self.exchange1.listen_to_data(self.data_queue),
-            self.exchange2.listen_to_data(self.data_queue),
-        )
+def main():
+    # Simulate user input for currency pair
+    currency_pair = input("Enter the currency pair (e.g., BTC-USD): ").strip()
+    
+    # Initialize Redis client
+    redis_client = RedisClient()
 
-    async def process_data(self):
-        """Continuously processes data from both exchanges and checks against target value."""
+    # Start HTX and OKX WebSocket clients
+    host_huobi = 'api.huobi.pro'
+    path_huobi = '/ws'
+    huobi_ws = HTXWebSocketClient(host_huobi, path_huobi, currency_pair, redis_client)
+    huobi_ws.start()
+
+    okx_ws = OKXWebSocketClient("wss://wspap.okx.com:8443/ws/v5/public", currency_pair, redis_client)
+    okx_ws.start()
+
+    # Continuously check prices from Redis
+    try:
         while True:
-            url, data = await self.data_queue.get()
+            check_price_match(redis_client, currency_pair)
+            time.sleep(1)  # Check interval
+    except KeyboardInterrupt:
+        print("Shutting down...")
 
-            # Attempt to parse WebSocket data to float for precision comparison
-            try:
-                data_value = float(data)
-                if self.current_target is not None and data_value == self.current_target:
-                    self.status.config(text=f"Match found on {url}! Executing order.")
-                    # Insert order execution code here
-                else:
-                    self.status.config(text=f"No match found. Current data: {data_value}")
-            except ValueError:
-                print("Received non-numeric data from WebSocket.")
-
-    def start(self):
-        """Run the tkinter main loop."""
-        self.root.mainloop()
-
-
-async def main():
-    # Create the main application window
-    root = tk.Tk()
-    app = TradingApp(root)
-
-    # Run the Tkinter mainloop in a separate thread
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, app.start)
-
-# Run the async main function
-asyncio.run(main())
+# Run the main process
+if __name__ == '__main__':
+    main()
