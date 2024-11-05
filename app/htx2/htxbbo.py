@@ -99,7 +99,7 @@ class Ws:
         # Store the data in Redis using HSET (Hash Set)
         redis_client.hset(redis_key, mapping=redis_data)
         print('publishing')
-        redis_client.publish('htxbbo_channel', json.dumps(redis_data))
+        redis_client.publish(redis_key, json.dumps(redis_data))
         print('published')
         
         # print(f"Data for {symbol} stored in Redis: {redis_data}")

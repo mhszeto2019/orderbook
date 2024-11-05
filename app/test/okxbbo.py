@@ -75,7 +75,7 @@ class OKXWebSocketClient:
 
             # Store data in Redis
             redis_client.hset(redis_key, mapping=redis_data)
-            redis_client.publish('okxbbo_channel', json.dumps(redis_data))
+            redis_client.publish(redis_key, json.dumps(redis_data))
 
             print("Data stored in Redis.")
             stored_data = redis_client.hgetall(redis_key)

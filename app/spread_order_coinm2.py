@@ -157,8 +157,8 @@ class MatchingEngine:
 
 
 orderupdates_redis_subscriber = RedisSubscriber(subscribed_channel='order_updates')
-okxbbo_redis_subscriber = RedisSubscriber('okxbbo:btcusdt')
-htxbbo_redis_subscriber = RedisSubscriber('htxbbo:btcusdt')
+okxbbo_redis_subscriber = RedisSubscriber('okxbbo_channel')
+htxbbo_redis_subscriber = RedisSubscriber('htxbbo_channel')
 
 matching_engine = MatchingEngine(orderupdates_redis_subscriber, okxbbo_redis_subscriber,htxbbo_redis_subscriber)
 
