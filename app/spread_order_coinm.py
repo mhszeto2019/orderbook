@@ -117,20 +117,27 @@ def huobi_callback(price_depth_event):
     # compare_prices(huobi_data, json.loads(okx_client.okx_data))  # Compare with OKX data
 
 
+def runokxsubscriber():
+    okxbbo_redis_subscriber.start()
 
+def runhtxsubscriber():
+    htxbbo_redis_subscriber.start()
 
-# # Start the event loop for Huobi in a thread
-# if __name__ == '__main__':
-#     huobi_thread = threading.Thread(target=run_huobi_client)
-#     huobi_thread.start()
+def runorderupdatessubscriber():
+    orderupdates_redis_subscriber.start()
 
-#     # Start the Redis subscriber in a separate thread
-#     redis_thread = threading.Thread(target=run_redis_subscriber)
-#     redis_thread.start()
+# Start the event loop for Huobi in a thread
+if __name__ == '__main__':
+    okx_redis_thread = threading.Thread(target=runokxsubscriber)
+    okx_redis_thread.start()
 
-#     # Start the OKX WebSocket client in the main thread
-#     asyncio.run(run_okx_client())
+    # Start the Redis subscriber in a separate thread
+    orderupdate_redis_thread = threading.Thread(target=runorderupdatessubscriber)
+    orderupdate_redis_thread.start()
 
-#     # Wait for the Huobi thread to finish (this may block indefinitely)
-#     huobi_thread.join()
-#     redis_thread.join()
+    # Start the HTTX WebSocket client in the main thread
+    asyncio.run(runhtxsubscriber())
+
+    # Wait for the Huobi thread to finish (this may block indefinitely)
+    okx_redis_thread.join()
+    orderupdate_redis_thread.join()
