@@ -46,6 +46,29 @@ def get_fills():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/market_order', methods=['POST'])
+def market_order():
+    data = request.get_json()
+    
+   
+    # limit order
+    result = tradeApi.place_order(
+        instId= data['instId'],
+        tdMode=data['tdMode'],
+        side=data['side'],
+        ordType=data['ordType'],
+        px=data['px'],
+        sz=data['sz']
+    )
+        
+    if result["code"] == "0":
+        print("Successful order request，order_id = ",result["data"][0]["ordId"])
+    else:
+        print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+
+        return result["data"][0]["sCode"]
+    
 @app.route('/limit_order', methods=['POST'])
 def limit_order():
     data = request.get_json()
@@ -65,13 +88,14 @@ def limit_order():
         px=data['px'],
         sz=data['sz']
     )
-        
-    if result["code"] == "0":
-        print("Successful order request，order_id = ",result["data"][0]["ordId"])
-    else:
-        print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    print(result)
+    # if result["code"] == "0":
+    #     print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-        return result["data"][0]["sCode"]
+    # else:
+    #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    return result
+    return result["data"][0]["sCode"]
     
 @app.route('/get_order_list', methods=['GET'])
 def get_order_list():
@@ -117,6 +141,9 @@ def cancel_all_orders():
     result = tradeApi.cancel_multiple_orders(order_list)
     
     return result
+
+if __name__ == "__main__":
+    app.run(port=5024)
     # current_ts = time.time() 
     # day_before_ts = current_ts - 86400
     # print(day_before_ts,current_ts)
