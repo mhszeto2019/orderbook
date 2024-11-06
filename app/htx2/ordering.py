@@ -263,7 +263,7 @@ class HuobiCoinFutureRestTradeAPI:
         success, error = await self.request("POST", uri, body=body, auth=True)
         return success, error
 
-    async def get_open_orders(self, symbol, index=1, size=50, sort_by='created_at', trade_type=0):
+    async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         """ Get open order information.
 
         Args:
@@ -283,23 +283,22 @@ class HuobiCoinFutureRestTradeAPI:
         #     "sort_by": sort_by,
         #     "trade_type": trade_type
         # }
-        body = {
-                "contract_code":"BTC-USD",
-                # "order_id":123456,
-                "price":10,
-                "created_at":str(datetime.datetime.now()),
-                "volume":1,
-                "direction":"buy",
-                "offset":"open",
-                "lever_rate":10,
-                "order_price_type":"limit"
-                }
+        # body = {
+        #         "contract_code":"BTC-USD",
+        #         # "order_id":123456,
+        #         "price":60000,
+        #         "created_at":str(datetime.datetime.now()),
+        #         "volume":1,
+        #         "direction":"buy",
+        #         "offset":"open",
+        #         "lever_rate":1,
+        #         "order_price_type":"limit"
+        #         }
         
-        print(body)
+        # print(body)
         print('succes')
         success, error =  await self.request("POST", uri, body=body, auth=True)
         return success, error
-        return 'success'
 
 
     async def get_contract_hisorders(self, symbol, trade_type, type, status, contract=None, order_type=None, sort_by=None,
@@ -453,15 +452,15 @@ class HuobiCoinFutureRestTradeAPI:
             # Encode the timestamp with URI encoding in uppercase
             encoded_timestamp = urllib.parse.quote(timestamp, safe='')
 
-            print(timestamp,encoded_timestamp)
+            # print(timestamp,encoded_timestamp)
 
             params = params if params else {}
             params.update({"AccessKeyId": self._access_key,
                            "SignatureMethod": "HmacSHA256",
                            "SignatureVersion": "2",
                            "Timestamp": timestamp})
-            print(uri)
-            print(params)
+            # print(uri)
+            # print(params)
             params["Signature"] = self.generate_signature(method, params, uri)
 
         if not headers:
@@ -474,8 +473,7 @@ class HuobiCoinFutureRestTradeAPI:
             headers["Accept"] = "application/json"
             headers["Content-type"] = "application/json"
             headers["User-Agent"] = USER_AGENT
-            print(body)
-            print(params)
+           
             _, success, error = await AsyncHttpRequests.fetch("POST", url, params=params, data=body, headers=headers,
                                                               timeout=10)
         if error:
@@ -510,7 +508,17 @@ if __name__ == "__main__":
     htx_trade_engine = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc')
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(
-    htx_trade_engine.get_open_orders('BTC-USD'))
+    htx_trade_engine.get_open_orders('BTC-USD',body = {
+                "contract_code":"BTC-USD",
+                # "order_id":123456,
+                "price":60000,
+                "created_at":str(datetime.datetime.now()),
+                "volume":1,
+                "direction":"buy",
+                "offset":"open",
+                "lever_rate":1,
+                "order_price_type":"limit"
+                }))
     loop.close()
     print(result)
 
