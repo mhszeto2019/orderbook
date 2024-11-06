@@ -12,7 +12,7 @@ print("Config file path:", config_file_path)
 config.read(config_file_path)
 app = Flask(__name__)
 CORS(app)
-config_source = 'okx_live_trade'
+config_source = ''
 apiKey = config[config_source]['apiKey']
 secretKey = config[config_source]['secretKey']
 passphrase = config[config_source]['passphrase']
@@ -70,11 +70,13 @@ def market_order():
         sz=data['sz']
     )
     print(result)
+
     # if result["code"] == "0":
     #     print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
     # else:
     #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+
     return result
     
 @app.route('/limit_order', methods=['POST'])
