@@ -51,23 +51,31 @@ def get_fills():
 def market_order():
     data = request.get_json()
     
-   
+    # instId= data['instId'],
+    # tdMode=data['tdMode'],
+    # side=data['side'],
+    # ordType=data['ordType'],
+    # px=data['px'],
+    # sz=data['sz']
     # limit order
+
+    print(data)
+
     result = tradeApi.place_order(
         instId= data['instId'],
         tdMode=data['tdMode'],
         side=data['side'],
+        posSide= data['posSide'],
         ordType=data['ordType'],
-        px=data['px'],
         sz=data['sz']
     )
-        
-    if result["code"] == "0":
-        print("Successful order request，order_id = ",result["data"][0]["ordId"])
-    else:
-        print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    print(result)
+    # if result["code"] == "0":
+    #     print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-        return result["data"][0]["sCode"]
+    # else:
+    #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    return result
     
 @app.route('/limit_order', methods=['POST'])
 def limit_order():
@@ -80,10 +88,14 @@ def limit_order():
     # px=data['px'],
     # sz=data['sz']
     # limit order
+
+    print(data)
+
     result = tradeApi.place_order(
         instId= data['instId'],
         tdMode=data['tdMode'],
         side=data['side'],
+        posSide= data['posSide'],
         ordType=data['ordType'],
         px=data['px'],
         sz=data['sz']
@@ -95,7 +107,7 @@ def limit_order():
     # else:
     #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
     return result
-    return result["data"][0]["sCode"]
+
     
 @app.route('/get_order_list', methods=['GET'])
 def get_order_list():
