@@ -17,71 +17,100 @@
         <form id="order-form">
             
        
+            <form id="order-form">
 
-            <div class="row g-2">
-
-                <div class="col-12 col-md-6 mb-3">
-                    <label for="leading-exchange-input" class="form-label">Leading:</label>
-                    <select id="leading-exchange-input" class="form-select" required>
-                        <option value="" disabled selected>Select Exchange</option>
-                        <!-- <option value="market">Market</option> -->
-                        <option value="htx">HTX</option>
-                        <option value="okx">OKX</option>
-                    </select>
+                <div class="row g-2">
+            
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="leading-exchange-input" class="form-label">Leading:</label>
+                        <select id="leading-exchange-input" class="form-select" required>
+                            <option value="" disabled selected>Select Exchange</option>
+                            <option value="htx">HTX</option>
+                            <option value="okx">OKX</option>
+                        </select>
+                    </div>
+            
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="lagging-exchange-input" class="form-label">Lagging:</label>
+                        <select id="lagging-exchange-input" class="form-select" required>
+                            <option value="" disabled selected>Select Exchange</option>
+                            <option value="htx">HTX</option>
+                            <option value="okx">OKX</option>
+                        </select>
+                    </div>
+            
+                    <!-- Order Type Tabs -->
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="order-type-input" class="form-label">Order Type:</label>
+                        <select id="order-type-input" class="form-select" required onchange="handleOrderTypeChange()">
+                            <option value="" disabled selected>Select Order Type</option>
+                            <option value="market">Market</option>
+                            <option value="limit">Limit</option>
+                            <option value="algo">Algo</option>
+                        </select>
+                    </div>
+            
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="currency-input" class="form-label">Currency Pair:</label>
+                        <select id="currency-input" class="form-select" required>
+                            <option value="" disabled selected>Select Currency Pair</option>
+                            <option value="BTCUSD">BTCUSD</option>
+                            <option value="BTCUSDT">BTCUSDT</option>
+                        </select>
+                    </div>
+            
+                    <!-- Price field (hidden for Market orders) -->
+                    <div class="col-12 col-md-6 mb-3" id="price-container">
+                        <label for="price-input" class="form-label">Price:</label>
+                        <input type="number" id="price-input" class="form-control" placeholder="Price">
+                    </div>
+            
+                    <!-- Spread field (hidden for Market and Limit orders) -->
+                    <div class="col-12 col-md-6 mb-3" id="spread-container">
+                        <label for="spread-input" class="form-label">Spread:</label>
+                        <input type="number" id="spread-input" class="form-control" placeholder="Spread">
+                    </div>
+            
+                    <div class="col-12 mb-3">
+                        <label for="qty-input" class="form-label">Quantity:</label>
+                        <input type="number" id="qty-input" class="form-control" placeholder="Quantity" required>
+                    </div>
                 </div>
-    
-                <div class="col-12 col-md-6 mb-3">
-                    <label for="lagging-exchange-input" class="form-label">Lagging</label>
-                    <select id="lagging-exchange-input" class="form-select" required>
-                        <option value="" disabled selected>Select Exchange</option>
-                        <!-- <option value="market">Market</option> -->
-                        <option value="htx">HTX</option>
-                        <option value="okx">OKX</option>
-
-                    </select>
-                </div> 
-
-                <div class="col-12 col-md-6 mb-3">
-                    <label for="order-type-input" class="form-label">Order Type:</label>
-                    <select id="order-type-input" class="form-select" required>
-                        <option value="" disabled selected>Select Order Type</option>
-                        <option value="market">Market</option>
-                        <option value="limit">Limit</option>
-                    </select>
+            
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="submit" id="buy-button" value='buy' class="btn btn-success w-100 me-1">Buy</button>
+                    <button type="submit" id="sell-button" value='sell' class="btn btn-danger w-100 ms-1">Sell</button>
                 </div>
+            
+            </form>
+            
+            <script>
+                function handleOrderTypeChange() {
+                    const orderType = document.getElementById('order-type-input').value;
+                    const priceContainer = document.getElementById('price-container');
+                    const spreadContainer = document.getElementById('spread-container');
+            
+                    // Show or hide fields based on selected order type
+                    if (orderType === 'market') {
+                        priceContainer.style.display = 'none';
+                        spreadContainer.style.display = 'none';
+                    } else if (orderType === 'limit') {
+                        priceContainer.style.display = 'block';
+                        spreadContainer.style.display = 'none';
+                    } else if (orderType === 'algo') {
+                        priceContainer.style.display = 'block';
+                        spreadContainer.style.display = 'block';
+                    } else {
+                        priceContainer.style.display = 'none';
+                        spreadContainer.style.display = 'none';
+                    }
+                }
+            
+                // Initialize form on page load
+                document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
+            </script>
+            
 
-                <div class="col-12 col-md-6 mb-3">
-                    <label for="currency-input" class="form-label">Currency Pair:</label>
-                    <select id="currency-input" class="form-select" required>
-                        <option value="" disabled selected>Select Currency Pair</option>
-                        <option value="BTCUSD">BTCUSD</option>
-                        <option value="BTCUSDT">BTCUSDT</option>
-                    </select>
-                </div>
-                
-
-                <div class="col-12 col-md-6 mb-3">
-                    <label for="price-input" class="form-label">Price:</label>
-                    <input type="number" id="price-input" class="form-control" placeholder="Price" required>
-                </div>
-
-                <div class="col-12 col-md-6 mb-3">
-                    <label for="spread-input" class="form-label">Spread:</label>
-                    <input type="number" id="spread-input" class="form-control" placeholder="Spread" required>
-                </div>
-
-                <div class="col-12 mb-3">
-                    <label for="qty-input" class="form-label">Quantity:</label>
-                    <input type="number" id="qty-input" class="form-control" placeholder="Quantity" required>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between mt-3">
-     
-
-                <button type="submit" id="buy-button" value='buy' class="btn btn-success w-100 me-1" ><label>Buy</label></button>
-                <button type="submit" id="sell-button" value='sell' class="btn btn-danger w-100 ms-1" >Sell</button>
-            </div>
         </form>
     </div>
 

@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to update price data on the UI
     function updatePriceData(data) {
         console.log("Received Price Update:", data);
+
         // Update UI with the latest prices
         const btcusdtPriceElement = document.getElementById('btcusdt-price');
         const btcusdPriceElement = document.getElementById('btcusd-price');
@@ -81,6 +82,27 @@ document.addEventListener('DOMContentLoaded', () => {
             btcusdPriceElement.innerText = `BTC/USD: ${data.BTCUSD.price}`;
         }
     }
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        const marketTab = document.getElementById('market-tab');
+        const limitTab = document.getElementById('limit-tab');
+        const orderTypeInput = document.getElementById('order-type-input');
+        
+        // Set the default order type to "market" when the page first loads
+        orderTypeInput.value = 'market';
+    
+        // Set the order type to "market" when the Market tab is selected
+        marketTab.addEventListener('click', function () {
+            orderTypeInput.value = 'market';
+        });
+    
+        // Set the order type to "limit" when the Limit tab is selected
+        limitTab.addEventListener('click', function () {
+            orderTypeInput.value = 'limit';
+        });
+    });
+    
+    
 
     // Handle order form submission
     document.getElementById('order-form').onsubmit = async (event) => {
@@ -116,20 +138,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Send order data to Redis
         try {
-            const response = await fetch('http://localhost:5000/place_order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderData)
-            });
-            
+            console.log(orderType)
+            if (orderType == 'market'){
+                const response = await fetch('http://localhost:5024/place_market_order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
 
-            if (response.ok) {
-                const result = await response.json();
-                console.log('Order data sent to Redis successfully:', result);
-            } else {
-                console.error('Error sending order data to Redis:', response.statusText);
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Order data sent to Redis successfully:', result);
+                } else {
+                    console.error('Error sending order data to Redis:', response.statusText);
+                }
+            }
+            else {
+                // if orderType == limit
+                const response = await fetch('http://localhost:5024/limit_order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Order data sent to Redis successfully:', result);
+                } else {
+                    console.error('Error sending order data to Redis:', response.statusText);
+                }
             }
         } catch (error) {
             console.error('Error while sending order data to Redis:', error);
