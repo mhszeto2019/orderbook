@@ -60,7 +60,7 @@ class OKXWebSocketClient:
         if json_data.get('data'):
             currency_pair = json_data["arg"]["instId"]
             redis_key = f"okxbbo:{currency_pair}"
-            print(redis_key)
+            # print(redis_key)
 
             # Prepare a dictionary of the fields to store
             redis_data = {
@@ -78,9 +78,9 @@ class OKXWebSocketClient:
             redis_client.hset(redis_key, mapping=redis_data)
             redis_client.publish(redis_key, json.dumps(redis_data))
 
-            print("Data stored in Redis.")
+            # print("Data stored in Redis.")
             stored_data = redis_client.hgetall(redis_key)
-            print("Stored data in Redis:", stored_data)
+            # print("Stored data in Redis:", stored_data)
 
 
 

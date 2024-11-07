@@ -4,20 +4,20 @@
 //     document.getElementById("sell-button").addEventListener("click", sellOrder);
 
 //     function getOrderParams() {
-//         const orderType = document.getElementById("order-type-input").value;  // Limit or Market
+//         const ordType = document.getElementById("order-type-input").value;  // Limit or Market
 //         const currencyPair = document.getElementById("currency-input").value;  // BTCUSD, BTCUSDT, etc.
 //         const price = parseFloat(document.getElementById("price-input").value); // Order price
 //         const spread = parseFloat(document.getElementById("spread-input").value); // Spread
 //         const quantity = parseFloat(document.getElementById("qty-input").value);  // Quantity to buy or sell
 
-//         return { orderType, currencyPair, price, spread, quantity };
+//         return { ordType, currencyPair, price, spread, quantity };
 //     }
 
 //     function buyOrder() {
-//         const { orderType, currencyPair, price, spread, quantity } = getOrderParams();
+//         const { ordType, currencyPair, price, spread, quantity } = getOrderParams();
 
 //         // Basic validation (e.g., ensuring all fields are filled)
-//         if (!orderType || !currencyPair || isNaN(price) || isNaN(spread) || isNaN(quantity)) {
+//         if (!ordType || !currencyPair || isNaN(price) || isNaN(spread) || isNaN(quantity)) {
 //             alert("Please fill out all fields correctly before placing a buy order.");
 //             return;
 //         }
@@ -27,35 +27,35 @@
 //         // SELL LEG
 //         // Logic for placing a buy order
 //         console.log("Placing Buy Order with the following details:");
-//         console.log(`Order Type: ${orderType}`);
+//         console.log(`Order Type: ${ordType}`);
 //         console.log(`Currency Pair: ${currencyPair}`);
 //         console.log(`Price: ${price}`);
 //         console.log(`Spread: ${spread}`);
 //         console.log(`Quantity: ${quantity}`);
 
 //         // Execute buy order logic, e.g., call to backend API
-//         // Example: axios.post('/api/buy', { orderType, currencyPair, price, spread, quantity });
+//         // Example: axios.post('/api/buy', { ordType, currencyPair, price, spread, quantity });
 //     }
 
 //     function sellOrder() {
-//         const { orderType, currencyPair, price, spread, quantity } = getOrderParams();
+//         const { ordType, currencyPair, price, spread, quantity } = getOrderParams();
 
 //         // Basic validation (e.g., ensuring all fields are filled)
-//         if (!orderType || !currencyPair || isNaN(price) || isNaN(spread) || isNaN(quantity)) {
+//         if (!ordType || !currencyPair || isNaN(price) || isNaN(spread) || isNaN(quantity)) {
 //             alert("Please fill out all fields correctly before placing a sell order.");
 //             return;
 //         }
 
 //         // Logic for placing a sell order
 //         console.log("Placing Sell Order with the following details:");
-//         console.log(`Order Type: ${orderType}`);
+//         console.log(`Order Type: ${ordType}`);
 //         console.log(`Currency Pair: ${currencyPair}`);
 //         console.log(`Price: ${price}`);
 //         console.log(`Spread: ${spread}`);
 //         console.log(`Quantity: ${quantity}`);
 
 //         // Execute sell order logic, e.g., call to backend API
-//         // Example: axios.post('/api/sell', { orderType, currencyPair, price, spread, quantity });
+//         // Example: axios.post('/api/sell', { ordType, currencyPair, price, spread, quantity });
 //     }
 // });
 
@@ -86,19 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('DOMContentLoaded', function () {
         const marketTab = document.getElementById('market-tab');
         const limitTab = document.getElementById('limit-tab');
-        const orderTypeInput = document.getElementById('order-type-input');
+        const ordTypeInput = document.getElementById('order-type-input');
         
         // Set the default order type to "market" when the page first loads
-        orderTypeInput.value = 'market';
+        ordTypeInput.value = 'market';
     
         // Set the order type to "market" when the Market tab is selected
         marketTab.addEventListener('click', function () {
-            orderTypeInput.value = 'market';
+            ordTypeInput.value = 'market';
         });
     
         // Set the order type to "limit" when the Limit tab is selected
         limitTab.addEventListener('click', function () {
-            orderTypeInput.value = 'limit';
+            ordTypeInput.value = 'limit';
         });
     });
     
@@ -110,36 +110,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const leadingExchange = document.getElementById('leading-exchange-input').value;
         const laggingExchange = document.getElementById('lagging-exchange-input').value;
 
-        const orderType = document.getElementById('order-type-input').value;
-        const currency = document.getElementById('currency-input').value;
-        const price = document.getElementById('price-input').value;
+        const ordType = document.getElementById('order-type-input').value;
+        const instId = document.getElementById('currency-input').value;
+        const px = document.getElementById('price-input').value;
         const spread = document.getElementById('spread-input').value;
-        const qty = document.getElementById('qty-input').value;
-        const direction = event.submitter.value;
-        console.log(leadingExchange,
+        const sz = document.getElementById('qty-input').value;
+        const side = event.submitter.value;
+        console.log(
+            leadingExchange,
             laggingExchange,
-            orderType,
-            currency,
-            price,
+            ordType,
+            instId,
+            px,
             spread,
-            qty,
-            direction)
+            sz,
+            side
+        )
         // Create order object
         const orderData = {
             leadingExchange,
             laggingExchange,
-            orderType,
-            currency,
-            price,
+            ordType,
+            instId,
+            px,
             spread,
-            qty,
-            direction
+            sz,
+            side
         };
 
         // Send order data to Redis
+
         try {
-            console.log(orderType)
-            if (orderType == 'market'){
+            // console.log(ordType)
+            console.log(orderData)
+            if (ordType == 'market'){
                 const response = await fetch('http://localhost:5024/place_market_order', {
                     method: 'POST',
                     headers: {
@@ -147,33 +151,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify(orderData)
                 });
-                
-
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('Order data sent to Redis successfully:', result);
+                    console.log(result)
+                    console.log('Response from server:',result.data[0].sMsg);
                 } else {
                     console.error('Error sending order data to Redis:', response.statusText);
                 }
+
+               
             }
             else {
-                // if orderType == limit
-                const response = await fetch('http://localhost:5024/limit_order', {
+                // if ordType == limit
+                const response = await fetch('http://localhost:5024/place_limit_order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(orderData)
                 });
-                
-
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('Order data sent to Redis successfully:', result);
+               
+
+                    console.log('Response from server:',result.data[0].sMsg);
                 } else {
                     console.error('Error sending order data to Redis:', response.statusText);
                 }
+
+              
             }
+            
         } catch (error) {
             console.error('Error while sending order data to Redis:', error);
         }
