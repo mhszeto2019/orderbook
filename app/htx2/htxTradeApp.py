@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS  # Import CORS
 
-from okx import Trade,SpreadTrading
 import os
 import json
 import configparser
@@ -65,7 +64,6 @@ def place_market_order():
     ordType=  data["ordType"]
     sz= str(data["sz"]) 
 
-
     result = tradeApi.get_open_orders(
         instId= data["instId"],
         tdMode= "cross", 
@@ -96,27 +94,52 @@ def place_market_order():
         print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
 
     return result
-    
-@app.route('/place_limit_order', methods=['POST'])
+
+import datetime
+@app.route('/htx/place_limit_order', methods=['POST'])
 def place_limit_order():
     data = request.get_json()
     
+    print(data)
+
     side = data['side']
     if side == 'buy':
         posSide = 'long'
     else:
         posSide = 'short'
 
-    result = tradeApi.place_order(
-        instId= data["instId"],
-        tdMode= "cross", 
-        side= side, 
-        posSide=posSide, 
-        ordType=  data["ordType"],
-        px= str(data["px"]) if data["px"] else "",
-        sz= str(data["sz"]) 
-    )
+    instId= data["instId"].replace("-SWAP", "")
+    print(instId)  # Output: BTC-USD
+    tdMode= "cross"
+    side= side
+    posSide=posSide
+    ordType=  data["ordType"]
+    sz= str(data["sz"]) 
+
+    return data
+    # result = tradeApi.place_order(
+    #     instId= data["instId"],
+    #     tdMode= "cross", 
+    #     side= side, 
+    #     posSide=posSide, 
+    #     ordType=  data["ordType"],
+    #     px= str(data["px"]) if data["px"] else "",
+    #     sz= str(data["sz"]) 
+    # )
     
+    result = tradeApi.get_open_orders(
+              instId,body = {
+                "contract_code":instId,
+                # "order_id":123456,
+                "price":str(data["px"]) if data["px"] else "",
+                "created_at":str(datetime.datetime.now()),
+                "volume":str(data["sz"]),
+                "direction":side,
+                "offset":"open",
+                "lever_rate":3,
+                "order_price_type":ordType
+                }
+    )
     if result["code"] == "0":
         print("Successful order request，order_id = ",result["data"][0]["ordId"])
 

@@ -77,7 +77,7 @@ def place_market_order():
 
     return result
     
-@app.route('/place_limit_order', methods=['POST'])
+@app.route('/okx/place_limit_order', methods=['POST'])
 def place_limit_order():
     data = request.get_json()
     
@@ -87,6 +87,9 @@ def place_limit_order():
     else:
         posSide = 'short'
 
+    print(data)
+
+    return data
     result = tradeApi.place_order(
         instId= data["instId"],
         tdMode= "cross", 

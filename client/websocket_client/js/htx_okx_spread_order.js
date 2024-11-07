@@ -112,7 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const ordType = document.getElementById('order-type-input').value;
         const instId = document.getElementById('currency-input').value;
-        const px = document.getElementById('price-input').value;
+        const px1 = document.getElementById('price-input-1').value;
+        const px2 = document.getElementById('price-input-1').value;
         const spread = document.getElementById('spread-input').value;
         const sz = document.getElementById('qty-input').value;
         const side = event.submitter.value;
@@ -121,7 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
             laggingExchange,
             ordType,
             instId,
-            px,
+            px1,
+            px2,
             spread,
             sz,
             side
@@ -132,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
             laggingExchange,
             ordType,
             instId,
-            px,
+            px1,
+            px2,
             spread,
             sz,
             side
@@ -166,13 +169,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     // second leg: order on lagging which has the opposite direction/side i.e if leading is buy, lagging is sell, vice versa
                     orderData.side  = orderData.side === 'buy' ? 'sell' : 'buy';
                     console.log(orderData)
-
+                    const response = await fetch('http://localhost:5025/place_market_order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Response from server:',result.data[0].sMsg);
+                    } else {
+                        console.error('Error sending order data to Redis:', response.statusText);
+                    }
                 }
                
             }
             else {
                 // if ordType == limit
-                const response = await fetch('http://localhost:5024/place_limit_order', {
+                // first leg - leading
+                console.log('orderData',orderData)
+
+                orderData.px = orderData.px1
+                const response = await fetch(`http://localhost:5024/${leadingExchange}/place_${ordType}_order`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -181,13 +200,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     const result = await response.json();
-               
+            
 
                     console.log('Response from server:',result.data[0].sMsg);
                 } else {
                     console.error('Error sending order data to Redis:', response.statusText);
                 }
+                // second leg
+                orderData.side  = orderData.side === 'buy' ? 'sell' : 'buy';
+                orderData.px = orderData.px2
+                console.log('orderData2',orderData)
 
+                const second_response = await fetch(`http://localhost:5025/${laggingExchange}/place_${ordType}_order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                if (second_response.ok) {
+                    const result = await second_response.json();
+                    console.log('Response from server:',result.data[0].sMsg);
+                } else {
+                    console.error('Error sending order data to Redis:', second_response.statusText);
+                }
               
             }
             
