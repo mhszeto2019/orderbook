@@ -142,23 +142,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // console.log(ordType)
-            console.log(orderData)
+            // first check is ordType; second check is leading and lagging; third check is ccy pair
+            // console.log(orderData)
             if (ordType == 'market'){
-                const response = await fetch('http://localhost:5024/place_market_order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log(result)
-                    console.log('Response from server:',result.data[0].sMsg);
-                } else {
-                    console.error('Error sending order data to Redis:', response.statusText);
-                }
 
+                if (leadingExchange == 'okx'){
+                    console.log(orderData, typeof orderData)
+                    
+                    // // first leg: order on leading
+                    // const response = await fetch('http://localhost:5024/place_market_order', {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'Content-Type': 'application/json',
+                    //     },
+                    //     body: JSON.stringify(orderData)
+                    // });
+                    // if (response.ok) {
+                    //     const result = await response.json();
+                    //     console.log('Response from server:',result.data[0].sMsg);
+                    // } else {
+                    //     console.error('Error sending order data to Redis:', response.statusText);
+                    // }
+                    // second leg: order on lagging which has the opposite direction/side i.e if leading is buy, lagging is sell, vice versa
+                    orderData.side  = orderData.side === 'buy' ? 'sell' : 'buy';
+                    console.log(orderData)
+
+                }
                
             }
             else {
