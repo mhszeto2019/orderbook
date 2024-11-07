@@ -12,8 +12,8 @@ redis_port = 6379
 redis_db = 0  # Default database
 r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
 
-@app.route('/place_order', methods=['POST'])
-def place_order():
+@app.route('/place_algo_order', methods=['POST'])
+def place_algo_order():
     # Get the order data from the request
     order_data = request.json
     print(order_data)
@@ -24,6 +24,7 @@ def place_order():
     r.publish('order_updates', json.dumps(order_data))
 
     return jsonify({"status": "success", "message": "Order data updated in Redis."})
+
 
 @app.route('/get_transaction_history', methods=['GET'])
 def get_transaction_history():

@@ -296,7 +296,6 @@ class HuobiCoinFutureRestTradeAPI:
         #         }
         
         # print(body)
-        print('succes')
         success, error =  await self.request("POST", uri, body=body, auth=True)
         return success, error
 
@@ -504,10 +503,11 @@ class HuobiCoinFutureRestTradeAPI:
         return signature
 
 import asyncio
+
 if __name__ == "__main__":
     htx_trade_engine = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc')
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(
+    # loop = asyncio.get_event_loop()
+    # result = loop.run_until_complete(
     htx_trade_engine.get_open_orders('BTC-USD',body = {
                 "contract_code":"BTC-USD",
                 # "order_id":123456,
@@ -518,9 +518,10 @@ if __name__ == "__main__":
                 "offset":"open",
                 "lever_rate":1,
                 "order_price_type":"limit"
-                }))
-    loop.close()
-    print(result)
+                })
+    # )
+    # loop.close()
+    # print(result)
 
 
     

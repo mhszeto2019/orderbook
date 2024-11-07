@@ -82,32 +82,50 @@ def market_order():
 @app.route('/limit_order', methods=['POST'])
 def limit_order():
     data = request.get_json()
+    #  {
+    # "instId":"BTC-USDT",
+    # "tdMode":"cash",
+    # "clOrdId":"b15",
+    # "posSide":"",
+    # "side":"buy",
+    # "ordType":"limit",
+    # "px":"2.15",
+    # "sz":"1"
+    # }
     
-    # instId= data['instId'],
-    # tdMode=data['tdMode'],
-    # side=data['side'],
-    # ordType=data['ordType'],
-    # px=data['px'],
-    # sz=data['sz']
+    # {
+    #     "instId": data["currency"].replace("USD", "-USDT"),  # Convert "BTCUSD" to "BTC-USDT"
+    #     "tdMode": "cash",                                    # Set a static trading mode
+    #     "clOrdId": "b15",                                    # Set a static client order ID
+    #     "posSide": "",                                       # Set position side as empty
+    #     "side": data["direction"],                           # Map 'direction' to 'side'
+    #     "ordType": data["orderType"],                        # Map 'orderType' to 'ordType'
+    #     "px": str(data["price"]) if data["price"] else "",   # Map 'price' to 'px', default to ""
+    #     "sz": str(data["qty"])                               # Map 'qty' to 'sz'
+    # }         
+
+   
+
+    
     # limit order
 
-    print(data)
-
+    
+    # return data
     result = tradeApi.place_order(
-        instId= data['instId'],
-        tdMode=data['tdMode'],
-        side=data['side'],
-        posSide= data['posSide'],
-        ordType=data['ordType'],
-        px=data['px'],
-        sz=data['sz']
+        instId= data["currency"].replace("USD", "-USDT"),
+        tdMode= "cash", 
+        side= data["direction"], 
+        posSide= "", 
+        ordType=  data["orderType"],
+        px= str(data["price"]) if data["price"] else "",
+        sz= str(data["qty"]) 
     )
     print(result)
-    # if result["code"] == "0":
-    #     print("Successful order request，order_id = ",result["data"][0]["ordId"])
+    if result["code"] == "0":
+        print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-    # else:
-    #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    else:
+        print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
     return result
 
     

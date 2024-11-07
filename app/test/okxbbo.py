@@ -2,6 +2,7 @@ import asyncio
 from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
 import json
+from datetime import datetime
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -69,7 +70,7 @@ class OKXWebSocketClient:
                 "ask_size": json_data["data"][0]["asks"][0][1],   # Renamed for consistency
                 "bid_price": json_data["data"][0]["bids"][0][0],  # Renamed for consistency
                 "bid_size": json_data["data"][0]["bids"][0][1],   # Renamed for consistency
-                "timestamp": json_data["data"][0]["ts"],
+                "timestamp": datetime.fromtimestamp(float(json_data["data"][0]["ts"]) / 1000).strftime('%Y-%m-%d %H:%M:%S'),
                 "sequence_id": json_data["data"][0]["seqId"]
             }
 
@@ -81,11 +82,13 @@ class OKXWebSocketClient:
             stored_data = redis_client.hgetall(redis_key)
             print("Stored data in Redis:", stored_data)
 
+
+
 # Example usage
 async def main():
     client = OKXWebSocketClient()
     # List of currency pairs to subscribe to
-    currency_pairs = ["BTC-USDC", "BTC-USDT"]  # Add more pairs as needed
+    currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
     await client.run(currency_pairs, client.publicCallback)
 
 if __name__ == '__main__':
