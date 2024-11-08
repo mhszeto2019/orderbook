@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS  # Import CORS
+# from ..okx import Trade,SpreadTrading
+from app.okx import Trade, SpreadTrading
 
-from okx import Trade,SpreadTrading
 import os
 import json
 import configparser

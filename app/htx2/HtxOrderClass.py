@@ -10,8 +10,8 @@ import hashlib
 import datetime
 import time
 from urllib.parse import urljoin
-from alpha.utils.request import AsyncHttpRequests
-from alpha.const import USER_AGENT
+# from alpha.utils.request import AsyncHttpRequests
+# from alpha.const import USER_AGENT
 
 __all__ = ("HuobiCoinFutureRestTradeAPI",)
 
