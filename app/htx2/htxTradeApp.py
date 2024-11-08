@@ -100,7 +100,6 @@ import datetime
 def place_limit_order():
     data = request.get_json()
     
-    print(data)
 
     side = data['side']
     if side == 'buy':
@@ -115,7 +114,7 @@ def place_limit_order():
     posSide=posSide
     ordType=  data["ordType"]
     sz= str(data["sz"]) 
-
+    print(data)
     # result = tradeApi.place_order(
     #     instId= data["instId"],
     #     tdMode= "cross", 
@@ -126,7 +125,10 @@ def place_limit_order():
     #     sz= str(data["sz"]) 
     # )
     
-    result = tradeApi.get_open_orders(
+
+    # Return the result in a valid response format
+    
+    result = tradeApi.get_open_orders(  
               instId,body = {
                 "contract_code":instId,
                 # "order_id":123456,
@@ -139,12 +141,15 @@ def place_limit_order():
                 "order_price_type":ordType
                 }
     )
-    if result["code"] == "0":
-        print("Successful order request，order_id = ",result["data"][0]["ordId"])
+    print('result,',result)
+    # if result["code"] == "0":
+    #     print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-    else:
-        print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    # else:
+    #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+    # return jsonify(result=result)
     return result
+
 
     
 @app.route('/get_order_list', methods=['GET'])
