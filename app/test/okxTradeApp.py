@@ -52,7 +52,7 @@ def get_fills():
 def place_market_order():
     data = request.get_json()
     
-    print(data)
+    print('requesteddata' ,data)
 
     side = data['side']
     if side == 'buy':
@@ -88,8 +88,9 @@ def place_limit_order():
     else:
         posSide = 'short'
 
-    print(data)
+    # print(data)
 
+    print('requesteddata' ,data)
     
     result = tradeApi.place_order(
         instId= data["instId"],
@@ -100,12 +101,13 @@ def place_limit_order():
         px= str(data["px"]) if data["px"] else "",
         sz= str(data["sz"]) 
     )
-    
-    if result["code"] == "0":
-        print("Successful order request，order_id = ",result["data"][0]["ordId"])
+    print(result)
+    # if result["code"] == "0":
+        # print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-    else:
-        print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+
+    # else:
+        # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
     return result
 
     
