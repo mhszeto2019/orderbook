@@ -116,7 +116,6 @@ def place_limit_order():
     ordType=  data["ordType"]
     sz= str(data["sz"]) 
 
-    return data
     # result = tradeApi.place_order(
     #     instId= data["instId"],
     #     tdMode= "cross", 

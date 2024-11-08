@@ -68,7 +68,7 @@ def place_market_order():
         ordType=  data["ordType"],
         sz= str(data["sz"]) 
     )
-    print(result)
+    print('result',result)
 
     if result["code"] == "0":
         print("Successful order request，order_id = ",result["data"][0]["ordId"])
@@ -90,7 +90,7 @@ def place_limit_order():
 
     print(data)
 
-    return data
+    
     result = tradeApi.place_order(
         instId= data["instId"],
         tdMode= "cross", 
