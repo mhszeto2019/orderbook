@@ -100,7 +100,6 @@ import datetime
 def place_limit_order():
     data = request.get_json()
     
-
     side = data['side']
     if side == 'buy':
         posSide = 'long'
@@ -124,10 +123,8 @@ def place_limit_order():
     #     px= str(data["px"]) if data["px"] else "",
     #     sz= str(data["sz"]) 
     # )
-    
 
     # Return the result in a valid response format
-    
     result = tradeApi.get_open_orders(  
               instId,body = {
                 "contract_code":instId,
@@ -148,7 +145,7 @@ def place_limit_order():
     # else:
     #     print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
     # return jsonify(result=result)
-    return result
+    return "Sucess"
 
 
     
