@@ -1,0 +1,3 @@
+# pack-refs with: peeled fully-peeled sorted 
+eb31487ab3c8ff0d98d5b8b9a0604bb0ffb7ee0e refs/remotes/origin/macbookbranch
+b421d424046dd9e28bbd56af0f3d24f1e33193a4 refs/remotes/origin/master

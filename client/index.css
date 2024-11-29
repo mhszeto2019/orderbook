@@ -1,0 +1,441 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+/* Flex container to layout the two sections */
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* Live Prices Table */
+.livePricesTable {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.livePricesTable th, 
+.livePricesTable td {
+    border: 1px solid #ddd;
+    padding: 4px 6px; /* Reduce padding for more compact appearance */
+    text-align: left;
+    font-size: 12px; /* Smaller font size for a more compact layout */
+    white-space: nowrap; /* Prevent text from wrapping */
+    overflow: hidden; /* Hides overflow content */
+    text-overflow: ellipsis; /* Shows ellipsis (...) when content overflows */
+}
+
+.livePricesTable th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+    color: #555;
+    font-size: 13px; /* Slightly smaller header font */
+}
+
+.livePricesTable tbody tr:nth-child(odd) {
+    background-color: #fafafa;
+}
+
+.livePricesTable tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.livePricesTable tbody tr:hover {
+    background-color: #e6f7ff; /* Highlight row on hover */
+}
+
+/* Specific narrower widths for "Exchange" and "Currency Pair (ccy)" columns */
+.livePricesTable th:nth-child(1), 
+.livePricesTable td:nth-child(1), 
+.livePricesTable th:nth-child(2), 
+.livePricesTable td:nth-child(2) {
+    width: 70px; /* Thinner width for Exchange and Currency Pair columns */
+    max-width: 90px; /* Optional max-width to prevent too much expansion */
+}
+
+/* Wider columns for "Last Price", "Size", etc. */
+.livePricesTable th:nth-child(3), 
+.livePricesTable td:nth-child(3), 
+.livePricesTable th:nth-child(4), 
+.livePricesTable td:nth-child(4), 
+.livePricesTable th:nth-child(5), 
+.livePricesTable td:nth-child(5), 
+.livePricesTable th:nth-child(6), 
+.livePricesTable td:nth-child(6) {
+    width: 120px; /* Reduce width slightly */
+}
+
+/* Order Book Table */
+.orderBookTable {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    overflow: hidden;
+    font-size: 12px; /* Slightly smaller for compactness */
+}
+
+.orderBookTable th, 
+.orderBookTable td {
+    padding: 4px 6px; /* Reduce padding for more compact appearance */
+    text-align: right; /* Align numbers to the right */
+    border: 1px solid #ddd;
+}
+
+.orderBookTable  th {
+    background-color: #f0f0f0;
+    color: #555;
+    font-weight: bold;
+    font-size: 12px; /* Slightly smaller for a compact look */
+}
+
+.orderBookTable tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+.orderBookTable tbody tr:nth-child(even) {
+    background-color: #fff;
+}
+
+.orderBookTable tbody tr:hover {
+    background-color: #f1f7ff; /* Row hover effect */
+}
+
+/* Scrollable container for the order book */
+.orderbook-scroll-container {
+    max-height: 300px; /* Adjust the max height as needed */
+    overflow-y: auto; /* Makes the container scrollable when content overflows */
+    padding-right: 10px; /* Add a small padding to the right for scroll */
+}
+
+.orderbook-area {
+    display: flex;
+}
+
+.orderbook-section {
+    margin: 10px; /* Adjust margins for a more compact layout */
+}
+
+/* Adjust table responsiveness */
+@media (max-width: 768px) {
+    .flex-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .livePricesTable th, 
+    .orderBookTable th, 
+    .livePricesTable td, 
+    .orderBookTable td {
+        font-size: 11px; /* Reduce font size on smaller screens */
+        padding: 4px; /* Less padding for smaller screens */
+    }
+}
+
+/* Style for Ask Prices (red) */
+.ask-price {
+    color: red;
+    font-weight: bold;
+}
+
+/* Style for Bid Prices (green) */
+.bid-price {
+    color: green;
+    font-weight: bold;
+}
+
+#selected-info {
+    padding: 10px; /* Reduce padding */
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    max-width: 250px; /* Reduce width for a more compact view */
+    margin: 10px 0;
+}
+
+#selected-info p {
+    margin: 5px 0; /* Reduce margin for compact appearance */
+    font-size: 14px; /* Smaller font */
+    color: #333;
+}
+
+#selected-info p strong {
+    color: #555;
+}
+
+.info-value {
+    font-weight: bold;
+    color: #007bff; /* Blue color for a modern look */
+}
+
+#selected-info p:last-child {
+    margin-bottom: 0;
+}
+
+.group-header {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+.askPrice-lastSize {
+    text-align: center; /* Center-aligns the content */
+}
+
+.askPrice-lastSize .askPrice, 
+.askPrice-lastSize .lastSize {
+    display: block; /* Ensures both askPrice and lastSize are displayed on new lines */
+}
+
+.askPrice-lastSize .lastSize {
+    margin-top: 3px; /* Reduce spacing between askPrice and lastSize */
+}
+
+
+
+
+/* TABS */
+      /* Basic styles */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+    }
+
+    h1 {
+        font-size: 24px;
+        text-align: center;
+        color: #007bff;
+    }
+
+    h2 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .flex-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    /* Compact tab styling */
+    .tab-container {
+        margin-top: 20px;
+    }
+
+    .tabs {
+        display: flex;
+        justify-content: flex-start;
+        border-bottom: 1px solid #ddd; /* Line below tabs for visual separation */
+    }
+
+    .tab {
+        padding: 10px 15px;
+        font-size: 16px;
+        color: #333;
+        background-color: transparent; /* No background */
+        margin: 0; /* Remove any margin between tabs */
+        border: none;
+        border-bottom: 3px solid transparent; /* Bottom border to indicate active state */
+        cursor: pointer;
+        transition: color 0.3s ease, border-bottom 0.3s ease;
+    }
+
+    .tab:hover {
+        color: #007bff;
+    }
+
+    .tab.active {
+        color: #007bff;
+        border-bottom: 3px solid #007bff; /* Underline active tab */
+    }
+
+    .tab-content {
+        display: none;
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-top: none; /* Remove top border to match tabs */
+        border-radius: 0 0 8px 8px; /* Rounded corners at the bottom */
+        margin-top: 0; /* Compact design with no gap */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+/* User Input Section Styles */
+.user-input-section {
+    /* background-color: #fff; */
+    /* border: 1px solid #ddd; */
+    /* border-radius: 5px; */
+    /* padding: 15px; Added padding for better aesthetics */
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
+    flex: 1; 
+    min-width: 20px;
+    /* margin: 10px; Adjust margins for a more compact layout */
+
+}
+
+
+/* Group styling for input fields */
+.input-group {
+    margin-bottom: 5px; /* Space between input fields */
+}
+
+.user-input-section label {
+    font-size: 12px; /* Smaller font for labels */
+    margin-bottom: 5px; /* Space below labels */
+    display: block; /* Ensure labels are block elements */
+}
+
+.user-input-section input {
+    width: 70%; /* Full width input */
+    padding: 6px; /* Standard padding */
+    margin-bottom: 5px; /* Space below inputs */
+    font-size: 14px; /* Standard font size */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 3px; /* Rounded corners */
+}
+
+/* Action Buttons Styling */
+.action-buttons {
+    display: flex;
+    justify-content: space-between; /* Space between buttons */
+}
+
+.action-buttons button {
+    flex: 1; /* Make buttons equal width */
+    padding: 8px; /* Padding for buttons */
+    font-size: 14px; /* Standard font size */
+    background-color: #007bff; /* Bootstrap primary color */
+    color: white; /* Text color */
+    border: none; /* No border */
+    border-radius: 3px; /* Rounded corners */
+    cursor: pointer; /* Pointer on hover */
+    transition: background-color 0.3s; /* Transition for hover effect */
+    margin: 0 5px; /* Space between buttons */
+    
+}
+
+.action-buttons button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .user-input-section {
+        min-width: 15%; /* Make full width on smaller screens */
+    }
+
+    .user-input-section h2 {
+        font-size: 14px; /* Smaller title font */
+    }
+
+    .user-input-section input {
+        font-size: 12px; /* Smaller font for inputs */
+    }
+
+    .action-buttons button {
+        font-size: 12px; /* Smaller font for buttons */
+    }
+}
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .tabs {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .tab {
+            width: 100%; /* Make tabs full-width on smaller screens */
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab.active {
+            border-bottom: 3px solid #007bff;
+        }
+    }
+
+    .oms-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+  
+      .oms-table th, .oms-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+  
+      .oms-table th {
+        background-color: #f2f2f2;
+        text-align: left;
+      }
+  
+      .oms-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+  
+      .oms-table tbody tr:hover {
+        background-color: #f1f1f1;
+      }
+
+      #txn-history-refresh-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #fff;
+        background-color: #4CAF50; /* Green */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        display: inline-block;
+        font-weight: bold;
+    }
+    
+    #txn-history-refresh-btn:hover {
+        background-color: #45a049; /* Darker green on hover */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+    }
+    
+    #txn-history-refresh-btn:active {
+        background-color: #388E3C; /* Even darker green on click */
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2) inset; /* Inset shadow for "pressed" effect */
+    }
+    
+    #txn-history-refresh-btn:focus {
+        outline: none; /* Removes outline on focus for a cleaner look */
+    }
+    
+    #txn-history-refresh-btn::before {
+        content: 'Refresh'; /* Sets button text */
+    }
+    
+    

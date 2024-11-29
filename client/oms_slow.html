@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Price Updates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<script src="./websocket_client/js/htx_okx_spread_order.js"></script>
+<link href="./websocket_client/css/statusbadge.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="websocket_client/css/arbButton.css">
+<body class="container ">
+    
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Falconstead</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="navbar-links">
+                    <!-- Login Link (Visible when logged out) -->
+                    <li class="nav-item" id="login-link">
+                        <a class="nav-link" href="auth.html">Login</a>
+                    </li>
+                    <!-- Logout Link (Visible when logged in) -->
+                    <li class="nav-item" id="logout-link" style="display: none;">
+                        <a class="nav-link logout-btn" href="#" onclick="logout()">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class = "row">
+        <!-- DISPLAY TABLE -->
+         
+        <div class="col-lg-8 container-fluid mt-4" id="orderbookdisplayContainer">
+            
+            <!-- <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Order Book Comparison</h4>
+                <div>
+                    <button class="btn btn-primary" id="changeCurrencyBtn" onclick="openCurrencySelector()">Change Currency</button>
+                </div>
+            </div> -->
+
+                       
+            <!--WS STATUS BADGE  -->
+            <div class="justify-content-between align-items-center mb-3">
+                <h6>Connection Status:</h6>
+                <span id="status-okx" class="statusbadge bg-danger">okx: dead</span>
+                <span id="status-htx" class="statusbadge bg-danger">htx: dead</span>
+                <span id="status-bnb" class="statusbadge bg-danger">bnb: dead</span>
+            </div>
+
+            <div class="justify-content-between align-items-center mb-3">
+
+                    <div class="row">
+                          
+                        <div class="container mt-4">
+                            <div class="row align-items-center">
+                              <!-- Currency Input -->
+                              <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="input-group">
+                                  <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                  <select id="currency-input" class="form-select" aria-label="Currency" onchange="updateCurrency()">
+                                    <option value="">Select Currency</option>
+                                    <option value="btcusdc">BTC-USDC</option>
+                                    <option value="btcusdt">BTC-USDT</option>
+                                    <option value="btcusdswap" selected>BTC-USD-SWAP</option>
+
+                                  </select>
+                                </div>
+                              </div>
+                          
+                              <!-- Exchange 1 Dropdown -->
+                              <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="input-group">
+                                  <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                  <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange()">
+                                    <option value="">Select Exchange 1</option>
+                                    <option value="okx" selected>OKX</option>
+                                    <option value="htx">HTX</option>
+                                  </select>
+                                </div>
+                              </div>
+                          
+                              <!-- Exchange 2 Dropdown -->
+                              <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="input-group">
+                                  <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                  <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange()">
+                                    <option value="">Select Exchange 2</option>
+                                    <option value="okx" >OKX</option>
+                                    <option value="htx" selected>HTX</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                    </div>
+
+
+
+
+                    <div class="row">
+                        <!-- <div class = 'col-md-12 justify-content'>
+                            <button>BUY</button>
+                            <button>BUY</button>
+    
+                          </div> -->
+
+                      <!-- First Exchange Last Prices -->
+                      <div class="col-md-3">
+                        <div class="orderbook-section">
+                          <h2>Last</h2>
+                          <div id="selected-info" >
+                            <p>Exchange: <span id="selected-exchange-lastprice-1">Not Selected</span></p>
+                            <p>Currency: <span id="selected-ccy-lastprice-1" >Not Selected</span></p>
+                          </div>
+                          <div class="orderbook-scroll-container">
+                            <table class="orderBookTable">
+                              <thead>
+                                <tr>
+                                  <th>Price</th>
+                                  <th>Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody id="lastprice-data-table-body-1">
+                                <!-- Order book data will be dynamically inserted here -->
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                  
+                      <!-- leading Order Book Section -->
+                      <div class="col-md-3">
+                        <div class="orderbook-section">
+                          <h2>Order Book 1</h2>
+                          <div id="selected-info">
+                            <p>Exchange: <span id="selected-exchange-orderbook-1">Not Selected</span></p>
+                            <p>Currency: <span id="selected-ccy-orderbook-1">Not Selected</span></p>
+                          </div>
+                          <div class="orderbook-scroll-container">
+                            <p id="orderbook-timestamp-1">Timestamp: Not Available</p>
+                            <table class="orderBookTable scrollable-orderbook" id="orderBookTable1">
+
+                              <thead>
+                                <tr>
+                                  <th>Price</th>
+                                  <th>Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody id="order-data-table-body-1">
+                                <!-- Order book data will be dynamically inserted here -->
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                        <!-- Buttons for comparing -->
+  
+
+                      <!-- lagging Order Book Section -->
+                      <div class="col-md-3">
+                        <div class="orderbook-section ">
+                          <h2>Order Book 2</h2>
+
+                          <div id="selected-info">
+                            <p>Exchange: <span id="selected-exchange-orderbook-2">Not Selected</span></p>
+                            <p>Currency: <span id="selected-ccy-orderbook-2">Not Selected</span></p>
+                          </div>
+                          <div class="orderbook-scroll-container">
+                            <p id="orderbook-timestamp-2">Timestamp: Not Available</p>
+                            <table class="orderBookTable scrollable-orderbook">
+                              <thead>
+                                <tr>
+                                  <th>Price</th>
+                                  <th>Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody id="order-data-table-body-2">
+                                <!-- Order book data will be dynamically inserted here -->
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                        <!-- Second Exchange Last Prices -->
+                      <div class="col-md-3">
+                        <div class="orderbook-section">
+                          <h2>Last Trades</h2>
+                          <div id="selected-info">
+                            <p>Exchange: <span id="selected-exchange-lastprice-2">Not Selected</span></p>
+                            <p>Currency: <span id="selected-ccy-lastprice-2">Not Selected</span></p>
+                          </div>
+                          <div class="orderbook-scroll-container">
+                            <table class="orderBookTable">
+                              <thead>
+                                <tr>
+                                  <th>Price</th>
+                                  <th>Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody id="lastprice-data-table-body-2">
+                                <!-- Order book data will be dynamically inserted here -->
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                                       
+                    </div>
+
+                    <div id="securedContentBidAskOrder" class="alert alert-success" style="display: none;">
+
+                        <!-- Sync and Reset Buttons (Always at the Bottom) -->
+                        <div class="rfs-spread-base-cell my-4">
+                            <!-- Header with Bid, Spread, and Ask -->
+                            <div class="RfsSpreadCell_rfs-spread-card-header-container d-flex justify-content-between align-items-center">
+                                <span class="quote-side-text text-success fw-bold">Bid</span>
+                                <div class="quote-bps-container d-flex align-items-center">
+                                    <span class="quote-bps-value fw-bold" id="buysellgapPx">-</span>&nbsp;
+                                    <span class="quote-bps-unit text-muted">BPS</span>
+                                </div>
+                                <span class="quote-side-text text-danger fw-bold">Ask</span>
+                            </div>
+                               
+
+                            <!-- Card Section for Bid and Ask Prices -->
+                            <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center">
+                                <div class="quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
+                                    <!-- <div class="card-upper-container">
+                                        <div class="best-quote-size text-muted">50K USD</div>
+                                    </div> -->
+                                    <div class="best-quote-price-container">
+                                        <div class="price-data fs-4 fw-bold" id="buySpread">-</div>
+                                    </div>
+                                    <div class="card-bottom-container" >
+                                        <div class="card-bottom-quote-diff text-success" id="buySpreadSz">-</div>
+                                    </div>
+                                </div>
+                        
+                                <!-- Ask Card -->
+                                <div class="quote-price-card sell card p-3 text-center border-danger" onclick="handleClick('sell')" role="button" tabindex="0">
+                                    <!-- <div class="card-upper-container">
+                                        <div class="best-quote-size text-muted">50K USD</div>
+                                    </div> -->
+                                    <div class="best-quote-price-container">
+                                        <div class="price-data fs-4 fw-bold" id="sellSpread">-</div>
+                                    </div>
+                                    <div class="card-bottom-container">
+                                        <div class="card-bottom-quote-diff text-danger" id="sellSpreadSz">-</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    
+                    </div>
+
+
+                </div>
+                  
+            
+        </div>
+
+        <!-- FORM for ordering -->
+        <div class="col-lg-4 container-fluid  mt-4">
+            <!-- This section will only be visible if the JWT is present -->
+            <div id="securedContent" class="alert alert-success" style="display: none;">
+
+                <h4>Welcome, you have access to secured content!</h4>
+                <p>This section is protected by JWT. You are logged in.</p>
+
+                <!-- Notification Hub Icon and Dropdown -->
+                <div class="position-relative text-end mb-4">
+                    <button id="notification-icon" class="btn btn-light" onclick="toggleNotificationHub()">
+                        🛎 Notifications <span id="notification-count" class="badge bg-danger">0</span>
+                    </button>
+                    <div id="notification-hub" class="notification-hub bg-light shadow rounded" style="display: none;">
+                        <h5 class="p-2">Notifications</h5>
+                        <div id="toast-list" class="toast-list p-2" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Dynamic Toast Messages Will Appear Here -->
+                        </div>
+                        
+                        <button class="btn btn-secondary w-100" onclick="clearNotifications()">Clear All</button>
+                    </div>
+                </div>
+
+
+                <!-- User Input Section -->
+                <div class="card p-4 mb-4">
+                    <h2 class="text-center">Place Order</h2>
+                    <form id="order-form">
+                        
+                
+                        <form id="order-form">
+                            <div class="row g-2">
+                            
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="leading-exchange-input" class="form-label">
+                                        Leading
+                                        <!-- Tooltip Icon -->
+                                        <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Your order applies to this exchange">
+                                          <i class="bi bi-info-circle"></i>
+                                        </span>
+                                      </label>
+                                      
+                                    <select id="leading-exchange-input" class="form-select" required>
+                                        <option value="" disabled selected>Select Exchange</option>
+                                        <option value="htx">HTX</option>
+                                        <option value="okx" selected>OKX</option>
+                                    </select>
+                                </div>
+                        
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="lagging-exchange-input" class="form-label">Lagging:</label>
+                                    <select id="lagging-exchange-input" class="form-select" required>
+                                        <option value="" disabled selected>Select Exchange</option>
+                                        <option value="htx" selected>HTX</option>
+                                        <option value="okx">OKX</option>
+                                    </select>
+                                </div>
+                        
+                                <!-- Instrument Field for Spot/Swap -->
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="instrument-input" class="form-label">Instrument:</label>
+                                    <select id="instrument-input" class="form-select" required>
+                                        <option value="" disabled selected>Select Instrument</option>
+                                        <option value="spot">Spot</option>
+                                        <option value="swap" selected>Swap</option>
+                                    </select>
+                                </div>
+                        
+                                <!-- Order Type Tabs -->
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="order-type-input" class="form-label">Order Type:</label>
+                                    <select id="order-type-input" class="form-select" required onchange="handleOrderTypeChange()">
+                                        <option value="" disabled selected>Select Order Type</option>
+                                        <option value="market" >Market</option>
+                                        <option value="limit" selected>Limit</option>
+                                        <option value="algo">Algo</option>
+                                    </select>
+                                </div>
+                        
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="currency-input" class="form-label">Currency Pair:</label>
+                                    <select id="currency-input" class="form-select" required>
+                                        <option value="" disabled selected>Select Currency Pair</option>
+                                        <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
+                                    </select>
+                                </div>
+                        
+                                <!-- Price field (two inputs side by side for Price 1 and Price 2) -->
+                                <div class="col-12 col-md-6 mb-3" id="price-container">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label for="price-input-1" class="form-label">Price 1:</label>
+                                            <input type="number" id="price-input-1" class="form-control" placeholder="Price" required>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="price-input-2" class="form-label">Price 2:</label>
+                                            <input type="number" id="price-input-2" class="form-control" placeholder="Price" required>
+                                        </div>
+                                    </div>
+                                </div>
+                        
+                                <!-- Spread field -->
+                                <div class="col-12 col-md-6 mb-3" id="spread-container">
+                                    <label for="spread-input" class="form-label">Spread:</label>
+                                    <input type="number" id="spread-input" class="form-control" placeholder="Spread">
+                                </div>
+                        
+                                <div class="col-12 mb-3">
+                                    <label for="qty-input" class="form-label">Quantity:</label>
+                                    <input type="number" id="qty-input" class="form-control" placeholder="Quantity" value="1" required>
+                                </div>
+                            </div>
+                        
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="submit" id="buy-button" value="buy" class="btn btn-success w-100 me-1">Buy</button>
+                                <button type="submit" id="sell-button" value="sell" class="btn btn-danger w-100 ms-1">Sell</button>
+                            </div>
+                        </form>
+                        
+                        
+                        <script>
+                            function handleOrderTypeChange() {
+
+                                console.log('CHANGE')
+
+                                const orderType = document.getElementById('order-type-input').value;
+                                const priceContainer = document.getElementById('price-container');
+                                const spreadContainer = document.getElementById('spread-container');
+                                const priceInputs = priceContainer.querySelectorAll('input');
+                                
+
+                                // Show or hide fields based on selected order type
+                                if (orderType === 'market') {
+                                    priceContainer.style.display = 'none';
+                                    spreadContainer.style.display = 'none';
+                                    priceInputs.forEach(input => input.removeAttribute('required'));
+
+                                } else if (orderType === 'limit') {
+                                    priceContainer.style.display = 'block';
+                                    spreadContainer.style.display = 'none';
+                                } else if (orderType === 'algo') {
+                                    priceContainer.style.display = 'block';
+                                    spreadContainer.style.display = 'block';
+                                } else {
+                                    priceContainer.style.display = 'none';
+                                    spreadContainer.style.display = 'none';
+                                }
+                            }
+                        
+                            // Initialize form on page load
+                            document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
+                        </script>
+                        
+
+                    </form>
+                </div>
+
+               
+
+            </div>
+
+            <!-- This section will be visible if the JWT is NOT present -->
+            <div id="loginPrompt" class="alert alert-warning">
+                <h4>You are not logged in.</h4>
+                <p>Please log in to access secured content.</p>
+            </div>
+
+        </div>
+
+         <!-- Order Management System Section -->
+         <div id="securedContentOMS" class="alert alert-success" style="display: none;">
+            <div class="card p-4">
+                <h2 class="text-center">Order Management System (Prototype)</h2>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs flex-wrap" id="omsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#assets-positions" type="button" role="tab">Assets & Positions</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#open-orders" type="button" role="tab">Open Orders</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transaction-history" type="button" role="tab">Transaction History</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transaction-records" type="button" role="tab">Transaction Records</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-3">
+                    <!-- Assets & Positions Tab -->
+                    <div class="tab-pane fade show active" id="assets-positions" role="tabpanel">
+                        <p class="text-end text-muted">Last updated: <span id="last-updated-positions">-</span></p>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Instrument ID</th>
+                                        <th>Leverage</th>
+                                        <th>Position Side</th>
+                                        <th>Available Position</th>
+                                        <th>ADL</th>
+                                        <th>Liquidation Price</th>
+                                        <th>Diff</th>
+                                        <th>PnL</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="oms-open-positions-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Open Orders Tab -->
+                    <div class="tab-pane fade" id="open-orders" role="tabpanel">
+                        <p class="text-end text-muted">Last updated: <span id="last-updated-orders">-</span></p>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Placed Time</th>
+                                        <th>Filled Time</th>
+                                        <th>Side</th>
+                                        <th>Limit</th>
+                                        <th>Market</th>
+                                        <th>Spread</th>
+                                        <th>Amount</th>
+                                        <th>Filled</th>
+                                        <th>Avg Fill Spread</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="oms-open-orders-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Transaction History Tab -->
+                    <div class="tab-pane fade" id="transaction-history" role="tabpanel">
+                        <p class="text-end text-muted">Last updated: <span id="last-updated-txn-history">-</span></p>
+                        <button id="txn-history-refresh-btn" class="btn btn-primary btn-sm float-end mb-2">Refresh</button>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>CCY</th>
+                                        <th>Filled Price</th>
+                                        <th>Filled Size</th>
+                                        <th>Filled Time</th>
+                                        <th>Trade Type</th>
+                                        <th>Fee</th>
+                                        <th>Fee CCY</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="oms-open-txn-history-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Records Tab -->
+                    <div class="tab-pane fade" id="transaction-records" role="tabpanel">
+                        <h3>Transaction Records</h3>
+                        <p>Content for transaction records will be displayed here.</p>
+                    </div>
+
+                </div>
+                
+            </div>
+        </div>
+
+    </div>
+    <script src="websocket_client/js/wsConnections.js"></script>
+    <script src="websocket_client/js/display_orderbook.js"></script>
+    <script src="websocket_client/js/arbButton.js"></script>
+
+
+    
+  
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="./websocket_client/js/auth.js"></script>
+
+    <script>
+        let currency_pair = null;
+        
+        function getAuthToken() {
+            return localStorage.getItem('jwt_token');  // You can change this to sessionStorage if needed
+        }
+        
+
+        // Check if the JWT token is present and display the corresponding content
+        function checkJWTAndDisplay() {
+            const token = getAuthToken();
+
+            // Get the elements by ID
+            const securedContent = document.getElementById('securedContent');
+            const securedContentOMS = document.getElementById('securedContentOMS');
+            const securedContentBidAskOrder = document.getElementById('securedContentBidAskOrder');
+
+            // securedContentBidAskOrder
+            const loginPrompt = document.getElementById('loginPrompt');
+
+            if (token) {
+                // If the token is present, show the secured content
+                securedContent.style.display = 'block';
+                securedContentOMS.style.display = 'block';
+                securedContentBidAskOrder.style.display = 'block';
+
+                loginPrompt.style.display = 'none';
+            } else {
+                // If the token is not present, show the login prompt
+                securedContent.style.display = 'none';
+                securedContentOMS.style.display = 'none';
+                securedContentBidAskOrder.style.display = 'none';
+
+
+                loginPrompt.style.display = 'block';
+            }
+        }
+
+        // Run the function to check the JWT token and display appropriate content
+        checkJWTAndDisplay();
+
+        // Array to store notifications
+        const notifications = [];
+        
+        function updateNotificationHub() {
+            const toastList = document.getElementById('toast-list');
+
+            toastList.innerHTML = ''; // Clear previous notifications
+        
+            let orderIdColor = 'bg-secondary'; // Grey by default
+            let statusColor = 'bg-secondary'; // Grey by default
+            let errColor = 'bg-secondary';   // Grey by default
+            notifications.forEach(notification => {
+                // if (notification.statusCode == 200) statusColor = 'bg-success';
+                let orderIdColor = notification.orderId != null ? 'bg-success' : 'bg-danger';
+                let statusColor = notification.statusCode == 200? 'bg-success' : 'bg-danger';
+                let errColor = notification.errCode == null | notification.errCode =='undefined' ? 'bg-success' : 'bg-danger';
+
+
+                const toastItem = document.createElement('div');
+                toastItem.className = `toast-item toast-${notification.type}`;
+                toastItem.innerHTML = `
+                <div class="toast-item mb-2 p-3 rounded shadow text-start" style="background-color: #f9f9f9;">
+                <div class="toast-header d-flex align-items-center">
+                    <strong class="me-2">[${notification.apiSource}]</strong> 
+                    <div class="ms-auto">
+                        <span class="badge ${orderIdColor}">Order ID: ${notification.orderId}</span>
+                        <span class="badge ms-1 ${statusColor}">Status: ${notification.statusCode}</span>
+                        <span class="badge ms-1 ${errColor}">Error: ${notification.errCode}</span>
+                    </div>
+                </div>
+                <div class="toast-body">
+                    <p class="mb-1">${notification.message}</p>
+                    <small class="text-muted">${notification.timestamp}</small>
+                </div>
+            </div>
+
+                `;
+
+                toastList.prepend(toastItem);
+            });
+        }
+
+        // Toggle Notification Hub visibility
+        function toggleNotificationHub() {
+            const hub = document.getElementById('notification-hub');
+            hub.style.display = hub.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Update notification count
+        function updateNotificationCount() {
+            const count = notifications.length;
+            document.getElementById('notification-count').innerText = count;
+        }
+
+        // Clear all notifications
+        function clearNotifications() {
+            notifications.length = 0;
+            updateNotificationHub();
+            updateNotificationCount();
+        }
+
+        // Example usage for testing
+    // Function to open a modal or dropdown for currency selection
+    function openCurrencySelector() {
+        console.log(currency_pair)
+
+        const currencies = ['BTC/USD', 'ETH/USD', 'BNB/USD']; // Example currencies
+        let selectedCurrency = prompt('Enter the currency pair (e.g., BTC/USD):', currencies[0]);
+        
+        if (selectedCurrency) {
+            updateTableForCurrency(selectedCurrency);
+        }
+    }
+
+    // Function to update the table for the selected currency
+    function updateTableForCurrency(currency) {
+        console.log(currency_pair)
+
+        document.querySelector('h4').innerText = `Order Book Comparison for ${currency}`;
+        // TODO: Fetch new data and update order books dynamically here
+        alert(`Order books updated for ${currency}`);
+        currency_pair = currency
+        console.log(currency_pair)
+    }
+
+       
+    </script>
+
+<style>
+
+    /* Custom Navbar Bottom Border */
+    .navbar {
+        border-bottom: 2px solid #ddd; /* Adjust color and thickness of the line */
+    }
+
+    .navbar-light .navbar-nav .nav-link {
+        color: #007bff;
+    }
+
+    .navbar-light .navbar-nav .nav-link:hover {
+        color: #0056b3;
+    }
+
+    /* Optional: Custom navbar spacing for better visual */
+    .navbar-nav {
+        margin-left: auto;
+    }
+
+
+ /* Make sure the parent container is a flex container */
+.orderbook-container {
+    width:70%;
+    display: flex;
+    justify-content: space-between;  /* Ensure orderbooks are side by side */
+    gap: 15px; /* Space between each orderbook */
+
+}
+
+/* Set a fixed width for each orderbook container */
+.scrollable-orderbook {
+    max-height: 160px; /* Set a fixed height for uniformity */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    border: 1px solid #ddd;  /* Optional border styling */
+    /* padding: 10px; */
+    background-color: #f9f9f9; /* Light background for better readability */
+    display: flex;
+    flex-direction: column;
+    gap: 5px;  /* Add gap between asks and bids */
+    box-sizing: border-box; /* Include padding and border in the element's total width */
+    scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
+    scrollbar-width: thin; 
+}
+
+
+
+/* Optional: Ensures each ask/bid has a consistent font size and line height */
+.scrollable-orderbook p,
+.scrollable-orderbook li {
+    font-size: 15px;
+    /* line-height: 1.6; */
+    margin: 0;
+    /* padding: 2px 0; */
+}
+
+.scrollable-orderbook ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.scrollable-orderbook li {
+    margin-bottom: 5px;
+}
+/* Style for Asks (Red) */
+.scrollable-orderbook .asks  {
+    color: red;
+}
+
+/* Style for Bids (Green) */
+.scrollable-orderbook .bids {
+    color: green;
+}
+
+
+</style>
+
+</body>
+
+</html>
