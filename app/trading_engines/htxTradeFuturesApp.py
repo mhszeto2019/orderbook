@@ -226,7 +226,7 @@ async def place_limit_order():
         ordType = data.get("ordType")
         
         # Call the asynchronous place_order function
-        result = await tradeApi.get_open_orders(instId,body = {
+        result = await tradeApi.place_order(instId,body = {
             "contract_code": instId,
             "price": str(data["px"]) if data["px"] else "",
             "created_at": str(datetime.datetime.now()),

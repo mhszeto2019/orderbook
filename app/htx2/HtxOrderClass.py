@@ -56,7 +56,7 @@ class HuobiCoinFutureRestTradeAPI:
         print("JSON DICT",json_dict)
         return json_dict
 
-    async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+    async def place_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         """ Get open order information.
 
         Args:
@@ -75,6 +75,50 @@ class HuobiCoinFutureRestTradeAPI:
         # print("open_orders,json_dict",json_dict)
         # print('json_response2',json_response2)
         return json_response2
+
+    async def get_order_info(self, contract_code, order_ids=None, client_order_ids=None):
+        """ Get order information.
+
+        Args:
+            contract_code: such as "BTC-USD".
+            order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+            client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+
+        Returns:
+            success: Success results, otherwise it's None.
+            error: Error information, otherwise it's None.
+        """
+        uri = "/swap-api/v1/swap_order_info"
+        body = {
+            "contract_code": contract_code
+        }
+        if order_ids:
+            body.update({"order_id": ",".join(order_ids)})
+        if client_order_ids:
+            body.update({"client_order_id": ",".join(client_order_ids)})
+
+        success, error = await self.request("POST", uri, body=body, auth=True)
+        return success, error
+
+
+#
+    async def get_open_orders(self, contract_code, index=1, size=50):
+        # Args:
+        #     contract_code: such as "BTC-USD".
+        #     index: Page index, default 1st page.
+        #     size: Page size, Default 20，no more than 50.
+
+        # Returns:
+        #     success: Success results, otherwise it's None.
+        #     error: Error information, otherwise it's None.
+        uri = "/swap-api/v1/swap_openorders"
+        body = {
+            "contract_code": contract_code,
+            "page_index": index,
+            "page_size": size
+        }
+        success, error = await self.request("POST", uri, body=body, auth=True)
+        return success, error
 
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.

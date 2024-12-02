@@ -88,16 +88,15 @@ async def get_all_htx_open_orders():
 
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
 
-        positions = await tradeApi.get_open_orders(instId,body = {
+        open_orders = await tradeApi.get_open_orders(instId,body = {
             "contract_code": instId
             }
             )
-        print(positions)
-        # print("POSITIONSSSS",positions)
-        position_data = positions.get('data', [])
-        print(position_data)
-        # [{'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'available': 1.0, 'frozen': 0.0, 'cost_open': 95827.20000000004, 'cost_hold': 95827.20000000004, 'profit_unreal': 0.0, 'profit_rate': -1.845e-15, 'lever_rate': 5, 'position_margin': 0.000208709009550524, 'direction': 'buy', 'profit': 0.0, 'liq_px': 33313.866877150256, 'last_price': 95827.2, 'store_time': '2024-11-28 15:21:38', 'open_adl': 1, 'adl_risk_percent': 1, 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}]
-        return position_data
+        print(open_orders)
+        open_order_data = open_orders.get('data', [])
+        print(open_order_data)
+        
+        return open_order_data
     
     except Exception as e:
         print(e)
