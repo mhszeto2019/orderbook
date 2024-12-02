@@ -1,4 +1,4 @@
-  const socket = io('http://localhost:5001', {
+  const socket = io('http://localhost:5000', {
     reconnection: true,  // Enable reconnection
     reconnectionAttempts: 5, // Number of attempts before giving up
     reconnectionDelay: 1000, // Delay between reconnection attempts in ms

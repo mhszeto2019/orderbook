@@ -36,6 +36,7 @@ async function populatePositions() {
         },
         body: JSON.stringify(request_data)
     });
+    secondOrderPromise.autoCancellation(false)
 
     try {
         const results = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);

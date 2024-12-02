@@ -38,37 +38,13 @@ from cryptography.fernet import Fernet
 # Initialize the Trade API client
 # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",secretKey,apiKey)
 
-# @app.route('/')
-# def home():
-#     return "Welcome to the OKX Trade API Flask App!"
-
-# # Route to test getting fills
-# @app.route('/get_fills', methods=['GET'])
-# def get_fills():
-
-#     begin = request.args.get('begin', '1717045609000')
-#     end = request.args.get('end', '1717045609100')
-#     # print(time.localtime())
-#     # current_ts = int(time.time() * 1000)
-#     current_ts = time.time() 
-#     day_before_ts = current_ts - 86400
-#     print(day_before_ts,current_ts)
-#     try:
-#         fills = tradeApi.get_fills(begin=int(current_ts * 1000), end=int(day_before_ts * 1000))
-#         print(fills)
-#         return jsonify(fills), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
-# get_open_orders means opening an order
 
 
 @token_required
-@app.route('/htx/get_all_positions', methods=['POST'])
-async def get_all_htx_positions():
+@app.route('/htx/get_all_htx_open_orders', methods=['POST'])
+async def get_all_htx_open_orders():
     data = request.get_json()
-    
+    print(data)
     username = data.get('username')
     # Get the order data from the request
     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
@@ -77,7 +53,6 @@ async def get_all_htx_positions():
         cleaned_key_string = key_string[2:-1]
     else:
         cleaned_key_string = key_string  # Fallback if the format is unexpected
-
     # Now decode the base64 string into bytes
     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
     key_bytes = cleaned_key_string.encode('utf-8')
@@ -113,7 +88,7 @@ async def get_all_htx_positions():
 
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
 
-        positions = await tradeApi.get_positions(instId,body = {
+        positions = await tradeApi.get_open_orders(instId,body = {
             "contract_code": instId
             }
             )
@@ -128,4 +103,4 @@ async def get_all_htx_positions():
         print(e)
 
 if __name__ == "__main__":
-    app.run(port='5071')
+    app.run(port=5061)

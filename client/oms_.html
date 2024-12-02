@@ -362,7 +362,7 @@
                                     </select>
                                 </div>
                         
-                                <div class="col-12 col-md-6 mb-3">
+                                <div class="col-12 col-md-12 mb-3">
                                     <label for="currency-input" class="form-label">Currency Pair:</label>
                                     <select id="currency-input" class="form-select" required>
                                         <option value="" disabled selected>Select Currency Pair</option>
@@ -371,7 +371,7 @@
                                 </div>
                         
                                 <!-- Price field (two inputs side by side for Price 1 and Price 2) -->
-                                <div class="col-12 col-md-6 mb-3" id="price-container">
+                                <div class="col-12 col-md-12 mb-3" id="price-container">
                                     <div class="row">
                                         <div class="col-6">
                                             <label for="price-input-1" class="form-label">Price 1:</label>
@@ -465,12 +465,7 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#open-orders" type="button" role="tab">Open Orders</button>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transaction-history" type="button" role="tab">Transaction History</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transaction-records" type="button" role="tab">Transaction Records</button>
-                    </li>
+                   
                 </ul>
                 <div class="tab-content mt-3">
                     <!-- Assets & Positions Tab -->
@@ -536,7 +531,7 @@
                                 <button id="positions-clear-all-btn" class="btn btn-danger btn-sm mx-2" onclick="clearPositions('all')" disabled>Clear All</button>
                                 <button id="positions-clear-okx-btn" class="btn btn-warning btn-sm mx-2" onclick="clearPositions('okx')" disabled>Clear OKX</button>
                                 <button id="positions-clear-htx-btn" class="btn btn-warning btn-sm mx-2" onclick="clearPositions('htx')" disabled>Clear HTX</button>
-                                <button id="lock-clear-btn" class="btn btn-secondary btn-sm mx-2" onclick="toggleLockClear()">🔒 Lock</button>
+                                <button id="lock-clear-btn" class="btn btn-secondary btn-sm mx-2" onclick="toggleLockClear()">🔒 Unlock</button>
                                 
                             </div>
 
@@ -569,36 +564,6 @@
                             </table>
                         </div>
                         
-                        
-                    </div>
-
-                    <!-- Transaction History Tab -->
-                    <div class="tab-pane fade" id="transaction-history" role="tabpanel">
-                        <p class="text-end text-muted">Last updated: <span id="last-updated-txn-history">-</span></p>
-                        <button id="txn-history-refresh-btn" class="btn btn-primary btn-sm float-end mb-2">Refresh</button>
-                        <div class="table-responsive">
-                            <table class="table table-hover table-bordered table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>CCY</th>
-                                        <th>Filled Price</th>
-                                        <th>Filled Size</th>
-                                        <th>Filled Time</th>
-                                        <th>Trade Type</th>
-                                        <th>Fee</th>
-                                        <th>Fee CCY</th>
-                                        <th>Timestamp</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="oms-open-txn-history-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Transaction Records Tab -->
-                    <div class="tab-pane fade" id="transaction-records" role="tabpanel">
-                        <h3>Transaction Records</h3>
-                        <p>Content for transaction records will be displayed here.</p>
                     </div>
 
                 </div>

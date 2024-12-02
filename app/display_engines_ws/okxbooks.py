@@ -44,22 +44,41 @@ class OKXWebSocketClient:
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
 
-    async def run(self, channel,currency_pairs, callback):
-        """Run the WebSocket client, subscribing to the given currency pairs."""
-        await self.start()
-        # Subscribe to all specified currency pairs
-        for pair in currency_pairs:
-            await self.subscribe(channel, pair, callback)
+    # async def run(self, channel,currency_pairs, callback):
+    #     """Run the WebSocket client, subscribing to the given currency pairs."""
+    #     await self.start()
+    #     # Subscribe to all specified currency pairs
+    #     for pair in currency_pairs:
+    #         await self.subscribe(channel, pair, callback)
 
-        # Keep the connection alive
-        try:
-            while True:
-                await asyncio.sleep(1)  # Keep the event loop running
-        except KeyboardInterrupt:
-            print("Disconnecting...")
-            await self.unsubscribe()  # Unsubscribe when exiting
-        finally:
-            await self.close()  # Ensure WebSocket is closed when done
+    #     # Keep the connection alive
+    #     try:
+    #         while True:
+    #             await asyncio.sleep(1)  # Keep the event loop running
+    #     except KeyboardInterrupt:
+    #         print("Disconnecting...")
+    #         await self.unsubscribe()  # Unsubscribe when exiting
+    #     finally:
+    #         await self.close()  # Ensure WebSocket is closed when done
+    async def run(self, channel, currency_pairs, callback):
+        """Run the WebSocket client, subscribing to the given currency pairs."""
+        while True:
+            try:
+                await self.start()
+                print(f"Connected to {self.url}")
+
+                # Subscribe to all specified currency pairs
+                for pair in currency_pairs:
+                    await self.subscribe(channel, pair, callback)
+
+                # Keep the connection alive
+                while True:
+                    await asyncio.sleep(1)  # Keep the event loop running
+            except (asyncio.CancelledError, Exception) as e:
+                print(f"Error in WebSocket connection: {e}")
+                print("Attempting to reconnect in 5 seconds...")
+                await self.close()
+                await asyncio.sleep(5)  # Wait before reconnecting
 
     async def unsubscribe(self):
         """Unsubscribe from all channels."""

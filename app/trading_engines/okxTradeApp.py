@@ -258,7 +258,9 @@ def ammend_order():
             print(f"API credentials for {username}", api_creds_dict)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         
-      
+        if data.get('algoId') == 'undefined':
+            data['algoId'] = ''
+
         print('data',data)
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['px'],'newSlOrdPx':data['px'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
         print('atachalgoords',attachAlgoOrds)
@@ -326,6 +328,7 @@ def cancel_all_orders_by_ccy():
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
         print(f"API credentials for {username}", api_creds_dict)
+    print(data['ccy'])
     tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
     response = tradeAPI.get_order_list(instId=data['ccy'])
     

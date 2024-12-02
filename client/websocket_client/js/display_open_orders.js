@@ -28,7 +28,7 @@ async function populateOpenOrders() {
         body: JSON.stringify(request_data)
     });
 
-    const secondOrderPromise = fetch(`http://${hostname}:5081/htx/get_all_open_orders`, {
+    const secondOrderPromise = fetch(`http://${hostname}:5061/htx/get_all_open_orders`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -396,14 +396,14 @@ function toggleLockClear() {
 
     if (isLocked) {
         // Unlock: Enable the buttons and update the lock button appearance
-        lockButton.textContent = '🔓 Unlock';
+        lockButton.textContent = '🔓 Lock';
         lockButton.classList.remove('btn-secondary');
         lockButton.classList.add('btn-success');
         actionButtons.forEach(button => button.disabled = false);
         isLocked = false;
     } else {
         // Lock: Disable the buttons and update the lock button appearance
-        lockButton.textContent = '🔒 Lock';
+        lockButton.textContent = '🔒 Unlock';
         lockButton.classList.remove('btn-success');
         lockButton.classList.add('btn-secondary');
         actionButtons.forEach(button => button.disabled = true);

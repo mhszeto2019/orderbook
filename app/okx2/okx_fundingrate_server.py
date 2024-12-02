@@ -95,11 +95,13 @@ async def okx_websocket():
                         print('ccy',response_data['data'][0].get('instId',''))
                         ccy = response_data['data'][0].get('instId','')
                         
-                        ts = response_data['data'][0].get('ts',0)
-                      
-                        data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":ts}
-                        # Emit the received data to the frontend
-                        print(data_to_client)
+                        ts = int(response_data['data'][0].get('ts',0))/ 1000
+                        readable_timestamp = datetime.datetime.fromtimestamp(ts)
+
+                        # Format the timestamp as a human-readable string
+                        formatted_timestamp = readable_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                        print(readable_timestamp)
+                        data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":formatted_timestamp}
                         socketio.emit(f'okx_funding_rate/{ccy}', {'data': json.dumps(data_to_client)}) 
 
                     # await asyncio.sleep(1)  # Adjust the time delay (in seconds)
@@ -122,11 +124,6 @@ def handle_connect():
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_okx_client)
 
-@socketio.on('disconnect')
-def handle_connect():
-    print("Client disconnected")
-    # Start the WebSocket client using a background task
-
 if __name__ == '__main__':
     # Run Flask server
-    socketio.run(app, host='0.0.0.0', port=5001)
+    socketio.run(app, host='0.0.0.0', port=5000)

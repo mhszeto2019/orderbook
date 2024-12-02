@@ -30,3 +30,5 @@ tmux send-keys -t okx_display_asset_and_position_engine "source $okxenv && gunic
 tmux new-session -d -s htx_display_asset_and_position_engine
 # Create a new window within that session, ensuring the environment is sourced
 tmux send-keys -t htx_display_asset_and_position_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_asset_and_position_port app.display_engines_rest.htx_positions:app" C-m
+
+# gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5000 okx2.okx_fundingrate_server:app
