@@ -201,7 +201,6 @@ def get_all_okx_open_orders():
         # side = data['side']
         username = data.get('username')
         key_string = data.get('redis_key')
-        print(key_string)
         # cleaned_key_string = key_string.strip("b'")
         if key_string.startswith("b'") and key_string.endswith("'"):
             cleaned_key_string = key_string[2:-1]
@@ -223,6 +222,7 @@ def get_all_okx_open_orders():
             print(f"API credentials for {username}", api_creds_dict)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = tradeAPI.get_order_list()
+        print(result)
         return result
         # order_list = []
         # for row in data:

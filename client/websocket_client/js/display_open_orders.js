@@ -28,7 +28,7 @@ async function populateOpenOrders() {
         body: JSON.stringify(request_data)
     });
 
-    const secondOrderPromise = fetch(`http://${hostname}:5061/htx/get_all_open_orders`, {
+    const  secondOrderPromise= fetch(`http://${hostname}:6061/htx/get_all_htx_open_orders`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -480,6 +480,7 @@ function copyToClipboard(inputId) {
 }
 
 
+// {'code': '0', 'data': [{'accFillSz': '0', 'algoClOrdId': '', 'algoId': '', 'attachAlgoClOrdId': '', 'attachAlgoOrds': [], 'avgPx': '', 'cTime': '1733132176140', 'cancelSource': '', 'cancelSourceReason': '', 'category': 'normal', 'ccy': '', 'clOrdId': '', 'fee': '0', 'feeCcy': 'BTC', 'fillPx': '', 'fillSz': '0', 'fillTime': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'isTpLimit': 'false', 'lever': '5', 'linkedAlgoOrd': {'algoId': ''}, 'ordId': '2034397700695343104', 'ordType': 'limit', 'pnl': '0', 'posSide': 'net', 'px': '70000', 'pxType': '', 'pxUsd': '', 'pxVol': '', 'quickMgnType': '', 'rebate': '0', 'rebateCcy': 'BTC', 'reduceOnly': 'false', 'side': 'buy', 'slOrdPx': '', 'slTriggerPx': '', 'slTriggerPxType': '', 'source': '', 'state': 'live', 'stpId': '', 'stpMode': 'cancel_maker', 'sz': '1', 'tag': '', 'tdMode': 'isolated', 'tgtCcy': '', 'tpOrdPx': '', 'tpTriggerPx': '', 'tpTriggerPxType': '', 'tradeId': '', 'uTime': '1733132176140'}], 'msg': ''}
 
 function Htx2OkxFormat(originalDataArray) {
     return originalDataArray.map(originalData => {
