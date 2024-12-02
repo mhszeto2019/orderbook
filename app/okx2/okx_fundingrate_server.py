@@ -89,20 +89,18 @@ async def okx_websocket():
 
                 async for msg in ws:
                     response_data = json.loads(msg)
-                    print(response_data)
                     if 'data' in response_data:
                         funding_rate = response_data['data'][0].get('fundingRate', None)
-                        fundingTime = unix_ts_to_datetime(response_data['data'][0].get('fundingTime', []))
+                        fundingTime = response_data['data'][0].get('fundingTime', [])
+                        print('ccy',response_data['data'][0].get('instId',''))
+                        ccy = response_data['data'][0].get('instId','')
                         
-                        ccy = standardised_ccy_naming(response_data['data'][0].get('instId',''))
-                        if ccy in {"btcusdswap"}:
-                                ccy = "coin-m"
-                        ts = unix_ts_to_datetime(response_data['data'][0].get('ts',0))
+                        ts = response_data['data'][0].get('ts',0)
                       
                         data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":ts}
-                        print(data_to_client)
                         # Emit the received data to the frontend
-                        socketio.emit('okx_funding_rate', {'data': json.dumps(data_to_client)}) 
+                        print(data_to_client)
+                        socketio.emit(f'okx_funding_rate/{ccy}', {'data': json.dumps(data_to_client)}) 
 
                     # await asyncio.sleep(1)  # Adjust the time delay (in seconds)
     print("Disconnected " + datetime.datetime.now().isoformat())
@@ -123,6 +121,11 @@ def handle_connect():
     print("Client connected")
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_okx_client)
+
+@socketio.on('disconnect')
+def handle_connect():
+    print("Client disconnected")
+    # Start the WebSocket client using a background task
 
 if __name__ == '__main__':
     # Run Flask server

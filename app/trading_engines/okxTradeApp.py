@@ -37,25 +37,6 @@ import base64
 def home():
     return "Welcome to the OKX Trade API Flask App!"
 
-# Route to test getting fills
-# @app.route('/get_fills', methods=['GET'])
-# def get_fills():
-
-#     begin = request.args.get('begin', '1717045609000')
-#     end = request.args.get('end', '1717045609100')
-#     # print(time.localtime())
-#     # current_ts = int(time.time() * 1000)
-#     current_ts = time.time() 
-#     day_before_ts = current_ts - 86400
-#     # print(day_before_ts,current_ts)
-#     try:
-#         fills = tradeApi.get_fills(begin=int(current_ts * 1000), end=int(day_before_ts * 1000))
-#         print(fills)
-#         return jsonify(fills), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
 @app.route('/okx/swap/place_market_order', methods=['POST'])
 @token_required
 def place_market_order():
@@ -212,7 +193,6 @@ def close_positions():
     return result
 
 
-
 @token_required
 @app.route('/okx/get_all_okx_open_orders', methods=['POST'])
 def get_all_okx_open_orders():
@@ -323,6 +303,7 @@ def cancel_order_by_id():
 
     return result
 
+@token_required
 @app.route('/okx/cancel_all_orders_by_ccy',methods=['POST'])
 def cancel_all_orders_by_ccy():
     data = request.get_json()
@@ -356,6 +337,8 @@ def cancel_all_orders_by_ccy():
     result = tradeAPI.cancel_multiple_orders(order_list)
     return result
 
+
+
 # not checked
 @app.route('/get_order_list', methods=['GET'])
 def get_order_list():
@@ -380,7 +363,6 @@ def cancel_order():
     
     print(tradeApi.cancel_order(instId=data['instId'],ordId=data['ordId']))
     
-
 @app.route('/cancel_multiple_orders', methods=['POST'])
 def cancel_multiple_order():
     data = request.get_json()
@@ -388,7 +370,6 @@ def cancel_multiple_order():
     result = tradeApi.cancel_multiple_orders(cancel_orders_list)
     # print(result)
     return result
-    
     
 @app.route('/cancel_all_orders',methods=['POST'])
 def cancel_all_orders():
