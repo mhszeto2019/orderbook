@@ -23,10 +23,10 @@ tmux new-session -d -s htx_display_engine_orderbook
 # Create a new window within that session, ensuring the environment is sourced
 tmux send-keys -t htx_display_engine_orderbook "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_orderbook_port --workers 1 app.display_engines_ws.htxbooks:app" C-m
 
-# tmux new-session -d -s okx_display_asset_and_position_engine
-# # Create a new window within that session, ensuring the environment is sourced
-# tmux send-keys -t okx_display_asset_and_position_engine "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_asset_and_position_port app.display_engines_ws.okxbooks:app" C-m
+tmux new-session -d -s okx_display_asset_and_position_engine
+# Create a new window within that session, ensuring the environment is sourced
+tmux send-keys -t okx_display_asset_and_position_engine "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_asset_and_position_port app.display_engines_rest.okx_positions:app" C-m
 
-# tmux new-session -d -s htx_display_asset_and_position_engine
-# # Create a new window within that session, ensuring the environment is sourced
-# tmux send-keys -t htx_display_asset_and_position_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_asset_and_position_port app.display_engines_ws.htxbooks:app" C-m
+tmux new-session -d -s htx_display_asset_and_position_engine
+# Create a new window within that session, ensuring the environment is sourced
+tmux send-keys -t htx_display_asset_and_position_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_asset_and_position_port app.display_engines_rest.htx_positions:app" C-m

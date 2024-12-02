@@ -19,7 +19,7 @@ async function populatePositions() {
     const request_data = { "username": username, "redis_key": redis_key };
 
     // Set up both the OKX and HTX requests
-    const firstOrderPromise = fetch(`http://${hostname}:9001/okx/get_all_positions`, {
+    const firstOrderPromise = fetch(`http://${hostname}:5070/okx/get_all_positions`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -28,7 +28,7 @@ async function populatePositions() {
         body: JSON.stringify(request_data)
     });
 
-    const secondOrderPromise = fetch(`http://${hostname}:9000/htx/get_all_positions`, {
+    const secondOrderPromise = fetch(`http://${hostname}:5071/htx/get_all_positions`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,

@@ -53,14 +53,18 @@ def home():
 
 @token_required
 @app.route('/okx/get_all_positions', methods=['POST'])
-def get_all_okx_positions():
+def get_all_positions():
     try:
         data = request.get_json()
+        print(data)
         # side = data['side']
         username = data.get('username')
         key_string = data.get('redis_key')
         print(data)
-        cleaned_key_string = key_string.strip("b'")
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
         key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
         key_bytes = cleaned_key_string.encode('utf-8')
         # You can now use the key with Fernet
@@ -105,4 +109,4 @@ def get_all_okx_positions():
 # {'code': '0', 'data': [{'adl': '1', 'availPos': '', 'avgPx': '93511.7', 'baseBal': '', 'baseBorrowed': '', 'baseInterest': '', 'bePx': '93567.82385715279', 'bizRefId': '', 'bizRefType': '', 'cTime': '1732693584348', 'ccy': 'BTC', 'clSpotInUseAmt': '', 'closeOrderAlgo': [], 'deltaBS': '', 'deltaPA': '', 'fee': '-0.0000003208154701', 'fundingFee': '0', 'gammaBS': '', 'gammaPA': '', 'idxPx': '93470.8000000000000000', 'imr': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'interest': '', 'last': '93523.8', 'lever': '5', 'liab': '', 'liabCcy': '', 'liqPenalty': '0', 'liqPx': '78261.60025833434', 'margin': '0.0002138769800998', 'markPx': '93516.3', 'maxSpotInUseAmt': '', 'mgnMode': 'isolated', 'mgnRatio': '46.525355824765654', 'mmr': '0.0000042773291929', 'notionalUsd': '100', 'optVal': '', 'pendingCloseOrdLiabVal': '', 'pnl': '0', 'pos': '1', 'posCcy': '', 'posId': '2019681002234920961', 'posSide': 'net', 'quoteBal': '', 'quoteBorrowed': '', 'quoteInterest': '', 'realizedPnl': '-0.0000003208154701', 'spotInUseAmt': '', 'spotInUseCcy': '', 'thetaBS': '', 'thetaPA': '', 'tradeId': '332996199', 'uTime': '1732693584348', 'upl': '0.0000000526022794', 'uplLastPx': '0.0000001383557693', 'uplRatio': '0.0002459464285909', 'uplRatioLastPx': '0.0006468941595617', 'usdPx': '', 'vegaBS': '', 'vegaPA': ''}], 'msg': ''}
 
 if __name__ == "__main__":
-    app.run(port = '9001')
+    app.run(port = '5070')

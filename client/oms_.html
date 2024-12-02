@@ -468,8 +468,7 @@
                 </ul>
                 <div class="tab-content mt-3">
                     <!-- Assets & Positions Tab -->
-                   
-                   
+                                    
                     <div class="tab-pane fade show active" id="assets-positions" role="tabpanel">
                         
                         <p >
@@ -541,9 +540,9 @@
                            
                         </p>
                         
-                        <div class="table-responsive">
-                            <table class="OpenOrdersTable table table-hover table-bordered table-sm">
-                                <thead>
+                        <div class="table-responsive" style="height: 400px; overflow-y: auto;">
+                            <table class="OpenOrdersTable table table-hover table-bordered table-sm w-100">
+                                <thead class="table-light" style="position: sticky; top: 0; z-index: 1020;">
                                     <tr>
                                         <th>Exchange</th>
                                         <th>Symbol</th>
@@ -556,14 +555,15 @@
                                         <th>Order Time</th>
                                         <th>Action1</th>
                                         <th>Action2</th>
-
                                     </tr>
                                 </thead>
                                 <tbody id="oms-open-orders-body">
-
+                                    <!-- Dynamic rows will be inserted here -->
                                 </tbody>
                             </table>
                         </div>
+                        
+                        
                     </div>
 
                     <!-- Transaction History Tab -->
@@ -812,59 +812,59 @@
     }
 
 
- /* Make sure the parent container is a flex container */
-.orderbook-container {
-    width:70%;
-    display: flex;
-    justify-content: space-between;  /* Ensure orderbooks are side by side */
-    gap: 15px; /* Space between each orderbook */
+    /* Make sure the parent container is a flex container */
+    .orderbook-container {
+        width:70%;
+        display: flex;
+        justify-content: space-between;  /* Ensure orderbooks are side by side */
+        gap: 15px; /* Space between each orderbook */
 
-}
+    }
 
-/* Set a fixed width for each orderbook container */
-.scrollable-orderbook {
-    max-height: 160px; /* Set a fixed height for uniformity */
-    overflow-y: auto;  /* Enable vertical scrolling */
-    border: 1px solid #ddd;  /* Optional border styling */
-    /* padding: 10px; */
-    background-color: #f9f9f9; /* Light background for better readability */
-    display: flex;
-    flex-direction: column;
-    gap: 5px;  /* Add gap between asks and bids */
-    box-sizing: border-box; /* Include padding and border in the element's total width */
-    scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
-    scrollbar-width: thin; 
-}
+    /* Set a fixed width for each orderbook container */
+    .scrollable-orderbook {
+        max-height: 160px; /* Set a fixed height for uniformity */
+        overflow-y: auto;  /* Enable vertical scrolling */
+        border: 1px solid #ddd;  /* Optional border styling */
+        /* padding: 10px; */
+        background-color: #f9f9f9; /* Light background for better readability */
+        display: flex;
+        flex-direction: column;
+        gap: 5px;  /* Add gap between asks and bids */
+        box-sizing: border-box; /* Include padding and border in the element's total width */
+        scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
+        scrollbar-width: thin; 
+    }
 
 
 
-/* Optional: Ensures each ask/bid has a consistent font size and line height */
-.scrollable-orderbook p,
-.scrollable-orderbook li {
-    font-size: 15px;
-    /* line-height: 1.6; */
-    margin: 0;
-    /* padding: 2px 0; */
-}
+    /* Optional: Ensures each ask/bid has a consistent font size and line height */
+    .scrollable-orderbook p,
+    .scrollable-orderbook li {
+        font-size: 15px;
+        /* line-height: 1.6; */
+        margin: 0;
+        /* padding: 2px 0; */
+    }
 
-.scrollable-orderbook ul {
-    list-style-type: none;
-    padding-left: 0;
-    margin: 0;
-}
+    .scrollable-orderbook ul {
+        list-style-type: none;
+        padding-left: 0;
+        margin: 0;
+    }
 
-.scrollable-orderbook li {
-    margin-bottom: 5px;
-}
-/* Style for Asks (Red) */
-.scrollable-orderbook .asks  {
-    color: red;
-}
+    .scrollable-orderbook li {
+        margin-bottom: 5px;
+    }
+    /* Style for Asks (Red) */
+    .scrollable-orderbook .asks  {
+        color: red;
+    }
 
-/* Style for Bids (Green) */
-.scrollable-orderbook .bids {
-    color: green;
-}
+    /* Style for Bids (Green) */
+    .scrollable-orderbook .bids {
+        color: green;
+    }
 
 
 </style>

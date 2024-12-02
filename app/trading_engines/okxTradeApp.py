@@ -65,7 +65,10 @@ def place_market_order():
     # Get the order data from the request
     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
     key_string = data.get('redis_key')
-    cleaned_key_string = key_string.strip("b'")
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
 
     # Now decode the base64 string into bytes
     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
@@ -121,7 +124,10 @@ def place_limit_order():
     # Get the order data from the request
     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
     key_string = data.get('redis_key')
-    cleaned_key_string = key_string.strip("b'")
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
 
     # Now decode the base64 string into bytes
     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
@@ -181,7 +187,10 @@ def close_positions():
     username = data.get('username')
     key_string = data.get('redis_key')
     print(data)
-    cleaned_key_string = key_string.strip("b'")
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
     key_bytes = cleaned_key_string.encode('utf-8')
     # You can now use the key with Fernet
@@ -203,15 +212,22 @@ def close_positions():
     return result
 
 
+
 @token_required
-@app.route('/okx/get_all_open_orders', methods=['POST'])
+@app.route('/okx/get_all_okx_open_orders', methods=['POST'])
 def get_all_okx_open_orders():
     try:
         data = request.get_json()
         # side = data['side']
         username = data.get('username')
         key_string = data.get('redis_key')
-        cleaned_key_string = key_string.strip("b'")
+        print(key_string)
+        # cleaned_key_string = key_string.strip("b'")
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+
         key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
         key_bytes = cleaned_key_string.encode('utf-8')
         # You can now use the key with Fernet
@@ -227,7 +243,6 @@ def get_all_okx_open_orders():
             print(f"API credentials for {username}", api_creds_dict)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = tradeAPI.get_order_list()
-        print(result)
         return result
         # order_list = []
         # for row in data:
@@ -235,8 +250,6 @@ def get_all_okx_open_orders():
         # print(order_list)
     except Exception as e:
         print(e)
-
-
 
 
 @token_required
@@ -247,7 +260,10 @@ def ammend_order():
         print(data)
         username = data.get('username')
         key_string = data.get('redis_key')
-        cleaned_key_string = key_string.strip("b'")
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
         key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
         key_bytes = cleaned_key_string.encode('utf-8')
         # You can now use the key with Fernet
@@ -261,35 +277,14 @@ def ammend_order():
             api_creds_dict = json.loads(decrypted_data)
             print(f"API credentials for {username}", api_creds_dict)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-        # result = tradeAPI.amend_order(
-        #     instId=data['ccy'],
-        #     ordId=data['ordId'],
-        #     newSz=data['sz'],
-        #     newPx=data['px'],
-        #     newTpOrdPx=data['takeProfit'],
-        #     newSlOrdPx=data['stopLoss'],
-            
-        #     attachAlgoOrds = [
-        #        {
-        #         "tpTriggerPxType": "last",
-        #         "tpOrdPx": "-1",
-        #         "newtpTriggerPx": data['takeProfit'],
-        #         "newSz": "1"
-        #     },
-        #     {
-        #         "slTriggerPxType": "last",
-        #         "slOrdPx": "-1",
-        #         "newslTriggerPx": data['stopLoss'],
-        #         "newSz": "1"
-        #     }
-        #     ]
-
-        # )
+        
       
-        print(data)
+        print('data',data)
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['px'],'newSlOrdPx':data['px'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
+        print('atachalgoords',attachAlgoOrds)
         result = tradeAPI.amend_order("BTC-USD-SWAP", ordId=data['ordId'],newSz='1',
                                         attachAlgoOrds=attachAlgoOrds)
+        print(result)
         return result
         # order_list = []
         # for row in data:
@@ -298,7 +293,68 @@ def ammend_order():
     except Exception as e:
         print(e)
 
+@token_required
+@app.route('/okx/cancel_order_by_id', methods=['POST'])
+def cancel_order_by_id():
+    data = request.get_json()
+    username = data.get('username')
+    key_string = data.get('redis_key')
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
+    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+    key_bytes = cleaned_key_string.encode('utf-8')
+    # You can now use the key with Fernet
+    cipher_suite = Fernet(key_bytes)
+    
+    cache_key = f"user:{username}:api_credentials"
+    # Fetch the encrypted credentials from Redis
+    encrypted_data = r.get(cache_key)   
+    if encrypted_data:
+    # Decrypt the credentials
+        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+        api_creds_dict = json.loads(decrypted_data)
+        print(f"API credentials for {username}", api_creds_dict)
+    tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+    print(data['ccy'])
+    result = tradeAPI.cancel_order(data['ccy'],data['ordId'])
+    print(result)
 
+    return result
+
+@app.route('/okx/cancel_all_orders_by_ccy',methods=['POST'])
+def cancel_all_orders_by_ccy():
+    data = request.get_json()
+    username = data.get('username')
+    key_string = data.get('redis_key')
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
+    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+    key_bytes = cleaned_key_string.encode('utf-8')
+    # You can now use the key with Fernet
+    cipher_suite = Fernet(key_bytes)
+    
+    cache_key = f"user:{username}:api_credentials"
+    # Fetch the encrypted credentials from Redis
+    encrypted_data = r.get(cache_key)   
+    if encrypted_data:
+    # Decrypt the credentials
+        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+        api_creds_dict = json.loads(decrypted_data)
+        print(f"API credentials for {username}", api_creds_dict)
+    tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+    response = tradeAPI.get_order_list(instId=data['ccy'])
+    
+    # # print(data)
+    print('order_list',response['data'])
+    order_list = []
+    for row in response['data']:
+        order_list.append({"instId":row['instId'], "ordId":row['ordId']})
+    result = tradeAPI.cancel_multiple_orders(order_list)
+    return result
 
 # not checked
 @app.route('/get_order_list', methods=['GET'])

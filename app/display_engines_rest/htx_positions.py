@@ -73,7 +73,10 @@ async def get_all_htx_positions():
     # Get the order data from the request
     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
     key_string = data.get('redis_key')
-    cleaned_key_string = key_string.strip("b'")
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
 
     # Now decode the base64 string into bytes
     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
