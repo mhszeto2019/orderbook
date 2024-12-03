@@ -96,6 +96,29 @@ class HuobiCoinFutureRestTradeAPI:
             print("JSON DICT",json_dict)
             return json_dict
 
+    async def revoke_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+            """ Revoke an order.
+
+            Args:
+                contract_code: such as "BTC-USD".
+                order_id: Order ID.
+
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/swap-api/v1/swap_cancel"
+            # body = {
+            #     "contract_code": contract_code
+            # }
+            # if order_id:
+            #     body["order_id"] = order_id
+            # if client_order_id:
+            #     body["client_order_id"] = client_order_id
+
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            print("JSON DICT",json_dict)
+            return json_dict
 
     async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         # Args:

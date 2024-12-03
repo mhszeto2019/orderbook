@@ -119,7 +119,7 @@ function populateOpenOpenOrdersTable(orders) {
         // Add rows dynamically
         orders.forEach(position => {
             // Check attachAlgoOrds
-            console.log(position)
+            console.log('position',position)
             ordersHist[position.ordId]={};
             ordersHist[position.ordId]['orderPx']= position.px;
             ordersHist[position.ordId]['orderSz']= position.sz;
@@ -156,7 +156,7 @@ function populateOpenOpenOrdersTable(orders) {
                 position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A',
                 // Buttons for last two columns
                 `<button class="btn btn-primary btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleModify('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}')">Modify</button>`,
-                `<button class="btn btn-danger btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleDelete('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}')">Delete</button>`
+                `<button class="btn btn-danger btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleDelete('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Delete</button>`
             ]);
         });
         console.log(ordersHist)
@@ -345,9 +345,11 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
 
 
 
-async function handleDelete(instId, ordId) {
+async function handleDelete(instId, ordId,algoId,exchange) {
     console.log(`Delete clicked for InstID: ${instId}, OrderID: ${ordId}`);
     // Add your delete logic here
+    exchange = exchange.toLowerCase()
+    console.log(exchange)
     const token = getAuthToken();
     const username = localStorage.getItem('username')
     const redis_key = localStorage.getItem('key')
@@ -356,35 +358,64 @@ async function handleDelete(instId, ordId) {
         alert("You must be logged in to access this.");
         return;
     }
-    request_data = {"username":username,"redis_key":redis_key,'ordId':ordId,'ccy':instId}
+    request_data = {"username":username,"redis_key":redis_key,'ordId':ordId,'ccy':instId,'exchange':exchange}
+    if (exchange == 'okx')
+        {
+            // Call the API using fetch
+            const firstOrderPromise =  fetch(`http://${hostname}:5080/okx/cancel_order_by_id`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request_data)
+            });
 
-    console.log(request_data)
-    // Call the API using fetch
-    const firstOrderPromise =  fetch(`http://${hostname}:5080/okx/cancel_order_by_id`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
-
-    const results = await Promise.allSettled([firstOrderPromise]);
-    if (results[0].status === 'fulfilled') {
-        // Extract the data from the resolved promise
-        const response = results[0].value;
-        if (response.ok) {
-            // Parse the JSON data from the response
-            const response_data = await response.json();
-            console.log(response_data.data)
-            // populateOpenOpenOrdersTable(response_data.data);
-            populateOpenOrders();
-        } else {
-            console.error('Error fetching orders:', response.statusText);
+            const results = await Promise.allSettled([firstOrderPromise]);
+            if (results[0].status === 'fulfilled') {
+                // Extract the data from the resolved promise
+                const response = results[0].value;
+                if (response.ok) {
+                    // Parse the JSON data from the response
+                    const response_data = await response.json();
+                    console.log(response_data.data)
+                    // populateOpenOpenOrdersTable(response_data.data);
+                    populateOpenOrders();
+                } else {
+                    console.error('Error fetching orders:', response.statusText);
+                }
+            } else {
+                console.error('Request failed:', results[0].reason);
+            }
         }
-    } else {
-        console.error('Request failed:', results[0].reason);
-    }
+    else if (exchange == 'htx'){
+            // Call the API using fetch
+            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/cancel_order_by_id`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request_data)
+            });
+
+            const results = await Promise.allSettled([firstOrderPromise]);
+            if (results[0].status === 'fulfilled') {
+                // Extract the data from the resolved promise
+                const response = results[0].value;
+                if (response.ok) {
+                    // Parse the JSON data from the response
+                    const response_data = await response.json();
+                    console.log(response_data.data)
+                    // populateOpenOpenOrdersTable(response_data.data);
+                    populateOpenOrders();
+                } else {
+                    console.error('Error fetching orders:', response.statusText);
+                }
+            } else {
+                console.error('Request failed:', results[0].reason);
+            }
+        }
 }
 
 
