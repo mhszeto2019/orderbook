@@ -40,65 +40,66 @@ def home():
 @app.route('/okx/swap/place_market_order', methods=['POST'])
 @token_required
 def place_market_order():
-    data = request.get_json()
-    side = data['side']
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
+    try:
+        data = request.get_json()
+        side = data['side']
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
 
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
         
-    # Initialize TradeAPI
-    tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+            
+        # Initialize TradeAPI
+        tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
 
-    result = tradeApi.place_order(
-        instId= data["instId"],
-        tdMode= "cross", 
-        side= side, 
-        posSide='', 
-        ordType=  data["ordType"],
-        sz= str(data["sz"]) 
-    )
-    result['data'][0]['exchange']='okx'
+        result = tradeApi.place_order(
+            instId= data["instId"],
+            tdMode= "cross", 
+            side= side, 
+            posSide='', 
+            ordType=  data["ordType"],
+            sz= str(data["sz"]) 
+        )
+        result['data'][0]['exchange']='okx'
 
-    if result["code"] == "0":
-        result['data'][0]['sCode'] = 200
+        if result["code"] == "0":
+            result['data'][0]['sCode'] = 200
 
-        # print("Successful order request，order_id = ",result["data"][0]["ordId"])
+            # print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-    else:
-        result['data'][0]['sCode'] = 400
+        else:
+            result['data'][0]['sCode'] = 400
 
-        # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+            # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
 
-    logger.info("Order request resposne {}".format(result))
+        logger.info("Order request resposne {}".format(result))
 
-    return result
+        return result
+    except Exception as e:
+        print(e)
 
 
 @app.route('/okx/swap/place_limit_order', methods=['POST'])
 @token_required
 def place_limit_order():
     data = request.get_json()
-    print(data)
 
     side = data['side']
     username = data.get('username')
@@ -117,16 +118,13 @@ def place_limit_order():
     cipher_suite = Fernet(key_bytes)
     
     cache_key = f"user:{username}:api_credentials"
-    print(cache_key)
 
     # Fetch the encrypted credentials from Redis
     encrypted_data = r.get(cache_key)   
-    print('encrypt',encrypted_data)
     if encrypted_data:
     # Decrypt the credentials
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
         
     # Initialize TradeAPI
     tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
@@ -164,33 +162,33 @@ def place_limit_order():
 @token_required
 @app.route('/close_positions', methods=['POST'])
 def close_positions():
-    data = request.get_json()
-    username = data.get('username')
-    key_string = data.get('redis_key')
-    print(data)
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
-    tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-    print(data['ccy'])
-    result = tradeAPI.close_positions(data['ccy'],mgnMode="cross")
-    print(result)
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        key_string = data.get('redis_key')
+        print(data)
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+        tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+        result = tradeAPI.close_positions(data['ccy'],mgnMode="cross")
 
-    return result
+        return result
+    except Exception as e:
+        print(e)
 
 
 @token_required
@@ -219,7 +217,6 @@ def get_all_okx_open_orders():
         # Decrypt the credentials
             decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
             api_creds_dict = json.loads(decrypted_data)
-            print(f"API credentials for {username}", api_creds_dict)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = tradeAPI.get_order_list()
         print(result)
@@ -255,18 +252,14 @@ def ammend_order():
         # Decrypt the credentials
             decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
             api_creds_dict = json.loads(decrypted_data)
-            print(f"API credentials for {username}", api_creds_dict)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         
         if data.get('algoId') == 'undefined':
             data['algoId'] = ''
 
-        print('data',data)
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['px'],'newSlOrdPx':data['px'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
-        print('atachalgoords',attachAlgoOrds)
         result = tradeAPI.amend_order("BTC-USD-SWAP", ordId=data['ordId'],newSz='1',
                                         attachAlgoOrds=attachAlgoOrds)
-        print(result)
         return result
         # order_list = []
         # for row in data:
