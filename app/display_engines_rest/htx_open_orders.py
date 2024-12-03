@@ -39,7 +39,7 @@ from cryptography.fernet import Fernet
 # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",secretKey,apiKey)
 
 @token_required
-@app.route('/htx/get_all_htx_open_orders', methods=['POST'])
+@app.route('/htx/swap/get_all_htx_open_orders', methods=['POST'])
 async def get_all_htx_open_orders():
     data = request.get_json()
     username = data.get('username')
@@ -64,7 +64,6 @@ async def get_all_htx_open_orders():
     # Decrypt the credentials
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
         
     try:
         # Data received from the client (assuming JSON body)
@@ -79,7 +78,6 @@ async def get_all_htx_open_orders():
             }
         )
         open_order_data = open_orders.get('data', [])
-        
         return open_order_data
     
     except Exception as e:
@@ -87,7 +85,7 @@ async def get_all_htx_open_orders():
 
 
 @token_required
-@app.route('/htx/cancel_all_htx_open_order_by_ccy', methods=['POST'])
+@app.route('/htx/swap/cancel_all_htx_open_order_by_ccy', methods=['POST'])
 async def cancel_all_htx_open_order_by_ccy():
     data = request.get_json()
     username = data.get('username')
@@ -112,32 +110,31 @@ async def cancel_all_htx_open_order_by_ccy():
     # Decrypt the credentials
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
         
     try:
 
         # Data received from the client (assuming JSON body)
-        print(data)
         instId = data.get('ccy','')
         # instId= data["instId"].replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
-        open_orders = await tradeApi.revoke_order_all(
+        open_orders_request = await tradeApi.revoke_order_all(
             instId,body = {
             "contract_code": instId
             }
         )
-        open_order_data = open_orders.get('data', [])
-        
-        return open_order_data
+
+        print(open_orders_request)
+        # open_order_data = open_orders_request.get('data',[])
+        return open_orders_request
     
     except Exception as e:
         print(e)
 
 
 @token_required
-@app.route('/htx/cancel_order_by_id', methods=['POST'])
+@app.route('/htx/swap/cancel_order_by_id', methods=['POST'])
 async def cancel_order_by_id():
     data = request.get_json()
     username = data.get('username')
@@ -162,14 +159,12 @@ async def cancel_order_by_id():
     # Decrypt the credentials
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
         
     try:
 
         # Data received from the client (assuming JSON body)
-        print(data)
         instId = data.get('ccy','')
-        # instId= data["instId"].replace("-SWAP", "")
+        instId= instId.replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])

@@ -278,67 +278,70 @@ def ammend_order():
 @token_required
 @app.route('/okx/cancel_order_by_id', methods=['POST'])
 def cancel_order_by_id():
-    data = request.get_json()
-    username = data.get('username')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
-    tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-    print(data['ccy'])
-    result = tradeAPI.cancel_order(data['ccy'],data['ordId'])
-    print(result)
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+        tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+        result = tradeAPI.cancel_order(data['ccy'],data['ordId'])
 
-    return result
+        return result
+    except Exception as e:
+        print(e)
 
 @token_required
 @app.route('/okx/cancel_all_orders_by_ccy',methods=['POST'])
 def cancel_all_orders_by_ccy():
-    data = request.get_json()
-    username = data.get('username')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+            print(f"API credentials for {username}", api_creds_dict)
+        tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+        response = tradeAPI.get_order_list(instId=data['ccy'])
+        
+        # # print(data)
+        print('order_list',response['data'])
+        order_list = []
+        for row in response['data']:
+            order_list.append({"instId":row['instId'], "ordId":row['ordId']})
+        result = tradeAPI.cancel_multiple_orders(order_list)
+        return result
     
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
-    print(data['ccy'])
-    tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-    response = tradeAPI.get_order_list(instId=data['ccy'])
-    
-    # # print(data)
-    print('order_list',response['data'])
-    order_list = []
-    for row in response['data']:
-        order_list.append({"instId":row['instId'], "ordId":row['ordId']})
-    result = tradeAPI.cancel_multiple_orders(order_list)
-    return result
+    except Exception as e:
+        print(e)
 
 
 

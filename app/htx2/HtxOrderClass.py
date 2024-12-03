@@ -54,6 +54,7 @@ class HuobiCoinFutureRestTradeAPI:
 
         json_dict = await self.request("POST", uri, body=body, auth=True)
         print("JSON DICT",json_dict)
+
         return json_dict
 
     async def place_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
@@ -94,6 +95,7 @@ class HuobiCoinFutureRestTradeAPI:
 
             json_dict = await self.request("POST", uri, body=body, auth=True)
             print("JSON DICT",json_dict)
+            
             return json_dict
 
     async def revoke_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):

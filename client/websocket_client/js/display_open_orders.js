@@ -28,7 +28,7 @@ async function populateOpenOrders() {
         body: JSON.stringify(request_data)
     });
 
-    const  secondOrderPromise= fetch(`http://${hostname}:6061/htx/get_all_htx_open_orders`, {
+    const secondOrderPromise= fetch(`http://${hostname}:6061/htx/swap/get_all_htx_open_orders`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -73,22 +73,18 @@ async function populateOpenOrders() {
             const response = results[1].value;
             if (response.ok) {
                 const response_data = await response.json();
-                console.log('HTX data:', response_data);
                 const formattedData = Htx2OkxFormat(response_data);  // Format HTX data as needed
-                console.log(formattedData)
                 // Append HTX data to allOpenOrders
                 allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
                     ...position,
                     exchange: 'HTX'  // Add exchange name to each position
                 })));
-                console.log('HTX populated');
             } else {
                 console.error('Error fetching HTX orders:', response.statusText);
             }
         } else {
             console.error('HTX Request failed:', results[1].reason);
         }
-
         // After both responses are handled, populate the table with all orders
         populateOpenOpenOrdersTable(allOpenOrders);
 
@@ -107,7 +103,6 @@ function populateOpenOpenOrdersTable(orders) {
     openordersTable.clear();
 
     if (orders.length === 0) {
-        console.log(orders.length);
 
         // Manually add a row with `colspan`
         const emptyMessage = `
@@ -119,7 +114,6 @@ function populateOpenOpenOrdersTable(orders) {
         // Add rows dynamically
         orders.forEach(position => {
             // Check attachAlgoOrds
-            console.log('position',position)
             ordersHist[position.ordId]={};
             ordersHist[position.ordId]['orderPx']= position.px;
             ordersHist[position.ordId]['orderSz']= position.sz;
@@ -159,7 +153,6 @@ function populateOpenOpenOrdersTable(orders) {
                 `<button class="btn btn-danger btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleDelete('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Delete</button>`
             ]);
         });
-        console.log(ordersHist)
     }
 
     // Redraw the table to reflect changes
@@ -235,8 +228,6 @@ function handleModify(instId, ordId,algoId) {
     </div>
 </div>
 
-
-
     `;
     // Display the modal
     modal.style.display = 'block';
@@ -268,10 +259,8 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
         alert("You must be logged in to access this.");
         return;
     }
-    console.log(formData)
 
     const request_data = { "username": username, "redis_key": redis_key, 'ordId':formData.get('ordId'),'algoId':formData.get('algoId'),'px':formData.get('orderPrice'),'sz':formData.get('orderSize'),'ccy':formData.get('instId'),'exchange':'okx','stopLoss':formData.get('stopLoss'),'takeProfit':formData.get('takeProfit'),'orderPrice':formData.get('orderPrice')};
-    // console.log('Form submitted with data:', Object.fromEntries(request_data));
 
     const firstAmmendPromise = fetch(`http://${hostname}:5080/okx/ammend_order`, {
         method: 'POST',
@@ -293,13 +282,11 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
             if (response.ok) {
                 const response_data = await response.json();
                 if (response_data.data){
-                    console.log('OKX data:', response_data.data);
                     // Append OKX data to allOpenOrders
                     allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
                         ...position,
                         exchange: 'OKX'  // Add exchange name to each position
                     })));
-                    console.log('OKX populated');
                 }
                 else{
                     console.error(response_data['msg'],response_data['code'])
@@ -346,14 +333,11 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
 
 
 async function handleDelete(instId, ordId,algoId,exchange) {
-    console.log(`Delete clicked for InstID: ${instId}, OrderID: ${ordId}`);
     // Add your delete logic here
     exchange = exchange.toLowerCase()
-    console.log(exchange)
     const token = getAuthToken();
     const username = localStorage.getItem('username')
     const redis_key = localStorage.getItem('key')
-    // console.log(username,redis_key,token)
     if (!token |!username | !redis_key ) {
         alert("You must be logged in to access this.");
         return;
@@ -378,7 +362,6 @@ async function handleDelete(instId, ordId,algoId,exchange) {
                 if (response.ok) {
                     // Parse the JSON data from the response
                     const response_data = await response.json();
-                    console.log(response_data.data)
                     // populateOpenOpenOrdersTable(response_data.data);
                     populateOpenOrders();
                 } else {
@@ -390,7 +373,7 @@ async function handleDelete(instId, ordId,algoId,exchange) {
         }
     else if (exchange == 'htx'){
             // Call the API using fetch
-            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/cancel_order_by_id`, {
+            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/swap/cancel_order_by_id`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -406,7 +389,6 @@ async function handleDelete(instId, ordId,algoId,exchange) {
                 if (response.ok) {
                     // Parse the JSON data from the response
                     const response_data = await response.json();
-                    console.log(response_data.data)
                     // populateOpenOpenOrdersTable(response_data.data);
                     populateOpenOrders();
                 } else {
@@ -417,7 +399,6 @@ async function handleDelete(instId, ordId,algoId,exchange) {
             }
         }
 }
-
 
 // Lock state variable
 let isLocked = true;
@@ -445,15 +426,12 @@ function toggleLockClear() {
 
 async function clearPositions(exchange) {
     ccy = document.getElementById('clearCurrencyDropdown').value
-    console.log(exchange)
     const selectedCurrency = document.getElementById('clearCurrencyDropdown').value;
     const action = `Clear positions for ${exchange} ${
         selectedCurrency === 'all' ? 'across all currencies' : `in currency: ${selectedCurrency}`
     }`;
-    console.log(confirm)
     
     if (confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
-        console.log(action);
         // Add clearing logic here
         const token = getAuthToken();
         const username = localStorage.getItem('username')
@@ -483,7 +461,6 @@ async function clearPositions(exchange) {
                     if (response.ok) {
                         // Parse the JSON data from the response
                         const response_data = await response.json();
-                        console.log(response_data.data)
                         // populateOpenOpenOrdersTable(response_data.data);
                         populateOpenOrders();
                     } else {
@@ -495,7 +472,7 @@ async function clearPositions(exchange) {
         }
         else if (exchange == 'htx'){
             // Call the API using fetch
-            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/cancel_all_htx_open_order_by_ccy`, {
+            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/swap/cancel_all_htx_open_order_by_ccy`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -511,7 +488,10 @@ async function clearPositions(exchange) {
                     if (response.ok) {
                         // Parse the JSON data from the response
                         const response_data = await response.json();
-                        console.log(response_data.data)
+                        if (response_data['err_msg']){
+                            alert(response_data['err_msg'] + "\nError:" + response_data['err_code'])
+                        }
+
                         // populateOpenOpenOrdersTable(response_data.data);
                         populateOpenOrders();
                     } else {
@@ -521,10 +501,8 @@ async function clearPositions(exchange) {
                     console.error('Request failed:', results[0].reason);
                 }
         }
-        
     } 
     else {
-
         console.log('Action canceled.');
     }
 }
@@ -545,12 +523,10 @@ function copyToClipboard(inputId) {
 }
 
 
-// {'code': '0', 'data': [{'accFillSz': '0', 'algoClOrdId': '', 'algoId': '', 'attachAlgoClOrdId': '', 'attachAlgoOrds': [], 'avgPx': '', 'cTime': '1733132176140', 'cancelSource': '', 'cancelSourceReason': '', 'category': 'normal', 'ccy': '', 'clOrdId': '', 'fee': '0', 'feeCcy': 'BTC', 'fillPx': '', 'fillSz': '0', 'fillTime': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'isTpLimit': 'false', 'lever': '5', 'linkedAlgoOrd': {'algoId': ''}, 'ordId': '2034397700695343104', 'ordType': 'limit', 'pnl': '0', 'posSide': 'net', 'px': '70000', 'pxType': '', 'pxUsd': '', 'pxVol': '', 'quickMgnType': '', 'rebate': '0', 'rebateCcy': 'BTC', 'reduceOnly': 'false', 'side': 'buy', 'slOrdPx': '', 'slTriggerPx': '', 'slTriggerPxType': '', 'source': '', 'state': 'live', 'stpId': '', 'stpMode': 'cancel_maker', 'sz': '1', 'tag': '', 'tdMode': 'isolated', 'tgtCcy': '', 'tpOrdPx': '', 'tpTriggerPx': '', 'tpTriggerPxType': '', 'tradeId': '', 'uTime': '1733132176140'}], 'msg': ''}
-
 function Htx2OkxFormat(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
-
+    console.log('respionseDta',responseData)
     // Transform each order to match the desired OKX format
     const transformedOrders = orders.map(order => ({
         accFillSz: order.trade_volume.toString(),
@@ -575,7 +551,7 @@ function Htx2OkxFormat(responseData) {
         isTpLimit: order.is_tpsl ? "true" : "false",
         lever: order.lever_rate.toString(),
         linkedAlgoOrd: { algoId: "" },
-        ordId: order.order_id.toString(),
+        ordId: order.order_id_str,
         ordType: order.order_price_type,
         pnl: order.profit.toString(),
         posSide: "net",
