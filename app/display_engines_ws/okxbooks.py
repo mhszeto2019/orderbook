@@ -44,49 +44,23 @@ class OKXWebSocketClient:
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
 
-    # async def run(self, channel,currency_pairs, callback):
-    #     """Run the WebSocket client, subscribing to the given currency pairs."""
-    #     await self.start()
-    #     # Subscribe to all specified currency pairs
-    #     for pair in currency_pairs:
-    #         await self.subscribe(channel, pair, callback)
+    async def run(self, channel,currency_pairs, callback):
+        """Run the WebSocket client, subscribing to the given currency pairs."""
+        await self.start()
+        # Subscribe to all specified currency pairs
+        for pair in currency_pairs:
+            await self.subscribe(channel, pair, callback)
 
-    #     # Keep the connection alive
-    #     try:
-    #         while True:
-    #             await asyncio.sleep(1)  # Keep the event loop running
-    #     except KeyboardInterrupt:
-    #         print("Disconnecting...")
-    #         await self.unsubscribe()  # Unsubscribe when exiting
-    #     finally:
-    #         await self.close()  # Ensure WebSocket is closed when done
+        # Keep the connection alive
+        try:
+            while True:
+                await asyncio.sleep(1)  # Keep the event loop running
+        except KeyboardInterrupt:
+            print("Disconnecting...")
+            await self.unsubscribe()  # Unsubscribe when exiting
+        finally:
+            await self.close()  # Ensure WebSocket is closed when done
     
-    async def run(self, channel, currency_pairs, callback):
-        """Run the WebSocket client with automatic reconnection."""
-        while True:
-            try:
-                await self.start()
-
-                # Subscribe to all specified currency pairs
-                for pair in currency_pairs:
-                    await self.subscribe(channel, pair, callback)
-
-                # Keep the connection alive
-                while True:
-                    await asyncio.sleep(1)  # Keep the event loop running
-
-            except self.ws.exceptions.ConnectionClosedError as e:
-                logger.warning(f"WebSocket closed: {e}")
-            except Exception as e:
-                logger.exception(f"Unexpected error: {e}")
-            finally:
-                # Increment reconnect attempts and delay with backoff
-                self.reconnect_attempts += 1
-                delay = min(2 ** self.reconnect_attempts, 30)  # Max backoff of 30 seconds
-                logger.info(f"Reconnecting in {delay} seconds...")
-                await self.close()
-                await asyncio.sleep(delay)
-
 
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
@@ -154,21 +128,15 @@ async def main():
 loop = None
 
 def run_okx_client():
-    logger.info("Running OKX client")
-    global loop
+    print('running_okx_client')
+    global loop    
     try:
+        
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(main())
     except Exception as e:
-        logger.exception(f"Error running OKX WebSocket client: {e}")
-        if loop.is_running():
-            loop.close()
-    finally:
-        if loop.is_running():
-            loop.close()
-        logger.info("WebSocket client stopped")
-
+        loop.close()
 
 @socketio.on('connect')
 def handle_connect(auth):
