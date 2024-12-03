@@ -73,7 +73,7 @@ async function populateOpenOrders() {
             const response = results[1].value;
             if (response.ok) {
                 const response_data = await response.json();
-                const formattedData = Htx2OkxFormat(response_data);  // Format HTX data as needed
+                const formattedData = Htx2OkxFormatOrders(response_data);  // Format HTX data as needed
                 console.log(response_data)
                 // Append HTX data to allOpenOrders
                 allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
@@ -306,7 +306,7 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
         //     if (response.ok) {
         //         const response_data = await response.json();
         //         console.log('HTX data:', response_data);
-        //         const formattedData = Htx2OkxFormat(response_data);  // Format HTX data as needed
+        //         const formattedData = Htx2OkxFormatOrders(response_data);  // Format HTX data as needed
         //         // Append HTX data to allOpenOrders
         //         allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
         //             ...position,
@@ -608,7 +608,7 @@ async function get_sub_htx_info(ordId,ccy){
     console.log(order_info)
 }
 
-function Htx2OkxFormat(responseData) {
+function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
     // console.log('respionseDta',responseData)

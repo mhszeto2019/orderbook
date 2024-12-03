@@ -49,7 +49,11 @@ async def place_market_order():
     # Get the order data from the request
     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
     key_string = data.get('redis_key')
-    cleaned_key_string = key_string.strip("b'")
+    # cleaned_key_string = key_string.strip("b'")
+    if key_string.startswith("b'") and key_string.endswith("'"):
+        cleaned_key_string = key_string[2:-1]
+    else:
+        cleaned_key_string = key_string  # Fallback if the format is unexpected
 
     # Now decode the base64 string into bytes
     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
@@ -110,7 +114,7 @@ async def place_market_order():
         if direction and side == direction :
             # same direction so we just add on
             print('same direction')
-            result = await tradeApi.get_open_orders(instId,body = {
+            result = await tradeApi.place_order(instId,body = {
             "contract_code": instId,
             "created_at": str(datetime.datetime.now()),
             "volume": str(data["sz"]),
@@ -122,7 +126,7 @@ async def place_market_order():
         else: 
             if direction != None and sz_int > availability:
                 print('first close the available positions - close the long pos')
-                result = await tradeApi.get_open_orders(instId,body = {
+                result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
                 "volume": str(availability) ,
@@ -131,7 +135,7 @@ async def place_market_order():
                 "lever_rate": 5,
                 "order_price_type": ordType        }
                 )
-                result = await tradeApi.get_open_orders(instId,body = {
+                result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
                 "volume": str(sz_int - availability),
@@ -143,7 +147,7 @@ async def place_market_order():
                 print('second carry on with the trade with sz = sz - availability - buy short')
             elif direction != None and sz_int <= availability:
                 print('close positions')
-                result = await tradeApi.get_open_orders(instId,body = {
+                result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
                 "volume": str(sz_int) ,
@@ -154,7 +158,7 @@ async def place_market_order():
                 )
             else:
                 print('opening a new position ')
-                result = await tradeApi.get_open_orders(instId,body = {
+                result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
                 "volume": str(sz_int) ,
@@ -163,7 +167,7 @@ async def place_market_order():
                 "lever_rate": 5,
                 "order_price_type": ordType        }
                 )
-        # print(result)
+        print(result)
         logger.info("Order request response {}".format(result))
 
         if result['status'] == 'error':
@@ -274,7 +278,7 @@ async def place_limit_order():
         
     #     # Run the async function using the obtained loop
     #     result, error = loop.run_until_complete(
-    #         tradeApi.get_open_orders(
+    #         tradeApi.place_order(
     #             instId,body = {
     #                 "contract_code":instId,
     #                 # "order_id":123456,
