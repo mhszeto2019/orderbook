@@ -420,47 +420,80 @@ async function clearPositions(exchange) {
         selectedCurrency === 'all' ? 'across all currencies' : `in currency: ${selectedCurrency}`
     }`;
     console.log(confirm)
+    
     if (confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
         console.log(action);
         // Add clearing logic here
         const token = getAuthToken();
-    const username = localStorage.getItem('username')
-    const redis_key = localStorage.getItem('key')
-    // console.log(username,redis_key,token)
-    if (!token |!username | !redis_key ) {
-        alert("You must be logged in to access this.");
-        return;
-    }
-    request_data = {"username":username,"redis_key":redis_key,'ccy':ccy}
-
-    console.log(request_data)
-    // Call the API using fetch
-    const firstOrderPromise =  fetch(`http://${hostname}:5080/okx/cancel_all_orders_by_ccy`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-        });
-
-        const results = await Promise.allSettled([firstOrderPromise]);
-        if (results[0].status === 'fulfilled') {
-            // Extract the data from the resolved promise
-            const response = results[0].value;
-            if (response.ok) {
-                // Parse the JSON data from the response
-                const response_data = await response.json();
-                console.log(response_data.data)
-                // populateOpenOpenOrdersTable(response_data.data);
-                populateOpenOrders();
-            } else {
-                console.error('Error fetching orders:', response.statusText);
-            }
-        } else {
-            console.error('Request failed:', results[0].reason);
+        const username = localStorage.getItem('username')
+        const redis_key = localStorage.getItem('key')
+        // console.log(username,redis_key,token)
+        if (!token |!username | !redis_key ) {
+            alert("You must be logged in to access this.");
+            return;
         }
-    } else {
+        request_data = {"username":username,"redis_key":redis_key,'ccy':ccy}
+
+        if (exchange == 'okx'){
+            // Call the API using fetch
+            const firstOrderPromise =  fetch(`http://${hostname}:5080/okx/cancel_all_orders_by_ccy`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request_data)
+                });
+    
+                const results = await Promise.allSettled([firstOrderPromise]);
+                if (results[0].status === 'fulfilled') {
+                    // Extract the data from the resolved promise
+                    const response = results[0].value;
+                    if (response.ok) {
+                        // Parse the JSON data from the response
+                        const response_data = await response.json();
+                        console.log(response_data.data)
+                        // populateOpenOpenOrdersTable(response_data.data);
+                        populateOpenOrders();
+                    } else {
+                        console.error('Error fetching orders:', response.statusText);
+                    }
+                } else {
+                    console.error('Request failed:', results[0].reason);
+                }
+        }
+        else if (exchange == 'htx'){
+            // Call the API using fetch
+            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/cancel_all_htx_open_order_by_ccy`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request_data)
+                });
+    
+                const results = await Promise.allSettled([firstOrderPromise]);
+                if (results[0].status === 'fulfilled') {
+                    // Extract the data from the resolved promise
+                    const response = results[0].value;
+                    if (response.ok) {
+                        // Parse the JSON data from the response
+                        const response_data = await response.json();
+                        console.log(response_data.data)
+                        // populateOpenOpenOrdersTable(response_data.data);
+                        populateOpenOrders();
+                    } else {
+                        console.error('Error fetching orders:', response.statusText);
+                    }
+                } else {
+                    console.error('Request failed:', results[0].reason);
+                }
+        }
+        
+    } 
+    else {
+
         console.log('Action canceled.');
     }
 }

@@ -76,29 +76,25 @@ class HuobiCoinFutureRestTradeAPI:
         # print('json_response2',json_response2)
         return json_response2
 
-    async def get_order_info(self, contract_code='', order_ids=None, client_order_ids=None):
-        """ Get order information.
+    async def revoke_order_all(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+            """ Revoke all orders.
 
-        Args:
-            contract_code: such as "BTC-USD".
-            order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
-            client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+            Args:
+                contract_code: such as "BTC-USD".
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/swap-api/v1/swap_openorders"
-        body = {
-            "contract_code": contract_code
-        }
-        if order_ids:
-            body.update({"order_id": ",".join(order_ids)})
-        if client_order_ids:
-            body.update({"client_order_id": ",".join(client_order_ids)})
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
 
-        success, error = await self.request("POST", uri, body=body, auth=True)
-        return success, error
+            * NOTE: 1. If input `contract_code`, only matching this contract code.
+                    2. If not input `contract_code`, matching by `symbol + contract_type`.
+            """
+            uri = "/swap-api/v1/swap_cancelall"
+            
+
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            print("JSON DICT",json_dict)
+            return json_dict
 
 
     async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
