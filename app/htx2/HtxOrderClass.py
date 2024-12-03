@@ -76,7 +76,7 @@ class HuobiCoinFutureRestTradeAPI:
         # print('json_response2',json_response2)
         return json_response2
 
-    async def get_order_info(self, contract_code, order_ids=None, client_order_ids=None):
+    async def get_order_info(self, contract_code='', order_ids=None, client_order_ids=None):
         """ Get order information.
 
         Args:
@@ -88,7 +88,7 @@ class HuobiCoinFutureRestTradeAPI:
             success: Success results, otherwise it's None.
             error: Error information, otherwise it's None.
         """
-        uri = "/swap-api/v1/swap_order_info"
+        uri = "/swap-api/v1/swap_openorders"
         body = {
             "contract_code": contract_code
         }
@@ -101,8 +101,7 @@ class HuobiCoinFutureRestTradeAPI:
         return success, error
 
 
-#
-    async def get_open_orders(self, contract_code, index=1, size=50):
+    async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         # Args:
         #     contract_code: such as "BTC-USD".
         #     index: Page index, default 1st page.
@@ -112,13 +111,14 @@ class HuobiCoinFutureRestTradeAPI:
         #     success: Success results, otherwise it's None.
         #     error: Error information, otherwise it's None.
         uri = "/swap-api/v1/swap_openorders"
-        body = {
-            "contract_code": contract_code,
-            "page_index": index,
-            "page_size": size
-        }
-        success, error = await self.request("POST", uri, body=body, auth=True)
-        return success, error
+        # body = {
+        #     "contract_code": contract_code,
+        #     "page_index": index,
+        #     "page_size": size
+        # }
+        # body = {}
+        json_dict = await self.request("POST", uri, body=body, auth=True)
+        return json_dict
 
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.
@@ -174,13 +174,8 @@ class HuobiCoinFutureRestTradeAPI:
             headers["Content-type"] = "application/json"
             headers["User-Agent"] = USER_AGENT
             body['contract_code'] =  body['contract_code'].split('-SWAP')[0]
-            # dic = self.python_request("POST", url, params=params, data=body, headers=headers)
-            # print('params',params)
-            # print('method',method)
-            # print('headers',headers)
-          
+       
             try:
-
             
                 response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
                 # print('python response',response_dict)
@@ -192,19 +187,6 @@ class HuobiCoinFutureRestTradeAPI:
                 # print('exception printed',e)
                 response_dict = response_dict
 
-
-            # try:
-            #     response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
-            #     print('python response',response_dict)
-            #     response_dict['data'] = response_dict.get('data',[])
-            #     response_dict['data']['sMsg'] = 'Orders placed'
-            #     response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]
-            # except Exception as e:
-            #     print('exception printed',e)
-            #     response_dict ={'error':'error'}
-                
-        
-        # print('response_dict',response_dict)
         return response_dict
         
     def python_request(self,method, url, params, data, headers):

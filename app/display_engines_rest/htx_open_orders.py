@@ -82,19 +82,17 @@ async def get_all_htx_open_orders():
         # Extract necessary parameters from the request
         print(data)
       
-        print('instdid',instId)
-     
-       
+        print('instdid22222',instId)
 
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
-
-        open_orders = await tradeApi.get_open_orders(instId,body = {
+        open_orders = await tradeApi.get_open_orders(
+            instId,body = {
             "contract_code": instId
             }
-            )
-        print(open_orders)
+        )
+
+        print('open_orders',open_orders)
         open_order_data = open_orders.get('data', [])
-        print(open_order_data)
         
         return open_order_data
     

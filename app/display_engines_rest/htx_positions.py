@@ -108,12 +108,13 @@ async def get_all_htx_positions():
         print(data)
       
         print('instdid',instId)
-     
        
 
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
 
-        positions = await tradeApi.get_positions(
+        positions = await tradeApi.get_positions(instId,body = {
+            "contract_code": instId
+            }
             )
         print(positions)
         # print("POSITIONSSSS",positions)
