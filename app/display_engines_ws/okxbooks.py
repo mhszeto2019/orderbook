@@ -60,12 +60,12 @@ class OKXWebSocketClient:
     #         await self.unsubscribe()  # Unsubscribe when exiting
     #     finally:
     #         await self.close()  # Ensure WebSocket is closed when done
+    
     async def run(self, channel, currency_pairs, callback):
-        """Run the WebSocket client, subscribing to the given currency pairs."""
+        """Run the WebSocket client with automatic reconnection."""
         while True:
             try:
                 await self.start()
-                print(f"Connected to {self.url}")
 
                 # Subscribe to all specified currency pairs
                 for pair in currency_pairs:
@@ -74,11 +74,19 @@ class OKXWebSocketClient:
                 # Keep the connection alive
                 while True:
                     await asyncio.sleep(1)  # Keep the event loop running
-            except (asyncio.CancelledError, Exception) as e:
-                print(f"Error in WebSocket connection: {e}")
-                print("Attempting to reconnect in 5 seconds...")
+
+            except self.ws.exceptions.ConnectionClosedError as e:
+                logger.warning(f"WebSocket closed: {e}")
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+            finally:
+                # Increment reconnect attempts and delay with backoff
+                self.reconnect_attempts += 1
+                delay = min(2 ** self.reconnect_attempts, 30)  # Max backoff of 30 seconds
+                logger.info(f"Reconnecting in {delay} seconds...")
                 await self.close()
-                await asyncio.sleep(5)  # Wait before reconnecting
+                await asyncio.sleep(delay)
+
 
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
@@ -146,15 +154,21 @@ async def main():
 loop = None
 
 def run_okx_client():
-    print('running_okx_client')
-    global loop    
+    logger.info("Running OKX client")
+    global loop
     try:
-        
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(main())
     except Exception as e:
-        loop.close()
+        logger.exception(f"Error running OKX WebSocket client: {e}")
+        if loop.is_running():
+            loop.close()
+    finally:
+        if loop.is_running():
+            loop.close()
+        logger.info("WebSocket client stopped")
+
 
 @socketio.on('connect')
 def handle_connect(auth):
