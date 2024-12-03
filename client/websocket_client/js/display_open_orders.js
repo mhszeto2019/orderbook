@@ -75,6 +75,7 @@ async function populateOpenOrders() {
                 const response_data = await response.json();
                 console.log('HTX data:', response_data);
                 const formattedData = Htx2OkxFormat(response_data);  // Format HTX data as needed
+                console.log(formattedData)
                 // Append HTX data to allOpenOrders
                 allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
                     ...position,
@@ -482,75 +483,80 @@ function copyToClipboard(inputId) {
 
 // {'code': '0', 'data': [{'accFillSz': '0', 'algoClOrdId': '', 'algoId': '', 'attachAlgoClOrdId': '', 'attachAlgoOrds': [], 'avgPx': '', 'cTime': '1733132176140', 'cancelSource': '', 'cancelSourceReason': '', 'category': 'normal', 'ccy': '', 'clOrdId': '', 'fee': '0', 'feeCcy': 'BTC', 'fillPx': '', 'fillSz': '0', 'fillTime': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'isTpLimit': 'false', 'lever': '5', 'linkedAlgoOrd': {'algoId': ''}, 'ordId': '2034397700695343104', 'ordType': 'limit', 'pnl': '0', 'posSide': 'net', 'px': '70000', 'pxType': '', 'pxUsd': '', 'pxVol': '', 'quickMgnType': '', 'rebate': '0', 'rebateCcy': 'BTC', 'reduceOnly': 'false', 'side': 'buy', 'slOrdPx': '', 'slTriggerPx': '', 'slTriggerPxType': '', 'source': '', 'state': 'live', 'stpId': '', 'stpMode': 'cancel_maker', 'sz': '1', 'tag': '', 'tdMode': 'isolated', 'tgtCcy': '', 'tpOrdPx': '', 'tpTriggerPx': '', 'tpTriggerPxType': '', 'tradeId': '', 'uTime': '1733132176140'}], 'msg': ''}
 
-function Htx2OkxFormat(originalDataArray) {
-    return originalDataArray.map(originalData => {
-        console.log(originalData)
-      return {
-        "adl": String(originalData.open_adl || '0'),  // Convert to string, or default to 0
-        "availPos": "",  // Empty as per the target format
-        "avgPx": String(originalData.last_price.toFixed(1)),  // Rounded to 1 decimal place
-        "baseBal": "",
-        "baseBorrowed": "",
-        "baseInterest": "",
-        "bePx": String(originalData.liq_px.toFixed(10)),  // Displaying the value with 10 decimal points
-        "bizRefId": "",
-        "bizRefType": "",
-        "cTime": new Date(originalData.store_time).getTime().toString(),  // Convert to timestamp
-        "ccy": originalData.symbol,
-        "clSpotInUseAmt": "",
-        "closeOrderAlgo": [],
-        "deltaBS": "",
-        "deltaPA": "",
-        "fee": String(originalData.profit_rate.toFixed(10)),  // Rounding for consistency
-        "fundingFee": "0",
-        "gammaBS": "",
-        "gammaPA": "",
-        "idxPx": String(originalData.cost_open.toFixed(10)),  // Using cost_open for idxPx
-        "imr": "",
-        "instId": originalData.contract_code + "-SWAP",  // Assuming this is a swap contract
-        "instType": "SWAP",
-        "interest": "",
-        "last": String(originalData.last_price.toFixed(1)),
-        "lever": String(originalData.lever_rate),
-        "liab": "",
-        "liabCcy": "",
-        "liqPenalty": "0",
-        "liqPx": String(originalData.liq_px.toFixed(10)),
-        "margin": String(originalData.position_margin.toFixed(10)),
-        "markPx": String(originalData.last_price.toFixed(1)),
-        "maxSpotInUseAmt": "",
-        "mgnMode": "isolated",
-        "mgnRatio": "46.53351821356301",  // Assumed fixed value for this example
-        "mmr": String((originalData.profit / originalData.cost_hold).toFixed(10)),  // Just an example calculation
-        "notionalUsd": "100",  // Assumed fixed value
-        "optVal": "",
-        "pendingCloseOrdLiabVal": "",
-        "pnl": String(originalData.profit.toFixed(10)),  // Placeholder, may depend on further logic
-        "pos": "-1",  // Placeholder for position status
-        "posCcy": "",
-        "posId": "2019681002234920961",  // Placeholder position ID
-        "posSide": String((originalData.direction)),  // Assumed position side
-        "quoteBal": "",
-        "quoteBorrowed": "",
-        "quoteInterest": "",
-        "realizedPnl": String(originalData.profit.toFixed(10)),
-        "spotInUseAmt": "",
-        "spotInUseCcy": "",
-        "thetaBS": "",
-        "thetaPA": "",
-        "tradeId": "333006380",  // Placeholder trade ID
-        "uTime": new Date(originalData.store_time).getTime().toString(),
-        "upl": String(originalData.profit.toFixed(10)),
-        "uplLastPx": String(originalData.profit.toFixed(10)),
-        "uplRatio": String((originalData.profit_rate).toFixed(10)),
-        "uplRatioLastPx": String((originalData.profit_rate).toFixed(10)),
-        "usdPx": "",
-        "vegaBS": "",
-        "vegaPA": "",
-        "exchange":'htx'
-      };
-    });
-  }
+function Htx2OkxFormat(responseData) {
+    // Extract orders from the response
+    const { orders } = responseData;
+
+    // Transform each order to match the desired OKX format
+    const transformedOrders = orders.map(order => ({
+        accFillSz: order.trade_volume.toString(),
+        algoClOrdId: "",
+        algoId: "",
+        attachAlgoClOrdId: "",
+        attachAlgoOrds: [],
+        avgPx: order.trade_avg_price ? order.trade_avg_price.toString() : "",
+        cTime: order.created_at.toString(),
+        cancelSource: order.canceled_source || "",
+        cancelSourceReason: "",
+        category: "normal",
+        ccy: "",
+        clOrdId: order.client_order_id || "",
+        fee: order.fee.toString(),
+        feeCcy: order.fee_asset,
+        fillPx: "",
+        fillSz: order.trade_volume.toString(),
+        fillTime: "",
+        instId: `${order.contract_code}-SWAP`,
+        instType: "SWAP",
+        isTpLimit: order.is_tpsl ? "true" : "false",
+        lever: order.lever_rate.toString(),
+        linkedAlgoOrd: { algoId: "" },
+        ordId: order.order_id.toString(),
+        ordType: order.order_price_type,
+        pnl: order.profit.toString(),
+        posSide: "net",
+        px: order.price.toString(),
+        pxType: "",
+        pxUsd: "",
+        pxVol: "",
+        quickMgnType: "",
+        rebate: "0",
+        rebateCcy: order.fee_asset,
+        reduceOnly: "false",
+        side: order.direction,
+        slOrdPx: "",
+        slTriggerPx: "",
+        slTriggerPxType: "",
+        source: order.order_source || "",
+        state: mapStatusToState(order.status),
+        stpId: "",
+        stpMode: "cancel_maker",
+        sz: order.volume.toString(),
+        tag: "",
+        tdMode: "isolated", // Assuming isolated margin; adjust if needed
+        tgtCcy: "",
+        tpOrdPx: "",
+        tpTriggerPx: "",
+        tpTriggerPxType: "",
+        tradeId: "",
+        uTime: order.update_time.toString(),
+    }));
+
+    // Wrap in the final response structure
+    return transformedOrders
+}
+
+// Helper function to map HTX status codes to OKX state strings
+function mapStatusToState(status) {
+    const statusMap = {
+        3: "live",      // Example: live order
+        4: "cancelled", // Example: cancelled order
+        // Add additional mappings if needed
+    };
+    return statusMap[status] || "unknown"; // Default to "unknown" if status is not mapped
+}
+
+
 
 
 function updateTime(selectedDOM) {
