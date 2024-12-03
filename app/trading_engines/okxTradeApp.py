@@ -331,6 +331,10 @@ def cancel_all_orders_by_ccy():
         for row in response['data']:
             order_list.append({"instId":row['instId'], "ordId":row['ordId']})
         result = tradeAPI.cancel_multiple_orders(order_list)
+        print('result',result)
+        if len(result.get('data')) == 0:
+            print('fail')
+            return result
         return result
     
     except Exception as e:

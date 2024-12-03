@@ -462,6 +462,10 @@ async function clearPositions(exchange) {
                     if (response.ok) {
                         // Parse the JSON data from the response
                         const response_data = await response.json();
+                        if (response_data['data'].length == 0){
+                            console.log('empty')
+                            alert(response_data['msg'] + "\nError code:"+ response_data['code'])
+                        }
                         // populateOpenOpenOrdersTable(response_data.data);
                         populateOpenOrders();
                     } else {
@@ -473,7 +477,7 @@ async function clearPositions(exchange) {
         }
         else if (exchange == 'htx'){
             // Call the API using fetch
-            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/swap/cancel_all_htx_open_order_by_ccy`, {
+                const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/swap/cancel_all_htx_open_order_by_ccy`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -493,6 +497,63 @@ async function clearPositions(exchange) {
                             alert(response_data['err_msg'] + "\nError:" + response_data['err_code'])
                         }
 
+                        // populateOpenOpenOrdersTable(response_data.data);
+                        populateOpenOrders();
+                    } else {
+                        console.error('Error fetching orders:', response.statusText);
+                    }
+                } else {
+                    console.error('Request failed:', results[0].reason);
+                }
+        }
+        // ALL REMEMBER TO CHANGE WHEN ADD NEWEXCHANGE
+        else{
+                const firstOrderPromise =  fetch(`http://${hostname}:5080/okx/cancel_all_orders_by_ccy`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request_data)
+                });
+
+                const secondOrderPromise =  fetch(`http://${hostname}:6061/htx/swap/cancel_all_htx_open_order_by_ccy`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(request_data)
+                    });
+    
+                const results = await Promise.allSettled([firstOrderPromise,secondOrderPromise]);
+                console.log(results)
+                if (results[0].status === 'fulfilled') {
+                    // Extract the data from the resolved promise
+                    const response = results[0].value;
+                    if (response.ok) {
+                        // Parse the JSON data from the response
+                        const response_data = await response.json();
+
+                        if (response_data['data'].length == 0){
+                            console.log('empty')
+                            alert(response_data['msg'] + "\nError code:"+ response_data['code'])
+                        }
+                        // populateOpenOpenOrdersTable(response_data.data);
+                        populateOpenOrders();
+                    } else {
+                        console.error('Error fetching orders:', response.statusText);
+                    }
+                } else {
+                    console.error('Request failed:', results[0].reason);
+                }
+                if (results[1].status === 'fulfilled') {
+                    // Extract the data from the resolved promise
+                    const response = results[0].value;
+                    if (response.ok) {
+                        
+                        // Parse the JSON data from the response
+                        const response_data = await response.json();
                         // populateOpenOpenOrdersTable(response_data.data);
                         populateOpenOrders();
                     } else {
@@ -550,8 +611,8 @@ async function get_sub_htx_info(ordId,ccy){
 function Htx2OkxFormat(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
-    console.log('respionseDta',responseData)
-    get_sub_htx_info('1313541876632293376','BTC-USD-SWAP')
+    // console.log('respionseDta',responseData)
+    // get_sub_htx_info('1313541876632293376','BTC-USD-SWAP')
 
     // Transform each order to match the desired OKX format
     const transformedOrders = orders.map(order => ({
