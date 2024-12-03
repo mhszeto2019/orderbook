@@ -95,7 +95,7 @@ class HuobiCoinFutureRestTradeAPI:
 
             json_dict = await self.request("POST", uri, body=body, auth=True)
             print("JSON DICT",json_dict)
-            
+
             return json_dict
 
     async def revoke_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
@@ -140,6 +140,26 @@ class HuobiCoinFutureRestTradeAPI:
         # body = {}
         json_dict = await self.request("POST", uri, body=body, auth=True)
         return json_dict
+
+
+    async def get_order_info(self,  symbol,body, order_ids=None, client_order_ids=None):
+        """ Get order information.
+
+        Args:
+            contract_code: such as "BTC-USD".
+            order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+            client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+
+        Returns:
+            success: Success results, otherwise it's None.
+            error: Error information, otherwise it's None.
+        """
+        uri = "/swap-api/v1/swap_order_info"
+        
+        
+        json_dict = await self.request("POST", uri, body=body, auth=True)
+        return json_dict
+
 
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.

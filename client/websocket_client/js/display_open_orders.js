@@ -74,6 +74,7 @@ async function populateOpenOrders() {
             if (response.ok) {
                 const response_data = await response.json();
                 const formattedData = Htx2OkxFormat(response_data);  // Format HTX data as needed
+                console.log(response_data)
                 // Append HTX data to allOpenOrders
                 allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
                     ...position,
@@ -522,11 +523,36 @@ function copyToClipboard(inputId) {
     }
 }
 
+async function get_sub_htx_info(ordId,ccy){
+
+    const token = getAuthToken();
+    const username = localStorage.getItem('username');
+    const redis_key = localStorage.getItem('key');
+
+    if (!token || !username || !redis_key) {
+        alert("You must be logged in to access this.");
+        return;
+    }
+
+    const request_data = { "username": username, "redis_key": redis_key,'ordId':ordId,'ccy':ccy };
+    const thirdOrderPromise= fetch(`http://${hostname}:6061/htx/swap/get_order_info`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
+    order_info = await thirdOrderPromise
+    console.log(order_info)
+}
 
 function Htx2OkxFormat(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
     console.log('respionseDta',responseData)
+    get_sub_htx_info('1313541876632293376','BTC-USD-SWAP')
+
     // Transform each order to match the desired OKX format
     const transformedOrders = orders.map(order => ({
         accFillSz: order.trade_volume.toString(),
