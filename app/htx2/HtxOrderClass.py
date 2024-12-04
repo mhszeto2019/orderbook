@@ -172,7 +172,7 @@ class HuobiCoinFutureRestTradeAPI:
             success: Success results, otherwise it's None.
             error: Error information, otherwise it's None.
         """
-        uri = "/linear-swap-api/v1/swap_cross_relation_tpsl_order"
+        uri = "/swap-api/v1/swap_relation_tpsl_order"
         
 
         json_dict = await self.request("POST", uri, body=body, auth=True)

@@ -124,7 +124,7 @@ async def get_tpsl_info():
         # Extract necessary parameters from the request
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
         # print('data',data)
-        data['ordId'] = 1313838593508646912
+        data['ordId'] = 1313907123482300416
         data['ccy'] = 'BTC-USD'
         print(data['ordId'],data['ccy'])
         order_infos = await tradeApi.get_tpsl_info(instId,
