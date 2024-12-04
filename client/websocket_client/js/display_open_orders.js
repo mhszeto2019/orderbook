@@ -676,14 +676,14 @@ async function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
     // console.log('respionseDta',responseData)
-    const tpsl_info =  await get_tpsl_info(1313838593508647000,'BTC-USD-SWAP')
+    const tpsl_info =  await get_tpsl_info(1313927624669990912,'BTC-USD')
     console.log(tpsl_info)
     // console.log('tpsl_info',tpsl_info.tpsl_order_info[0].tpsl_order_type)
     // console.log('tpsl_info',tpsl_info.tpsl_order_info[0].trigger_price)
     // console.log('tpsl_info',tpsl_info.tpsl_order_info[1].tpsl_order_type)
     // console.log('tpsl_info',tpsl_info.tpsl_order_info[1].trigger_price)
-    let sl_price = null;
-    let tp_price = null;
+    let sl_price = '';
+    let tp_price = '';
     let tp_algo_id = ''
     let sl_algo_id = ''
     let algoOrds = [{
@@ -722,26 +722,29 @@ async function Htx2OkxFormatOrders(responseData) {
     //   }
     
     // Loop through each order and check the order type
-    tpsl_info.tpsl_order_info.forEach(order => {
-        algoOrds[0]["sz"] = order.volume
-
-        if (order.tpsl_order_type === 'sl') {
-            sl_price = order.trigger_price;
-            sl_algo_id = order.relation_tpsl_order_id
-            algoOrds[0]["attachAlgoId"].push(sl_algo_id)
-            algoOrds[0]["slTriggerPx"] = sl_price
-
-            
-        } else if (order.tpsl_order_type === 'tp') {
-            tp_price = order.trigger_price;
-            tp_algo_id = order.relation_tpsl_order_id
-            algoOrds[0]["attachAlgoId"].push(tp_algo_id)
-            algoOrds[0]["tpOrdPx"] = tp_price
-            
-
-
-        }
-    });
+    if (!tpsl_info){
+        tpsl_info.tpsl_order_info.forEach(order => {
+            algoOrds[0]["sz"] = order.volume
+    
+            if (order.tpsl_order_type === 'sl') {
+                sl_price = order.trigger_price;
+                sl_algo_id = order.relation_tpsl_order_id
+                algoOrds[0]["attachAlgoId"].push(sl_algo_id)
+                algoOrds[0]["slTriggerPx"] = sl_price
+    
+                
+            } else if (order.tpsl_order_type === 'tp') {
+                tp_price = order.trigger_price;
+                tp_algo_id = order.relation_tpsl_order_id
+                algoOrds[0]["attachAlgoId"].push(tp_algo_id)
+                algoOrds[0]["tpOrdPx"] = tp_price
+                
+    
+    
+            }
+        });
+    }
+    
     
     // Output the results
     // console.log("SL Price:", sl_price);
@@ -751,9 +754,9 @@ async function Htx2OkxFormatOrders(responseData) {
     const transformedOrders = orders.map(order => ({
         accFillSz: order.trade_volume.toString(),
         algoClOrdId: "",
-        algoId: [sl_algo_id,tp_algo_id],
+        algoId: [sl_algo_id,tp_algo_id] || [],
         attachAlgoClOrdId: "",
-        attachAlgoOrds: algoOrds,
+        attachAlgoOrds: algoOrds | [],
         avgPx: order.trade_avg_price ? order.trade_avg_price.toString() : "",
         cTime: order.created_at.toString(),
         cancelSource: order.canceled_source || "",
@@ -785,7 +788,7 @@ async function Htx2OkxFormatOrders(responseData) {
         reduceOnly: "false",
         side: order.direction,
         slOrdPx: "",
-        slTriggerPx: sl_price,
+        slTriggerPx: sl_price|| "",
         slTriggerPxType: "",
         source: order.order_source || "",
         state: mapStatusToState(order.status),
@@ -796,7 +799,7 @@ async function Htx2OkxFormatOrders(responseData) {
         tdMode: "isolated", // Assuming isolated margin; adjust if needed
         tgtCcy: "",
         tpOrdPx: "",
-        tpTriggerPx: tp_price.toString(),
+        tpTriggerPx: tp_price.toString() || "",
         tpTriggerPxType: "",
         tradeId: "",
         uTime: order.update_time.toString(),
