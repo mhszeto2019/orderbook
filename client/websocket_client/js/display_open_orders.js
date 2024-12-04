@@ -218,8 +218,8 @@ function handleModify(instId, ordId,algoId,exchange) {
     <!-- Row 2: Order Size and Price -->
     <div class="row mb-3">
         <div class="col-md-4">
-            <label for="orderSide" class="form-label">Order Side</label>
-            <select class="form-control form-control-sm" id="orderSide" name="orderSide">
+            <label for="side" class="form-label">Order Side</label>
+            <select class="form-control form-control-sm" id="side" name="side">
                 <option value="buy" ${ordersHist[ordId]['side'] === 'buy' ? 'selected' : ''}>Buy</option>
                 <option value="sell" ${ordersHist[ordId]['side'] === 'sell' ? 'selected' : ''}>Sell</option>
             </select>
@@ -323,7 +323,6 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
             }
     }
     else if (exchange == 'htx'){
-        console.log("EEE EXCHANGE")
         const firstAmmendPromise = fetch(`http://${hostname}:6061/htx/swap/ammend_order`, {
             method: 'POST',
             headers: {
@@ -365,7 +364,7 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
             }
     }
         
-
+    populateOpenOrders();
     
 
 
@@ -652,8 +651,8 @@ async function get_tpsl_info(ordId,ccy){
 function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
-    console.log('respionseDta',responseData)
-    get_tpsl_info(1313838593508647000,'BTC-USD-SWAP')
+    // console.log('respionseDta',responseData)
+    // get_tpsl_info(1313838593508647000,'BTC-USD-SWAP')
 
     // Transform each order to match the desired OKX format
     const transformedOrders = orders.map(order => ({

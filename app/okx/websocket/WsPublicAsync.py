@@ -38,9 +38,30 @@ class WsPublicAsync:
         self.callback = None
         self.loop = asyncio.get_event_loop()
         self.factory = WebSocketFactory(url)
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts = 10  # Limit reconnect attempts
+        self.reconnect_delay = 1  # Initial delay in seconds
+
+    # async def connect(self):
+    #     self.websocket = await self.factory.connect()
+   
 
     async def connect(self):
-        self.websocket = await self.factory.connect()
+        while self.reconnect_attempts < self.max_reconnect_attempts:
+            try:
+                self.websocket = await self.factory.connect()
+                self.reconnect_attempts = 0  # Reset on successful connection
+                logger.info("Connected to WebSocket.")
+                break
+            except Exception as e:
+                self.reconnect_attempts += 1
+                delay = self.reconnect_delay * (2 ** (self.reconnect_attempts - 1))  # Exponential backoff
+                logger.error(f"Connection failed (attempt {self.reconnect_attempts}): {e}. Retrying in {delay}s...")
+                await asyncio.sleep(min(delay, 30))  # Cap delay at 30 seconds
+        else:
+            logger.error("Max reconnection attempts reached. Could not connect.")
+            raise ConnectionError("Failed to connect to WebSocket after multiple attempts.")
+
 
     async def consume(self):
         async for message in self.websocket:
