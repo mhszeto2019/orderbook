@@ -118,6 +118,8 @@ function populateOpenOpenOrdersTable(orders) {
             ordersHist[position.ordId]={};
             ordersHist[position.ordId]['orderPx']= position.px;
             ordersHist[position.ordId]['orderSz']= position.sz;
+            ordersHist[position.ordId]['side']= position.side;
+
             
             const algoData = Array.isArray(position.attachAlgoOrds) && position.attachAlgoOrds.length > 0
                 ? position.attachAlgoOrds.map(algo => {
@@ -150,7 +152,7 @@ function populateOpenOpenOrdersTable(orders) {
                 position.ordId || 'N/A',
                 position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A',
                 // Buttons for last two columns
-                `<button class="btn btn-primary btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleModify('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}')">Modify</button>`,
+                `<button class="btn btn-primary btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleModify('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Modify</button>`,
                 `<button class="btn btn-danger btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleDelete('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Delete</button>`
             ]);
         });
@@ -160,7 +162,7 @@ function populateOpenOpenOrdersTable(orders) {
     openordersTable.draw();
 }
 
-function handleModify(instId, ordId,algoId) {
+function handleModify(instId, ordId,algoId,exchange) {
     // Get the modal element
     const modal = document.getElementById('modifyPositionModal');
 
@@ -172,45 +174,62 @@ function handleModify(instId, ordId,algoId) {
 
     // Dynamically add form fields for modification
     form.innerHTML = `
-       <div class="container">
-    <!-- Row 1: IDs with Copy Buttons -->
     <div class="row mb-3">
-        <div class="col-md-4">
-            <label for="instId" class="form-label">Instrument ID</label>
+        <!-- Exchange -->
+        <div class="col-md-3">
+            <label for="exchange" class="form-label">Exchange</label>
             <div class="input-group">
-                <input type="text" class="form-control form-control-sm" id="instId" name="instId" value="${instId}" readonly>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('instId')">
-                    <i class="bi bi-clipboard"></i>
-                </button>
+                <input type="text" class="form-control form-control-sm" id="exchange" name="exchange" value="${exchange}" readonly>
             </div>
         </div>
-        <div class="col-md-4">
+        
+        <!-- CCY (Instrument ID) -->
+        <div class="col-md-3">
+            <label for="instId" class="form-label">CCY</label>
+            <div class="input-group">
+                <input type="text" class="form-control form-control-sm" id="instId" name="instId" value="${instId}" readonly>
+            </div>
+        </div>
+        
+        <!-- Order ID -->
+        <div class="col-md-3">
             <label for="ordId" class="form-label">Order ID</label>
             <div class="input-group">
                 <input type="text" class="form-control form-control-sm" id="ordId" name="ordId" value="${ordId}" readonly>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('ordId')">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('ordId')" title="Copy Order ID">
                     <i class="bi bi-clipboard"></i>
                 </button>
             </div>
         </div>
-        <div class="col-md-4">
+        
+        <!-- Algo ID -->
+        <div class="col-md-3">
             <label for="algoId" class="form-label">Algo ID</label>
             <div class="input-group">
                 <input type="text" class="form-control form-control-sm" id="algoId" name="algoId" value="${algoId}" readonly>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('algoId')">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('algoId')" title="Copy Algo ID">
                     <i class="bi bi-clipboard"></i>
                 </button>
             </div>
         </div>
     </div>
 
+
     <!-- Row 2: Order Size and Price -->
     <div class="row mb-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <label for="orderSide" class="form-label">Order Side</label>
+            <select class="form-control form-control-sm" id="orderSide" name="orderSide">
+                <option value="buy" ${ordersHist[ordId]['side'] === 'buy' ? 'selected' : ''}>Buy</option>
+                <option value="sell" ${ordersHist[ordId]['side'] === 'sell' ? 'selected' : ''}>Sell</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
             <label for="orderSize" class="form-label">Order Size</label>
             <input type="number" step="0.01" class="form-control" id="orderSize" value="${ordersHist[ordId]['orderSz']}" name="orderSize" placeholder="Enter new order size">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <label for="orderPrice" class="form-label">Order Price</label>
             <input type="number" step="0.01" class="form-control" id="orderPrice" value="${ordersHist[ordId]['orderPx']}" name="orderPrice" placeholder="Enter new order price">
         </div>
@@ -251,7 +270,7 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
 
     // Optional: Add your logic for handling the form submission here
     const formData = new FormData(this); // Collect form data 
-
+    console.log(formData)
     const token = getAuthToken();
     const username = localStorage.getItem('username');
     const redis_key = localStorage.getItem('key');
@@ -260,72 +279,94 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
         alert("You must be logged in to access this.");
         return;
     }
-
-    const request_data = { "username": username, "redis_key": redis_key, 'ordId':formData.get('ordId'),'algoId':formData.get('algoId'),'px':formData.get('orderPrice'),'sz':formData.get('orderSize'),'ccy':formData.get('instId'),'exchange':'okx','stopLoss':formData.get('stopLoss'),'takeProfit':formData.get('takeProfit'),'orderPrice':formData.get('orderPrice')};
-
-    const firstAmmendPromise = fetch(`http://${hostname}:5080/okx/ammend_order`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
-    try {
-        const results = await Promise.allSettled([firstAmmendPromise]);
-
-        // Array to hold combined orders
-        let allOpenOrders = [];
-
-        // Handle OKX Response
-        if (results[0].status === 'fulfilled') {
-            const response = results[0].value;
-            if (response.ok) {
-                const response_data = await response.json();
-                if (response_data.data){
-                    // Append OKX data to allOpenOrders
-                    allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
-                        ...position,
-                        exchange: 'OKX'  // Add exchange name to each position
-                    })));
+    const exchange = formData.get('exchange').toLowerCase()
+    const request_data = { "username": username, "redis_key": redis_key, 'ordId':formData.get('ordId'),'algoId':formData.get('algoId'),'px':formData.get('orderPrice'),'sz':formData.get('orderSize'),'ccy':formData.get('instId'),'exchange':'okx','stopLoss':formData.get('stopLoss'),'takeProfit':formData.get('takeProfit'),'orderPrice':formData.get('orderPrice'),'exchange':exchange,'side':formData.get('side')};
+    if (exchange == 'okx'){
+        const firstAmmendPromise = fetch(`http://${hostname}:5080/okx/ammend_order`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
+            });
+            try {
+                const results = await Promise.allSettled([firstAmmendPromise]);
+    
+                // Array to hold combined orders
+                let allOpenOrders = [];
+    
+                // Handle OKX Response
+                if (results[0].status === 'fulfilled') {
+                    const response = results[0].value;
+                    if (response.ok) {
+                        const response_data = await response.json();
+                        if (response_data.data){
+                            // Append OKX data to allOpenOrders
+                            allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
+                                ...position,
+                                exchange: 'OKX'  // Add exchange name to each position
+                            })));
+                        }
+                        else{
+                            console.error(response_data['msg'],response_data['code'])
+                        }
+                        
+                    } else {
+                        console.error('Error fetching OKX orders:', response.statusText);
+                    }
+                } else {
+                    console.error('OKX Request failed:', results[0].reason);
                 }
-                else{
-                    console.error(response_data['msg'],response_data['code'])
-                }
-                
-            } else {
-                console.error('Error fetching OKX orders:', response.statusText);
+            } catch (error) {
+                console.error('Error in fetching and populating data:', error);
             }
-        } else {
-            console.error('OKX Request failed:', results[0].reason);
-        }
-
-        // Handle HTX Response
-        // if (results[1].status === 'fulfilled') {
-        //     const response = results[1].value;
-        //     if (response.ok) {
-        //         const response_data = await response.json();
-        //         console.log('HTX data:', response_data);
-        //         const formattedData = Htx2OkxFormatOrders(response_data);  // Format HTX data as needed
-        //         // Append HTX data to allOpenOrders
-        //         allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
-        //             ...position,
-        //             exchange: 'HTX'  // Add exchange name to each position
-        //         })));
-        //         console.log('HTX populated');
-        //     } else {
-        //         console.error('Error fetching HTX orders:', response.statusText);
-        //     }
-        // } else {
-        //     console.error('HTX Request failed:', results[1].reason);
-        // }
-
-        // // After both responses are handled, populate the table with all orders
-        // // populateOpenOpenOrdersTable(allOpenOrders);
-
-    } catch (error) {
-        console.error('Error in fetching and populating data:', error);
     }
+    else if (exchange == 'htx'){
+        console.log("EEE EXCHANGE")
+        const firstAmmendPromise = fetch(`http://${hostname}:6061/htx/swap/ammend_order`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
+            });
+            try {
+                const results = await Promise.allSettled([firstAmmendPromise]);
+    
+                // Array to hold combined orders
+                let allOpenOrders = [];
+    
+                // Handle OKX Response
+                if (results[0].status === 'fulfilled') {
+                    const response = results[0].value;
+                    if (response.ok) {
+                        const response_data = await response.json();
+                        if (response_data.data){
+                            // Append OKX data to allOpenOrders
+                            allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
+                                ...position,
+                                exchange: 'HTX'  // Add exchange name to each position
+                            })));
+                        }
+                        else{
+                            console.error(response_data['msg'],response_data['code'])
+                        }
+                        
+                    } else {
+                        console.error('Error fetching HTX orders:', response.statusText);
+                    }
+                } else {
+                    console.error('HTX Request failed:', results[0].reason);
+                }
+            } catch (error) {
+                console.error('Error in fetching and populating data:', error);
+            }
+    }
+        
+
+    
 
 
 
@@ -584,7 +625,7 @@ function copyToClipboard(inputId) {
     }
 }
 
-async function get_sub_htx_info(ordId,ccy){
+async function get_tpsl_info(ordId,ccy){
 
     const token = getAuthToken();
     const username = localStorage.getItem('username');
@@ -596,7 +637,7 @@ async function get_sub_htx_info(ordId,ccy){
     }
 
     const request_data = { "username": username, "redis_key": redis_key,'ordId':ordId,'ccy':ccy };
-    const thirdOrderPromise= fetch(`http://${hostname}:6061/htx/swap/get_order_info`, {
+    const thirdOrderPromise= fetch(`http://${hostname}:6061/htx/swap/get_tpsl_info`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -604,15 +645,15 @@ async function get_sub_htx_info(ordId,ccy){
         },
         body: JSON.stringify(request_data)
     });
-    order_info = await thirdOrderPromise
-    console.log(order_info)
+    tpsl_info = await thirdOrderPromise
+    console.log(tpsl_info)
 }
 
 function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
-    // console.log('respionseDta',responseData)
-    // get_sub_htx_info('1313541876632293376','BTC-USD-SWAP')
+    console.log('respionseDta',responseData)
+    get_tpsl_info(1313838593508647000,'BTC-USD-SWAP')
 
     // Transform each order to match the desired OKX format
     const transformedOrders = orders.map(order => ({

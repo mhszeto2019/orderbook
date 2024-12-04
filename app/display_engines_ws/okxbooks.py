@@ -80,7 +80,7 @@ class OKXWebSocketClient:
         """Callback function to handle incoming messages."""
         json_data = json.loads(message)
         if json_data.get('data'):
-
+            
             channel = json_data["arg"]["channel"]
             currency_pair = json_data["arg"]["instId"]
             instrument = 'SPOT'
