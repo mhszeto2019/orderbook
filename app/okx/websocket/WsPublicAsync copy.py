@@ -1,24 +1,35 @@
 import asyncio
 import json
 import logging
-import os
-from okx.websocket.WebSocketFactory import WebSocketFactory
-from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
-# Logging configuration
+from okx.websocket.WebSocketFactory import WebSocketFactory
+
+# logging.basicConfig(level=logging.INFO)
+import os
 LOG_DIR = '/var/www/html/orderbook/logs'
-log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
+log_filename = os.path.join(LOG_DIR, f'orderbooks_okx_data.log')
+
+# Ensure the log directory exists
 os.makedirs(LOG_DIR, exist_ok=True)
 
+# Configure logging
 logging.basicConfig(
     level=logging.ERROR,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler(log_filename),
-        logging.StreamHandler()
+        logging.FileHandler(log_filename),  # Log to the specified file
+        logging.StreamHandler()            # Optionally, also log to the console
     ]
 )
+file_handler = logging.FileHandler(log_filename)
+console_handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
 logger = logging.getLogger("WsPublic")
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+logger.setLevel(logging.ERROR)
 
 class WsPublicAsync:
     def __init__(self, url):
@@ -31,8 +42,11 @@ class WsPublicAsync:
         self.max_reconnect_attempts = 10  # Limit reconnect attempts
         self.reconnect_delay = 1  # Initial delay in seconds
 
+    # async def connect(self):
+    #     self.websocket = await self.factory.connect()
+   
+
     async def connect(self):
-        """Establish a WebSocket connection with retries."""
         while self.reconnect_attempts < self.max_reconnect_attempts:
             try:
                 self.websocket = await self.factory.connect()
@@ -48,69 +62,40 @@ class WsPublicAsync:
             logger.error("Max reconnection attempts reached. Could not connect.")
             raise ConnectionError("Failed to connect to WebSocket after multiple attempts.")
 
+
     async def consume(self):
-        """Continuously consume messages from the WebSocket, handling disconnections."""
-        while True:
-            try:
-                async for message in self.websocket:
-                    logger.info("Received message: {%s}", message)
-                    if self.callback:
-                        self.callback(message)
-            except ConnectionClosedError as e:
-                logger.error(f"WebSocket closed unexpectedly: {e}. Reconnecting...")
-                await self.reconnect()  # Attempt to reconnect
-            except ConnectionClosedOK:
-                logger.info("WebSocket connection closed gracefully.")
-                break
-            except Exception as e:
-                logger.error(f"Unexpected error in consume: {e}")
-                break
+        async for message in self.websocket:
+            logger.info("Received message: {%s}", message)
+            
+            if self.callback:
+                self.callback(message)
 
     async def subscribe(self, params: list, callback):
-        """Subscribe to WebSocket channels."""
         self.callback = callback
         payload = json.dumps({
             "op": "subscribe",
             "args": params
         })
         await self.websocket.send(payload)
-        logger.info(f"Subscribed with payload: {payload}")
+        # await self.consume()
 
     async def unsubscribe(self, params: list, callback):
-        """Unsubscribe from WebSocket channels."""
         self.callback = callback
         payload = json.dumps({
             "op": "unsubscribe",
             "args": params
         })
-        logger.info(f"Unsubscribe payload: {payload}")
+        logger.info(f"unsubscribe: {payload}")
         await self.websocket.send(payload)
 
     async def stop(self):
-        """Stop the WebSocket connection and event loop."""
-        logger.info("Stopping WebSocket connection...")
         await self.factory.close()
         self.loop.stop()
 
-    async def reconnect(self):
-        """Re-establish the WebSocket connection."""
-        logger.info("Attempting to reconnect...")
-        await self.connect()  # Use the existing connect logic
-        if self.subscriptions:
-            await self.resubscribe()  # Resubscribe to channels
-
-    async def resubscribe(self):
-        """Resubscribe to previous subscriptions after reconnection."""
-        for params in self.subscriptions:
-            await self.subscribe(params, self.callback)
-        logger.info("Resubscribed to all channels after reconnection.")
-
     async def start(self):
-        """Start the WebSocket connection and begin consuming messages."""
-        logger.info("Starting WebSocket connection...")
+        logger.info("Connecting to WebSocket...")
         await self.connect()
         self.loop.create_task(self.consume())
 
     def stop_sync(self):
-        """Stop the WebSocket connection synchronously."""
         self.loop.run_until_complete(self.stop())

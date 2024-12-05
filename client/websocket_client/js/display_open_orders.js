@@ -49,13 +49,11 @@ async function populateOpenOrders() {
             if (response.ok) {
                 const response_data = await response.json();
                 if (response_data.data){
-                    console.log('OKX data:', response_data.data);
                     // Append OKX data to allOpenOrders
                     allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
                         ...position,
                         exchange: 'OKX'  // Add exchange name to each position
                     })));
-                    console.log('OKX populated');
                 }
                 else{
                     console.error(response_data['msg'],response_data['code'])
@@ -74,7 +72,6 @@ async function populateOpenOrders() {
             if (response.ok) {
                 const response_data = await response.json();
                 const formattedData = await Htx2OkxFormatOrders(response_data);  // Format HTX data as needed
-                console.log(formattedData)
                 // Append HTX data to allOpenOrders
                 allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
                     ...position,
@@ -87,7 +84,6 @@ async function populateOpenOrders() {
             console.error('HTX Request failed:', results[1].reason);
         }
         // After both responses are handled, populate the table with all orders
-        console.log(allOpenOrders)
         populateOpenOpenOrdersTable(allOpenOrders);
 
     } catch (error) {
@@ -121,7 +117,7 @@ function populateOpenOpenOrdersTable(orders) {
             ordersHist[position.ordId]['orderSz']= position.sz;
             ordersHist[position.ordId]['side']= position.side;
 
-            
+            console.log(position)
             const algoData = Array.isArray(position.attachAlgoOrds) && position.attachAlgoOrds.length > 0
                 ? position.attachAlgoOrds.map(algo => {
                     // Update the ordersHist object
@@ -134,7 +130,9 @@ function populateOpenOpenOrdersTable(orders) {
                     
                     // Return the HTML representation for this algo data
                     return `
-                        ${algo.attachAlgoId}
+                        <div style="width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${algo.attachAlgoId}">
+                            ${algo.attachAlgoId}
+                        </div>
                         <div style="width: 150px;">
                             <span>SL Trigger Px: ${algo.slTriggerPx || 'N/A'}</span><br>
                             <span>TP Order Px: ${algo.tpOrdPx || 'N/A'}</span>
@@ -151,6 +149,7 @@ function populateOpenOpenOrdersTable(orders) {
                 position.sz ? Number.parseFloat(position.sz).toFixed(1) : 'N/A',
                 algoData,  // Display attachAlgoOrds content
                 position.ordId || 'N/A',
+                
                 position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A',
                 // Buttons for last two columns
                 `<button class="btn btn-primary btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleModify('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Modify</button>`,
@@ -271,7 +270,6 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
 
     // Optional: Add your logic for handling the form submission here
     const formData = new FormData(this); // Collect form data 
-    console.log(formData)
     const token = getAuthToken();
     const username = localStorage.getItem('username');
     const redis_key = localStorage.getItem('key');
@@ -478,7 +476,6 @@ async function clearPositions(exchange) {
         const token = getAuthToken();
         const username = localStorage.getItem('username')
         const redis_key = localStorage.getItem('key')
-        // console.log(username,redis_key,token)
         if (!token |!username | !redis_key ) {
             alert("You must be logged in to access this.");
             return;
@@ -504,7 +501,6 @@ async function clearPositions(exchange) {
                         // Parse the JSON data from the response
                         const response_data = await response.json();
                         if (response_data['data'].length == 0){
-                            console.log('empty')
                             alert(response_data['msg'] + "\nError code:"+ response_data['code'])
                         }
                         // populateOpenOpenOrdersTable(response_data.data);
@@ -568,7 +564,6 @@ async function clearPositions(exchange) {
                     });
     
                 const results = await Promise.allSettled([firstOrderPromise,secondOrderPromise]);
-                console.log(results)
                 if (results[0].status === 'fulfilled') {
                     // Extract the data from the resolved promise
                     const response = results[0].value;
@@ -577,7 +572,6 @@ async function clearPositions(exchange) {
                         const response_data = await response.json();
 
                         if (response_data['data'].length == 0){
-                            console.log('empty')
                             alert(response_data['msg'] + "\nError code:"+ response_data['code'])
                         }
                         // populateOpenOpenOrdersTable(response_data.data);
@@ -664,86 +658,129 @@ async function get_tpsl_info_promise(ordId, ccy) {
 
 async function get_tpsl_info(ordId,instId) {
     const tpsl_info = await get_tpsl_info_promise(ordId,instId);
-    console.log(tpsl_info); // this will log the actual data
     return tpsl_info
 }
-
-
-
 
 
 async function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
     // console.log('respionseDta',responseData)
-    const tpsl_info =  await get_tpsl_info(1313927624669990912,'BTC-USD')
-    console.log(tpsl_info)
-    // console.log('tpsl_info',tpsl_info.tpsl_order_info[0].tpsl_order_type)
-    // console.log('tpsl_info',tpsl_info.tpsl_order_info[0].trigger_price)
-    // console.log('tpsl_info',tpsl_info.tpsl_order_info[1].tpsl_order_type)
-    // console.log('tpsl_info',tpsl_info.tpsl_order_info[1].trigger_price)
-    let sl_price = '';
-    let tp_price = '';
-    let tp_algo_id = ''
-    let sl_algo_id = ''
-    let algoOrds = [{
-        "amendPxOnTriggerType": "0",
-        "attachAlgoClOrdId": "",
-        "attachAlgoId": [],
-        "failCode": "",
-        "failReason": "",
-        "slOrdPx": "-1",
-        "slTriggerPx": "90",
-        "slTriggerPxType": "last",
-        "sz": "",
-        "tpOrdKind": "limit",
-        "tpOrdPx": "99999",
-        "tpTriggerPx": "",
-        "tpTriggerPxType": ""
-      }]
-    //   {
-    //     "canceled_at": 0,
-    //     "created_at": 1733301469452,
-    //     "direction": "sell",
-    //     "fail_code": null,
-    //     "fail_reason": null,
-    //     "order_id": 1313907123482300400,
-    //     "order_id_str": "1313907123482300417",
-    //     "order_price": 100000,
-    //     "order_price_type": "limit",
-    //     "relation_order_id": "-1",
-    //     "relation_tpsl_order_id": "1313907123482300418",
-    //     "status": 1,
-    //     "tpsl_order_type": "tp",
-    //     "trigger_price": 100000,
-    //     "trigger_type": "ge",
-    //     "triggered_price": null,
-    //     "volume": 1
-    //   }
-    
-    // Loop through each order and check the order type
-    if (!tpsl_info){
-        tpsl_info.tpsl_order_info.forEach(order => {
-            algoOrds[0]["sz"] = order.volume
-    
-            if (order.tpsl_order_type === 'sl') {
-                sl_price = order.trigger_price;
-                sl_algo_id = order.relation_tpsl_order_id
-                algoOrds[0]["attachAlgoId"].push(sl_algo_id)
-                algoOrds[0]["slTriggerPx"] = sl_price
-    
+    console.log('response_data',responseData)
+    const transformedOrders = []
+    for (const row of responseData.orders) {
+        console.log('row', row);
+        try {
+            let contract_code = row.contract_code
+            let is_tpsl = row.is_tpsl
+            let order_id = row.order_id_str
+            let sl_price = '';
+            let tp_price = '';
+            let tp_algo_id = ''
+            let sl_algo_id = ''
+            let algoOrds = []
+            console.log(is_tpsl)
+            if (is_tpsl){
+                const tpsl_info = await get_tpsl_info(order_id, contract_code);
+                console.log('tpsl_info', tpsl_info);
                 
-            } else if (order.tpsl_order_type === 'tp') {
-                tp_price = order.trigger_price;
-                tp_algo_id = order.relation_tpsl_order_id
-                algoOrds[0]["attachAlgoId"].push(tp_algo_id)
-                algoOrds[0]["tpOrdPx"] = tp_price
+                algoOrds.push({
+                    "amendPxOnTriggerType": "0",
+                    "attachAlgoClOrdId": "",
+                    "attachAlgoId": [],
+                    "failCode": "",
+                    "failReason": "",
+                    "slOrdPx": "-1",
+                    "slTriggerPx": "90",
+                    "slTriggerPxType": "last",
+                    "sz": "",
+                    "tpOrdKind": "limit",
+                    "tpOrdPx": "99999",
+                    "tpTriggerPx": "",
+                    "tpTriggerPxType": ""
+                  })
+                tpsl_info.tpsl_order_info.forEach(order => {
+                    algoOrds[0]["sz"] = order.volume
+                    if (order.tpsl_order_type === 'sl') {
+                        sl_price = order.trigger_price;
+                        sl_algo_id = order.relation_tpsl_order_id
+                        algoOrds[0]["attachAlgoId"].push(sl_algo_id)
+                        algoOrds[0]["slTriggerPx"] = sl_price
+            
+                    } else if (order.tpsl_order_type === 'tp') {
+                        tp_price = order.trigger_price;
+                        tp_algo_id = order.relation_tpsl_order_id
+                        algoOrds[0]["attachAlgoId"].push(tp_algo_id)
+                        algoOrds[0]["tpOrdPx"] = tp_price
+                    }
+                });
+                console.log("SL Price:", sl_price);
+                console.log("TP Price:", tp_price);
                 
-    
-    
             }
-        });
+
+            let transformedRow = {
+                accFillSz: row.trade_volume.toString(),
+                algoClOrdId: "",
+                algoId: sl_algo_id && !tp_algo_id ? [] :[sl_algo_id,tp_algo_id],
+                attachAlgoClOrdId: "",
+                attachAlgoOrds:sl_algo_id && !tp_algo_id ? [] :algoOrds ,
+                avgPx: row.trade_avg_price ? row.trade_avg_price.toString() : "",
+                cTime: row.created_at.toString(),
+                cancelSource: row.canceled_source || "",
+                cancelSourceReason: "",
+                category: "normal",
+                ccy: "",
+                clOrdId: row.client_order_id || "",
+                fee: row.fee.toString(),
+                feeCcy: row.fee_asset,
+                fillPx: "",
+                fillSz: row.trade_volume.toString(),
+                fillTime: "",
+                instId: `${row.contract_code}-SWAP`,
+                instType: "SWAP",
+                isTpLimit: row.is_tpsl ? "true" : "false",
+                lever: row.lever_rate.toString(),
+                linkedAlgoOrd: sl_algo_id && !tp_algo_id ? '' : { algoId: [sl_algo_id, tp_algo_id] },
+                ordId: row.order_id_str,
+                ordType: row.order_price_type,
+                pnl: row.profit.toString(),
+                posSide: "net",
+                px: row.price.toString(),
+                pxType: "",
+                pxUsd: "",
+                pxVol: "",
+                quickMgnType: "",
+                rebate: "0",
+                rebateCcy: row.fee_asset,
+                reduceOnly: "false",
+                side: row.direction,
+                slOrdPx: "",
+                slTriggerPx: sl_price|| "",
+                slTriggerPxType: "",
+                source: row.order_source || "",
+                state: mapStatusToState(row.status),
+                stpId: "",
+                stpMode: "cancel_maker",
+                sz: row.volume.toString(),
+                tag: "",
+                tdMode: "isolated", // Assuming isolated margin; adjust if needed
+                tgtCcy: "",
+                tpOrdPx: "",
+                tpTriggerPx: tp_price.toString() || "",
+                tpTriggerPxType: "",
+                tradeId: "",
+                uTime: row.update_time.toString(),
+            }
+
+            transformedOrders.push(transformedRow)
+            
+        } catch (error) {
+            console.error('Error fetching TPSL info:', error);
+        }
     }
+    
+    
     
     
     // Output the results
@@ -751,59 +788,59 @@ async function Htx2OkxFormatOrders(responseData) {
     // console.log("TP Price:", tp_price);
     
     // Transform each order to match the desired OKX format
-    const transformedOrders = orders.map(order => ({
-        accFillSz: order.trade_volume.toString(),
-        algoClOrdId: "",
-        algoId: [sl_algo_id,tp_algo_id] || [],
-        attachAlgoClOrdId: "",
-        attachAlgoOrds: algoOrds | [],
-        avgPx: order.trade_avg_price ? order.trade_avg_price.toString() : "",
-        cTime: order.created_at.toString(),
-        cancelSource: order.canceled_source || "",
-        cancelSourceReason: "",
-        category: "normal",
-        ccy: "",
-        clOrdId: order.client_order_id || "",
-        fee: order.fee.toString(),
-        feeCcy: order.fee_asset,
-        fillPx: "",
-        fillSz: order.trade_volume.toString(),
-        fillTime: "",
-        instId: `${order.contract_code}-SWAP`,
-        instType: "SWAP",
-        isTpLimit: order.is_tpsl ? "true" : "false",
-        lever: order.lever_rate.toString(),
-        linkedAlgoOrd: { algoId: [sl_algo_id,tp_algo_id] },
-        ordId: order.order_id_str,
-        ordType: order.order_price_type,
-        pnl: order.profit.toString(),
-        posSide: "net",
-        px: order.price.toString(),
-        pxType: "",
-        pxUsd: "",
-        pxVol: "",
-        quickMgnType: "",
-        rebate: "0",
-        rebateCcy: order.fee_asset,
-        reduceOnly: "false",
-        side: order.direction,
-        slOrdPx: "",
-        slTriggerPx: sl_price|| "",
-        slTriggerPxType: "",
-        source: order.order_source || "",
-        state: mapStatusToState(order.status),
-        stpId: "",
-        stpMode: "cancel_maker",
-        sz: order.volume.toString(),
-        tag: "",
-        tdMode: "isolated", // Assuming isolated margin; adjust if needed
-        tgtCcy: "",
-        tpOrdPx: "",
-        tpTriggerPx: tp_price.toString() || "",
-        tpTriggerPxType: "",
-        tradeId: "",
-        uTime: order.update_time.toString(),
-    }));
+    // const transformedOrders = orders.map(order => ({
+    //     accFillSz: order.trade_volume.toString(),
+    //     algoClOrdId: "",
+    //     algoId: [sl_algo_id,tp_algo_id] || [],
+    //     attachAlgoClOrdId: "",
+    //     attachAlgoOrds: algoOrds | [],
+    //     avgPx: order.trade_avg_price ? order.trade_avg_price.toString() : "",
+    //     cTime: order.created_at.toString(),
+    //     cancelSource: order.canceled_source || "",
+    //     cancelSourceReason: "",
+    //     category: "normal",
+    //     ccy: "",
+    //     clOrdId: order.client_order_id || "",
+    //     fee: order.fee.toString(),
+    //     feeCcy: order.fee_asset,
+    //     fillPx: "",
+    //     fillSz: order.trade_volume.toString(),
+    //     fillTime: "",
+    //     instId: `${order.contract_code}-SWAP`,
+    //     instType: "SWAP",
+    //     isTpLimit: order.is_tpsl ? "true" : "false",
+    //     lever: order.lever_rate.toString(),
+    //     linkedAlgoOrd: { algoId: [sl_algo_id,tp_algo_id] },
+    //     ordId: order.order_id_str,
+    //     ordType: order.order_price_type,
+    //     pnl: order.profit.toString(),
+    //     posSide: "net",
+    //     px: order.price.toString(),
+    //     pxType: "",
+    //     pxUsd: "",
+    //     pxVol: "",
+    //     quickMgnType: "",
+    //     rebate: "0",
+    //     rebateCcy: order.fee_asset,
+    //     reduceOnly: "false",
+    //     side: order.direction,
+    //     slOrdPx: "",
+    //     slTriggerPx: sl_price|| "",
+    //     slTriggerPxType: "",
+    //     source: order.order_source || "",
+    //     state: mapStatusToState(order.status),
+    //     stpId: "",
+    //     stpMode: "cancel_maker",
+    //     sz: order.volume.toString(),
+    //     tag: "",
+    //     tdMode: "isolated", // Assuming isolated margin; adjust if needed
+    //     tgtCcy: "",
+    //     tpOrdPx: "",
+    //     tpTriggerPx: tp_price.toString() || "",
+    //     tpTriggerPxType: "",
+    //     tradeId: "",
+    //     uTime: order.update_time.toString(),
+    // }));
 
     // {'status': ['ok', 'no error'], 'data': {'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1, 'price': 60000, 'order_price_type': 'limit', 'direction': 'buy', 'offset': 'open', 'lever_rate': 5, 'order_id': 1313907123482300416, 'order_id_str': '1313907123482300416', 'client_order_id': None, 'created_at': 1733301469441, 'trade_volume': 0, 'trade_turnover': 0, 'fee': 0, 'trade_avg_price': None, 'margin_frozen': 0.000333333333333333, 'profit': 0, 'status': 3, 'order_type': 1, 'order_source': 'web', 'fee_asset': 'BTC', 'canceled_at': 0, 'tpsl_order_info': [{'volume': 1.0, 'direction': 'sell', 'tpsl_order_type': 'tp', 'order_id': 1313907123482300417, 'order_id_str': '1313907123482300417', 'trigger_type': 'ge', 'trigger_price': 100000.0, 'order_price': 100000.0, 'created_at': 1733301469452, 'order_price_type': 'limit', 'relation_tpsl_order_id': '1313907123482300418', 'status': 1, 'canceled_at': 0, 'fail_code': None, 'fail_reason': None, 'triggered_price': None, 'relation_order_id': '-1'}, {'volume': 1.0, 'direction': 'sell', 'tpsl_order_type': 'sl', 'order_id': 1313907123482300418, 'order_id_str': '1313907123482300418', 'trigger_type': 'le', 'trigger_price': 20000.0, 'order_price': 20000.0, 'created_at': 1733301469452, 'order_price_type': 'limit', 'relation_tpsl_order_id': '1313907123482300417', 'status': 1, 'canceled_at': 0, 'fail_code': None, 'fail_reason': None, 'triggered_price': None, 'relation_order_id': '-1'}], 'sMsg': 'Orders placed'}, 'ts': 1733301592504, 'sCode': 200}
 
