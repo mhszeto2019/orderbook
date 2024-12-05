@@ -1,9 +1,10 @@
-  const socket = io('http://localhost:5000', {
+  const socket = io('http://localhost:5001', {
     reconnection: true,  // Enable reconnection
     reconnectionAttempts: 5, // Number of attempts before giving up
     reconnectionDelay: 1000, // Delay between reconnection attempts in ms
     reconnectionDelayMax: 5000, // Maximum delay for reconnection in ms
-    timeout: 20000 // Timeout before connection attempt is considered failed
+    timeout: 20000 ,// Timeout before connection attempt is considered failed,
+    transports: ['websocket']
   });
 
   let currentCurrency = "BTC-USD-SWAP"; // Default selected currency
@@ -15,7 +16,7 @@
       socket.off(activeListener);
     }
 
-    const eventName = `okx_funding_rate/${currency}`;
+    const eventName = `${currency}`;
     activeListener = eventName; // Update the active listener
 
     console.log(`Listening to event: ${eventName}`);
@@ -49,7 +50,7 @@
   connectToCurrency(currentCurrency);
 
   // Event handler for currency dropdown changes
-  document.getElementById('currencyDropdown').addEventListener('change', function () {
+  document.getElementById('currency-input').addEventListener('change', function () {
     const selectedCurrency = this.value;
     if (selectedCurrency) {
       currentCurrency = selectedCurrency;
@@ -57,6 +58,9 @@
     }
   });
 
+  socket.on('connect',()=>{
+    console.debug('conneccted')
+  })
   // Handle disconnection
   socket.on('disconnect', () => {
     console.log('Disconnected from server');

@@ -253,13 +253,18 @@ def ammend_order():
             decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
             api_creds_dict = json.loads(decrypted_data)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-        
-        if data.get('algoId') == 'undefined':
+        print('inputdata',data)
+        print(data.get('takeProfit') =='' and data.get('stopLoss') == '')
+        if data.get('algoId') == 'undefined' or data.get('takeProfit') =='' and data.get('stopLoss') == '':
+            print('TRUE')
             data['algoId'] = ''
+            attachAlgoOrds = []
+            
+        attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['takeProfit'],'newSlOrdPx':data['stopLoss'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
 
-        attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['px'],'newSlOrdPx':data['px'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
         result = tradeAPI.amend_order("BTC-USD-SWAP", ordId=data['ordId'],newSz='1',
                                         attachAlgoOrds=attachAlgoOrds)
+        print('amend result',result)
         return result
         # order_list = []
         # for row in data:

@@ -201,35 +201,36 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Add a refresh button functionality for transaction history or open orders
-    document.getElementById('txn-history-refresh-btn').onclick = async () => {
-        try {
-            const response = await fetch('/get_transaction_history');
-            const historyData = await response.json();
-            // Update the transaction history table here
-            updateTransactionHistoryTable(historyData);
-        } catch (error) {
-            console.error('Error fetching transaction history:', error);
-        }
-    };
+    // document.getElementById('txn-history-refresh-btn').onclick = async () => {
+    //     try {
+    //         const response = await fetch('/get_transaction_history');
+    //         const historyData = await response.json();
+    //         // Update the transaction history table here
+    //         updateTransactionHistoryTable(historyData);
+    //     } catch (error) {
+    //         console.error('Error fetching transaction history:', error);
+    //     }
+    // };
 
-    // Function to update transaction history table
-    function updateTransactionHistoryTable(data) {
-        const txnHistoryBody = document.getElementById('oms-open-txn-history-body');
-        txnHistoryBody.innerHTML = ''; // Clear existing rows
+    // // Function to update transaction history table
+    // function updateTransactionHistoryTable(data) {
+    //     const txnHistoryBody = document.getElementById('oms-open-txn-history-body');
+    //     txnHistoryBody.innerHTML = ''; // Clear existing rows
 
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.currency}</td>
-                <td>${item.filledPrice}</td>
-                <td>${item.filledSize}</td>
-                <td>${item.filledTime}</td>
-                <td>${item.tradeType}</td>
-                <td>${item.fee}</td>
-                <td>${item.feeCurrency}</td>
-                <td>${item.timestamp}</td>
-            `;
-            txnHistoryBody.appendChild(row);
-        });
-    }
+    //     data.forEach(item => {
+    //         const row = document.createElement('tr');
+    //         row.innerHTML = `
+    //             <td>${item.currency}</td>
+    //             <td>${item.filledPrice}</td>
+    //             <td>${item.filledSize}</td>
+    //             <td>${item.filledTime}</td>
+    //             <td>${item.tradeType}</td>
+    //             <td>${item.fee}</td>
+    //             <td>${item.feeCurrency}</td>
+    //             <td>${item.timestamp}</td>
+    //         `;
+    //         txnHistoryBody.appendChild(row);
+    //     });
+    // }
+
 });

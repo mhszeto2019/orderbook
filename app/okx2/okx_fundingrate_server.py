@@ -102,7 +102,8 @@ async def okx_websocket():
                         formatted_timestamp = readable_timestamp.strftime('%Y-%m-%d %H:%M:%S')
                         print(readable_timestamp)
                         data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":formatted_timestamp}
-                        socketio.emit(f'okx_funding_rate/{ccy}', {'data': json.dumps(data_to_client)}) 
+                        socketio.emit(f'{ccy}', {'data': json.dumps(data_to_client)}) 
+                        print(f"Emitting to {ccy}: {data_to_client}")
 
                     # await asyncio.sleep(1)  # Adjust the time delay (in seconds)
     print("Disconnected " + datetime.datetime.now().isoformat())
@@ -126,4 +127,4 @@ def handle_connect():
 
 if __name__ == '__main__':
     # Run Flask server
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app,  port=5001)
