@@ -56,7 +56,6 @@ def home():
 def get_all_positions():
     try:
         data = request.get_json()
-        print(data)
         # side = data['side']
         username = data.get('username')
         key_string = data.get('redis_key')
@@ -76,7 +75,6 @@ def get_all_positions():
         # Decrypt the credentials
             decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
             api_creds_dict = json.loads(decrypted_data)
-            print(f"API credentials for {username}", api_creds_dict)
 
         accountAPI = Account.AccountAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = accountAPI.get_positions()

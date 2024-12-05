@@ -11,6 +11,9 @@ okx_display_engine_orderbook_port=$OKX_DISPLAY_ORDERBOOK_PORT
 
 htx_display_engine_asset_and_position_port=$HTX_DISPLAY_ASSET_AND_POSITION_PORT
 okx_display_engine_asset_and_position_port=$OKX_DISPLAY_ASSET_AND_POSITION_PORT
+
+htx_display_engine_open_orders_port=$HTX_DISPLAY_OPEN_ORDERS_PORT
+okx_display_engine_open_orders_port=$OKX_DISPLAY_OPEN_ORDERS_PORT
 # Start a new tmux session for okx_fundingrate_app
 # tmux new-session -d -s redis_connector
 # tmux send-keys -t redis_connector "source $venv && gunicorn -w 1 -b 0.0.0.0:$REDIS_CONNECTOR_PORT app.redis_connector:app " C-m
@@ -31,4 +34,8 @@ tmux new-session -d -s htx_display_asset_and_position_engine
 # Create a new window within that session, ensuring the environment is sourced
 tmux send-keys -t htx_display_asset_and_position_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_asset_and_position_port app.display_engines_rest.htx_positions:app" C-m
 
-# gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5000 okx2.okx_fundingrate_server:app
+# OKX OPEN ORDERS ENGINE NOT REQUIRED because it is with trades
+
+tmux new-session -d -s htx_display_open_orders_engine
+# Create a new window within that session, ensuring the environment is sourced
+tmux send-keys -t htx_display_open_orders_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_open_orders_port app.display_engines_rest.htx_open_orders:app" C-m

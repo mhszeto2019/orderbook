@@ -685,17 +685,17 @@ async function Htx2OkxFormatOrders(responseData) {
                 console.log('tpsl_info', tpsl_info);
                 
                 algoOrds.push({
-                    "amendPxOnTriggerType": "0",
+                    "amendPxOnTriggerType": "",
                     "attachAlgoClOrdId": "",
                     "attachAlgoId": [],
                     "failCode": "",
                     "failReason": "",
                     "slOrdPx": "-1",
-                    "slTriggerPx": "90",
+                    "slTriggerPx": "",
                     "slTriggerPxType": "last",
                     "sz": "",
                     "tpOrdKind": "limit",
-                    "tpOrdPx": "99999",
+                    "tpOrdPx": "",
                     "tpTriggerPx": "",
                     "tpTriggerPxType": ""
                   })
@@ -703,13 +703,13 @@ async function Htx2OkxFormatOrders(responseData) {
                     algoOrds[0]["sz"] = order.volume
                     if (order.tpsl_order_type === 'sl') {
                         sl_price = order.trigger_price;
-                        sl_algo_id = order.relation_tpsl_order_id
+                        sl_algo_id = order.order_id_str
                         algoOrds[0]["attachAlgoId"].push(sl_algo_id)
                         algoOrds[0]["slTriggerPx"] = sl_price
             
                     } else if (order.tpsl_order_type === 'tp') {
                         tp_price = order.trigger_price;
-                        tp_algo_id = order.relation_tpsl_order_id
+                        tp_algo_id = order.order_id_str
                         algoOrds[0]["attachAlgoId"].push(tp_algo_id)
                         algoOrds[0]["tpOrdPx"] = tp_price
                     }
@@ -722,9 +722,9 @@ async function Htx2OkxFormatOrders(responseData) {
             let transformedRow = {
                 accFillSz: row.trade_volume.toString(),
                 algoClOrdId: "",
-                algoId: sl_algo_id && !tp_algo_id ? [] :[sl_algo_id,tp_algo_id],
+                algoId: [sl_algo_id, tp_algo_id].filter(id => id != null),
                 attachAlgoClOrdId: "",
-                attachAlgoOrds:sl_algo_id && !tp_algo_id ? [] :algoOrds ,
+                attachAlgoOrds: (sl_algo_id || tp_algo_id) ? algoOrds : [] ,
                 avgPx: row.trade_avg_price ? row.trade_avg_price.toString() : "",
                 cTime: row.created_at.toString(),
                 cancelSource: row.canceled_source || "",
@@ -741,7 +741,7 @@ async function Htx2OkxFormatOrders(responseData) {
                 instType: "SWAP",
                 isTpLimit: row.is_tpsl ? "true" : "false",
                 lever: row.lever_rate.toString(),
-                linkedAlgoOrd: sl_algo_id && !tp_algo_id ? '' : { algoId: [sl_algo_id, tp_algo_id] },
+                linkedAlgoOrd: (sl_algo_id || tp_algo_id) ? '' : { algoId: [sl_algo_id, tp_algo_id].filter(id => id != null) },
                 ordId: row.order_id_str,
                 ordType: row.order_price_type,
                 pnl: row.profit.toString(),

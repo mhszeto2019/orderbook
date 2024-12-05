@@ -326,7 +326,7 @@ async def ammend_order():
             "contract_code": instId
             }
         )
-        print(data)
+        print('input',data)
         revoke_order_data = revoke_orders.get('data', [])
         if len(revoke_order_data['errors']) == 0:
             print('revoked')
@@ -344,7 +344,11 @@ async def ammend_order():
                 "direction": side,
                 "offset": "open",
                 "lever_rate": 5,
-                "order_price_type": ordType
+                "order_price_type": ordType,
+                "sl_trigger_price":data['stopLoss'] if data['stopLoss'] else "",
+                "sl_order_price":data['stopLoss'] if data['stopLoss'] else "",
+                "tp_trigger_price":data['takeProfit'] if data['takeProfit'] else "",
+                "tp_order_price":data['takeProfit'] if data['takeProfit'] else ""
             })
             print(result)
             print('order placed')
