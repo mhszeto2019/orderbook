@@ -107,78 +107,6 @@ function compareData(newData) {
     console.log(`Data received from ${exchange}:`, data);
   }
 
-// // Function to connect to WebSocket servers for all exchanges
-// function connectToWebSockets() {
-//     Object.keys(wsServers).forEach(exchange => {
-//         const wsUrl = wsServers[exchange];
-
-//         // Create a WebSocket connection for the exchange
-//         const ws = new WebSocket(wsUrl);
-
-//         // Handle WebSocket open event
-//         ws.onopen = () => {
-//             console.log(`Connected to ${exchange} WebSocket server at ${wsUrl}`);
-//             updateStatus(exchange, true); 
-//         };
-
-//         // Handle incoming messages from the WebSocket
-//         ws.onmessage = (event) => {
-//             try {
-//                 const parsedData = JSON.parse(event.data);
-//                 lastData[exchange] = parsedData; // Store data for this exchange
-//                 compareData(parsedData);
-//                 onWsDataReceived(exchange,parsedData)
-//                 // onWsDataReceived(parsedData) // Add this function to handle data when it's received
-//             } catch (error) {
-//                 console.error(`Error parsing data from ${exchange}:`, error);
-//             }
-//         };
-
-//         // Handle WebSocket error event
-//         ws.onerror = (error) => {
-//             console.error(`Error occurred with ${exchange} WebSocket connection:`, error);
-//         };
-
-//         // Handle WebSocket close event
-//         ws.onclose = () => {
-//             console.log(`Disconnected from ${exchange} WebSocket server.`);
-//             updateStatus(exchange, false);
-//         };
-
-//         // Store the WebSocket connection
-//         wsConnections[exchange] = ws;
-//     });
-// }
-
-
-// Import the Socket.IO client library
-
-
-// // Function that handles the WebSocket data after it's received
-// function onWsDataReceived(data) {
-//         console.log('Received data:', data);
-//  }
-
-// // Connect to WebSocket servers when the page loads
-// connectToWebSockets();
-
-
-{/* <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script> */}
-
-
-// const order_management_sockets = {
-//     okx: io('http://localhost:5090', {
-//         transports: ['websocket'],
-//         // debug: false // Disable debug logging
-//     }),
-  
-
-// };
-
-// // Optimize connection logging
-// Object.entries(order_management_sockets).forEach(([name, socket]) => {
-//     socket.on('connect', () => console.log(`Connected to ${name} WebSocket`));
-// });
 
 const wsServers = {
    
@@ -244,5 +172,16 @@ function connectToSocketIO() {
     });
 }
 
+// Function to clear old data from lastData (for memory management)
+function clearOldData() {
+    Object.keys(lastData).forEach(exchange => {
+        if (lastData[exchange] && Date.now() - lastData[exchange].timestamp > 60000) { // 1 minute timeout for data
+            lastData[exchange] = null; // Clear data if it's older than 1 minute
+            console.log(`Cleared old data for ${exchange}`);
+        }
+    });
+}
+// Periodically clear old data to manage memory
+setInterval(clearOldData, 60000); // Clear old data every 60 seconds
 
 connectToSocketIO()
