@@ -155,6 +155,7 @@ def handle_connect(auth):
 #     global loop
 #     print("Client disconnected")
 #     loop.close()
+
 @socketio.on('client_change')
 def handle_client_change(data):
     global loop

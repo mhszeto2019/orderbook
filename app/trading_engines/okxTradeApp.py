@@ -255,11 +255,16 @@ def ammend_order():
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         print('inputdata',data)
         print(data.get('takeProfit') =='' and data.get('stopLoss') == '')
-        if data.get('algoId') == 'undefined' or data.get('takeProfit') =='' and data.get('stopLoss') == '':
+        if data.get('takeProfit') == '' and data.get('stopLoss') == '':
+            data['takeProfit'] = 0
+            data['stopLoss'] = 0
+
+        if data.get('algoId') == 'undefined':
             print('TRUE')
+            
             data['algoId'] = ''
             attachAlgoOrds = []
-            
+
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['takeProfit'],'newSlOrdPx':data['stopLoss'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
 
         result = tradeAPI.amend_order("BTC-USD-SWAP", ordId=data['ordId'],newSz='1',
@@ -346,50 +351,6 @@ def cancel_all_orders_by_ccy():
         print(e)
 
 
-
-# not checked
-@app.route('/get_order_list', methods=['GET'])
-def get_order_list():
-    result = tradeApi.get_order_list()
-    data = result.get('data',[])
-    print(data)
-    order_list = []
-    for row in data:
-        order_list.append({"instId":row['instId'], "ordId":row['ordId']})
-    
-    return order_list
-
-@app.route('/get_order_history', methods=['GET'])
-def get_order_history():
-    result = tradeApi.get_orders_history(instType="SPOT")
-    print(result)
-    return result
-
-@app.route('/cancel_order', methods=['POST'])
-def cancel_order():
-    data = request.get_json()
-    
-    print(tradeApi.cancel_order(instId=data['instId'],ordId=data['ordId']))
-    
-@app.route('/cancel_multiple_orders', methods=['POST'])
-def cancel_multiple_order():
-    data = request.get_json()
-    cancel_orders_list = data
-    result = tradeApi.cancel_multiple_orders(cancel_orders_list)
-    # print(result)
-    return result
-    
-@app.route('/cancel_all_orders',methods=['POST'])
-def cancel_all_orders():
-    order_list = tradeApi.get_orders_history(instType="SPOT")
-    data = order_list.get('data',[])
-    # print(data)
-    order_list = []
-    for row in data:
-        order_list.append({"instId":row['instId'], "ordId":row['ordId']})
-    result = tradeApi.cancel_multiple_orders(order_list)
-    
-    return result
 
 if __name__ == "__main__":
     app.run(port=5080)

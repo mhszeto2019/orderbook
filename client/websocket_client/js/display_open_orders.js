@@ -251,7 +251,6 @@ function handleModify(instId, ordId,algoId,exchange) {
     `;
     // Display the modal
     modal.style.display = 'block';
-    populateOpenOrders();
 
 }
 
