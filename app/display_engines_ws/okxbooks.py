@@ -111,10 +111,7 @@ class OKXWebSocketClient:
             print('sending to client')
             if 'SWAP' in currency_pair:
                 instrument = 'SWAP'
-            redis_key = f'okx:{instrument}:{channel}:{currency_pair}'
-            redis_client.publish(redis_key, json.dumps(redis_data))
-            # Store data in Redis
-            redis_client.hset(redis_key, mapping=redis_data)
+            
 client = None
 # Example usage
 async def main():

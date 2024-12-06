@@ -16,10 +16,33 @@ redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=Tr
 import datetime
 import json
 def publicCallback(message):
-    # print("publicCallback", message)
-    # redis_client.hset(redis_key, mapping=message)
-    # redis_client.publish(redis_key, json.dumps(message))
+    # try:
+    #     response_data = json.loads(message)
+    #     print(response_data)
+    #     if 'data' in response_data:
+    #         funding_rate = response_data['data'][0].get('fundingRate', None)
+    #         fundingTime = response_data['data'][0].get('fundingTime', [])
+    #         print('ccy',response_data['data'][0].get('instId',''))
+    #         ccy = response_data['data'][0].get('instId','')
+            
+    #         ts = int(response_data['data'][0].get('ts',0))/ 1000
+    #         readable_timestamp = datetime.datetime.fromtimestamp(ts)
+
+    #         # Format the timestamp as a human-readable string
+    #         formatted_timestamp = readable_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    #         print(readable_timestamp)
+    #         data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":formatted_timestamp}
+    #         msg = json.dumps(data_to_client)
+    #         print(msg,type(msg))
+    #         redis_client.hset(f'okxfundingrate/{ccy}',msg)
+
+    #         # redis_client.publish(f'okxfundingrate/{ccy}',data_to_client )
+    # except Exception as e:
+    #     print('error')
+    #     print(e)
+
     response_data = json.loads(message)
+    print(response_data)
     if 'data' in response_data:
         funding_rate = response_data['data'][0].get('fundingRate', None)
         fundingTime = response_data['data'][0].get('fundingTime', [])
@@ -33,11 +56,9 @@ def publicCallback(message):
         formatted_timestamp = readable_timestamp.strftime('%Y-%m-%d %H:%M:%S')
         print(readable_timestamp)
         data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":formatted_timestamp}
-        print(data_to_client)
-        redis_key = f'okx_fundingrate/{ccy}'
-        redis_client.hset(redis_key, mapping=data_to_client)
-        redis_client.publish(redis_key, json.dumps(data_to_client))
-
+        msg = json.dumps(data_to_client)
+        print(msg,type(msg))
+        redis_client.set(f'okxfundingrate/{ccy}',msg)
 
 async def main():
     
@@ -59,7 +80,7 @@ async def main():
     # print("-----------------------------------------unsubscribe--------------------------------------------")
     # args2 = [arg4]
     # await ws.unsubscribe(args2, publicCallback)
-    await asyncio.sleep(60)
+    await asyncio.sleep(5)
     
 
 

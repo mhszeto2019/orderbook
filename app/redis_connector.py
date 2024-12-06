@@ -75,9 +75,7 @@ def retrieve_okxbbo(key):
 #     retrieved_data['sequence_id'] = int(retrieved_data['sequence_id']) if retrieved_data.get('sequence_id') else 0
 
 #     return jsonify(retrieved_data), 200
-@app.route('/okx/get_fundingrate', methods=['GET'])
 
-    return jsonify(retrieved_data), 200
 
 
 @app.route('/set_okx_secretkey_apikey_passphrase', methods=['POST'])

@@ -159,7 +159,7 @@ class WsSwaps(WsBase):
         # Store data in Redis
         redis_client.publish(redis_key, json.dumps(redis_data))
        
-        redis_client.hset(redis_key, mapping=redis_data)
+        # redis_client.hset(redis_key, mapping=redis_data)
         
         return 'test'
     
