@@ -71,7 +71,7 @@ class OKXWebSocketClient:
     async def close(self):
         """Close the WebSocket connection."""
         if self.ws:
-            await self.ws.close()
+            await self.ws.factory.close()
             print("WebSocket connection closed.")
         redis_client.close()
 
@@ -108,15 +108,17 @@ class OKXWebSocketClient:
 
             }
             socketio.emit(currency_pair,redis_data)
+            print('sending to client')
             if 'SWAP' in currency_pair:
                 instrument = 'SWAP'
             redis_key = f'okx:{instrument}:{channel}:{currency_pair}'
             redis_client.publish(redis_key, json.dumps(redis_data))
             # Store data in Redis
             redis_client.hset(redis_key, mapping=redis_data)
-
+client = None
 # Example usage
 async def main():
+    global client
     client = OKXWebSocketClient()
     # List of currency pairs to subscribe to
     currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
@@ -148,11 +150,33 @@ def handle_connect(auth):
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_okx_client)
 
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     global loop
+#     print("Client disconnected")
+#     loop.close()
+@socketio.on('client_change')
+def handle_client_change(data):
+    global loop
+    print(f"Client change detected with data: {data}")
+    if loop is not None:
+        try:
+            loop.run_until_complete(client.cleanup())
+            print("Client WebSocket connection cleaned up.")
+        except Exception as e:
+            print(f"Error during client change cleanup: {e}")
+
 @socketio.on('disconnect')
 def handle_disconnect():
     global loop
     print("Client disconnected")
-    loop.close()
+    if loop and loop.is_running():
+        # Stop all running tasks
+        for task in asyncio.all_tasks(loop):
+            task.cancel()
+        # Optionally stop the event loop (not close)
+        loop.call_soon_threadsafe(loop.stop)
+
 
 @socketio.on('message')
 def handle_message(data):

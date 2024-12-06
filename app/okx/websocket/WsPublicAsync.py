@@ -41,9 +41,9 @@ class WsPublicAsync:
                 break
             except Exception as e:
                 self.reconnect_attempts += 1
-                delay = self.reconnect_delay * (2 ** (self.reconnect_attempts - 1))  # Exponential backoff
+                delay = min(self.reconnect_delay * (2 ** (self.reconnect_attempts - 1)), 30)  # Cap delay at 30 seconds
                 logger.error(f"Connection failed (attempt {self.reconnect_attempts}): {e}. Retrying in {delay}s...")
-                await asyncio.sleep(min(delay, 30))  # Cap delay at 30 seconds
+                await asyncio.sleep(delay)
         else:
             logger.error("Max reconnection attempts reached. Could not connect.")
             raise ConnectionError("Failed to connect to WebSocket after multiple attempts.")
@@ -114,3 +114,16 @@ class WsPublicAsync:
     def stop_sync(self):
         """Stop the WebSocket connection synchronously."""
         self.loop.run_until_complete(self.stop())
+    
+    async def cleanup(self):
+        """Clean up by unsubscribing and closing WebSocket."""
+        await self.unsubscribe()
+        await self.factory.close()
+
+    async def handle_disconnection(self):
+        """Handle WebSocket disconnection."""
+        try:
+            await self.websocket.close()
+        except Exception as e:
+            logger.warning(f"Error while closing WebSocket during disconnection handling: {e}")
+        await self.reconnect()
