@@ -7,7 +7,7 @@ const socket = io('http://localhost:5001', {
   transports: ['websocket']
 });
 
-let currentChannel = 'okx_fundingrate/BTC-USD-SWAP'; // Default channel
+let currentChannel = 'okxfunding_rate/ccy'; // Default channel
 let activeListener = null;
 
 function connectToChannel(channel) {
