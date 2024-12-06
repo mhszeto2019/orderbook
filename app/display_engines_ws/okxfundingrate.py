@@ -94,8 +94,9 @@ class OKXWebSocketClient:
             print(readable_timestamp)
             data_to_client = {"exchange":"OKX","ccy":ccy, "funding_rate": str(round(float(funding_rate) * 100,6))+"% ({})".format(fundingTime),"ts":formatted_timestamp}
             msg = json.dumps(data_to_client)
-            socketio.emit('okxfunding_rate/ccy',data_to_client)
-            print('sending to client')
+
+            socketio.emit(f'okxfunding_rate/{ccy}',data_to_client)
+            print('sending to client',ccy)
             
             
 client = None
@@ -171,4 +172,4 @@ def handle_message(data):
 
 # Running the Flask application with Gevent Worker
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5001, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=6040, use_reloader=False)
