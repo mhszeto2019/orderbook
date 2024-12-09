@@ -52,7 +52,7 @@ class WsPublicAsync:
         while True:
             try:
                 async for message in self.websocket:
-                    logger.info("Received message: {%s}", message)
+                    # logger.info("Received message: {%s}", message)
                     if self.callback:
                         self.callback(message)
             except ConnectionClosedError as e:

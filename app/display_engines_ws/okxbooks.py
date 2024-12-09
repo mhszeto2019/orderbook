@@ -108,7 +108,7 @@ class OKXWebSocketClient:
 
             }
             socketio.emit(currency_pair,redis_data)
-            print('sending to client')
+            # print('sending to client')
             if 'SWAP' in currency_pair:
                 instrument = 'SWAP'
             
@@ -178,7 +178,7 @@ def handle_disconnect():
 
 @socketio.on('message')
 def handle_message(data):
-    print('Received message: ' + str(data))
+    # print('Received message: ' + str(data))
     # Echo the message back
     socketio.send(data)
 

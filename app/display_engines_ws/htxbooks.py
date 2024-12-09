@@ -86,6 +86,7 @@ class WsBase:
         print(f"WebSocket closed: {close_status_code} - {close_msg}")
         self._has_open = False
         self.reconnect()
+    
 
     def reconnect(self):
         retry_count = 0
@@ -137,6 +138,10 @@ class WsBase:
         self._sub_str = None
         self._has_open = False
         self._ws.close()
+        self.all_data.clear()
+
+ 
+
     
     @staticmethod
     def unix_ts_to_datetime(ts):
