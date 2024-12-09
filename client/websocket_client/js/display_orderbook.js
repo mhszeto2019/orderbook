@@ -1,8 +1,9 @@
+let debounceTimeout = null;
+
 function populateOrderBook(exchange, data) {
-    // console.log(exchange,data)
     // Loop through each table (orderbook 1 and orderbook 2)
     for (let i = 1; i <= 2; i++) {
-        const timestamp = document.getElementById(`orderbook-timestamp-${i}`)
+        const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
         // Get the selected exchange for the current table
         const selectedExchange = document.getElementById(`selected-exchange-orderbook-${i}`).innerText;
         // If the selected exchange matches the current exchange from WebSocket
@@ -10,7 +11,7 @@ function populateOrderBook(exchange, data) {
             const tableBody = document.getElementById(`order-data-table-body-${i}`);
             // Clear the previous data in the table
             tableBody.innerHTML = '';
-            
+
             const bid_list = JSON.parse(data.bid_list);
             const ask_list = JSON.parse(data.ask_list);
             timestamp.innerHTML = `<b>Timestamp(${exchange})</b>:\n ${data.timestamp}`;
@@ -31,22 +32,45 @@ function populateOrderBook(exchange, data) {
         }
     }
 }
-function clearOrderbookTable(){
-    orderbookTs1DOM = document.getElementById('orderbook-timestamp-1')
-    orderbookTs2DOM = document.getElementById('orderbook-timestamp-2')
 
-    orderbookDisplay1DOM = document.getElementById('order-data-table-body-1')
-    orderbookDisplay2DOM = document.getElementById('order-data-table-body-2')
-    orderbookDisplay1DOM.innerHTML=""
-    orderbookDisplay2DOM.innerHTML=""
+// Debounce function that delays execution of populateOrderBook
+function debounce(func, delay) {
+    return function (...args) {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => func(...args), delay);
+    };
+}
 
-    orderbookTs1DOM.innerHTML=""
-    orderbookTs2DOM.innerHTML=""
+// Create a debounced version of populateOrderBook with a delay of 100 ms
+const debouncedPopulateOrderBook = debounce(populateOrderBook, 100);
+
+function clearOrderbookTable() {
+    const orderbookTs1DOM = document.getElementById('orderbook-timestamp-1');
+    const orderbookTs2DOM = document.getElementById('orderbook-timestamp-2');
+
+    const orderbookDisplay1DOM = document.getElementById('order-data-table-body-1');
+    const orderbookDisplay2DOM = document.getElementById('order-data-table-body-2');
+
+    // Safely clear tables and timestamps
+    if (orderbookDisplay1DOM) {
+        while (orderbookDisplay1DOM.firstChild) {
+            orderbookDisplay1DOM.firstChild.remove();
+        }
+    }
+    if (orderbookDisplay2DOM) {
+        while (orderbookDisplay2DOM.firstChild) {
+            orderbookDisplay2DOM.firstChild.remove();
+        }
+    }
+
+    if (orderbookTs1DOM) orderbookTs1DOM.innerHTML = '';
+    if (orderbookTs2DOM) orderbookTs2DOM.innerHTML = '';
 }
 
 function onWsDataReceived(exchange,message) {
     try {
-        populateOrderBook(exchange,message)
+        
+        debouncedPopulateOrderBook(exchange,message)
     
     } catch (error) {
         console.error("Error processing WebSocket data:", error);
@@ -70,6 +94,8 @@ function updateCurrency() {
     ordertablepx1.innerHTML = selectedCurrency;
     lastpricepx2.innerHTML = selectedCurrency;
     ordertablepx2.innerHTML = selectedCurrency;
+    
+   
 
     // Optionally, log the selected value to the console for testing
     console.log('Selected currency:', selectedCurrency);
@@ -88,10 +114,10 @@ function updateExchange(){
     // Get the selected value from the select input
 
     // Update the display with the selected currency
-    lastpriceexch1.innerHTML = exchange1;
-    ordertableexch1.innerHTML = exchange1;
-    lastpriceexch2.innerHTML = exchange2;
-    ordertableexch2.innerHTML = exchange2;
+    if (lastpriceexch1) lastpriceexch1.innerHTML = exchange1;
+    if (ordertableexch1) ordertableexch1.innerHTML = exchange1;
+    if (lastpriceexch2) lastpriceexch2.innerHTML = exchange2;
+    if (ordertableexch2) ordertableexch2.innerHTML = exchange2;
 
 }
 

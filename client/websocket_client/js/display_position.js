@@ -5,6 +5,7 @@ async function populatePositions() {
     const openPositionDOM = document.getElementById('oms-open-positions-body');
     openPositionDOM.innerHTML = '';  // Clear the table before populating
     const openPositionTS = document.getElementById('last-updated-positions');
+    onePositionTs =''
     updateTime(openPositionTS);  // Update the timestamp of when the data was last fetched
 
     const token = getAuthToken();

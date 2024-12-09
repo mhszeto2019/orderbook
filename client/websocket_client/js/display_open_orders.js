@@ -19,79 +19,69 @@ async function populateOpenOrders() {
     const request_data = { "username": username, "redis_key": redis_key };
 
     // Set up both the OKX and HTX requests
-    const firstOrderPromise = fetch(`http://${hostname}:5080/okx/get_all_okx_open_orders`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
-
-    const secondOrderPromise= fetch(`http://${hostname}:6061/htx/swap/get_all_htx_open_orders`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
+    const [okxResponse, htxResponse] = await Promise.all([
+        fetch(`http://${hostname}:5080/okx/get_all_okx_open_orders`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
+        }),
+        fetch(`http://${hostname}:6061/htx/swap/get_all_htx_open_orders`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
+        })
+    ]);
 
     try {
-        const results = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);
-
-        // Array to hold combined orders
         let allOpenOrders = [];
 
         // Handle OKX Response
-        if (results[0].status === 'fulfilled') {
-            const response = results[0].value;
-            if (response.ok) {
-                const response_data = await response.json();
-                if (response_data.data){
-                    // Append OKX data to allOpenOrders
-                    allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
-                        ...position,
-                        exchange: 'OKX'  // Add exchange name to each position
-                    })));
-                }
-                else{
-                    console.error(response_data['msg'],response_data['code'])
-                }
-                
+        if (okxResponse.ok) {
+            const okxData = await okxResponse.json();
+            if (okxData.data) {
+                allOpenOrders = allOpenOrders.concat(okxData.data.map(position => ({
+                    ...position,
+                    exchange: 'OKX'
+                })));
             } else {
-                console.error('Error fetching OKX orders:', response.statusText);
+                console.error(okxData.msg, okxData.code);
             }
         } else {
-            console.error('OKX Request failed:', results[0].reason);
+            console.error('Error fetching OKX orders:', okxResponse.statusText);
         }
 
         // Handle HTX Response
-        if (results[1].status === 'fulfilled') {
-            const response = results[1].value;
-            if (response.ok) {
-                const response_data = await response.json();
-                const formattedData = await Htx2OkxFormatOrders(response_data);  // Format HTX data as needed
-                // Append HTX data to allOpenOrders
-                allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
-                    ...position,
-                    exchange: 'HTX'  // Add exchange name to each position
-                })));
-            } else {
-                console.error('Error fetching HTX orders:', response.statusText);
-            }
+        if (htxResponse.ok) {
+            const htxData = await htxResponse.json();
+            const formattedData = await Htx2OkxFormatOrders(htxData);  // Format HTX data as needed
+            allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
+                ...position,
+                exchange: 'HTX'
+            })));
         } else {
-            console.error('HTX Request failed:', results[1].reason);
+            console.error('Error fetching HTX orders:', htxResponse.statusText);
         }
+
         // After both responses are handled, populate the table with all orders
         populateOpenOpenOrdersTable(allOpenOrders);
-
     } catch (error) {
         console.error('Error in fetching and populating data:', error);
+    } finally {
+        // Clear temporary references after they are used
+        
+    
+        allOpenOrders = null; // Clear the reference to release memory
     }
+    
 }
 
-const ordersHist = {}
+const ordersHist = {};
 
 function populateOpenOpenOrdersTable(orders) {
     // Get reference to the DataTable instance (or initialize if not already)
@@ -101,7 +91,6 @@ function populateOpenOpenOrdersTable(orders) {
     openordersTable.clear();
 
     if (orders.length === 0) {
-
         // Manually add a row with `colspan`
         const emptyMessage = `
             <tr>
@@ -111,35 +100,20 @@ function populateOpenOpenOrdersTable(orders) {
     } else {
         // Add rows dynamically
         orders.forEach(position => {
-            // Check attachAlgoOrds
-            ordersHist[position.ordId]={};
-            ordersHist[position.ordId]['orderPx']= position.px;
-            ordersHist[position.ordId]['orderSz']= position.sz;
-            ordersHist[position.ordId]['side']= position.side;
+            // Collect necessary data for ordersHist
+            const orderId = position.ordId;
+            ordersHist[orderId] = {
+                orderPx: position.px,
+                orderSz: position.sz,
+                side: position.side,
+                stop_limit: "N/A",
+                take_profit: "N/A",
+                algo_id: "N/A"
+            };
 
-            console.log(position)
-            const algoData = Array.isArray(position.attachAlgoOrds) && position.attachAlgoOrds.length > 0
-                ? position.attachAlgoOrds.map(algo => {
-                    // Update the ordersHist object
-                    if (!ordersHist[position.ordId]) {
-                        ordersHist[position.ordId] = {};
-                    }
-                    ordersHist[position.ordId]['stop_limit'] = algo.slTriggerPx || 'N/A';
-                    ordersHist[position.ordId]['take_profit'] = algo.tpOrdPx || 'N/A';
-                    ordersHist[position.ordId]['algo_id'] = algo.attachAlgoId || 'N/A';
-                    
-                    // Return the HTML representation for this algo data
-                    return `
-                        <div style="width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${algo.attachAlgoId}">
-                            ${algo.attachAlgoId}
-                        </div>
-                        <div style="width: 150px;">
-                            <span>SL Trigger Px: ${algo.slTriggerPx || 'N/A'}</span><br>
-                            <span>TP Order Px: ${algo.tpOrdPx || 'N/A'}</span>
-                        </div>
-                    `;
-                }).join('') // Combine multiple algo data into one cell
-                : "No data";
+            // Process attachAlgoOrds
+            const algoData = processAlgoData(position.attachAlgoOrds, orderId);
+
             openordersTable.row.add([
                 position.exchange || 'N/A',  // New exchange column
                 position.instId || 'N/A',
@@ -148,12 +122,10 @@ function populateOpenOpenOrdersTable(orders) {
                 position.px || 'N/A',
                 position.sz ? Number.parseFloat(position.sz).toFixed(1) : 'N/A',
                 algoData,  // Display attachAlgoOrds content
-                position.ordId || 'N/A',
-                
+                orderId,
                 position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A',
-                // Buttons for last two columns
-                `<button class="btn btn-primary btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleModify('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Modify</button>`,
-                `<button class="btn btn-danger btn-sm" data-order-id="${position.ordId}" data-algo-id="${ordersHist[position.ordId]['algo_id']}" onclick="handleDelete('${position.instId}', '${position.ordId}','${ordersHist[position.ordId]['algo_id']}','${position.exchange}')">Delete</button>`
+                createButton('primary', position.ordId, ordersHist[orderId]['algo_id'], position.instId, position.exchange, 'Modify'),
+                createButton('danger', position.ordId, ordersHist[orderId]['algo_id'], position.instId, position.exchange, 'Delete')
             ]);
         });
     }
@@ -161,6 +133,38 @@ function populateOpenOpenOrdersTable(orders) {
     // Redraw the table to reflect changes
     openordersTable.draw();
 }
+
+// Function to process attachAlgoOrds
+function processAlgoData(attachAlgoOrds, orderId) {
+    if (Array.isArray(attachAlgoOrds) && attachAlgoOrds.length > 0) {
+        return attachAlgoOrds.map(algo => {
+            // Update ordersHist with algo details
+            ordersHist[orderId]['stop_limit'] = algo.slTriggerPx || 'N/A';
+            ordersHist[orderId]['take_profit'] = algo.tpOrdPx || 'N/A';
+            ordersHist[orderId]['algo_id'] = algo.attachAlgoId || 'N/A';
+
+            // Return HTML for this algo data
+            return `
+                <div style="width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${algo.attachAlgoId}">
+                    ${algo.attachAlgoId}
+                </div>
+                <div style="width: 150px;">
+                    <span>SL Trigger Px: ${algo.slTriggerPx || 'N/A'}</span><br>
+                    <span>TP Order Px: ${algo.tpOrdPx || 'N/A'}</span>
+                </div>
+            `;
+        }).join('');
+    }
+    return "No data";
+}
+
+// Function to create action buttons
+function createButton(type, orderId, algoId, instId, exchange, action) {
+    return `
+        <button class="btn btn-${type} btn-sm" data-order-id="${orderId}" data-algo-id="${algoId}" onclick="handle${action}('${instId}', '${orderId}', '${algoId}', '${exchange}')">${action}</button>
+    `;
+}
+
 
 function handleModify(instId, ordId,algoId,exchange) {
     // Get the modal element
@@ -781,68 +785,6 @@ async function Htx2OkxFormatOrders(responseData) {
     
     
     
-    
-    // Output the results
-    // console.log("SL Price:", sl_price);
-    // console.log("TP Price:", tp_price);
-    
-    // Transform each order to match the desired OKX format
-    // const transformedOrders = orders.map(order => ({
-    //     accFillSz: order.trade_volume.toString(),
-    //     algoClOrdId: "",
-    //     algoId: [sl_algo_id,tp_algo_id] || [],
-    //     attachAlgoClOrdId: "",
-    //     attachAlgoOrds: algoOrds | [],
-    //     avgPx: order.trade_avg_price ? order.trade_avg_price.toString() : "",
-    //     cTime: order.created_at.toString(),
-    //     cancelSource: order.canceled_source || "",
-    //     cancelSourceReason: "",
-    //     category: "normal",
-    //     ccy: "",
-    //     clOrdId: order.client_order_id || "",
-    //     fee: order.fee.toString(),
-    //     feeCcy: order.fee_asset,
-    //     fillPx: "",
-    //     fillSz: order.trade_volume.toString(),
-    //     fillTime: "",
-    //     instId: `${order.contract_code}-SWAP`,
-    //     instType: "SWAP",
-    //     isTpLimit: order.is_tpsl ? "true" : "false",
-    //     lever: order.lever_rate.toString(),
-    //     linkedAlgoOrd: { algoId: [sl_algo_id,tp_algo_id] },
-    //     ordId: order.order_id_str,
-    //     ordType: order.order_price_type,
-    //     pnl: order.profit.toString(),
-    //     posSide: "net",
-    //     px: order.price.toString(),
-    //     pxType: "",
-    //     pxUsd: "",
-    //     pxVol: "",
-    //     quickMgnType: "",
-    //     rebate: "0",
-    //     rebateCcy: order.fee_asset,
-    //     reduceOnly: "false",
-    //     side: order.direction,
-    //     slOrdPx: "",
-    //     slTriggerPx: sl_price|| "",
-    //     slTriggerPxType: "",
-    //     source: order.order_source || "",
-    //     state: mapStatusToState(order.status),
-    //     stpId: "",
-    //     stpMode: "cancel_maker",
-    //     sz: order.volume.toString(),
-    //     tag: "",
-    //     tdMode: "isolated", // Assuming isolated margin; adjust if needed
-    //     tgtCcy: "",
-    //     tpOrdPx: "",
-    //     tpTriggerPx: tp_price.toString() || "",
-    //     tpTriggerPxType: "",
-    //     tradeId: "",
-    //     uTime: order.update_time.toString(),
-    // }));
-
-    // {'status': ['ok', 'no error'], 'data': {'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1, 'price': 60000, 'order_price_type': 'limit', 'direction': 'buy', 'offset': 'open', 'lever_rate': 5, 'order_id': 1313907123482300416, 'order_id_str': '1313907123482300416', 'client_order_id': None, 'created_at': 1733301469441, 'trade_volume': 0, 'trade_turnover': 0, 'fee': 0, 'trade_avg_price': None, 'margin_frozen': 0.000333333333333333, 'profit': 0, 'status': 3, 'order_type': 1, 'order_source': 'web', 'fee_asset': 'BTC', 'canceled_at': 0, 'tpsl_order_info': [{'volume': 1.0, 'direction': 'sell', 'tpsl_order_type': 'tp', 'order_id': 1313907123482300417, 'order_id_str': '1313907123482300417', 'trigger_type': 'ge', 'trigger_price': 100000.0, 'order_price': 100000.0, 'created_at': 1733301469452, 'order_price_type': 'limit', 'relation_tpsl_order_id': '1313907123482300418', 'status': 1, 'canceled_at': 0, 'fail_code': None, 'fail_reason': None, 'triggered_price': None, 'relation_order_id': '-1'}, {'volume': 1.0, 'direction': 'sell', 'tpsl_order_type': 'sl', 'order_id': 1313907123482300418, 'order_id_str': '1313907123482300418', 'trigger_type': 'le', 'trigger_price': 20000.0, 'order_price': 20000.0, 'created_at': 1733301469452, 'order_price_type': 'limit', 'relation_tpsl_order_id': '1313907123482300417', 'status': 1, 'canceled_at': 0, 'fail_code': None, 'fail_reason': None, 'triggered_price': None, 'relation_order_id': '-1'}], 'sMsg': 'Orders placed'}, 'ts': 1733301592504, 'sCode': 200}
-
     // Wrap in the final response structure
     return transformedOrders
 }

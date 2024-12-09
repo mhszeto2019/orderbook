@@ -34,12 +34,12 @@ async function populateFundingRate
             data = response_data.data[0]
             if (response_data.data){
                 // Append OKX data to allOpenOrders
-                console.log(data)
-                console.log(data.fundingRate)
-                console.log(data.fundingTime)
-                console.log(data.instId)
-                console.log(data.instType)
-                console.log(data.nextFundingTime)
+                // console.log(data)
+                // console.log(data.fundingRate)
+                // console.log(data.fundingTime)
+                // console.log(data.instId)
+                // console.log(data.instType)
+                // console.log(data.nextFundingTime)
                 document.getElementById('funding-time-okx').textContent = `Funding Time: ${data.fundingTime}`;
                 document.getElementById('next-funding-time-okx').textContent = `Next Funding Time: ${data.nextFundingTime}`;
                 document.getElementById('funding-rate-okx').textContent = `Funding Rate: ${data.fundingRate}`;
@@ -59,6 +59,7 @@ async function populateFundingRate
         console.error('OKX Request failed:', results[0].reason);
     }
 }
+
 
 populateFundingRate()
 

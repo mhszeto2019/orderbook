@@ -118,8 +118,8 @@ async def main():
     global client
     client = OKXWebSocketClient()
     # List of currency pairs to subscribe to
-    currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
-    # currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
+    # currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
+    currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
     
     channel = 'books5'
     await client.run(channel,currency_pairs, client.publicCallback)

@@ -1,7 +1,10 @@
 
 
 function handleOrderBookData(exchange, ccy, message,tableNo) {
+
     const orderDataTableBody = document.getElementById(`order-data-table-body-${tableNo}`);
+    orderDataTableBody.innerHTML = ''; // Clears previous data
+
     // console.log(message)
     // updateBidAndAskPrices(exchange,ccy,message)
     try {
