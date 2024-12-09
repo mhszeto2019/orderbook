@@ -32,6 +32,10 @@ async function populateFundingRate
         if (response.ok) {
             const response_data = await response.json();
             data = response_data.data[0]
+            // const FundingTime = data.fundingTime;
+            const humanReadableFundingTime  = unixTsConversion(data.fundingTime)
+            const humanReadableNextFundingTime  = unixTsConversion(data.nextFundingTime)
+            
             if (response_data.data){
                 // Append OKX data to allOpenOrders
                 // console.log(data)
@@ -40,8 +44,8 @@ async function populateFundingRate
                 // console.log(data.instId)
                 // console.log(data.instType)
                 // console.log(data.nextFundingTime)
-                document.getElementById('funding-time-okx').textContent = `Funding Time: ${data.fundingTime}`;
-                document.getElementById('next-funding-time-okx').textContent = `Next Funding Time: ${data.nextFundingTime}`;
+                document.getElementById('funding-time-okx').textContent = `Funding Time: ${humanReadableFundingTime}`;
+                document.getElementById('next-funding-time-okx').textContent = `Next Funding Time: ${humanReadableNextFundingTime}`;
                 document.getElementById('funding-rate-okx').textContent = `Funding Rate: ${data.fundingRate}`;
                 document.getElementById('currency-okx').textContent = `Currency: ${data.currency}`;
 
@@ -60,6 +64,20 @@ async function populateFundingRate
     }
 }
 
+function unixTsConversion(unixTs){
+    return new Date(unixTs * 1000).toLocaleString(); // Convert timestamp to readable format
+}
 
-populateFundingRate()
+// // // Set up the scheduler
+function startFundingRateScheduler(interval = 35000) {
+    // Call populateFundingRate immediately
+    populateFundingRate();
 
+    // Schedule populateFundingRate to run every few seconds
+    setInterval(populateFundingRate, interval);
+}
+
+// Start the scheduler when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    startFundingRateScheduler();
+});
