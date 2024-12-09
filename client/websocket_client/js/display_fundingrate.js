@@ -71,26 +71,27 @@ async function populateFundingRate
     }
 
     if (results[1].status === 'fulfilled') {
-        const response = results[0].value;
+        const response = results[1].value;
         if (response.ok) {
             const response_data = await response.json();
-            data = response_data.data[0]
-            // const FundingTime = data.fundingTime;
-            // console.log(data.fundingTime)
-            const humanReadableFundingTime  = unixTsConversion(data.fundingTime)
-            const humanReadableNextFundingTime  = unixTsConversion(data.nextFundingTime)
-            const currencyValue = parseFloat(data.fundingRate); // Parse the value to ensure it's a number
+            console.log(response_data)
+            data = response_data
+            console.log(data)
+            
+            const humanReadableFundingTime  = unixTsConversion(data.funding_time)
+            const humanReadableNextFundingTime  = unixTsConversion(data.next_funding_time)
+            const currencyValue = parseFloat(data.funding_rate); // Parse the value to ensure it's a number
                 if (!isNaN(currencyValue)) {
                     fundingRate = `${(currencyValue * 100).toFixed(6)}%`; // Convert to percentage
                 } else {
                     fundingRate = "Invalid value"; // Handle invalid input
                 }
-            if (response_data.data){
+            if (response_data){
                 // Append OKX data to allOpenOrders
                 document.getElementById('funding-time-htx').textContent = `${humanReadableFundingTime}`;
                 document.getElementById('next-funding-time-htx').textContent = `${humanReadableNextFundingTime}`;
                 document.getElementById('funding-rate-htx').textContent = `${fundingRate}`;
-                document.getElementById('currency-htx').textContent = `${data.currency}`;
+                document.getElementById('currency-htx').textContent = `${data.contract_code}`;
                 
             }
             else{

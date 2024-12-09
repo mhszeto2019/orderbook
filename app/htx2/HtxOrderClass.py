@@ -243,8 +243,7 @@ class HuobiCoinFutureRestTradeAPI:
             headers["User-Agent"] = USER_AGENT
             # _, success, error = await AsyncHttpRequests.fetch("GET", url, params=params, headers=headers, timeout=10)
             try:
-                print('get')
-                response_dict = await self.python_request("GET", url, params=params, data=body, headers=headers)
+                response_dict = self.python_request("GET", url, params=params, data=body, headers=headers)
             except Exception as e:
                 print(e)
         else:
@@ -281,14 +280,7 @@ class HuobiCoinFutureRestTradeAPI:
                 # print(json_response)
                 json_response['sCode'] = status_code
 
-                # json_response2 = self.format_message(json_response,status_code)
-                # okx data response
-    # {'code': '0', 'data': [{'clOrdId': '', 'ordId': '1978649465662291968', 'sCode': '0', 'sMsg': 'Order placed', 'tag': '', 'ts': '1731470749267'}], 'inTime': '1731470749266892', 'msg': '', 'outTime': '1731470749269384'}
-    # {'code': '1', 'data': [{'clOrdId': '', 'ordId': '', 'sCode': '51006', 'sMsg': 'Order price is not within the price limit (max buy price: 89,471.3; min sell price: 85,962.6).', 'tag': '', 'ts': '1731471877501'}], 'inTime': '1731471877501445', 'msg': 'All operations failed', 'outTime': '1731471877501567'}
-                # htx data response
-    # {'status': 'ok', 'data': {'order_id': 1306232733928095744, 'order_id_str': '1306232733928095744'}, 'ts': 1731471752406}
-    # {'status': 'error', 'err_code': 1039, 'err_msg': 'Buy price must be lower than 89478.1USD. Sell price must be higher than 85969.3USD.', 'ts': 1731471775894}
-
+     
                 # Check if the request was successful (status code 200)
                 if response.status_code == 200:
                     # If successful, return the JSON response
@@ -299,9 +291,24 @@ class HuobiCoinFutureRestTradeAPI:
                     # print(f"Request failed with status code {response.status_code}")
                     return json_response
             else:
+
                 response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
-                print(response.statuinfos)
-                return response
+                status_code = response.status_code
+                # print(status_code,response)
+                json_response = response.json()
+                # print(json_response)
+                json_response['sCode'] = status_code
+
+     
+                # Check if the request was successful (status code 200)
+                if response.status_code == 200:
+                    # If successful, return the JSON response
+                    # print(json_response)
+                    return json_response  # Parse the JSON response from the server
+                else:
+                    # If not successful, log the status and response content
+                    # print(f"Request failed with status code {response.status_code}")
+                    return json_response
             
         except requests.exceptions.RequestException as e:
             # If there is any exception with the request
