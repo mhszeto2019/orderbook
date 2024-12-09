@@ -70,7 +70,7 @@ function clearOrderbookTable() {
 function onWsDataReceived(exchange,message) {
     try {
         
-        debouncedPopulateOrderBook(exchange,message)
+        populateOrderBook(exchange,message)
     
     } catch (error) {
         console.error("Error processing WebSocket data:", error);

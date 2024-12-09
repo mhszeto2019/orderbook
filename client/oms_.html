@@ -64,41 +64,61 @@
             </div>
 
             <!-- Container for the funding rates row -->
-            <div class="container mt-4">
-                
-                <h6>Funding Rates:</h6>
-                    <div class="row">
-                        <div class="container">
-                            <!-- OKX Section -->
-                            <div id="okx-section" class="mb-2">
-                                <h6 class="text-danger" id="exchange-name">OKX</h6>
-                        
-                                <!-- Funding Time and Next Funding Time in the same row -->
-                                <div class="row mb-1">
-                                    <div class="col-6">
-                                        <p id="funding-time-okx" class="text-info mb-0">Funding Time: --</p>
-                                    </div>
-                                    <div class="col-6 text-end">
-                                        <p id="next-funding-time-okx" class="text-info mb-0">Next Funding Time: --</p>
-                                    </div>
-                                </div>
-                        
-                                <!-- Funding Rate and Currency in the same row -->
-                                <div class="row mb-1">
-                                    <div class="col-6">
-                                        <p id="funding-rate-okx" class="text-info mb-0">Funding Rate: --</p>
-                                    </div>
-                                    <div class="col-6 text-end">
-                                        <p id="currency-okx" class="text-info mb-0">Currency: --</p>
-                                    </div>
-                                </div>
+            <div class="container">
+                <div class="row">
+                    <!-- OKX Section -->
+                    <div id="okx-section" class="col-md-6 mb-4">
+                        <h6 class="text-dark">OKX</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                Funding Time:
+                                <p id="funding-time-okx" class="text-primary mb-0">--</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                Next Funding Time: 
+                                <p id="next-funding-time-okx" class="text-primary mb-0">--</p>
                             </div>
                         </div>
-                        
+                        <div class="row">
+                            <div class="col-6">
+                                Funding Rate: 
+                                <p id="funding-rate-okx" class="text-primary mb-0">--</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                Currency: 
+                                <p id="currency-okx" class="text-primary mb-0">--</p>
+                            </div>
+                        </div>
                     </div>
-
-
+            
+                    <!-- HTX Section -->
+                    <div id="htx-section" class="col-md-6 mb-4">
+                        <h6 class="text-dark">HTX</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                Funding Time: 
+                                <p id="funding-time-htx" class="text-primary mb-0">--</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                Next Funding Time: 
+                                <p id="next-funding-time-htx" class="text-primary mb-0">--</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                Funding Rate: 
+                                <p id="funding-rate-htx" class="text-primary mb-0">--</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                Currency: 
+                                <p id="currency-htx" class="text-primary mb-0">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            
+            
 
             
             
@@ -549,7 +569,6 @@
                                 Last updated: <span id="last-updated-orders">-</span>
                             </tag>
                             <!-- Second and third buttons (centered) -->
-
                             <!-- BUTTONS DANGEROUS -->
                             <div class="d-flex justify-content-center align-items-center mb-2">
                                 <!-- Currency Selector -->
@@ -557,19 +576,13 @@
                                     <option value="all" selected>All Currencies</option>
                                     <option value="BTC-USD-SWAP">BTC-USD-SWAP</option>
                                 </select>
-
                                 <!-- Lock/Unlock Button -->
-
                                 <!-- Action Buttons -->
                                 <button id="positions-clear-all-btn" class="btn btn-danger btn-sm mx-2" onclick="clearPositions('all')" disabled>Clear All</button>
                                 <button id="positions-clear-okx-btn" class="btn btn-warning btn-sm mx-2" onclick="clearPositions('okx')" disabled>Clear OKX</button>
                                 <button id="positions-clear-htx-btn" class="btn btn-warning btn-sm mx-2" onclick="clearPositions('htx')" disabled>Clear HTX</button>
                                 <button id="lock-clear-btn" class="btn btn-secondary btn-sm mx-2" onclick="toggleLockClear()">🔒 Unlock</button>
-                                
                             </div>
-
-
-                            
                         
                            
                         </p>
@@ -603,7 +616,6 @@
                 
             </div>
         </div>
-
 
         <!-- Placeholder Modal - will not be displayed. only displayed when button is pressed-->
         <div id="modifyPositionModal" class="modal" tabindex="-1" style="display: none;">
@@ -747,7 +759,7 @@
             updateNotificationCount();
         }
 
-        // Example usage for testing
+    // Example usage for testing
     // // Function to open a modal or dropdown for currency selection
     // function openCurrencySelector() {
     //     console.log(currency_pair)

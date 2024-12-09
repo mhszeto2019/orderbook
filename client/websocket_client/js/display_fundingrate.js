@@ -10,8 +10,9 @@ async function populateFundingRate
         alert("You must be logged in to access this.");
         return;
     }
+    ccy = document.getElementById('currency-input').value
 
-    const request_data = { "username": username, "redis_key": redis_key };
+    const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
 
     const firstOrderPromise = fetch(`http://${hostname}:5001/okx/getfundingrate`, {
         method: 'POST',
@@ -21,10 +22,18 @@ async function populateFundingRate
         },
         body: JSON.stringify(request_data)
     });
-    const results = await Promise.allSettled([firstOrderPromise]);
+    const secondOrderPromise = fetch(`http://${hostname}:5002/htx/getfundingrate`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
+    const results = await Promise.allSettled([firstOrderPromise,secondOrderPromise]);
 
-    // Array to hold combined orders
-    let allOpenOrders = [];
+    // Array to hold combined funding rate
+    let allFundingRate = [];
 
     // Handle OKX Response
     if (results[0].status === 'fulfilled') {
@@ -33,23 +42,21 @@ async function populateFundingRate
             const response_data = await response.json();
             data = response_data.data[0]
             // const FundingTime = data.fundingTime;
+            // console.log(data.fundingTime)
             const humanReadableFundingTime  = unixTsConversion(data.fundingTime)
             const humanReadableNextFundingTime  = unixTsConversion(data.nextFundingTime)
-            
+            const currencyValue = parseFloat(data.fundingRate); // Parse the value to ensure it's a number
+                if (!isNaN(currencyValue)) {
+                    fundingRate = `${(currencyValue * 100).toFixed(6)}%`; // Convert to percentage
+                } else {
+                    fundingRate = "Invalid value"; // Handle invalid input
+                }
             if (response_data.data){
                 // Append OKX data to allOpenOrders
-                // console.log(data)
-                // console.log(data.fundingRate)
-                // console.log(data.fundingTime)
-                // console.log(data.instId)
-                // console.log(data.instType)
-                // console.log(data.nextFundingTime)
-                document.getElementById('funding-time-okx').textContent = `Funding Time: ${humanReadableFundingTime}`;
-                document.getElementById('next-funding-time-okx').textContent = `Next Funding Time: ${humanReadableNextFundingTime}`;
-                document.getElementById('funding-rate-okx').textContent = `Funding Rate: ${data.fundingRate}`;
-                document.getElementById('currency-okx').textContent = `Currency: ${data.currency}`;
-
-
+                document.getElementById('funding-time-okx').textContent = `${humanReadableFundingTime}`;
+                document.getElementById('next-funding-time-okx').textContent = `${humanReadableNextFundingTime}`;
+                document.getElementById('funding-rate-okx').textContent = `${fundingRate}`;
+                document.getElementById('currency-okx').textContent = `${data.currency}`;
                 
             }
             else{
@@ -62,10 +69,62 @@ async function populateFundingRate
     } else {
         console.error('OKX Request failed:', results[0].reason);
     }
+
+    if (results[1].status === 'fulfilled') {
+        const response = results[0].value;
+        if (response.ok) {
+            const response_data = await response.json();
+            data = response_data.data[0]
+            // const FundingTime = data.fundingTime;
+            // console.log(data.fundingTime)
+            const humanReadableFundingTime  = unixTsConversion(data.fundingTime)
+            const humanReadableNextFundingTime  = unixTsConversion(data.nextFundingTime)
+            const currencyValue = parseFloat(data.fundingRate); // Parse the value to ensure it's a number
+                if (!isNaN(currencyValue)) {
+                    fundingRate = `${(currencyValue * 100).toFixed(6)}%`; // Convert to percentage
+                } else {
+                    fundingRate = "Invalid value"; // Handle invalid input
+                }
+            if (response_data.data){
+                // Append OKX data to allOpenOrders
+                document.getElementById('funding-time-htx').textContent = `${humanReadableFundingTime}`;
+                document.getElementById('next-funding-time-htx').textContent = `${humanReadableNextFundingTime}`;
+                document.getElementById('funding-rate-htx').textContent = `${fundingRate}`;
+                document.getElementById('currency-htx').textContent = `${data.currency}`;
+                
+            }
+            else{
+                console.error(response_data['msg'],response_data['code'])
+            }
+            
+        } else {
+            console.error('Error fetching HTX orders:', response.statusText);
+        }
+    } else {
+        console.error('HTX Request failed:', results[0].reason);
+    }
 }
 
-function unixTsConversion(unixTs){
-    return new Date(unixTs * 1000).toLocaleString(); // Convert timestamp to readable format
+
+function unixTsConversion(timestampString){
+    timestamp = Number(timestampString);
+    if (!timestamp || isNaN(timestamp)) {
+        return "Invalid timestamp";
+    }
+    
+    // Convert the timestamp to a Date object
+    const date = new Date(timestamp);
+    console.log(date)
+    // Format the date to a human-readable string
+    return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZoneName: "short" // Includes the time zone
+    });
 }
 
 // // // Set up the scheduler

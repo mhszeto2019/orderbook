@@ -178,6 +178,26 @@ class HuobiCoinFutureRestTradeAPI:
         json_dict = await self.request("POST", uri, body=body, auth=True)
         return json_dict
     
+
+    async def get_funding_rate(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        # Args:
+        #     contract_code: such as "BTC-USD".
+        #     index: Page index, default 1st page.
+        #     size: Page size, Default 20，no more than 50.
+
+        # Returns:
+        #     success: Success results, otherwise it's None.
+        #     error: Error information, otherwise it's None.
+        uri = "/swap-api/v1/swap_funding_rate"
+        # body = {
+        #     "contract_code": contract_code,
+        #     "page_index": index,
+        #     "page_size": size
+        # }
+        # body = {}
+        json_dict = await self.request("GET", uri, body,  auth=True)
+        return json_dict
+
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.
 
@@ -223,7 +243,8 @@ class HuobiCoinFutureRestTradeAPI:
             headers["User-Agent"] = USER_AGENT
             # _, success, error = await AsyncHttpRequests.fetch("GET", url, params=params, headers=headers, timeout=10)
             try:
-                response_dict = await self.python_request("GET", url, params=params, data=body, headers=headers,timeout=10)
+                print('get')
+                response_dict = await self.python_request("GET", url, params=params, data=body, headers=headers)
             except Exception as e:
                 print(e)
         else:
@@ -277,7 +298,11 @@ class HuobiCoinFutureRestTradeAPI:
                     # If not successful, log the status and response content
                     # print(f"Request failed with status code {response.status_code}")
                     return json_response
-
+            else:
+                response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
+                print(response.statuinfos)
+                return response
+            
         except requests.exceptions.RequestException as e:
             # If there is any exception with the request
             # print(f"An error occurred: {e}")

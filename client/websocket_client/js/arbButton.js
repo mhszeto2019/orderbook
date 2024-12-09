@@ -131,3 +131,19 @@ async function handleClick(type) {
         showToast('An unexpected error occurred while sending order data.', 4000);
     }
 }
+
+function showToast(message,  apiSource = 'API',timestamp=null,orderId=null,statusCode=200,errCode =1039) {
+    const toastMessage = {
+        id: Date.now(),
+        message,
+        apiSource,
+        timestamp,
+        orderId,
+        statusCode,
+        errCode
+    };
+    notifications.push(toastMessage);
+ 
+    updateNotificationHub();
+    updateNotificationCount();
+}

@@ -192,6 +192,7 @@ function populateOpenPositionsTable(positions) {
 function Htx2OkxFormat(originalDataArray) {
     return originalDataArray.map(originalData => {
         console.log(originalData)
+        console.log('liqpx',originalData.liq_px)
       return {
         "adl": String(originalData.open_adl || '0'),  // Convert to string, or default to 0
         "availPos": "",  // Empty as per the target format
@@ -199,7 +200,7 @@ function Htx2OkxFormat(originalDataArray) {
         "baseBal": "",
         "baseBorrowed": "",
         "baseInterest": "",
-        "bePx": String(originalData.liq_px.toFixed(10)),  // Displaying the value with 10 decimal points
+        "bePx": originalData.liq_px === null ? null : String(originalData.liq_px.toFixed(10)),  // Displaying the value with 10 decimal points
         "bizRefId": "",
         "bizRefType": "",
         "cTime": new Date(originalData.store_time).getTime().toString(),  // Convert to timestamp
@@ -222,7 +223,7 @@ function Htx2OkxFormat(originalDataArray) {
         "liab": "",
         "liabCcy": "",
         "liqPenalty": "0",
-        "liqPx": String(originalData.liq_px.toFixed(10)),
+        "liqPx": originalData.liq_px === null ? null : String(originalData.liq_px.toFixed(10)),
         "margin": String(originalData.position_margin.toFixed(10)),
         "markPx": String(originalData.last_price.toFixed(1)),
         "maxSpotInUseAmt": "",

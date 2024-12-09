@@ -70,7 +70,3 @@ def get_funding_rate():
     except requests.exceptions.RequestException as e:
         # Catch any exception and return an error response
         print('error')
-
-# if __name__ == '__main__':
-#     # app.run(debug=True,host='0.0.0.0',port=5011)
-#     socketio.run(app, host='0.0.0.0', port=5011)
