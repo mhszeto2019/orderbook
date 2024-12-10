@@ -39,43 +39,47 @@ async function populatePositions() {
     });
 
     try {
-        const results = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);
+        const positioinResults = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);
 
         // Array to hold combined positions
         let allPositions = [];
 
         // Handle OKX Response
-        if (results[0].status === 'fulfilled') {
-            const response = results[0].value;
-            if (response.ok) {
-                const response_data = await response.json();
-                if (response_data.data){
-                    console.log('OKX data:', response_data.data);
+        if (positioinResults[0].status === 'fulfilled') {
+            const positioinResponse = positioinResults[0].value;
+            if (positioinResponse.ok) {
+                const positioinResponse_data = await positioinResponse.json();
+                console.log('positioin resposne', positioinResponse_data)
+
+                if (positioinResponse_data.data){
+                    console.log('OKX data:', positioinResponse_data.data);
                     // Append OKX data to allPositions
-                    allPositions = allPositions.concat(response_data.data.map(position => ({
+                    allPositions = allPositions.concat(positioinResponse_data.data.map(position => ({
                         ...position,
                         exchange: 'OKX'  // Add exchange name to each position
                     })));
                     console.log('OKX populated');
                 }
                 else{
-                    console.error(response_data['msg'],response_data['code'])
+                    console.error(positioinResponse_data['msg'],positioinResponse_data['code'])
                 }
                 
             } else {
-                console.error('Error fetching OKX positions:', response.statusText);
+                console.error('Error fetching OKX positions:', positioinResponse.statusText);
             }
         } else {
-            console.error('OKX Request failed:', results[0].reason);
+            console.error('OKX Request failed:', positioinResults[0].reason);
         }
 
         // Handle HTX Response
-        if (results[1].status === 'fulfilled') {
-            const response = results[1].value;
-            if (response.ok) {
-                const response_data = await response.json();
-                console.log('HTX data:', response_data);
-                const formattedData = Htx2OkxFormat(response_data);  // Format HTX data as needed
+        if (positioinResults[1].status === 'fulfilled') {
+            const positioinResponse = positioinResults[1].value;
+            
+            console.log(positioinResponse)
+            if (positioinResponse.ok) {
+                const positioinResponse_data = await positioinResponse.json();
+                console.log('htx positioinResponse_data data:', positioinResponse_data);
+                const formattedData = Htx2OkxFormat(positioinResponse_data);  // Format HTX data as needed
                 // Append HTX data to allPositions
                 allPositions = allPositions.concat(formattedData.map(position => ({
                     ...position,
@@ -83,13 +87,13 @@ async function populatePositions() {
                 })));
                 console.log('HTX populated');
             } else {
-                console.error('Error fetching HTX positions:', response.statusText);
+                console.error('Error fetching HTX positions:', positioinResponse.statusText);
             }
         } else {
-            console.error('HTX Request failed:', results[1].reason);
+            console.error('HTX Request failed:', positioinResults[1].reason);
         }
 
-        // After both responses are handled, populate the table with all positions
+        // After both positioinResponses are handled, populate the table with all positions
         populateOpenPositionsTable(allPositions);
 
     } catch (error) {
@@ -171,28 +175,26 @@ function populateOpenPositionsTable(positions) {
 //         body: JSON.stringify(request_data)
 //     });
 
-//     const results = await Promise.allSettled([firstOrderPromise]);
-//     if (results[0].status === 'fulfilled') {
+//     const positioinResults = await Promise.allSettled([firstOrderPromise]);
+//     if (positioinResults[0].status === 'fulfilled') {
 //         // Extract the data from the resolved promise
-//         const response = results[0].value;
-//         if (response.ok) {
-//             // Parse the JSON data from the response
-//             const response_data = await response.json();
-//             console.log(response_data.data)
-//             // populateOpenPositionsTable(response_data.data);
+//         const positioinResponse = positioinResults[0].value;
+//         if (positioinResponse.ok) {
+//             // Parse the JSON data from the positioinResponse
+//             const positioinResponse_data = await positioinResponse.json();
+//             console.log(positioinResponse_data.data)
+//             // populateOpenPositionsTable(positioinResponse_data.data);
 //             populatePositions();
 //         } else {
-//             console.error('Error fetching positions:', response.statusText);
+//             console.error('Error fetching positions:', positioinResponse.statusText);
 //         }
 //     } else {
-//         console.error('Request failed:', results[0].reason);
+//         console.error('Request failed:', positioinResults[0].reason);
 //     }
 // }
 
 function Htx2OkxFormat(originalDataArray) {
     return originalDataArray.map(originalData => {
-        console.log(originalData)
-        console.log('liqpx',originalData.liq_px)
       return {
         "adl": String(originalData.open_adl || '0'),  // Convert to string, or default to 0
         "availPos": "",  // Empty as per the target format
@@ -228,9 +230,9 @@ function Htx2OkxFormat(originalDataArray) {
         "markPx": String(originalData.last_price.toFixed(1)),
         "maxSpotInUseAmt": "",
         "mgnMode": "isolated",
-        "mgnRatio": "46.53351821356301",  // Assumed fixed value for this example
+        "mgnRatio": "",  // Assumed fixed value for this example
         "mmr": String((originalData.profit / originalData.cost_hold).toFixed(10)),  // Just an example calculation
-        "notionalUsd": "100",  // Assumed fixed value
+        "notionalUsd": "",  // Assumed fixed value
         "optVal": "",
         "pendingCloseOrdLiabVal": "",
         "pnl": String(originalData.profit.toFixed(10)),  // Placeholder, may depend on further logic
