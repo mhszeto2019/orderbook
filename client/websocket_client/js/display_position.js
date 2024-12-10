@@ -96,10 +96,11 @@ async function populatePositions() {
 }
 
 
+
+
 function populateOpenPositionsTable(positions) {
     // Get reference to the DataTable instance (or initialize if not already)
     const omsTable = $('.OMStable').DataTable();
-
     // Clear existing rows from DataTable
     omsTable.clear();
 
