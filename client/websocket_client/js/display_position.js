@@ -49,16 +49,13 @@ async function populatePositions() {
             const positioinResponse = positioinResults[0].value;
             if (positioinResponse.ok) {
                 const positioinResponse_data = await positioinResponse.json();
-                console.log('positioin resposne', positioinResponse_data)
 
                 if (positioinResponse_data.data){
-                    console.log('OKX data:', positioinResponse_data.data);
                     // Append OKX data to allPositions
                     allPositions = allPositions.concat(positioinResponse_data.data.map(position => ({
                         ...position,
                         exchange: 'OKX'  // Add exchange name to each position
                     })));
-                    console.log('OKX populated');
                 }
                 else{
                     console.error(positioinResponse_data['msg'],positioinResponse_data['code'])
@@ -75,17 +72,14 @@ async function populatePositions() {
         if (positioinResults[1].status === 'fulfilled') {
             const positioinResponse = positioinResults[1].value;
             
-            console.log(positioinResponse)
             if (positioinResponse.ok) {
                 const positioinResponse_data = await positioinResponse.json();
-                console.log('htx positioinResponse_data data:', positioinResponse_data);
                 const formattedData = Htx2OkxFormat(positioinResponse_data);  // Format HTX data as needed
                 // Append HTX data to allPositions
                 allPositions = allPositions.concat(formattedData.map(position => ({
                     ...position,
                     exchange: 'HTX'  // Add exchange name to each position
                 })));
-                console.log('HTX populated');
             } else {
                 console.error('Error fetching HTX positions:', positioinResponse.statusText);
             }
@@ -101,6 +95,7 @@ async function populatePositions() {
     }
 }
 
+
 function populateOpenPositionsTable(positions) {
     // Get reference to the DataTable instance (or initialize if not already)
     const omsTable = $('.OMStable').DataTable();
@@ -109,7 +104,6 @@ function populateOpenPositionsTable(positions) {
     omsTable.clear();
 
     if (positions.length === 0) {
-        console.log(positions.length)
         // Add a "No open positions available" message
         // omsTable.row.add([
         //     { display: "No open positions available", colspan: 10 }

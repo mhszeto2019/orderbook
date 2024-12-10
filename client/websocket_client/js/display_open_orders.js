@@ -81,6 +81,7 @@ async function populateOpenOrders() {
     
 }
 
+
 const ordersHist = {};
 
 function populateOpenOpenOrdersTable(orders) {
@@ -668,11 +669,8 @@ async function get_tpsl_info(ordId,instId) {
 async function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
-    // console.log('respionseDta',responseData)
-    console.log('response_data',responseData)
     const transformedOrders = []
     for (const row of responseData.orders) {
-        console.log('row', row);
         try {
             let contract_code = row.contract_code
             let is_tpsl = row.is_tpsl
@@ -682,10 +680,8 @@ async function Htx2OkxFormatOrders(responseData) {
             let tp_algo_id = ''
             let sl_algo_id = ''
             let algoOrds = []
-            console.log(is_tpsl)
             if (is_tpsl){
                 const tpsl_info = await get_tpsl_info(order_id, contract_code);
-                console.log('tpsl_info', tpsl_info);
                 
                 algoOrds.push({
                     "amendPxOnTriggerType": "",
@@ -717,8 +713,6 @@ async function Htx2OkxFormatOrders(responseData) {
                         algoOrds[0]["tpOrdPx"] = tp_price
                     }
                 });
-                console.log("SL Price:", sl_price);
-                console.log("TP Price:", tp_price);
                 
             }
 

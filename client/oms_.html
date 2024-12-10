@@ -46,13 +46,6 @@
         <!-- DISPLAY TABLE -->
          
         <div class="col-lg-8 container-fluid mt-4" id="orderbookdisplayContainer">
-            
-            <!-- <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>Order Book Comparison</h4>
-                <div>
-                    <button class="btn btn-primary" id="changeCurrencyBtn" onclick="openCurrencySelector()">Change Currency</button>
-                </div>
-            </div> -->
 
                        
             <!--WS STATUS BADGE  -->
@@ -654,9 +647,6 @@
     <script src="websocket_client/js/display_orderbook.js"></script>
     <script src="websocket_client/js/display_position.js"></script>
     <script src="websocket_client/js/display_open_orders.js"></script>
-
-
-
     <script src="websocket_client/js/arbButton.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
@@ -664,6 +654,24 @@
     <script src="websocket_client/js/display_fundingrate.js"></script>
 
     <script>
+        // Clear JWT token from localStorage when no longer needed
+        function clearAuthToken() {
+            localStorage.removeItem('jwt_token');
+        }
+
+        // Clear notifications when user logs out or navigates away
+        function clearAllDataOnLogout() {
+            clearAuthToken();
+            clearNotifications();
+        }
+
+        // Remove event listener when no longer needed
+        window.removeEventListener('beforeunload', () => {
+            clearAuthToken();
+            clearNotifications();
+        });
+
+
         let currency_pair = null;
         
         function getAuthToken() {
@@ -765,19 +773,7 @@
             updateNotificationCount();
         }
 
-    // Example usage for testing
-    // // Function to open a modal or dropdown for currency selection
-    // function openCurrencySelector() {
-    //     console.log(currency_pair)
-
-    //     const currencies = ['BTC/USD', 'ETH/USD', 'BNB/USD']; // Example currencies
-    //     let selectedCurrency = prompt('Enter the currency pair (e.g., BTC/USD):', currencies[0]);
-        
-    //     if (selectedCurrency) {
-    //         updateTableForCurrency(selectedCurrency);
-    //     }
-    // }
-
+   
     // Function to update the table for the selected currency
     function updateTableForCurrency(currency) {
         console.log(currency_pair)
@@ -788,6 +784,8 @@
         currency_pair = currency
         console.log(currency_pair)
     }
+
+
     $('.OMStable').DataTable({
         paging: true,
         searching: true,

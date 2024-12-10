@@ -120,7 +120,6 @@ async def main():
     # List of currency pairs to subscribe to
     # currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
     currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
-    
     channel = 'books5'
     await client.run(channel,currency_pairs, client.publicCallback)
 
@@ -130,7 +129,6 @@ def run_okx_client():
     print('running_okx_client')
     global loop    
     try:
-        
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(main())
@@ -147,15 +145,12 @@ def handle_connect(auth):
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_okx_client)
 
-# @socketio.on('disconnect')
-# def handle_disconnect():
-#     global loop
-#     print("Client disconnected")
-#     loop.close()
+
 
 @socketio.on('client_change')
 def handle_client_change(data):
     global loop
+   
     print(f"Client change detected with data: {data}")
     if loop is not None:
         try:
@@ -166,8 +161,9 @@ def handle_client_change(data):
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    global loop
     print("Client disconnected")
+    
+    global loop
     if loop and loop.is_running():
         # Stop all running tasks
         for task in asyncio.all_tasks(loop):

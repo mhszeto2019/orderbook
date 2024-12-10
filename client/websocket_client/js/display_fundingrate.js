@@ -73,7 +73,6 @@ async function populateFundingRate(){
         const response = results[1].value;
         if (response.ok) {
             const response_data = await response.json();
-            console.log(response_data)
             data = response_data
             const ts = unixTsConversion(data.ts)
             const humanReadableFundingTime  = unixTsConversion(data.funding_time)

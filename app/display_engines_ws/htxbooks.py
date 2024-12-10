@@ -36,11 +36,11 @@ class WsBase:
         self._has_open = False
         self._sub_str = None
         self._ws = None
-        self.all_data = []
+        # self.all_data = []
         self.instId = instId
 
-    def get_data(self):
-        return self.all_data 
+    # def get_data(self):
+        # return self.all_data 
 
     def open(self):
         url = f'wss://{self._host}{self._path}'
@@ -63,7 +63,7 @@ class WsBase:
         self.handle_ping(response_data, plain)
 
         current_date = self.get_current_date()
-        self.all_data.append({"timestamp": current_date, "data": response_data})
+        # self.all_data.append({"timestamp": current_date, "data": response_data})
 
         if 'ch' in response_data and 'tick' in response_data:
             self.process_tick_data(response_data)
@@ -81,19 +81,12 @@ class WsBase:
         pass
 
     # def _on_close(self, close_status_code, close_msg):
-    # def _on_close(self, ws, close_status_code, close_msg):
-    
-    #     print(f"WebSocket closed: {close_status_code} - {close_msg}")
-    #     self._has_open = False
-    #     self.reconnect()
     def _on_close(self, ws, close_status_code, close_msg):
+    
         print(f"WebSocket closed: {close_status_code} - {close_msg}")
         self._has_open = False
-        if not self._active_close:
-            print("Attempting to reconnect...")
-            self.reconnect()
-        if self.thread and self.thread.is_alive():
-            self.thread.join()  # Ensure the thread is cleaned up
+        self._ws.close()
+        self.reconnect()
 
 
     def reconnect(self):
@@ -146,7 +139,7 @@ class WsBase:
         self._sub_str = None
         self._has_open = False
         self._ws.close()
-        self.all_data.clear()
+        # self.all_data.clear()
 
     
     @staticmethod
@@ -212,7 +205,6 @@ class WsSwaps(WsBase):
             'sequence_id': input_data['tick']['id'],
             'exchange': 'htx'
         }
-        # print("--- %s seconds for transforming data ---" % (time.time() - start_time))
         return transformed_data
     @staticmethod
     def publicCallback(message):
@@ -221,9 +213,11 @@ class WsSwaps(WsBase):
         print(message)
         # socketio.emit('BTC-USD-SWAP',message)
             
+swap = None
           
 async def main():
-    print('*****************\nstart Spot ws.\n')
+    print('*****************\nstart SWAP ws.\n')
+    global swap
     host = 'api.huobi.pro'
     path = '/ws'
     swap_host = "api.hbdm.com"
@@ -237,7 +231,7 @@ async def main():
     # spot.sub(sub_params1)
     swap.sub(sub_params2)
     # swap.close()
-    print('end Spot ws.\n')
+    print('end SWAP ws.\n')
 
 import asyncio
 loop = None
@@ -261,12 +255,10 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print("Client disconnected")
     global loop
-    print('hello')
+    print("Client disconnected")
     if loop and loop.is_running():
         # Stop all running tasks
-        print(loop)
         for task in asyncio.all_tasks(loop):
             task.cancel()
         # Optionally stop the event loop (not close)

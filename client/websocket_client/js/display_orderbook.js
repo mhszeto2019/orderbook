@@ -44,7 +44,9 @@ function debounce(func, delay) {
 // Create a debounced version of populateOrderBook with a delay of 10 ms
 const debouncedPopulateOrderBook = debounce(populateOrderBook, 10);
 
+
 function clearOrderbookTable() {
+
     const orderbookTs1DOM = document.getElementById('orderbook-timestamp-1');
     const orderbookTs2DOM = document.getElementById('orderbook-timestamp-2');
 
