@@ -114,8 +114,8 @@ async def getfundingrate():
             "contract_code": instId
             }
             )
-        print(fundingrate)
         position_data = fundingrate.get('data', [])
+        position_data['ts'] = fundingrate['ts']
         print(position_data)
         return position_data
     

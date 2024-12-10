@@ -1,6 +1,5 @@
 
-async function populateFundingRate
-(){
+async function populateFundingRate(){
     const token = getAuthToken();
     const username = localStorage.getItem('username');
     const redis_key = localStorage.getItem('key');
@@ -41,8 +40,7 @@ async function populateFundingRate
         if (response.ok) {
             const response_data = await response.json();
             data = response_data.data[0]
-            // const FundingTime = data.fundingTime;
-            // console.log(data.fundingTime)
+            const ts = unixTsConversion(data.ts)
             const humanReadableFundingTime  = unixTsConversion(data.fundingTime)
             const humanReadableNextFundingTime  = unixTsConversion(data.nextFundingTime)
             const currencyValue = parseFloat(data.fundingRate); // Parse the value to ensure it's a number
@@ -53,6 +51,7 @@ async function populateFundingRate
                 }
             if (response_data.data){
                 // Append OKX data to allOpenOrders
+                document.getElementById('fundingratets_okx').textContent = `${ts}`
                 document.getElementById('funding-time-okx').textContent = `${humanReadableFundingTime}`;
                 document.getElementById('next-funding-time-okx').textContent = `${humanReadableNextFundingTime}`;
                 document.getElementById('funding-rate-okx').textContent = `${fundingRate}`;
@@ -76,8 +75,7 @@ async function populateFundingRate
             const response_data = await response.json();
             console.log(response_data)
             data = response_data
-            console.log(data)
-            
+            const ts = unixTsConversion(data.ts)
             const humanReadableFundingTime  = unixTsConversion(data.funding_time)
             const humanReadableNextFundingTime  = unixTsConversion(data.next_funding_time)
             const currencyValue = parseFloat(data.funding_rate); // Parse the value to ensure it's a number
@@ -88,6 +86,7 @@ async function populateFundingRate
                 }
             if (response_data){
                 // Append OKX data to allOpenOrders
+                document.getElementById('fundingratets-htx').textContent = `${ts}`;
                 document.getElementById('funding-time-htx').textContent = `${humanReadableFundingTime}`;
                 document.getElementById('next-funding-time-htx').textContent = `${humanReadableNextFundingTime}`;
                 document.getElementById('funding-rate-htx').textContent = `${fundingRate}`;
@@ -106,30 +105,29 @@ async function populateFundingRate
     }
 }
 
-
-function unixTsConversion(timestampString){
-    timestamp = Number(timestampString);
+function unixTsConversion(timestampString) {
+    const timestamp = Number(timestampString);
     if (!timestamp || isNaN(timestamp)) {
         return "Invalid timestamp";
     }
-    
+
     // Convert the timestamp to a Date object
     const date = new Date(timestamp);
-    console.log(date)
-    // Format the date to a human-readable string
-    return date.toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        timeZoneName: "short" // Includes the time zone
-    });
+
+    // Extract the components of the date
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+    const year = String(date.getFullYear()).slice(-2); // Get last 2 digits of year
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    const milliseconds = String(date.getMilliseconds()).padStart(3, "0");
+
+    // Format as dd/mm/yy ss:ms
+    return `${day}/${month}/${year} ${seconds}:${milliseconds}`;
 }
 
+
 // // // Set up the scheduler
-function startFundingRateScheduler(interval = 35000) {
+function startFundingRateScheduler(interval = 5000) {
     // Call populateFundingRate immediately
     populateFundingRate();
 

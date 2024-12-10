@@ -81,12 +81,20 @@ class WsBase:
         pass
 
     # def _on_close(self, close_status_code, close_msg):
-    def _on_close(self, ws, close_status_code, close_msg):
+    # def _on_close(self, ws, close_status_code, close_msg):
     
+    #     print(f"WebSocket closed: {close_status_code} - {close_msg}")
+    #     self._has_open = False
+    #     self.reconnect()
+    def _on_close(self, ws, close_status_code, close_msg):
         print(f"WebSocket closed: {close_status_code} - {close_msg}")
         self._has_open = False
-        self.reconnect()
-    
+        if not self._active_close:
+            print("Attempting to reconnect...")
+            self.reconnect()
+        if self.thread and self.thread.is_alive():
+            self.thread.join()  # Ensure the thread is cleaned up
+
 
     def reconnect(self):
         retry_count = 0
@@ -139,8 +147,6 @@ class WsBase:
         self._has_open = False
         self._ws.close()
         self.all_data.clear()
-
- 
 
     
     @staticmethod
@@ -234,8 +240,10 @@ async def main():
     print('end Spot ws.\n')
 
 import asyncio
+loop = None
 
 def run_htx_client():
+    global loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
@@ -247,9 +255,24 @@ def handle_connect():
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_htx_client)
 
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     print("Client disconnected")
+
 @socketio.on('disconnect')
 def handle_disconnect():
     print("Client disconnected")
+    global loop
+    print('hello')
+    if loop and loop.is_running():
+        # Stop all running tasks
+        print(loop)
+        for task in asyncio.all_tasks(loop):
+            task.cancel()
+        # Optionally stop the event loop (not close)
+        loop.call_soon_threadsafe(loop.stop)
+
+
 
 @socketio.on('message')
 def handle_message(data):
