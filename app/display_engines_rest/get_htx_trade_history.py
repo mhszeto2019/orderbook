@@ -36,34 +36,35 @@ import asyncio
 import base64
 from cryptography.fernet import Fernet
 import requests
-@token_required
+
 @app.route('/htx/gettradehistory', methods=['POST'])
 async def gettradehistory():
+
     data = request.get_json()
     print('data',data)
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
+    # username = data.get('username')
+    # # Get the order data from the request
+    # # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+    # key_string = data.get('redis_key')
+    # if key_string.startswith("b'") and key_string.endswith("'"):
+    #     cleaned_key_string = key_string[2:-1]
+    # else:
+    #     cleaned_key_string = key_string  # Fallback if the format is unexpected
 
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
+    # # Now decode the base64 string into bytes
+    # key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+    # key_bytes = cleaned_key_string.encode('utf-8')
+    # # You can now use the key with Fernet
+    # cipher_suite = Fernet(key_bytes)
     
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
+    # cache_key = f"user:{username}:api_credentials"
+    # # Fetch the encrypted credentials from Redis
+    # encrypted_data = r.get(cache_key)   
     
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
+    # if encrypted_data:
+    # # Decrypt the credentials
+    #     decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+    #     api_creds_dict = json.loads(decrypted_data)
         
     # Initialize TradeAPI
        
@@ -82,7 +83,8 @@ async def gettradehistory():
             response = requests.get(url)
             response.raise_for_status()  # Raise an exception if the HTTP request returned an unsuccessful status code
             data = response.json()
-            print(data)
+            data['exchange'] = 'htx'
+            data['ccy'] =instId + '-SWAP'
             return jsonify(data)
 
         except requests.RequestException as e:

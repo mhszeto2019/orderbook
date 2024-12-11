@@ -21,7 +21,7 @@ async function getTradeHistory(){
         },
         body: JSON.stringify(request_data)
     });
-    
+
     // const secondOrderPromise = fetch(`http://${hostname}:5002/htx/getgettradehistory`, {
     //     method: 'POST',
     //     headers: {
@@ -44,23 +44,7 @@ async function getTradeHistory(){
             console.log(response_data)
             data = response_data.data
             console.log(data)
-            //     if (!isNaN(currencyValue)) {
-            //         fundingRate = `${(currencyValue * 100).toFixed(6)}%`; // Convert to percentage
-            //     } else {
-            //         fundingRate = "Invalid value"; // Handle invalid input
-            //     }
-            // if (response_data.data){
-            //     // Append OKX data to allOpenOrders
-            //     // document.getElementById('fundingratets_okx').textContent = `${ts}`
-            //     // document.getElementById('funding-time-okx').textContent = `${humanReadableFundingTime}`;
-            //     // document.getElementById('next-funding-time-okx').textContent = `${humanReadableNextFundingTime}`;
-            //     // document.getElementById('funding-rate-okx').textContent = `${fundingRate}`;
-            //     // document.getElementById('currency-okx').textContent = `${data.currency}`;
-                
-            // }
-            // else{
-            //     console.error(response_data['msg'],response_data['code'])
-            // }
+            
             
         } else {
             console.error('Error fetching OKX orders:', response.statusText);
