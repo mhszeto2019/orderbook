@@ -255,6 +255,8 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    swap.close()
+
     global loop
     print("Client disconnected")
     if loop and loop.is_running():

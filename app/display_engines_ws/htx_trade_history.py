@@ -154,6 +154,7 @@ class WsSwaps(WsBase):
         symbol = response_data['ch'].split('.')[1] + f'-{instrument}'
         response_data['exchange'] = 'htx'
         response_data['instrument'] = 'SWAP'
+        response_data['ccy']= response_data['ch'].split('.')[1]
         print(response_data)
         
         self.socketio.emit('htx_trade_history',response_data)
@@ -264,6 +265,7 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    swap.close()
     global loop
     print("Client disconnected")
     if loop and loop.is_running():
