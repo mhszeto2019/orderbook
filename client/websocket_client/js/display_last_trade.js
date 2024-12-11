@@ -100,23 +100,37 @@ function handleWebSocketMessage(message) {
         lastTrades[currency][instrument].unshift(tradeDetails);
 
         // Keep only the last 10 trades
-        if (lastTrades[currency][instrument].length > 10) {
+        if (lastTrades[currency][instrument].length > MAX_TRADES) {
             lastTrades[currency][instrument].pop();
         }
     });
     console.log(lastTrades)
     // Example: Populate the table (frontend logic)
     const { selectedCurrency, selectedInstrument } = getSelectedOptions(); // Your logic
+    
     if (selectedCurrency === currency && selectedInstrument === instrument) {
         populateTable(lastTrades[currency][instrument]);
     }
 }
 
+// lastprice-data-table-body-2
 // Populate Table Function (Example)
-function populateTable(trades) {
-    const tableBody = document.getElementById('trades-table-body');
+
+// Populate Table Function
+function populateTable(trades, tableKey) {
+    // Check if data is the same as last update
+    if (JSON.stringify(lastDisplayedTrades[tableKey]) === JSON.stringify(trades)) {
+        return; // Do not update if there's no new data
+    }
+
+    // Update the cache with the new trades
+    lastDisplayedTrades[tableKey] = trades;
+
+    // Get the table body by ID
+    const tableBody = document.getElementById('lastprice-data-table-body-2');
     tableBody.innerHTML = ''; // Clear existing rows
 
+    // Append new rows to the table
     trades.forEach(trade => {
         const row = document.createElement('tr');
         row.innerHTML = `
