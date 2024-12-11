@@ -40,6 +40,7 @@ class Ws:
         # print(message)
         plain = gzip.decompress(message).decode()
         jdata = json.loads(plain)
+        print(jdata)
         if 'ping' in jdata:
             print("ping: " + plain)
             sdata = plain.replace('ping', 'pong')

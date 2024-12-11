@@ -46,7 +46,6 @@ from cryptography.fernet import Fernet
 import base64
 
 
-
 @app.route('/')
 def home():
     return "Welcome to the OKX Account position API Flask App!"

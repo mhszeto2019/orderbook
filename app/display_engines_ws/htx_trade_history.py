@@ -19,158 +19,28 @@ REDIS_HOST = config[config_source]['host']
 REDIS_PORT = config[config_source]['port']
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
-class Ws:
-    def __init__(self, host: str, path: str):
-        self._host = host
-        self._path = path
-        self._active_close = False
-        self._has_open = False
-        self._sub_str = None
-        self._ws = None
-
-    def open(self):
-        url = 'wss://{}{}'.format(self._host, self._path)
-        self._ws = websocket.WebSocketApp(url,
-                                          on_open=self._on_open,
-                                          on_message=self._on_msg,
-                                          on_close=self._on_close,
-                                          on_error=self._on_error)
-        t = threading.Thread(target=self._ws.run_forever, daemon=True)
-        t.start()
-
-    def getcurrentdate(self):
-        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        return current_date
-
-    def _on_open(self, ws):
-        print('ws open')
-        print("WssHostAndPath: ", 'wss://{}{}'.format(self._host, self._path))
-        current_date = self.getcurrentdate()
-        print("CurrentDatetime:{} GMT+2".format(current_date))
-        self._has_open = True
-
-    def _on_msg(self, ws, message):
-        # print(message)
-        plain = gzip.decompress(message).decode()
-        jdata = json.loads(plain)
-        if 'ping' in jdata:
-            print("ping: " + plain)
-            sdata = plain.replace('ping', 'pong')
-            self._ws.send(sdata)
-            print("pong: " + sdata)
-            return
-        elif 'op' in jdata:
-            opdata = jdata['op']
-            if opdata == 'ping':
-                sdata = plain.replace('ping', 'pong')
-                # print("pong: " + sdata)
-                self._ws.send(sdata)
-                return
-            else:
-                pass
-        elif 'action' in jdata:
-            opdata = jdata['action']
-            if opdata == 'ping':
-                sdata = plain.replace('ping', 'pong')
-                # print("pong: "+ sdata)
-                self._ws.send(sdata)
-                return
-            else:
-                pass
-        else:
-            pass
-        current_date = self.getcurrentdate()
-        print("CurrentDatetime:{} GMT+2".format(current_date))
-        print(jdata)
-        # print(json.dumps(jdata, indent=4, ensure_ascii=False))
-        channel = jdata['ch']  # Channel name
-        symbol = jdata['tick']['symbol']  # Currency symbol
-        timestamp = jdata['ts']  # Timestamp
-        sequence_id = jdata['tick']['seqId']  # Sequence ID
-        ask_price = jdata['tick']['ask']  # Ask price
-        ask_size = jdata['tick']['askSize']  # Ask size
-        bid_price = jdata['tick']['bid']  # Bid price
-        bid_size = jdata['tick']['bidSize']  # Bid size
-        
-        # Create a Redis key using the symbol
-        redis_key = f"htxbbo:{symbol}"
-        
-        # Prepare the data to be stored in Redis
-        redis_data = {
-            "currency":symbol,
-            "channel": channel,
-            "ask_price": ask_price,
-            "ask_size": ask_size,
-            "bid_price": bid_price,
-            "bid_size": bid_size,
-            "timestamp": timestamp,
-            "sequence_id": sequence_id
-        }
-        
-        # Store the data in Redis using HSET (Hash Set)
-        redis_client.hset(redis_key, mapping=redis_data)
-        print('publishing')
-        redis_client.publish(redis_key, json.dumps(redis_data))
-        print('published')
-        
-        # print(f"Data for {symbol} stored in Redis: {redis_data}")
-        print("*************************************")
-        stored_data = redis_client.hgetall(redis_key)
-        print('storeddata',stored_data)
-    
-    def _on_close(self, ws,_active_close,_sub_str):
-        print("ws close.")
-        self._has_open = False
-        if not self._active_close and self._sub_str is not None:
-            self.open()
-            self.sub(self._sub_str)
-
-    def _on_error(self, ws, error):
-        print(error)
-
-    def sub(self, sub_str: dict):
-        if self._active_close:
-            print('has close')
-            return
-        while not self._has_open:
-            time.sleep(1)
-
-        self._sub_str = sub_str
-        print(sub_str)
-        self._ws.send(json.dumps(sub_str))  # as json string to be send
-        # print(sub_str)
-
-    def req(self, req_str: dict):
-        if self._active_close:
-            print('has close')
-            return
-        while not self._has_open:
-            time.sleep(1)
-
-        self._ws.send(json.dumps(req_str))  # as json string to be send
-        print(req_str)
-
-    def close(self):
-        self._active_close = True
-        self._sub_str = None
-        self._has_open = False
-        self._ws.close()
-
+# SOCKETIO SETUP
+from flask_socketio import SocketIO
+from flask import Flask
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all origins
+socketio = SocketIO(app, cors_allowed_origins="*",async_mode='gevent')
 
 class WsBase:
-    def __init__(self, host: str, path: str):
+    def __init__(self, host: str, path: str,socketio,instId):
         self._host = host
         self._path = path
-        
+        self.socketio = socketio
         self._active_close = False
         self._has_open = False
         self._sub_str = None
         self._ws = None
-        self.all_data = []
-       
+        # self.all_data = []
+        self.instId = instId
 
-    def get_data(self):
-        return self.all_data 
+    # def get_data(self):
+        # return self.all_data 
 
     def open(self):
         url = f'wss://{self._host}{self._path}'
@@ -193,7 +63,7 @@ class WsBase:
         self.handle_ping(response_data, plain)
 
         current_date = self.get_current_date()
-        self.all_data.append({"timestamp": current_date, "data": response_data})
+        # self.all_data.append({"timestamp": current_date, "data": response_data})
 
         if 'ch' in response_data and 'tick' in response_data:
             self.process_tick_data(response_data)
@@ -207,12 +77,17 @@ class WsBase:
 
     def process_tick_data(self, response_data):
         # To be implemented in subclasses
+        print('response_data',response_data)
         pass
 
-    def _on_close(self, close_status_code, close_msg):
+    # def _on_close(self, close_status_code, close_msg):
+    def _on_close(self, ws, close_status_code, close_msg):
+    
         print(f"WebSocket closed: {close_status_code} - {close_msg}")
         self._has_open = False
+        self._ws.close()
         self.reconnect()
+
 
     def reconnect(self):
         retry_count = 0
@@ -264,77 +139,150 @@ class WsBase:
         self._sub_str = None
         self._has_open = False
         self._ws.close()
+        # self.all_data.clear()
 
     
     @staticmethod
     def unix_ts_to_datetime(ts):
         # Convert Unix timestamp to datetime
-        return datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
     
 class WsSwaps(WsBase):
+
     def process_tick_data(self, response_data):
-        # last_price = response_data['tick'].get('close', None)
-        # last_size = response_data['tick'].get('vol', None)
-        symbol = response_data['ch'].split('.')[1] + '-SWAP'
-        # print(symbol,response_data)
+        instrument = 'SWAP'
+        symbol = response_data['ch'].split('.')[1] + f'-{instrument}'
+        response_data['exchange'] = 'htx'
+        response_data['instrument'] = 'SWAP'
+        print(response_data)
         
-        ts = self.unix_ts_to_datetime(response_data['ts'])
-        channel = self._host + self._path
-                
-        channel = response_data['ch']  # Channel name
-        ask_price = response_data['tick']['ask'][0] # Ask price
-        ask_size = response_data['tick']['ask'][1]  # Ask size
-        bid_price = response_data['tick']['bid'] [0] # Bid price
-        bid_size = response_data['tick']['bid'][1]  # Bid size
-        # print(ask_price,ask_size,bid_price,bid_size)
-        channel_name = channel.split('.')[2]
-        # Create a Redis key using the symbol
-        # redis_key = f"htxbbo:{symbol}"
-        redis_key = f'htx:SWAP:{channel_name}:{symbol}'
-    # htx:market.BTC-USD.bbo:BTC-USD-SWAP
-        # print(redis_key)
+        self.socketio.emit('htx_trade_history',response_data)
 
-        # Prepare the data to be stored in Redis
-        redis_data = {
-            "currency":symbol,
-            "channel": channel,
-            "ask_price": ask_price,
-            "ask_size": ask_size,
-            "bid_price": bid_price,
-            "bid_size": bid_size,
-            "timestamp": ts,
-            "exchange":"htx"
-        }
-        # print(redis_data)
-        # Store the data in Redis using HSET (Hash Set)
-        # redis_client.hset(redis_key, mapping=redis_data)
-        print('publishing')
+        # # return response_data
+    
+        # transformed_data = self.transform_data(response_data)
+
+        # redis_key = f'htx:SWAP:{transformed_data['channel']}:{symbol}'
+
+        # redis_data = transformed_data
+       
+        # self.socketio.emit(self.instId,redis_data)
+        # # time.sleep(1)
+
+        # # Store data in Redis
         # redis_client.publish(redis_key, json.dumps(redis_data))
-        # print('published')
+       
+        # # redis_client.hset(redis_key, mapping=redis_data)
+        
+        # return 'test'
+    
+    @classmethod
+    def transform_data(self,input_data):
+        # start_time = time.time()
+        # Define the exchange and instrument (this would be dynamic in a real-world scenario)
+        self.instId = "BTC-USD-SWAP"
+        
+        # Get the asks and bids data
+        asks = input_data['tick']['asks']
+        bids = input_data['tick']['bids']
+        
+        # Convert asks and bids to the required list of objects
+        # ask_list = [{"price": str(price), "size": str(size)} for price, size in asks]
+        ask_list = [{"price": str(price), "size": str(size)} for price, size in asks][::-1]
 
+        bid_list = [{"price": str(price), "size": str(size)} for price, size in bids]
 
+        # First ask and bid price/size
+        ask_price, ask_size = asks[0]
+        bid_price, bid_size = bids[0]
 
-if __name__ == '__main__':
-    ################# spot
-    print('*****************\nstart Spot ws.\n')
+        # Convert timestamp to human-readable format
+        # timestamp = datetime.utcfromtimestamp(input_data['ts'] / 1000).strftime('%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.fromtimestamp(input_data['ts'] / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
+        # Create the transformed data dictionary
+        transformed_data = {
+            'currency': self.instId,
+            'channel': 'books5',
+            'bid_list': json.dumps(bid_list),
+            'ask_list': json.dumps(ask_list),
+            'ask_price': str(ask_price),
+            'ask_size': str(ask_size),
+            'bid_price': str(bid_price),
+            'bid_size': str(bid_size),
+            'timestamp': timestamp,
+            'sequence_id': input_data['tick']['id'],
+            'exchange': 'htx'
+        }
+        return transformed_data
+    
+    @staticmethod
+    def publicCallback(message):
+        """Callback function to handle incoming messages."""
+      
+        print(message)
+        # socketio.emit('BTC-USD-SWAP',message)
+            
+swap = None
+          
+async def main():
+    print('*****************\nstart SWAP ws.\n')
+    global swap
     host = 'api.huobi.pro'
     path = '/ws'
     swap_host = "api.hbdm.com"
     swap_path='/swap-ws'
-    
-    spot = Ws(host, path)
-    spot.open()
-    swap = WsSwaps(swap_host,swap_path)
+    swap = WsSwaps(swap_host,swap_path,socketio,'BTC-USD-SWAP')
     swap.open()
-
     # sub
     # sub_params1 = {'sub': 'market.btcusdt.bbo'}
-    sub_params2 = {'sub': 'market.BTC-USD.bbo'}
+    sub_params2 = {'sub': 'market.BTC-USD.trade.detail'}
     # spot.sub(sub_params1)
     # spot.sub(sub_params1)
     swap.sub(sub_params2)
+    # swap.close()
+    print('end SWAP ws.\n')
+
+import asyncio
+loop = None
+
+def run_htx_client():
+    global loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
+
+# Flask-SocketIO event handling
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected")
+    # Start the WebSocket client using a background task
+    socketio.start_background_task(run_htx_client)
+
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     print("Client disconnected")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    global loop
+    print("Client disconnected")
+    if loop and loop.is_running():
+        # Stop all running tasks
+        for task in asyncio.all_tasks(loop):
+            task.cancel()
+        # Optionally stop the event loop (not close)
+        loop.call_soon_threadsafe(loop.stop)
 
 
-    time.sleep(10000)
-    spot.close()
-    print('end Spot ws.\n')
+
+@socketio.on('message')
+def handle_message(data):
+    print('Received message: ' + str(data))
+    # Echo the message back
+    socketio.send(data)
+
+
+if __name__ == '__main__':
+    # app.run(main(),port=5091)
+    socketio.run(app, host='localhost', port=5099)
+    
