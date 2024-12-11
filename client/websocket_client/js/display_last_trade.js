@@ -107,14 +107,28 @@ function handleWebSocketMessage(message) {
     console.log(lastTrades)
     // Example: Populate the table (frontend logic)
     const { selectedCurrency, selectedInstrument } = getSelectedOptions(); // Your logic
-    
+
     if (selectedCurrency === currency && selectedInstrument === instrument) {
         populateTable(lastTrades[currency][instrument]);
     }
 }
 
-// lastprice-data-table-body-2
-// Populate Table Function (Example)
+function getSelectedOptions() {
+    const currencySelect = document.getElementById('currencySelect');
+    const currencySelect = document.getElementById('currencySelect');
+
+    return currencySelect.value;
+}
+
+function onWsDataReceived(exchange,message) {
+    try {
+        
+        populateOrderBook(exchange,message)
+    
+    } catch (error) {
+        console.error("Error processing WebSocket data:", error);
+    }
+}
 
 // Populate Table Function
 function populateTable(trades, tableKey) {
