@@ -152,7 +152,7 @@ class WsSwaps(WsBase):
     def process_tick_data(self, response_data):
         instrument = 'SWAP'
         symbol = response_data['ch'].split('.')[1] + f'-{instrument}'
-        response_data['exchange'] = 'htx'
+        response_data['exchange'] = 'HTX'
         response_data['instrument'] = 'SWAP'
         response_data['ccy']= response_data['ch'].split('.')[1]
         print(response_data)

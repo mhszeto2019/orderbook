@@ -161,8 +161,9 @@ def handle_client_change(data):
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    client.close()
+
     print("Client disconnected")
-    
     global loop
     if loop and loop.is_running():
         # Stop all running tasks

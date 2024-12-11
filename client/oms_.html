@@ -179,7 +179,7 @@
 
                       <!-- First Exchange Last Prices -->
                       <div class="col-md-3">
-                        <div class="orderbook-section">
+                        <div class="orderbook-section ">
                           <h2>Last</h2>
                           <div id="selected-info" >
                             <p>Exchange: <span id="selected-exchange-lastprice-1">Not Selected</span></p>
@@ -264,12 +264,13 @@
                             <p>Exchange: <span id="selected-exchange-lastprice-2">Not Selected</span></p>
                             <p>Currency: <span id="selected-ccy-lastprice-2">Not Selected</span></p>
                           </div>
-                          <div class="orderbook-scroll-container">
+                          <div class="orderbook-scroll-container scrollable-orderbook">
                             <table class="orderBookTable">
                               <thead>
                                 <tr>
+                                  <th>Ts</th>
                                   <th>Price</th>
-                                  <th>Amount</th>
+                                  <th>Direction</th>
                                 </tr>
                               </thead>
                               <tbody id="lastprice-data-table-body-2">
