@@ -155,66 +155,11 @@ class WsSwaps(WsBase):
         response_data['exchange'] = 'HTX'
         response_data['instrument'] = 'SWAP'
         response_data['ccy']= response_data['ch'].split('.')[1]
-        print(response_data)
+        print('response_data',response_data)
         
         self.socketio.emit('htx_trade_history',response_data)
 
-        # # return response_data
-    
-        # transformed_data = self.transform_data(response_data)
-
-        # redis_key = f'htx:SWAP:{transformed_data['channel']}:{symbol}'
-
-        # redis_data = transformed_data
-       
-        # self.socketio.emit(self.instId,redis_data)
-        # # time.sleep(1)
-
-        # # Store data in Redis
-        # redis_client.publish(redis_key, json.dumps(redis_data))
-       
-        # # redis_client.hset(redis_key, mapping=redis_data)
-        
-        # return 'test'
-    
-    @classmethod
-    def transform_data(self,input_data):
-        # start_time = time.time()
-        # Define the exchange and instrument (this would be dynamic in a real-world scenario)
-        self.instId = "BTC-USD-SWAP"
-        
-        # Get the asks and bids data
-        asks = input_data['tick']['asks']
-        bids = input_data['tick']['bids']
-        
-        # Convert asks and bids to the required list of objects
-        # ask_list = [{"price": str(price), "size": str(size)} for price, size in asks]
-        ask_list = [{"price": str(price), "size": str(size)} for price, size in asks][::-1]
-
-        bid_list = [{"price": str(price), "size": str(size)} for price, size in bids]
-
-        # First ask and bid price/size
-        ask_price, ask_size = asks[0]
-        bid_price, bid_size = bids[0]
-
-        # Convert timestamp to human-readable format
-        # timestamp = datetime.utcfromtimestamp(input_data['ts'] / 1000).strftime('%Y-%m-%d %H:%M:%S')
-        timestamp = datetime.fromtimestamp(input_data['ts'] / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
-        # Create the transformed data dictionary
-        transformed_data = {
-            'currency': self.instId,
-            'channel': 'books5',
-            'bid_list': json.dumps(bid_list),
-            'ask_list': json.dumps(ask_list),
-            'ask_price': str(ask_price),
-            'ask_size': str(ask_size),
-            'bid_price': str(bid_price),
-            'bid_size': str(bid_size),
-            'timestamp': timestamp,
-            'sequence_id': input_data['tick']['id'],
-            'exchange': 'htx'
-        }
-        return transformed_data
+     
     
     @staticmethod
     def publicCallback(message):
@@ -259,10 +204,6 @@ def handle_connect():
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_htx_client)
 
-# @socketio.on('disconnect')
-# def handle_disconnect():
-#     print("Client disconnected")
-
 @socketio.on('disconnect')
 def handle_disconnect():
     swap.close()
@@ -281,10 +222,10 @@ def handle_disconnect():
 def handle_message(data):
     print('Received message: ' + str(data))
     # Echo the message back
-    socketio.send(data)
+    # socketio.send(data)
 
 
 if __name__ == '__main__':
     # app.run(main(),port=5091)
-    socketio.run(app, host='localhost', port=5099)
+    socketio.run(app, host='localhost', port=5061)
     

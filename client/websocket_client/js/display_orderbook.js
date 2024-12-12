@@ -69,6 +69,32 @@ function clearOrderbookTable() {
     if (orderbookTs2DOM) orderbookTs2DOM.innerHTML = '';
 }
 
+function clearlastPriceTable() {
+
+    const lastpriceTs1DOM = document.getElementById('lastprice-timestamp-1');
+    const lastpriceTs2DOM = document.getElementById('lastprice-timestamp-2');
+
+    const lastpriceDisplay1DOM = document.getElementById('lastprice-data-table-body-1');
+    const lastpriceDisplay2DOM = document.getElementById('lastprice-data-table-body-2');
+
+    // Safely clear tables and timestamps
+    if (lastpriceDisplay1DOM) {
+        while (lastpriceDisplay1DOM.firstChild) {
+            lastpriceDisplay1DOM.firstChild.remove();
+        }
+    }
+    if (lastpriceDisplay2DOM) {
+        while (lastpriceDisplay2DOM.firstChild) {
+            lastpriceDisplay2DOM.firstChild.remove();
+        }
+    }
+
+    if (lastpriceTs1DOM) lastpriceTs1DOM.innerHTML = '';
+    if (lastpriceTs2DOM) lastpriceTs2DOM.innerHTML = '';
+
+    
+}
+
 function onWsDataReceived(exchange,message) {
     try {
         
@@ -82,6 +108,8 @@ function onWsDataReceived(exchange,message) {
 
 function updateCurrency() {
     clearOrderbookTable()
+    clearlastPriceTable()
+
     // Get the currency input element
     const currencyInput = document.getElementById('currency-input');
     const lastpricepx1 = document.getElementById('selected-ccy-lastprice-1')
@@ -105,9 +133,11 @@ function updateCurrency() {
 
 function updateExchange(){
     clearOrderbookTable()
+    clearlastPriceTable()
 
     const exchange1 = document.getElementById('exchange1-input').value
     const exchange2 = document.getElementById('exchange2-input').value
+    const ccy = document.getElementById('currency-input').value
 
     const lastpriceexch1 = document.getElementById('selected-exchange-lastprice-1')
     const ordertableexch1 = document.getElementById('selected-exchange-orderbook-1')

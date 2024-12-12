@@ -17,7 +17,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 
-<body class="container ">
+<body class="container-fluid">
     
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -57,7 +57,7 @@
             </div>
 
             <!-- Container for the funding rates row -->
-            <div class="container">
+            <div >
                 <div class="row">
                     <!-- OKX Section -->
                     <div id="okx-section" class="col-md-6 mb-4">
@@ -91,7 +91,7 @@
                     <div id="htx-section" class="col-md-6 mb-4">
                         <div class="row">
                             <h6 class="text-dark col-md-6">HTX</h6>
-                            <h9 id='fundingratets-htx' class="text-warning col-md-6 text-end">ts:-</h9>
+                            <h9 id='fundingratets-htx' class="text-warning col-md-6 text-end">-</h9>
                         </div>
                         <div class="row">
                             <div class="col-6">
@@ -185,12 +185,13 @@
                             <p>Exchange: <span id="selected-exchange-lastprice-1">Not Selected</span></p>
                             <p>Currency: <span id="selected-ccy-lastprice-1" >Not Selected</span></p>
                           </div>
-                          <div class="orderbook-scroll-container">
+                          <div class="orderbook-scroll-container scrollable-orderbook">
                             <table class="orderBookTable">
                               <thead>
                                 <tr>
-                                  <th>Price</th>
-                                  <th>Amount</th>
+                                  <th>Ts</th>
+                                  <th>Price(USD)</th>
+                                  <th>Direction</th>
                                 </tr>
                               </thead>
                               <tbody id="lastprice-data-table-body-1">
@@ -269,7 +270,7 @@
                               <thead>
                                 <tr>
                                   <th>Ts</th>
-                                  <th>Price</th>
+                                  <th>Price(USD)</th>
                                   <th>Direction</th>
                                 </tr>
                               </thead>
@@ -288,18 +289,20 @@
                         <!-- Sync and Reset Buttons (Always at the Bottom) -->
                         <div class="rfs-spread-base-cell my-4">
                             <!-- Header with Bid, Spread, and Ask -->
-                            <div class="RfsSpreadCell_rfs-spread-card-header-container d-flex justify-content-between align-items-center">
-                                <span class="quote-side-text text-success fw-bold">Bid</span>
-                                <div class="quote-bps-container d-flex align-items-center">
+                            <div class="RfsSpreadCell_rfs-spread-card-header-container d-flex justify-content-center">
+                                <!-- <span class="quote-side-text text-success fw-bold">Bid</span> -->
+                                <div class="quote-bps-container d-flex align-items-center ">
                                     <span class="quote-bps-value fw-bold" id="buysellgapPx">-</span>&nbsp;
                                     <span class="quote-bps-unit text-muted">BPS</span>
                                 </div>
-                                <span class="quote-side-text text-danger fw-bold">Ask</span>
+                                <!-- <span class="quote-side-text text-danger fw-bold">Ask</span> -->
                             </div>
                                
 
                             <!-- Card Section for Bid and Ask Prices -->
                             <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center">
+                                <!-- Bid Card -->
+                                <span class="quote-side-text text-success fw-bold">Bid</span>
                                 <div class="quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
                                     <!-- <div class="card-upper-container">
                                         <div class="best-quote-size text-muted">50K USD</div>
@@ -317,6 +320,7 @@
                                     <!-- <div class="card-upper-container">
                                         <div class="best-quote-size text-muted">50K USD</div>
                                     </div> -->
+
                                     <div class="best-quote-price-container">
                                         <div class="price-data fs-4 fw-bold" id="sellSpread">-</div>
                                     </div>
@@ -324,6 +328,7 @@
                                         <div class="card-bottom-quote-diff text-danger" id="sellSpreadSz">-</div>
                                     </div>
                                 </div>
+                                <span class="quote-side-text text-danger fw-bold">Ask</span>
 
                             </div>
                         </div>
@@ -645,12 +650,13 @@
 
     <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
     <script src="websocket_client/js/wsConnections.js"></script>
+    <script src="websocket_client/js/display_last_trade.js"></script>
+
     <script src="websocket_client/js/display_orderbook.js"></script>
     <script src="websocket_client/js/display_position.js"></script>
     <script src="websocket_client/js/display_open_orders.js"></script>
     <script src="websocket_client/js/arbButton.js"></script>
     <!-- <script src="websocket_client/js/display_trade_history.js"></script> -->
-    <script src="websocket_client/js/display_last_trade.js"></script>
 
 
 
@@ -822,6 +828,7 @@
 
 <style>
 
+   
     /* Custom Navbar Bottom Border */
     .navbar {
         border-bottom: 2px solid #ddd; /* Adjust color and thickness of the line */
@@ -886,12 +893,12 @@
         margin-bottom: 5px;
     }
     /* Style for Asks (Red) */
-    .scrollable-orderbook .asks  {
+    .scrollable-orderbook .asks ,.sell {
         color: red;
     }
 
     /* Style for Bids (Green) */
-    .scrollable-orderbook .bids {
+    .scrollable-orderbook .bids , .buy {
         color: green;
     }
 

@@ -29,7 +29,7 @@ CORS(app)  # Enable CORS for all origins
 socketio = SocketIO(app, cors_allowed_origins="*",async_mode='gevent')
 
 class OKXWebSocketClient:
-    def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/business"):
+    def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
         self.url = url
         self.ws = None
         self.subscribed_pairs = []  # To keep track of subscribed pairs
@@ -79,39 +79,16 @@ class OKXWebSocketClient:
     def publicCallback(message):
         """Callback function to handle incoming messages."""
         json_data = json.loads(message)
-        print(json_data)
+        print('json_data',json_data)
+        socketio.emit('okx_trade_history','test')
+        
         if json_data.get('data'):
             channel = json_data["arg"]["channel"]
             currency_pair = json_data["arg"]["instId"]
             instrument = 'SPOT'
             socketio.emit('okx_trade_history','test')
 
-            # # Extract bids and asks
-            # # ask_list = [{"price": str(price), "size": str(size)} for price, size in asks][::-1]
-            # bid_list = [{"price": bid[0], "size": bid[1]} for bid in json_data["data"][0]["bids"]]
-            # ask_list = [{"price": ask[0], "size": ask[1]} for ask in json_data["data"][0]["asks"]][::-1]
-            # bid_list_json = json.dumps(bid_list)
-            # ask_list_json = json.dumps(ask_list)
             
-            # # Prepare a dictionary of the fields to store
-            # redis_data = {
-            #     "currency": currency_pair,
-            #     "channel": channel,
-            #     "bid_list":bid_list_json,
-            #     "ask_list":ask_list_json,
-            #     "ask_price": json_data["data"][0]["asks"][0][0],  # Renamed for consistency
-            #     "ask_size": json_data["data"][0]["asks"][0][1],   # Renamed for consistency
-            #     "bid_price": json_data["data"][0]["bids"][0][0],  # Renamed for consistency
-            #     "bid_size": json_data["data"][0]["bids"][0][1],   # Renamed for consistency
-            #     "timestamp": datetime.fromtimestamp(float(json_data["data"][0]["ts"]) / 1000).strftime('%Y-%m-%d %H:%M:%S.%f'),
-            #     "sequence_id": json_data["data"][0]["seqId"],
-            #     "exchange":"okx"
-
-            # }
-            # socketio.emit('okx_trade_history',redis_data)
-            # # print('sending to client')
-            # if 'SWAP' in currency_pair:
-            #     instrument = 'SWAP'
             
 client = None
 # Example usage
@@ -121,7 +98,7 @@ async def main():
     # List of currency pairs to subscribe to
     # currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
     currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
-    channel = 'sprd-public-trades'
+    channel = 'trades'
     await client.run(channel,currency_pairs, client.publicCallback)
 
 loop = None
@@ -129,29 +106,26 @@ loop = None
 def run_okx_client():
     print('running_okx_client')
     global loop    
-    try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(main())
-    except Exception as e:
-        loop.close()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
+    
 
 @socketio.on('connect')
 def handle_connect(auth):
     print('handleconnectmsg',auth)
-    global loop
-    # if loop != None:
-    #     loop.close()
-    print("Client connected")
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_okx_client)
 
-
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected")
+    socketio.emit('server_response', {'message': 'Welcome to the Socket.IO server!'})
+    # socketio.start_background_task(run_okx_client)
 
 @socketio.on('client_change')
 def handle_client_change(data):
     global loop
-   
     print(f"Client change detected with data: {data}")
     if loop is not None:
         try:
@@ -163,7 +137,6 @@ def handle_client_change(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     print("Client disconnected")
-    
     global loop
     if loop and loop.is_running():
         # Stop all running tasks
@@ -175,11 +148,11 @@ def handle_disconnect():
 
 @socketio.on('message')
 def handle_message(data):
-    # print('Received message: ' + str(data))
+    print('Received message: ' + str(data))
     # Echo the message back
     socketio.send(data)
 
 
 # Running the Flask application with Gevent Worker
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5098, use_reloader=False)
+    socketio.run(app, port=5098)

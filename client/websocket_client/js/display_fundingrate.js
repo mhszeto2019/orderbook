@@ -125,16 +125,16 @@ function unixTsConversion(timestampString) {
 }
 
 
-// // // // Set up the scheduler
-// function startFundingRateScheduler(interval = 5000) {
-//     // Call populateFundingRate immediately
-//     populateFundingRate();
+// // // Set up the scheduler
+function startFundingRateScheduler(interval = 5000) {
+    // Call populateFundingRate immediately
+    populateFundingRate();
 
-//     // Schedule populateFundingRate to run every few seconds
-//     setInterval(populateFundingRate, interval);
-// }
+    // Schedule populateFundingRate to run every few seconds
+    setInterval(populateFundingRate, interval);
+}
 
-// // Start the scheduler when the page loads
-// document.addEventListener('DOMContentLoaded', () => {
-//     startFundingRateScheduler();
-// });
+// Start the scheduler when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    startFundingRateScheduler();
+});

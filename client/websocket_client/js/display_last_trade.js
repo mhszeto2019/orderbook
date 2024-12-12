@@ -1,5 +1,5 @@
 // Connect to the Flask-SocketIO server
-const htxsocketLastTrades = io('http://localhost:5099');
+const htxsocketLastTrades = io('http://localhost:6101');
 // const okxsocketLastTrades = io('http://localhost:5098');
 
 let lastTrades = {
@@ -25,13 +25,13 @@ function initializeCurrencyPair(exchange, instrument,currencyPair) {
 }
 
 // Function to update the last trades
-function updateLastTrades(exchange, currencyPair, message) {
-    let instrument = message['instrument']
-    console.log(message['tick'])
+function updateLastTrades(exchange, currencyPair,instrument, message) {
+    console.log('msg',exchange,currencyPair,instrument,message)
     initializeCurrencyPair(exchange,instrument,currencyPair);
+    
     let tradesList = lastTrades[exchange][instrument][currencyPair];
-    message.tick.data.slice().reverse().forEach(row=>{
-        newTrade = { "price": row['price'], "time": row['ts'], "direction": row['direction'], "amount":row['amount'] }
+    message.forEach(row=>{
+        newTrade = { "px": row['px'], "ts": row['ts'], "side": row['side'], "sz":row['sz'] }
         // Maintain only the last 10 trades
         tradesList.unshift(newTrade); // Add new trade at the beginning
         
@@ -40,8 +40,75 @@ function updateLastTrades(exchange, currencyPair, message) {
         }
 
     })
+    console.log(lastTrades)
     
 }
+
+
+async function getTradeHistory(){
+    const token = getAuthToken();
+    const username = localStorage.getItem('username');
+    const redis_key = localStorage.getItem('key');
+
+
+    if (!token || !username || !redis_key) {
+        alert("You must be logged in to access this.");
+        return;
+    }
+    ccy = document.getElementById('currency-input').value
+
+    const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
+
+    const firstLastTradePromise = fetch(`http://${hostname}:6100/okx/gettradehistory`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
+
+
+    const results = await Promise.allSettled([firstLastTradePromise]);
+
+    // Handle OKX Response
+    if (results[0].status === 'fulfilled') {
+        const response = results[0].value;
+        if (response.ok) {
+            
+            const response_data = await response.json();
+            updateLastTrades(response_data['exchange'],response_data['ccy'],response_data['instrument'],response_data['data']);
+            onLastTradeWsDataReceived(response_data['exchange'],response_data['ccy'], response_data['instrument'])
+            
+        } else {
+            console.error('Error fetching OKX orders:', response.statusText);
+        }
+    } else {
+        console.error('OKX Request failed:', results[0].reason);
+    }
+
+   
+}
+
+function unixTsConversionHoursMinutes(timestampString) {
+    const timestamp = Number(timestampString);
+    if (!timestamp || isNaN(timestamp)) {
+        return "Invalid timestamp";
+    }
+
+    // Convert the timestamp to a Date object
+    const date = new Date(timestamp);
+
+    // Extract the components of the time
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    const milliseconds = String(date.getMilliseconds()).padStart(3, "0");
+
+    // Format as hh:mm:ss:ms
+    return `${hours}:${minutes}:${seconds}:${milliseconds}`;
+}
+
 
 
 
@@ -56,7 +123,9 @@ htxsocketLastTrades.on('connect', () => {
 
 // Event: Handle incoming messages
 htxsocketLastTrades.on('htx_trade_history', (data) => {
-    updateLastTrades(data['exchange'],data['ccy'],data);
+    formattedData = htx2okxLastTrade(data)
+    console.log(formattedData)
+    updateLastTrades(data['exchange'],data['ccy'],data['instrument'],formattedData);
     onLastTradeWsDataReceived(data['exchange'],data['ccy'], data['instrument'])
 });
 
@@ -72,18 +141,26 @@ htxsocketLastTrades.on('disconnect', () => {
 });
 
 
+function htx2okxLastTrade(htxData){
+    return htxData.tick.data.map(trade => ({
+        exchange: htxData.exchange,
+        instrument: htxData.instrument,
+        currencyPair: htxData.ccy,
+        px: trade.price,
+        ts: trade.ts,
+        side: trade.direction,
+        sz: trade.amount
+    }));
+}
+
 function onLastTradeWsDataReceived(exchange,currency,instrument) {
     try {
         populateLastTrades(exchange,currency,instrument)
+        console.log(exchange,)
     
     } catch (error) {
         console.error("Error processing WebSocket data:", error);
     }
-}
-
-function formatTime(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString(); // Format to local time
 }
 
 
@@ -94,18 +171,18 @@ function populateLastTrades(exchange,currency,instrument) {
         // Get the selected exchange for the current table
         const selectedExchange = document.getElementById(`selected-exchange-lastprice-${i}`).innerText.toUpperCase();
         const selectedCcy= document.getElementById(`selected-ccy-lastprice-${i}`).innerText;
-
+        console.log(selectedExchange,selectedCcy)
         // Check if the value ends with '-SWAP' and remove it if true
         const processedSelectedCcy = selectedCcy.endsWith('-SWAP') ? selectedCcy.replace('-SWAP', '') : selectedCcy;
+        console.log(exchange,currency,instrument)
         data = lastTrades[exchange][instrument][currency]
         
         
         
         if (selectedExchange == exchange && processedSelectedCcy == currency) {
             const tableBody = document.getElementById(`lastprice-data-table-body-${i}`);
-            console.log(selectedExchange,processedSelectedCcy,'swap')
+            tableBody.innerHTML = ''
             // console.log(lastTrades[selectedExchange][selectedCcy][instrument])
-            console.log(selectedExchange,exchange,instrument,processedSelectedCcy,currency,data)
             // Format the timestamp to a human-readable date
             
 
@@ -114,11 +191,17 @@ function populateLastTrades(exchange,currency,instrument) {
                 const row = document.createElement('tr'); // Create a new table row
 
                 // Create and append cells for price, time, direction, and amount
+                // row.innerHTML = `
+                //     <td>${trade.ts}</td>
+                //     <td class ='${trade.direction}'>${trade.price}</td>
+                //     <td class='${trade.direction}'>${trade.direction}(${trade.amount})</td>
+                // `;
+                console.log
                 row.innerHTML = `
-                    <td>${formatTime(trade.time)}</td>
-                    <td>${trade.price}</td>
-                    <td>${trade.direction}</td>
-                    <td>${trade.amount}</td>
+                    <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
+
+                    <td class ='${trade.side}'>${trade.px}</td>
+                    <td class='${trade.side}'>${trade.side}(${trade.sz})</td>
                 `;
 
                 // Append the row to the table body
@@ -132,3 +215,16 @@ function populateLastTrades(exchange,currency,instrument) {
 }
 
 
+// // // Set up the scheduler
+function startLastTradeScheduler(interval = 5000) {
+    // Call getTradeHistory immediately
+    getTradeHistory();
+
+    // Schedule getTradeHistory to run every few seconds
+    setInterval(getTradeHistory, interval);
+}
+
+// Start the scheduler when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    startLastTradeScheduler();
+});

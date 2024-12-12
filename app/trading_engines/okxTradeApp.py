@@ -255,19 +255,29 @@ def ammend_order():
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         print('inputdata',data)
         print(data.get('takeProfit') =='' and data.get('stopLoss') == '')
-        if data.get('takeProfit') == '' and data.get('stopLoss') == '':
-            data['takeProfit'] = 0
-            data['stopLoss'] = 0
-
-        if data.get('algoId') == 'undefined':
-            print('TRUE')
-            
-            data['algoId'] = ''
-            attachAlgoOrds = []
 
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['takeProfit'],'newSlOrdPx':data['stopLoss'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
+        # if both tp and sl are empty 
+        if data.get('takeProfit') == '' and data.get('stopLoss') == '':
+            print('both tp and sl not here')
+            data['takeProfit'] = 0
+            data['stopLoss'] = 0
+            attachAlgoOrds[0]['attachAlgoId'] = ''
+            attachAlgoOrds = []
 
-        result = tradeAPI.amend_order("BTC-USD-SWAP", ordId=data['ordId'],newSz='1',
+        if data.get('takeProfit') == '' or data.get('stopLoss') == '':
+            data['takeProfit'] = 0
+            data['stopLoss'] = 0
+            attachAlgoOrds[0]['attachAlgoId'] = ''
+
+        # if data.get('algoId') == 'undefined' or data.get('algoId') == 'N/A':
+        #     print('TRUE')
+        #     data['takeProfit'] = 0
+        #     data['stopLoss'] = 0
+        # attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['takeProfit'],'newSlOrdPx':data['stopLoss'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
+
+
+        result = tradeAPI.amend_order("BTC-USD-SWAP", ordId=data['ordId'],newSz=data['sz'],newPx=data['px'],
                                         attachAlgoOrds=attachAlgoOrds)
         print('amend result',result)
         return result

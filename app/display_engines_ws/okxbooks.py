@@ -137,7 +137,6 @@ def run_okx_client():
 
 @socketio.on('connect')
 def handle_connect(auth):
-    print('handleconnectmsg',auth)
     global loop
     # if loop != None:
     #     loop.close()
