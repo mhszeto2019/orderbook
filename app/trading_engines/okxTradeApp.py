@@ -219,7 +219,7 @@ def get_all_okx_open_orders():
             api_creds_dict = json.loads(decrypted_data)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = tradeAPI.get_order_list()
-        print(result)
+        # print(result)
         return result
         # order_list = []
         # for row in data:
@@ -257,18 +257,52 @@ def ammend_order():
         print(data.get('takeProfit') =='' and data.get('stopLoss') == '')
 
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['takeProfit'],'newSlOrdPx':data['stopLoss'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
-        # if both tp and sl are empty 
-        if data.get('takeProfit') == '' and data.get('stopLoss') == '':
-            print('both tp and sl not here')
-            data['takeProfit'] = 0
-            data['stopLoss'] = 0
-            attachAlgoOrds[0]['attachAlgoId'] = ''
-            attachAlgoOrds = []
+        # if both tp and sl are empty, algo id should be empty and takeprofit/stoploss should be 0
+        # if data.get('takeProfit') == '' and data.get('stopLoss') == '':
+        #     if data.get('algoId') == 'N/A':
+        #         print('both tp and sl not here')
+        #         attachAlgoOrds[0]['attachAlgoId'] = ''
+        #         attachAlgoOrds = []
+        #     else:
+        #         attachAlgoOrds[0]['newTpTriggerPx'] = 0
+        #         attachAlgoOrds[0]['newSlTriggerPx'] = 0
 
-        if data.get('takeProfit') == '' or data.get('stopLoss') == '':
-            data['takeProfit'] = 0
-            data['stopLoss'] = 0
+            
+        # # if either tp or sl is empty
+        # elif data.get('takeProfit') == '' or data.get('stopLoss') == '':
+        #     if data.get('algoId') == 'N/A':
+        #         attachAlgoOrds[0]['attachAlgoId'] = ''
+        #     if data.get('takeProfit') == '':
+        #         attachAlgoOrds[0]['newTpTriggerPx'] = 0
+        #     else:
+        #         attachAlgoOrds[0]['newSlTriggerPx'] = 0
+
+        #     # data['takeProfit'] = 0
+        #     # data['stopLoss'] = 0
+        #     # attachAlgoOrds[0]['attachAlgoId'] = ''
+
+        # # if both not empty
+        # else:
+        #     attachAlgoOrds[0]['attachAlgoId'] = ''
+
+        if data.get('algoId') == 'N/A':
+            # if both sl and tp empty, 
             attachAlgoOrds[0]['attachAlgoId'] = ''
+            if data.get('takeProfit') == '' and data.get('stopLoss') == '':
+                attachAlgoOrds = []
+        else:
+            # if 1 empty
+            if data.get('takeProfit') == '' and data.get('stopLoss') == '':
+                attachAlgoOrds[0]['newTpTriggerPx'] = 0
+                attachAlgoOrds[0]['newSlTriggerPx'] = 0
+            
+            elif data.get('takeProfit') == '' or data.get('stopLoss') == '':
+                if data.get('takeProfit') == '':
+                    attachAlgoOrds[0]['newTpTriggerPx'] = 0
+                else:
+                    attachAlgoOrds[0]['newSlTriggerPx'] = 0
+            
+
 
         # if data.get('algoId') == 'undefined' or data.get('algoId') == 'N/A':
         #     print('TRUE')

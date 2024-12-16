@@ -55,7 +55,7 @@ async function populateFundingRate(){
                 document.getElementById('funding-time-okx').textContent = `${humanReadableFundingTime}`;
                 document.getElementById('next-funding-time-okx').textContent = `${humanReadableNextFundingTime}`;
                 document.getElementById('funding-rate-okx').textContent = `${fundingRate}`;
-                document.getElementById('currency-okx').textContent = `${data.currency}`;
+                document.getElementById('currency-okx').textContent = `${response_data.ccy}`;
                 
             }
             else{
@@ -89,7 +89,7 @@ async function populateFundingRate(){
                 document.getElementById('funding-time-htx').textContent = `${humanReadableFundingTime}`;
                 document.getElementById('next-funding-time-htx').textContent = `${humanReadableNextFundingTime}`;
                 document.getElementById('funding-rate-htx').textContent = `${fundingRate}`;
-                document.getElementById('currency-htx').textContent = `${data.contract_code}`;
+                document.getElementById('currency-htx').textContent = `${data.ccy}`;
                 
             }
             else{

@@ -78,11 +78,11 @@ def getfundingrate():
 
         publicdataAPI = PublicData.PublicAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = publicdataAPI.get_funding_rate(
-            'BTC-USD-SWAP'
+           data['ccy']
         )
         if result.get('data'):
             print('success')
-            
+        result['ccy'] = data['ccy']
         return result
     except Exception as e:
         print(e)

@@ -100,8 +100,8 @@ async def getfundingrate():
         # Data received from the client (assuming JSON body)
         instId = data.get('ccy','')
         
-        instId= instId.replace("-SWAP", "")
-        print(instId)
+        contract_code= instId.replace("-SWAP", "")
+        print(contract_code)
         tdMode= "cross"
        
         # Extract necessary parameters from the request
@@ -110,13 +110,13 @@ async def getfundingrate():
        
 
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
-        fundingrate = await tradeApi.get_funding_rate(instId,body = {
-            "contract_code": instId
+        fundingrate = await tradeApi.get_funding_rate(contract_code,body = {
+            "contract_code": contract_code
             }
             )
         position_data = fundingrate.get('data', [])
         position_data['ts'] = fundingrate['ts']
-        print(position_data)
+        position_data['ccy']= instId
         return position_data
     
     except Exception as e:
