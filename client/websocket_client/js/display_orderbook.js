@@ -22,6 +22,10 @@ function populateOrderBook(exchange, data) {
                 row.innerHTML = `<td>${item.price}</td><td>(${item.size})</td>`;
                 tableBody.appendChild(row);
             });
+            // Add a separator row between asks and bids
+            const separatorRow = document.createElement('tr');
+            separatorRow.innerHTML = `<td colspan="2" style="border-top: 2px solid #000; text-align: center;"></td>`;
+            tableBody.appendChild(separatorRow);
             // Populate bids
             bid_list.forEach(item => {
                 const row = document.createElement('tr');  // Create a new row

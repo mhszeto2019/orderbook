@@ -110,8 +110,8 @@ function compareData(newData) {
 
 const wsServers = {
    
-    'okx':'http://localhost:5090',
-    'htx':'http://localhost:5091',
+    'okx':`http://${hostname}:5090`,
+    'htx':`http://${hostname}:5091`,
 
 
 // 

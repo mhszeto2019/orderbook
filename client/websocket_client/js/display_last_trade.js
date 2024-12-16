@@ -1,5 +1,5 @@
 // Connect to the Flask-SocketIO server
-const htxsocketLastTrades = io('http://localhost:6101');
+const htxsocketLastTrades = io(`http://${hostname}:6101`);
 // const okxsocketLastTrades = io('http://localhost:5098');
 
 let lastTrades = {

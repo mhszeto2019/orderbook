@@ -153,7 +153,7 @@ class WsSwaps(WsBase):
         symbol = response_data['ch'].split('.')[1] + '-SWAP'
         transformed_data = self.transform_data(response_data)
 
-        redis_key = f'htx:SWAP:{transformed_data['channel']}:{symbol}'
+        # redis_key = f'htx:SWAP:{transformed_data['channel']}:{symbol}'
 
         redis_data = transformed_data
        
@@ -161,7 +161,7 @@ class WsSwaps(WsBase):
         # time.sleep(1)
 
         # Store data in Redis
-        redis_client.publish(redis_key, json.dumps(redis_data))
+        # redis_client.publish(redis_key, json.dumps(redis_data))
        
         # redis_client.hset(redis_key, mapping=redis_data)
         

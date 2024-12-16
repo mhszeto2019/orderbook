@@ -196,6 +196,7 @@ def close_positions():
 def get_all_okx_open_orders():
     try:
         data = request.get_json()
+        print(data)
         # side = data['side']
         username = data.get('username')
         key_string = data.get('redis_key')
@@ -213,6 +214,7 @@ def get_all_okx_open_orders():
         cache_key = f"user:{username}:api_credentials"
         # Fetch the encrypted credentials from Redis
         encrypted_data = r.get(cache_key)   
+        print(encrypted_data)
         if encrypted_data:
         # Decrypt the credentials
             decrypted_data = cipher_suite.decrypt(encrypted_data).decode()

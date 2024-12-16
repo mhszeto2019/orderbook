@@ -179,52 +179,81 @@
 
                       <!-- First Exchange Last Prices -->
                       <div class="col-md-3">
-                        <div class="orderbook-section ">
-                          <h2>Last</h2>
-                          <div id="selected-info" >
-                            <p>Exchange: <span id="selected-exchange-lastprice-1">Not Selected</span></p>
-                            <p>Currency: <span id="selected-ccy-lastprice-1" >Not Selected</span></p>
-                          </div>
-                          <div class="orderbook-scroll-container scrollable-orderbook">
-                            <table class="orderBookTable">
-                              <thead>
-                                <tr>
-                                  <th>Ts</th>
-                                  <th>Price(USD)</th>
-                                  <th>Direction</th>
-                                </tr>
-                              </thead>
-                              <tbody id="lastprice-data-table-body-1">
-                                <!-- Order book data will be dynamically inserted here -->
-                              </tbody>
-                            </table>
+                        <div class="card shadow-sm ">
+                            <div class="card-body py-0 my-0">
+                              <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
+                              
+                              <!-- Row for Exchange and Currency -->
+                              <div class="d-flex justify-content-between">
+                                <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-1" class="text-danger">Not Selected</span></p>
+                                <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-1" class="text-danger">Not Selected</span></p>
+                              </div>
+                        
+                              
+                            </div>
+                            <div class="orderbook-scroll-container scrollable-lastprice">
+                                <table class="orderBookTable">
+                                  <thead>
+                                    <tr>
+                                      <th style='position: sticky; top: -1px;background: grey'>Ts</th>
+                                      <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
+                                      <th style='position: sticky; top: -1px;background: grey'>Direction</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody id="lastprice-data-table-body-1">
+                                    <!-- Last price data will be dynamically inserted here -->
+                                  </tbody>
+                                </table>
+                              </div>
                           </div>
                         </div>
-                      </div>
                   
                       <!-- leading Order Book Section -->
                       <div class="col-md-3">
                         <div class="orderbook-section">
-                          <h2>Order Book 1</h2>
+                          <!-- <h4>Order Book 1</h4>
                           <div id="selected-info">
                             <p>Exchange: <span id="selected-exchange-orderbook-1">Not Selected</span></p>
                             <p>Currency: <span id="selected-ccy-orderbook-1">Not Selected</span></p>
                           </div>
-                          <div class="orderbook-scroll-container">
-                            <p id="orderbook-timestamp-1">Timestamp: Not Available</p>
-                            <table class="orderBookTable scrollable-orderbook" id="orderBookTable1">
+                          <p id="orderbook-timestamp-1">Timestamp: Not Available</p> -->
 
-                              <thead>
-                                <tr>
-                                  <th>Price</th>
-                                  <th>Amount</th>
-                                </tr>
-                              </thead>
-                              <tbody id="order-data-table-body-1">
-                                <!-- Order book data will be dynamically inserted here -->
-                              </tbody>
-                            </table>
+                          <div class="container ">
+                            <div class="card shadow-sm ">
+                              <div class="card-body py-0 my-0">
+                                <h5 class="text-center border-bottom  mb-3">Order Book 1</h5>
+                                
+                                <!-- Row for Exchange and Currency -->
+                                <div class="d-flex justify-content-between">
+                                  <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-orderbook-1" class="text-danger">Not Selected</span></p>
+                                  <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-orderbook-1" class="text-danger">Not Selected</span></p>
+                                </div>
+                          
+                                <!-- Timestamp -->
+                                <p id="orderbook-timestamp-1" class="text-center text-muted py-0 my-0 ">
+                                  <strong>Timestamp:</strong> <span>Not Available</span>
+                                </p>
+                              </div>
+                            </div>
+                            <div class="orderbook-scroll-container scrollable-orderbook">
+                                <table class="orderBookTable " id="orderBookTable1">
+    
+                                  <thead>
+                                    <tr>
+                                      <th style='position: sticky; top: -1px;background: grey'>Price</th>
+                                      <th style='position: sticky; top: -1px;background: grey'>Amount</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody id="order-data-table-body-1">
+                                    <!-- Order book data will be dynamically inserted here -->
+                                  </tbody>
+                                </table>
+                              </div>
+
                           </div>
+                          
+
+                          
                         </div>
                       </div>
 
@@ -234,51 +263,92 @@
                       <!-- lagging Order Book Section -->
                       <div class="col-md-3">
                         <div class="orderbook-section ">
-                          <h2>Order Book 2</h2>
+                          <!-- <h4>Order Book 2</h4>
 
                           <div id="selected-info">
                             <p>Exchange: <span id="selected-exchange-orderbook-2">Not Selected</span></p>
                             <p>Currency: <span id="selected-ccy-orderbook-2">Not Selected</span></p>
                           </div>
-                          <div class="orderbook-scroll-container">
-                            <p id="orderbook-timestamp-2">Timestamp: Not Available</p>
-                            <table class="orderBookTable scrollable-orderbook">
-                              <thead>
-                                <tr>
-                                  <th>Price</th>
-                                  <th>Amount</th>
-                                </tr>
-                              </thead>
-                              <tbody id="order-data-table-body-2">
-                                <!-- Order book data will be dynamically inserted here -->
-                              </tbody>
-                            </table>
+                          <p id="orderbook-timestamp-2">Timestamp: Not Available</p> -->
+
+                          <div class="container">
+                            <div class="card shadow-sm ">
+                              <div class="card-body py-0 my-0">
+                                <h5 class="text-center border-bottom  mb-3">Order Book 2</h5>
+                                
+                                <!-- Row for Exchange and Currency -->
+                                <div class="d-flex justify-content-between">
+                                  <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-orderbook-2" class="text-danger">Not Selected</span></p>
+                                  <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-orderbook-2" class="text-danger">Not Selected</span></p>
+                                </div>
+                          
+                                <!-- Timestamp -->
+                                <p id="orderbook-timestamp-2" class="text-center text-muted py-0 my-0 ">
+                                  <strong>Timestamp:</strong> <span>Not Available</span>
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div class="orderbook-scroll-container scrollable-orderbook">
+                                <table class="orderBookTable " id="orderBookTable1">
+    
+                                  <thead>
+                                    <tr>
+                                      <th style='position: sticky; top: -1px;background: grey'>Price</th>
+                                      <th style='position: sticky; top: -1px;background: grey'>Amount</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody id="order-data-table-body-2">
+                                    <!-- Order book data will be dynamically inserted here -->
+                                  </tbody>
+                                </table>
+                              </div>
+
                           </div>
+
+                         
+
                         </div>
                       </div>
 
                         <!-- Second Exchange Last Prices -->
                       <div class="col-md-3">
                         <div class="orderbook-section">
-                          <h2>Last Trades</h2>
+                          <!-- <h2>Last Trades</h2>
                           <div id="selected-info">
                             <p>Exchange: <span id="selected-exchange-lastprice-2">Not Selected</span></p>
                             <p>Currency: <span id="selected-ccy-lastprice-2">Not Selected</span></p>
+                          </div> -->
+
+                          <div class="card shadow-sm ">
+                            <div class="card-body py-0 my-0">
+                              <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
+                              
+                              <!-- Row for Exchange and Currency -->
+                              <div class="d-flex justify-content-between">
+                                <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-2" class="text-danger">Not Selected</span></p>
+                                <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-2" class="text-danger">Not Selected</span></p>
+                              </div>
+                        
+                           
+                            </div>
+                            <div class="orderbook-scroll-container scrollable-lastprice">
+                                <table class="orderBookTable">
+                                  <thead>
+                                    <tr>
+                                      <th style='position: sticky; top: -1px;background: grey'>Ts</th>
+                                      <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
+                                      <th style='position: sticky; top: -1px;background: grey'>Direction</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody id="lastprice-data-table-body-2">
+                                    <!-- Last price data will be dynamically inserted here -->
+                                  </tbody>
+                                </table>
+                              </div>
                           </div>
-                          <div class="orderbook-scroll-container scrollable-orderbook">
-                            <table class="orderBookTable">
-                              <thead>
-                                <tr>
-                                  <th>Ts</th>
-                                  <th>Price(USD)</th>
-                                  <th>Direction</th>
-                                </tr>
-                              </thead>
-                              <tbody id="lastprice-data-table-body-2">
-                                <!-- Order book data will be dynamically inserted here -->
-                              </tbody>
-                            </table>
-                          </div>
+                          
+                         
                         </div>
                       </div>
                                        
@@ -859,7 +929,7 @@
 
     /* Set a fixed width for each orderbook container */
     .scrollable-orderbook {
-        max-height: 160px; /* Set a fixed height for uniformity */
+        max-height: 200px; /* Set a fixed height for uniformity */
         overflow-y: auto;  /* Enable vertical scrolling */
         border: 1px solid #ddd;  /* Optional border styling */
         /* padding: 10px; */
@@ -872,6 +942,19 @@
         scrollbar-width: thin; 
     }
 
+    .scrollable-lastprice {
+        max-height: 200px; /* Set a fixed height for uniformity */
+            overflow-y: auto;  /* Enable vertical scrolling */
+            border: 1px solid #ddd;  /* Optional border styling */
+            /* padding: 10px; */
+            background-color: #f9f9f9; /* Light background for better readability */
+            display: flex;
+            flex-direction: column;
+            gap: 5px;  /* Add gap between asks and bids */
+            box-sizing: border-box; /* Include padding and border in the element's total width */
+            scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
+            scrollbar-width: thin; 
+        }
 
 
     /* Optional: Ensures each ask/bid has a consistent font size and line height */
@@ -883,13 +966,13 @@
         /* padding: 2px 0; */
     }
 
-    .scrollable-orderbook ul {
+    .scrollable-orderbook ul  {
         list-style-type: none;
         padding-left: 0;
         margin: 0;
     }
 
-    .scrollable-orderbook li {
+    .scrollable-orderbook li  {
         margin-bottom: 5px;
     }
     /* Style for Asks (Red) */
