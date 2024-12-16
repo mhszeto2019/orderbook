@@ -154,4 +154,4 @@ def handle_disconnect():
 # signal.signal(signal.SIGTERM, handle_shutdown)
 if __name__ == '__main__':
     # Run Flask server
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5099)

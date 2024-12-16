@@ -19,7 +19,7 @@ function populateOrderBook(exchange, data) {
             ask_list.forEach(item => {
                 const row = document.createElement('tr');  // Create a new row
                 row.classList.add('asks');  // Add class 'ask' for styling purposes
-                row.innerHTML = `<td>${item.price}</td><td>(${item.size})</td>`;
+                row.innerHTML = `<td>${Number(item.price).toLocaleString()}</td><td>(${item.size})</td>`;
                 tableBody.appendChild(row);
             });
             // Add a separator row between asks and bids
@@ -30,7 +30,7 @@ function populateOrderBook(exchange, data) {
             bid_list.forEach(item => {
                 const row = document.createElement('tr');  // Create a new row
                 row.classList.add('bids');  // Add class 'bid' for styling purposes
-                row.innerHTML = `<td>${item.price}</td><td>(${item.size})</td>`;
+                row.innerHTML = `<td>${Number(item.price).toLocaleString()}</td><td>(${item.size})</td>`;
                 tableBody.appendChild(row);
             });
         }

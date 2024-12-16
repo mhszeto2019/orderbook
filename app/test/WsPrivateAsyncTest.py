@@ -19,9 +19,10 @@ apiKey = config[config_source]['apiKey']
 secretKey = config[config_source]['secretKey']
 passphrase = config[config_source]['passphrase']
 
+print(apiKey,secretKey,passphrase)
 async def main():
+    # url = "wss://ws.okx.com:8443/ws/v5/private"
     url = "wss://ws.okx.com:8443/ws/v5/private"
-    # url = "wss://wspap.okx.com:8443/ws/v5/private"
     ws = WsPrivateAsync(
             apiKey = apiKey,
             passphrase=passphrase,

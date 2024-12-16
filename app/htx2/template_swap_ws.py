@@ -113,18 +113,18 @@ class Ws:
 if __name__ == '__main__':
     ################# spot
     print('*****************\nstart Spot ws.\n')
-    host = 'api.huobi.pro'
-    path = '/ws'
+    host = 'api.hbdm.com'
+    path = '/swap-ws'
     
     spot = Ws(host, path)
     spot.open()
 
 
     # sub
-    sub_params1 = {'sub': 'market.btcusdt.depth.step6'}
-    sub_params2 = {'sub': 'market.ethusdt.depth.step0'}
+    sub_params1 = {'sub': 'market.BTC-USD.depth.step0'}
+    # sub_params2 = {'sub': 'market.ethusdt.depth.step0'}
     spot.sub(sub_params1)
-    spot.sub(sub_params2)
+    # spot.sub(sub_params2)
 
     time.sleep(10000)
     spot.close()
