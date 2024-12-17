@@ -11,11 +11,11 @@ log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.FileHandler(log_filename),
-        logging.StreamHandler()
+        # logging.StreamHandler()
     ]
 )
 logger = logging.getLogger("WsPublic")

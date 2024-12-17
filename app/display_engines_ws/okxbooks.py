@@ -18,8 +18,7 @@ REDIS_HOST = config[config_source]['host']
 REDIS_PORT = config[config_source]['port']
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
-from util import get_logger 
-logger = get_logger(os.path.basename(__file__))
+
 # SOCKETIO SETUP
 from flask_socketio import SocketIO
 from flask import Flask
@@ -27,6 +26,21 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
 socketio = SocketIO(app, cors_allowed_origins="*",async_mode='gevent')
+# Logging configuration
+LOG_DIR = '/var/www/html/orderbook/logs'
+log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
+os.makedirs(LOG_DIR, exist_ok=True)
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(log_filename),
+        # logging.StreamHandler()
+    ]
+)
+from util import get_logger 
+logger = get_logger(os.path.basename(__file__))
 
 class OKXWebSocketClient:
     def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
@@ -111,6 +125,7 @@ class OKXWebSocketClient:
             # print('sending to client')
             if 'SWAP' in currency_pair:
                 instrument = 'SWAP'
+            logger.debug('test')
             
 client = None
 # Example usage
