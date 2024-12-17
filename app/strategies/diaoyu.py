@@ -40,7 +40,7 @@ def generate_signature(host, method, params, request_path, secret_key):
     signature = signature.decode()
     return signature
 
-async def subscribe(url, access_key, secret_key, subs, callback=None, auth=False):
+async def subscribe(url,endpoint, access_key, secret_key, subs, callback=None, auth=False):
     """ Huobi Future subscribe websockets.
 
     Args:
@@ -100,25 +100,12 @@ async def handle_ws_data(*args, **kwargs):
 
 if __name__ == "__main__":
     ####  input your access_key and secret_key below:
-    access_key = ""
-    secret_key = ""
-
-    # market_url = 'ws://api.hbdm.vn/linear-swap-ws'
-    order_url = 'wss://api.hbdm.com/swap-notification'
-    
-    # market_subs = [
-                   
-    #             {
-    #                 "sub": "market.BTC-USDT.kline.1min.open",
-    #                 "id": "id1"
-    #             },
-    #             {
-    #                 "sub": "market.BTC-USDT.depth.step0",
-    #                 "id": "id1"
-    #             }
-
-    #         ]
-    order_subs = [
+    access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
+    secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
+    notification_url = 'wss://api.hbdm.com/swap-notification'
+    notification_endpoint = '/swap-notification'
+   
+    notification_subs = [
                 # {
                 #     "op": "sub",
                 #     "cid": str(uuid.uuid1()),
@@ -133,6 +120,7 @@ if __name__ == "__main__":
             ]
 
     place_order_url = "wss://api.hbdm.com/swap-trade"
+    place_order_endpoint = '/swap-trade'
     place_order_subs= [
             {
             "op":"create_order",
@@ -150,7 +138,7 @@ if __name__ == "__main__":
 
     while True: 
         try:
-            asyncio.get_event_loop().run_until_complete(subscribe(order_url, access_key,  secret_key, order_subs, handle_ws_data, auth=True))
+            asyncio.get_event_loop().run_until_complete(subscribe(notification_url, notification_endpoint ,access_key,  secret_key, notification_subs, handle_ws_data, auth=True))
             # asyncio.get_event_loop().run_until_complete(subscribe(place_order_url, access_key,  secret_key, place_order_subs, handle_ws_data, auth=True))
         #except (websockets.exceptions.ConnectionClosed):
         except Exception as e:

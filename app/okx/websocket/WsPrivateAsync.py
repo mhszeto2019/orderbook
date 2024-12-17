@@ -8,7 +8,6 @@ from okx.websocket.WebSocketFactory import WebSocketFactory
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WsPrivate")
 
-
 class WsPrivateAsync:
     def __init__(self, apiKey, passphrase, secretKey, url, useServerTime):
         self.url = url
@@ -42,7 +41,7 @@ class WsPrivateAsync:
                 "args": params
             })
             await self.websocket.send(payload)
-        await self.consume()
+        # await self.consume()
 
     async def login(self):
         loginPayload = WsUtils.initLoginParams(

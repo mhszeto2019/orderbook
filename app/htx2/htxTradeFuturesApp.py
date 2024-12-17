@@ -330,6 +330,8 @@ async def place_limit_order():
     
 @app.route('/get_order_list', methods=['GET'])
 def get_order_list():
+    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+
     result = tradeApi.get_order_list()
     data = result.get('data',[])
     print(data)
