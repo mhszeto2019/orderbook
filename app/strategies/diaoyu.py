@@ -12,91 +12,118 @@ import hashlib
 import gzip
 import traceback
 
+# from app.htx2.template_swap_trade_ws import subscribe
+
+class Diaoyu():
+    def __init__(self,url,endpoint,access_key,secret_key,is_open=False):
         
+        self.url = url
+        self.endpoint = endpoint
+        self.accesskey= access_key
+        self.secretkey= secret_key
+        self.is_open = is_open
 
-def generate_signature(host, method, params, request_path, secret_key):
-    """Generate signature of huobi future.
-    
-    Args:
-        host: api domain url.PS: colo user should set this host as 'api.hbdm.com',not colo domain.
-        method: request method.
-        params: request params.
-        request_path: "/notification"
-        secret_key: api secret_key
+    async def subscribe(self, subs,  auth=False):
+        """ Huobi Future subscribe websockets.
 
-    Returns:
-        singature string.
+        Args:
+            url: the url to be signatured.
+            access_key: API access_key.
+            secret_key: API secret_key.
+            subs: the data list to subscribe.
+            callback: the callback function to handle the ws data received. 
+            auth: True: Need to be signatured. False: No need to be signatured.
 
-    """
-    host_url = urllib.parse.urlparse(host).hostname.lower()
-    sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
-    encode_params = urllib.parse.urlencode(sorted_params)
-    payload = [method, host_url, request_path, encode_params]
-    payload = "\n".join(payload)
-    payload = payload.encode(encoding="UTF8")
-    secret_key = secret_key.encode(encoding="utf8")
-    digest = hmac.new(secret_key, payload, digestmod=hashlib.sha256).digest()
-    signature = base64.b64encode(digest)
-    signature = signature.decode()
-    return signature
 
-async def subscribe(url,endpoint, access_key, secret_key, subs, callback=None, auth=False):
-    """ Huobi Future subscribe websockets.
+        """
+        url = self.url
+        endpoint = self.endpoint
+        access_key = self.accesskey
+        secret_key = self.secretkey
+        self.is_open = True
+        async with websockets.connect(url) as websocket:
+            if auth:
+                timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+                data = {
+                    "AccessKeyId": access_key,
+                    "SignatureMethod": "HmacSHA256",
+                    "SignatureVersion": "2",
+                    "Timestamp": timestamp
+                }
+                # sign = generate_signature(url,"GET", data, "/swap-trade", secret_key)
+                sign = self.generate_signature(url,"GET", data, endpoint, secret_key)
 
-    Args:
-        url: the url to be signatured.
-        access_key: API access_key.
-        secret_key: API secret_key.
-        subs: the data list to subscribe.
-        callback: the callback function to handle the ws data received. 
-        auth: True: Need to be signatured. False: No need to be signatured.
+                data["op"] = "auth"
+                data["type"] = "api"
+                data["Signature"] = sign
+                msg_str = json.dumps(data)
+                await websocket.send(msg_str)
+                print(f"send: {msg_str}")
+            for sub in subs:
+                sub_str = json.dumps(sub)
+                await websocket.send(sub_str)
+                print(f"send: {sub_str}")
+            while self.is_open:
+                print(self.is_open)
+                rsp = await websocket.recv()
+                data = json.loads(gzip.decompress(rsp).decode())
+                # print(f"recevie<--: {data}")
+                if "op" in data and data.get("op") == "ping":
+                    pong_msg = {"op": "pong", "ts": data.get("ts")}
+                    await websocket.send(json.dumps(pong_msg))
+                    print(f"send: {pong_msg}")
+                    continue
+                if "ping" in data: 
+                    pong_msg = {"pong": data.get("ping")}
+                    await websocket.send(json.dumps(pong_msg))
+                    print(f"send: {pong_msg}")
+                    continue
+                rsp = await self.handle_ws_data(data)
 
-    """
-    async with websockets.connect(url) as websocket:
-        if auth:
-            timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-            data = {
-                "AccessKeyId": access_key,
-                "SignatureMethod": "HmacSHA256",
-                "SignatureVersion": "2",
-                "Timestamp": timestamp
-            }
-            # sign = generate_signature(url,"GET", data, "/swap-trade", secret_key)
-            sign = generate_signature(url,"GET", data, "/swap-notification", secret_key)
+    def unsubscribe(self):
+        self.is_open = False
 
-            data["op"] = "auth"
-            data["type"] = "api"
-            data["Signature"] = sign
-            msg_str = json.dumps(data)
-            await websocket.send(msg_str)
-            print(f"send: {msg_str}")
-        for sub in subs:
-            sub_str = json.dumps(sub)
-            await websocket.send(sub_str)
-            print(f"send: {sub_str}")
-        while True:
-            rsp = await websocket.recv()
-            data = json.loads(gzip.decompress(rsp).decode())
-            print(f"recevie<--: {data}")
-            if "op" in data and data.get("op") == "ping":
-                pong_msg = {"op": "pong", "ts": data.get("ts")}
-                await websocket.send(json.dumps(pong_msg))
-                print(f"send: {pong_msg}")
-                continue
-            if "ping" in data: 
-                pong_msg = {"pong": data.get("ping")}
-                await websocket.send(json.dumps(pong_msg))
-                print(f"send: {pong_msg}")
-                continue
-            rsp = await callback(data)
+    def handle_ws_data(*args, **kwargs):
+        """ callback function
+        Args:
+            args: values
+            kwargs: key-values.
+        """
 
-async def handle_ws_data(*args, **kwargs):
-    """ callback function
-    Args:
-        args: values
-        kwargs: key-values.
-    """
-    # print("callback param", *args,**kwargs)
+        print(args[1].get('event'))
+        # print(args[0].get('event'))
+        # print(args)
+        # if args[0].get('event') == 'order.match':
+        #     print("ORDER MATCH MEANS BOUGHT")
+        
+    @classmethod
+    def generate_signature(self,host, method, params, request_path, secret_key):
+        """Generate signature of huobi future.
+        
+        Args:
+            host: api domain url.PS: colo user should set this host as 'api.hbdm.com',not colo domain.
+            method: request method.
+            params: request params.
+            request_path: "/notification"
+            secret_key: api secret_key
+
+        Returns:
+            singature string.
+
+        """
+        host_url = urllib.parse.urlparse(host).hostname.lower()
+        sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
+        encode_params = urllib.parse.urlencode(sorted_params)
+        payload = [method, host_url, request_path, encode_params]
+        payload = "\n".join(payload)
+        payload = payload.encode(encoding="UTF8")
+        secret_key = secret_key.encode(encoding="utf8")
+        digest = hmac.new(secret_key, payload, digestmod=hashlib.sha256).digest()
+        signature = base64.b64encode(digest)
+        signature = signature.decode()
+        return signature
+
+import time
 
 if __name__ == "__main__":
     ####  input your access_key and secret_key below:
@@ -106,44 +133,26 @@ if __name__ == "__main__":
     notification_endpoint = '/swap-notification'
    
     notification_subs = [
-                # {
-                #     "op": "sub",
-                #     "cid": str(uuid.uuid1()),
-                #     "topic": "orders.BTC-USD"
-                # },
                 {
                     "op": "sub",
                     "cid": str(uuid.uuid1()),
                     "topic": "positions.BTC-USD"
                 }
-
             ]
-
-    place_order_url = "wss://api.hbdm.com/swap-trade"
-    place_order_endpoint = '/swap-trade'
-    place_order_subs= [
-            {
-            "op":"create_order",
-            "cid":str(uuid.uuid1()),
-            "data":{"contract_code":"BTC-USD",
-                    "price":"106703",
-                    "volume":"1",
-                    "direction":"buy",
-                    "offset":"open",
-                    "lever_rate":5,
-                    "order_price_type":"limit"
-                    }
-            }
-    ]
-
-    while True: 
-        try:
-            asyncio.get_event_loop().run_until_complete(subscribe(notification_url, notification_endpoint ,access_key,  secret_key, notification_subs, handle_ws_data, auth=True))
-            # asyncio.get_event_loop().run_until_complete(subscribe(place_order_url, access_key,  secret_key, place_order_subs, handle_ws_data, auth=True))
-        #except (websockets.exceptions.ConnectionClosed):
-        except Exception as e:
-            traceback.print_exc()
-            print('websocket connection error. reconnect rightnow')
+    ws = Diaoyu(notification_url,notification_endpoint,access_key,secret_key)
+    # asyncio.get_event_loop().run_until_complete(ws.subscribe(notification_subs,auth=True))
+    ws.subscribe(notification_subs,auth=True)
+    time.sleep(5)
+    print('unsubsring')
+    ws.unsubscribe()
+    # while True: 
+    #     try:
+    #         asyncio.get_event_loop().run_until_complete(subscribe(notification_url, notification_endpoint ,access_key,  secret_key, notification_subs, handle_ws_data, auth=True))
+    #         # asyncio.get_event_loop().run_until_complete(subscribe(place_order_url, access_key,  secret_key, place_order_subs, handle_ws_data, auth=True))
+    #     #except (websockets.exceptions.ConnectionClosed):
+    #     except Exception as e:
+    #         traceback.print_exc()
+    #         print('websocket connection error. reconnect rightnow')
 
 
 
