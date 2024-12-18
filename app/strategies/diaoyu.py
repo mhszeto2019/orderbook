@@ -43,7 +43,7 @@ class Diaoyu:
         if self.thread and self.thread.is_alive():
             print("Already running. Please stop the current thread first.")
             return
-
+        self._stop_event = threading.Event()
         self.is_open = True
         self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
         self.thread.start()
@@ -52,8 +52,9 @@ class Diaoyu:
         """ Stop the subscription process. """
         self.is_open = False
         self._stop_event.set()
+        print(self.loop)
         if self.ws:
-            self.loop.run_until_complete(self._close())
+            self._close()
         self.thread.join(timeout=5)  # Allow the thread to exit gracefully
 
     def _run(self, subs, auth=False, callback=None):
@@ -125,9 +126,9 @@ class Diaoyu:
         await websocket.send(msg_str)
         print(f"send: {msg_str}")
 
-    async def _close(self):
+    def _close(self):
         if self.ws:
-            await self.ws.close()
+            self.ws.close()
             print("WebSocket connection closed.")
             self.ws = None
 
@@ -175,6 +176,9 @@ def main():
 
     print("RESTARTING")
     ws1.start(notification_subs, auth=True, callback=publicCallback)
+    time.sleep(5)
+    
+    ws1.stop()
 
 if __name__ == '__main__':
     main()
