@@ -31,6 +31,7 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 logger.setLevel(logging.ERROR)
 
+
 class WsPublicAsync:
     def __init__(self, url):
         self.url = url
