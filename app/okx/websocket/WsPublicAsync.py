@@ -47,6 +47,7 @@ class WsPublicAsync:
         else:
             logger.error("Max reconnection attempts reached. Could not connect.")
             raise ConnectionError("Failed to connect to WebSocket after multiple attempts.")
+        
     async def consume(self):
         """Continuously consume messages from the WebSocket, handling disconnections."""
         while True:

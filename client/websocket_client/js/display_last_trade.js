@@ -201,7 +201,7 @@ function populateLastTrades(exchange,currency,instrument) {
                     <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
 
                     <td class ='${trade.side}'>${Number(trade.px).toLocaleString()}</td>
-                    <td class='${trade.side}'>${trade.side}(${trade.sz})</td>
+                    <td class='${trade.side}'>${trade.sz}</td>
                 `;
 
                 // Append the row to the table body
