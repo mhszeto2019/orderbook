@@ -151,31 +151,32 @@ config_source = 'localdb'
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
-# import pg8000
 
-# def with_db_connection(func):
-#     @wraps(func)
-#     def wrapper(*args, **kwargs):
-#         # Establish PostgreSQL connection
-#         try:
-#             con = pg8000.connect(
-#                 user=dbusername,         # Change to your PostgreSQL username
-#                 password=dbpassword, # Change to your PostgreSQL password
-#                 host="localhost",         # Host, usually 'localhost' for local connections
-#                 port=5432,                # Default PostgreSQL port
-#                 database=dbname   # Database name
-#             )
+import pg8000
 
-#             # Create cursor object to execute queries
-#             cursor = con.cursor()
+def with_db_connection(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Establish PostgreSQL connection
+        try:
+            con = pg8000.connect(
+                user=dbusername,         # Change to your PostgreSQL username
+                password=dbpassword, # Change to your PostgreSQL password
+                host="localhost",         # Host, usually 'localhost' for local connections
+                port=5432,                # Default PostgreSQL port
+                database=dbname   # Database name
+            )
 
-#             # Pass the connection and cursor to the wrapped function
-#             result = func(cursor, *args, **kwargs)
+            # Create cursor object to execute queries
+            cursor = con.cursor()
 
-#         finally:
-#             # Always ensure the cursor and connection are closed
-#             cursor.close()
-#             con.close()
+            # Pass the connection and cursor to the wrapped function
+            result = func(cursor, *args, **kwargs)
 
-#         return result
-#     return wrapper
+        finally:
+            # Always ensure the cursor and connection are closed
+            cursor.close()
+            con.close()
+
+        return result
+    return wrapper
