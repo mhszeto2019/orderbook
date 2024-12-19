@@ -53,8 +53,8 @@ class Diaoyu:
         self.is_open = False
         self._stop_event.set()
         print(self.loop)
-        if self.ws:
-            self._close()
+        # if self.ws:
+        #     self._close()
         self.thread.join(timeout=5)  # Allow the thread to exit gracefully
 
     def _run(self, subs, auth=False, callback=None):
@@ -151,19 +151,22 @@ class Diaoyu:
 def publicCallback(message):
     print("Callback received:", message)
 
-def main():
-    access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
-    secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
-    notification_url = 'wss://api.hbdm.com/swap-notification'
-    notification_endpoint = '/swap-notification'
-    notification_subs = [
-        {
-            "op": "sub",
-            "cid": str(uuid.uuid1()),
-            "topic": "positions.BTC-USD"
-        }
-    ]
+# def main():
+access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
+secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
+notification_url = 'wss://api.hbdm.com/swap-notification'
+notification_endpoint = '/swap-notification'
+notification_subs = [
+    {
+        "op": "sub",
+        "cid": str(uuid.uuid1()),
+        "topic": "positions.BTC-USD"
+    }
+]
 
+
+if __name__ == '__main__':
+        
     ws1 = Diaoyu(notification_url, notification_endpoint, access_key, secret_key)
     ws1.start(notification_subs, auth=True, callback=publicCallback)
     print("SUBSCRIBING")
@@ -173,15 +176,13 @@ def main():
 
     print("STOPPING")
     ws1.stop()
+    time.sleep(15)
 
     print("RESTARTING")
     ws1.start(notification_subs, auth=True, callback=publicCallback)
-    time.sleep(5)
-    
-    ws1.stop()
+    time.sleep(15)
 
-if __name__ == '__main__':
-    main()
+    ws1.stop()
 
 
 

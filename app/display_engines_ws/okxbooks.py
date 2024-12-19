@@ -175,7 +175,7 @@ def handle_client_change(data):
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    # client.close()
+    client.close()
     client.unsubscribe()
 
     print("Client disconnected")

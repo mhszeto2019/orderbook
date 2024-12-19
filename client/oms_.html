@@ -115,10 +115,10 @@
             
             <!-- ORDERBOOK DISPLAY -->
             <div class="justify-content-between align-items-center mb-3">
-
+                    <!-- CHOICES FOR LEADING AND LAGGING EXCHANGES -->
                     <div class="row">
                           
-                        <div class="container mt-4">
+                        <div class="container">
                             <div class="row align-items-center">
                               <!-- Currency Input -->
                               <div class="col-md-4 col-sm-12 mb-3">
@@ -162,190 +162,189 @@
 
                     </div>
 
+                    <!-- ORDERBOOK AND LAST TRADE SCROLLABLE TABLES -->
                     <div class="row">
-                        <!-- <div class = 'col-md-12 justify-content'>
-                            <button>BUY</button>
-                            <button>BUY</button>
-    
-                          </div> -->
-                        
-                      <!-- First Exchange Last Prices -->
-                      <div class="col-md-3">
-                        <div class="card shadow-sm">
-                            <div class="card-body py-0 my-0">
-                              <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
-                              
-                              <!-- Row for Exchange and Currency -->
-                              <div class="d-flex justify-content-between">
-                                <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-1" class="text-danger">Not Selected</span></p>
-                                <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-1" class="text-danger">Not Selected</span></p>
-                              </div>
-                        
-                              
-                            </div>
-                            <div class="orderbook-scroll-container scrollable-lastprice">
-                                <table class="orderBookTable">
-                                  <thead>
-                                    <tr>
-                                      <th style='position: sticky; top: -1px;background: grey'>Ts</th>
-                                      <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
-                                      <th style='position: sticky; top: -1px;background: grey'>Direction</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody id="lastprice-data-table-body-1">
-                                    <!-- Last price data will be dynamically inserted here -->
-                                  </tbody>
-                                </table>
-                              </div>
-                          </div>
-                        </div>
-                  
-                      <!-- leading Order Book Section -->
-                      <div class="col-md-3">
-                        <div class="orderbook-section">
-                          <!-- <h4>Order Book 1</h4>
-                          <div id="selected-info">
-                            <p>Exchange: <span id="selected-exchange-orderbook-1">Not Selected</span></p>
-                            <p>Currency: <span id="selected-ccy-orderbook-1">Not Selected</span></p>
-                          </div>
-                          <p id="orderbook-timestamp-1">Timestamp: Not Available</p> -->
-
-                          <div class="container ">
-                            <div class="card shadow-sm ">
-                              <div class="card-body py-0 my-0">
-                                <h5 class="text-center border-bottom  mb-3">Order Book 1</h5>
-                                
-                                <!-- Row for Exchange and Currency -->
-                                <div class="d-flex justify-content-between">
-                                  <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-orderbook-1" class="text-danger">Not Selected</span></p>
-                                  <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-orderbook-1" class="text-danger">Not Selected</span></p>
-                                </div>
-                          
-                                <!-- Timestamp -->
-                                <p id="orderbook-timestamp-1" class="text-center text-muted py-0 my-0 ">
-                                  <strong>Timestamp:</strong> <span>Not Available</span>
-                                </p>
-                              </div>
-                            </div>
-                            <div class="orderbook-scroll-container scrollable-orderbook">
-                                <table class="orderBookTable " id="orderBookTable1">
-    
-                                  <thead>
-                                    <tr>
-                                      <th style='position: sticky; top: -1px;background: grey'>Price</th>
-                                      <th style='position: sticky; top: -1px;background: grey'>Amount</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody id="order-data-table-body-1">
-                                    <!-- Order book data will be dynamically inserted here -->
-                                  </tbody>
-                                </table>
-                              </div>
-
-                          </div>
-                          
-
-                          
-                        </div>
-                      </div>
-
-                        <!-- Buttons for comparing -->
-  
-
-                      <!-- lagging Order Book Section -->
-                      <div class="col-md-3">
-                        <div class="orderbook-section ">
-                          <!-- <h4>Order Book 2</h4>
-
-                          <div id="selected-info">
-                            <p>Exchange: <span id="selected-exchange-orderbook-2">Not Selected</span></p>
-                            <p>Currency: <span id="selected-ccy-orderbook-2">Not Selected</span></p>
-                          </div>
-                          <p id="orderbook-timestamp-2">Timestamp: Not Available</p> -->
-
-                          <div class="container">
-                            <div class="card shadow-sm ">
-                              <div class="card-body py-0 my-0">
-                                <h5 class="text-center border-bottom  mb-3">Order Book 2</h5>
-                                
-                                <!-- Row for Exchange and Currency -->
-                                <div class="d-flex justify-content-between">
-                                  <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-orderbook-2" class="text-danger">Not Selected</span></p>
-                                  <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-orderbook-2" class="text-danger">Not Selected</span></p>
-                                </div>
-                          
-                                <!-- Timestamp -->
-                                <p id="orderbook-timestamp-2" class="text-center text-muted py-0 my-0 ">
-                                  <strong>Timestamp:</strong> <span>Not Available</span>
-                                </p>
-                              </div>
-                            </div>
+                       
+                        <div class="container pb-4">
+                            <div class="row ">
+                                <!-- First Exchange Last Prices -->
+                                <div class="col-md-3">
+                                    <div class="card shadow-sm">
+                                        <div class="card-body py-0 my-0">
+                                        <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
+                                        
+                                        <!-- Row for Exchange and Currency -->
+                                        <div class="d-flex justify-content-between">
+                                            <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-1" class="text-danger">Not Selected</span></p>
+                                            <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-1" class="text-danger">Not Selected</span></p>
+                                        </div>
+                                    
+                                        
+                                        </div>
+                                        <div class="orderbook-scroll-container scrollable-lastprice">
+                                            <table class="orderBookTable">
+                                            <thead>
+                                                <tr>
+                                                <th style='position: sticky; top: -1px;background: grey'>Ts</th>
+                                                <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
+                                                <th style='position: sticky; top: -1px;background: grey'>Direction</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="lastprice-data-table-body-1">
+                                                <!-- Last price data will be dynamically inserted here -->
+                                            </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    </div>
                             
-                            <div class="orderbook-scroll-container scrollable-orderbook">
-                                <table class="orderBookTable " id="orderBookTable1">
-    
-                                  <thead>
-                                    <tr>
-                                      <th style='position: sticky; top: -1px;background: grey'>Price</th>
-                                      <th style='position: sticky; top: -1px;background: grey'>Amount</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody id="order-data-table-body-2">
-                                    <!-- Order book data will be dynamically inserted here -->
-                                  </tbody>
-                                </table>
-                              </div>
+                                <!-- leading Order Book Section -->
+                                <div class="col-md-3">
+                                    <div class="orderbook-section">
+                                    <!-- <h4>Order Book 1</h4>
+                                    <div id="selected-info">
+                                        <p>Exchange: <span id="selected-exchange-orderbook-1">Not Selected</span></p>
+                                        <p>Currency: <span id="selected-ccy-orderbook-1">Not Selected</span></p>
+                                    </div>
+                                    <p id="orderbook-timestamp-1">Timestamp: Not Available</p> -->
 
-                          </div>
+                                    <div class="container ">
+                                        <div class="card shadow-sm ">
+                                        <div class="card-body py-0 my-0">
+                                            <h5 class="text-center border-bottom  mb-3">Order Book 1</h5>
+                                            
+                                            <!-- Row for Exchange and Currency -->
+                                            <div class="d-flex justify-content-between">
+                                            <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-orderbook-1" class="text-danger">Not Selected</span></p>
+                                            <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-orderbook-1" class="text-danger">Not Selected</span></p>
+                                            </div>
+                                    
+                                            <!-- Timestamp -->
+                                            <p id="orderbook-timestamp-1" class="text-center text-muted py-0 my-0 ">
+                                            <strong>Timestamp:</strong> <span>Not Available</span>
+                                            </p>
+                                        </div>
+                                        </div>
+                                        <div class="orderbook-scroll-container scrollable-orderbook">
+                                            <table class="orderBookTable " id="orderBookTable1">
+                
+                                            <thead>
+                                                <tr>
+                                                <th style='position: sticky; top: -1px;background: grey'>Price</th>
+                                                <th style='position: sticky; top: -1px;background: grey'>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="order-data-table-body-1">
+                                                <!-- Order book data will be dynamically inserted here -->
+                                            </tbody>
+                                            </table>
+                                        </div>
 
-                         
+                                    </div>
+                                    
 
-                        </div>
-                      </div>
+                                    
+                                    </div>
+                                </div>
 
-                        <!-- Second Exchange Last Prices -->
-                      <div class="col-md-3">
-                        <div class="orderbook-section">
-                          <!-- <h2>Last Trades</h2>
-                          <div id="selected-info">
-                            <p>Exchange: <span id="selected-exchange-lastprice-2">Not Selected</span></p>
-                            <p>Currency: <span id="selected-ccy-lastprice-2">Not Selected</span></p>
-                          </div> -->
 
-                          <div class="card shadow-sm ">
-                            <div class="card-body py-0 my-0">
-                              <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
-                              
-                              <!-- Row for Exchange and Currency -->
-                              <div class="d-flex justify-content-between">
-                                <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-2" class="text-danger">Not Selected</span></p>
-                                <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-2" class="text-danger">Not Selected</span></p>
-                              </div>
-                        
-                           
+                                <!-- lagging Order Book Section -->
+                                <div class="col-md-3">
+                                    <div class="orderbook-section ">
+                                    <!-- <h4>Order Book 2</h4>
+
+                                    <div id="selected-info">
+                                        <p>Exchange: <span id="selected-exchange-orderbook-2">Not Selected</span></p>
+                                        <p>Currency: <span id="selected-ccy-orderbook-2">Not Selected</span></p>
+                                    </div>
+                                    <p id="orderbook-timestamp-2">Timestamp: Not Available</p> -->
+
+                                    <div class="container">
+                                        <div class="card shadow-sm ">
+                                        <div class="card-body py-0 my-0">
+                                            <h5 class="text-center border-bottom  mb-3">Order Book 2</h5>
+                                            
+                                            <!-- Row for Exchange and Currency -->
+                                            <div class="d-flex justify-content-between">
+                                            <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-orderbook-2" class="text-danger">Not Selected</span></p>
+                                            <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-orderbook-2" class="text-danger">Not Selected</span></p>
+                                            </div>
+                                    
+                                            <!-- Timestamp -->
+                                            <p id="orderbook-timestamp-2" class="text-center text-muted py-0 my-0 ">
+                                            <strong>Timestamp:</strong> <span>Not Available</span>
+                                            </p>
+                                        </div>
+                                        </div>
+                                        
+                                        <div class="orderbook-scroll-container scrollable-orderbook">
+                                            <table class="orderBookTable " id="orderBookTable1">
+                
+                                            <thead>
+                                                <tr>
+                                                <th style='position: sticky; top: -1px;background: grey'>Price</th>
+                                                <th style='position: sticky; top: -1px;background: grey'>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="order-data-table-body-2">
+                                                <!-- Order book data will be dynamically inserted here -->
+                                            </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+
+                                    
+
+                                    </div>
+                                </div>
+
+                                    <!-- Second Exchange Last Prices -->
+                                <div class="col-md-3">
+                                    <div class="orderbook-section">
+                                    <!-- <h2>Last Trades</h2>
+                                    <div id="selected-info">
+                                        <p>Exchange: <span id="selected-exchange-lastprice-2">Not Selected</span></p>
+                                        <p>Currency: <span id="selected-ccy-lastprice-2">Not Selected</span></p>
+                                    </div> -->
+
+                                    <div class="card shadow-sm ">
+                                        <div class="card-body py-0 my-0">
+                                        <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
+                                        
+                                        <!-- Row for Exchange and Currency -->
+                                        <div class="d-flex justify-content-between">
+                                            <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-2" class="text-danger">Not Selected</span></p>
+                                            <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-2" class="text-danger">Not Selected</span></p>
+                                        </div>
+                                    
+                                    
+                                        </div>
+                                        <div class="orderbook-scroll-container scrollable-lastprice">
+                                            <table class="orderBookTable">
+                                            <thead>
+                                                <tr>
+                                                <th style='position: sticky; top: -1px;background: grey'>Ts</th>
+                                                <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
+                                                <th style='position: sticky; top: -1px;background: grey'>Direction</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="lastprice-data-table-body-2">
+                                                <!-- Last price data will be dynamically inserted here -->
+                                            </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    </div>
+                                </div>
                             </div>
-                            <div class="orderbook-scroll-container scrollable-lastprice">
-                                <table class="orderBookTable">
-                                  <thead>
-                                    <tr>
-                                      <th style='position: sticky; top: -1px;background: grey'>Ts</th>
-                                      <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
-                                      <th style='position: sticky; top: -1px;background: grey'>Direction</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody id="lastprice-data-table-body-2">
-                                    <!-- Last price data will be dynamically inserted here -->
-                                  </tbody>
-                                </table>
-                              </div>
-                          </div>
-                          
-                         
                         </div>
-                      </div>
 
                     </div>
-                    
+                                
+                    <!-- BUTTONS FOR COMPARING -->
                     <div class="row">
                         <div id="securedContentBidAskOrder" class="alert alert-success" style="display: none;">
                             <!-- Sync and Reset Buttons (Always at the Bottom) -->
@@ -430,11 +429,9 @@
 
 
                 <!-- User Input Section -->
-                <div class="card p-4 mb-4">
+                <div class="card p-4 ">
                     <h2 class="text-center">Place Order</h2>
                     <form id="order-form">
-                        
-                
                         <form id="order-form">
                             <div class="row g-2">
                             
@@ -481,6 +478,7 @@
                                         <option value="market" >Market</option>
                                         <option value="limit" selected>Limit</option>
                                         <option value="algo">Algo</option>
+
                                     </select>
                                 </div>
                         
@@ -495,11 +493,11 @@
                                 <!-- Price field (two inputs side by side for Price 1 and Price 2) -->
                                 <div class="col-12 col-md-12 mb-3" id="price-container">
                                     <div class="row">
-                                        <div class="col-6">
+                                        <div class="col-6" id="form-container-price1-input">
                                             <label for="price-input-1" class="form-label">Price 1:</label>
                                             <input type="number" id="price-input-1" class="form-control" placeholder="Price" required>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-6" id="form-container-price2-input">
                                             <label for="price-input-2" class="form-label">Price 2:</label>
                                             <input type="number" id="price-input-2" class="form-control" placeholder="Price" required>
                                         </div>
@@ -512,16 +510,37 @@
                                     <input type="number" id="spread-input" class="form-control" placeholder="Spread">
                                 </div>
                         
-                                <div class="col-12 mb-3">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="qty-input" class="form-label">Quantity:</label>
                                     <input type="number" id="qty-input" class="form-control" placeholder="Quantity" value="1" required>
                                 </div>
+
+                                <div class="col-md-6">
+                                    <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
+                                    <div class="d-flex">
+                                        <div class="form-check form-switch me-3">
+                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
+                                            <label class="form-check-label" for="flexSwitchCheckDefault">Diaoyu</label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
+                                            <label class="form-check-label" for="flexSwitchCheckChecked">Algo2</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                
+                               
+
+                            </div>
+
+                            <div id="form-buy-sell-container">
+                                <div class="d-flex justify-content-between mt-3" >
+                                    <button type="submit" id="buy-button" value="buy" class="btn btn-success w-100 me-1">Buy</button>
+                                    <button type="submit" id="sell-button" value="sell" class="btn btn-danger w-100 ms-1">Sell</button>
+                                </div>
                             </div>
                         
-                            <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" id="buy-button" value="buy" class="btn btn-success w-100 me-1">Buy</button>
-                                <button type="submit" id="sell-button" value="sell" class="btn btn-danger w-100 ms-1">Sell</button>
-                            </div>
                         </form>
                         
                         
@@ -534,21 +553,28 @@
                                 const priceContainer = document.getElementById('price-container');
                                 const spreadContainer = document.getElementById('spread-container');
                                 const priceInputs = priceContainer.querySelectorAll('input');
+                                const formBuySellContainer = document.getElementById('form-buy-sell-container');
                                 
-
                                 // Show or hide fields based on selected order type
                                 if (orderType === 'market') {
                                     priceContainer.style.display = 'none';
                                     spreadContainer.style.display = 'none';
+                                    formBuySellContainer.style.display = 'block';
                                     priceInputs.forEach(input => input.removeAttribute('required'));
 
                                 } else if (orderType === 'limit') {
                                     priceContainer.style.display = 'block';
                                     spreadContainer.style.display = 'none';
+                                    formBuySellContainer.style.display = 'block';
+
                                 } else if (orderType === 'algo') {
+                                    formBuySellContainer.style.display = 'none';
                                     priceContainer.style.display = 'block';
                                     spreadContainer.style.display = 'block';
+
+                                
                                 } else {
+                                    formBuySellContainer.style.display = 'block';
                                     priceContainer.style.display = 'none';
                                     spreadContainer.style.display = 'none';
                                 }
@@ -557,7 +583,6 @@
                             // Initialize form on page load
                             document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
                         </script>
-                        
 
                     </form>
                 </div>
