@@ -515,7 +515,7 @@
                                     <input type="number" id="qty-input" class="form-control" placeholder="Quantity" value="1" required>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6" id="algo-status-container">
                                     <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
                                     <div class="d-flex">
                                         <div class="form-check form-switch me-3">
@@ -554,27 +554,32 @@
                                 const spreadContainer = document.getElementById('spread-container');
                                 const priceInputs = priceContainer.querySelectorAll('input');
                                 const formBuySellContainer = document.getElementById('form-buy-sell-container');
-                                
+                                const algoStatusContainer = document.getElementById('algo-status-container')
+
                                 // Show or hide fields based on selected order type
                                 if (orderType === 'market') {
                                     priceContainer.style.display = 'none';
                                     spreadContainer.style.display = 'none';
                                     formBuySellContainer.style.display = 'block';
+                                    algoStatusContainer.style.display = 'none';
                                     priceInputs.forEach(input => input.removeAttribute('required'));
 
                                 } else if (orderType === 'limit') {
                                     priceContainer.style.display = 'block';
                                     spreadContainer.style.display = 'none';
                                     formBuySellContainer.style.display = 'block';
+                                    algoStatusContainer.style.display = 'none';
 
                                 } else if (orderType === 'algo') {
                                     formBuySellContainer.style.display = 'none';
                                     priceContainer.style.display = 'block';
                                     spreadContainer.style.display = 'block';
+                                    algoStatusContainer.style.display = 'block';
 
                                 
                                 } else {
                                     formBuySellContainer.style.display = 'block';
+                                    algoStatusContainer.style.display = 'none';
                                     priceContainer.style.display = 'none';
                                     spreadContainer.style.display = 'none';
                                 }
