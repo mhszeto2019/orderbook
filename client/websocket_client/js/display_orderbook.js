@@ -14,7 +14,7 @@ function populateOrderBook(exchange, data) {
 
             const bid_list = JSON.parse(data.bid_list);
             const ask_list = JSON.parse(data.ask_list);
-            timestamp.innerHTML = `<b>Timestamp(${exchange})</b>:\n ${data.timestamp}`;
+            timestamp.innerHTML = `<b>Ts(${exchange})</b>:\n ${data.timestamp}`;
             // Populate asks
             ask_list.forEach(item => {
                 const row = document.createElement('tr');  // Create a new row

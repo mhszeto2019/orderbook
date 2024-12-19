@@ -68,6 +68,7 @@ def place_market_order():
             
         # Initialize TradeAPI
         tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+        print("username:",username)
 
         result = tradeApi.place_order(
             instId= data["instId"],
@@ -78,7 +79,7 @@ def place_market_order():
             sz= str(data["sz"]) 
         )
         result['data'][0]['exchange']='okx'
-
+        print(result)
         if result["code"] == "0":
             result['data'][0]['sCode'] = 200
 
@@ -130,7 +131,7 @@ def place_limit_order():
     tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
 
     # tradeApi = Trade.TradeAPI(apiKey, secretKey, passphrase, False, '0')
-
+    print("username:",username)
     result = tradeApi.place_order(
         instId= data["instId"],
         tdMode= "cross", 
@@ -140,8 +141,8 @@ def place_limit_order():
         px= str(data["px"]) if data["px"] else "",
         sz= str(data["sz"]) 
     )
+    print(result)
     result['data'][0]['exchange']='okx'
-    
     # code== 0 means success
     if result["code"] == "0":
         # print("Successful order request，order_id = ",result["data"][0]["ordId"])
@@ -255,8 +256,7 @@ def ammend_order():
             decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
             api_creds_dict = json.loads(decrypted_data)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-        print('inputdata',data)
-        print(data.get('takeProfit') =='' and data.get('stopLoss') == '')
+        print('username:',data['username'])
 
         attachAlgoOrds = [{'attachAlgoId':data['algoId'],'newTpTriggerPx': data['takeProfit'],'newTpOrdKind':'last','newSlTriggerPx':data['stopLoss'],'newTpOrdPx':data['takeProfit'],'newSlOrdPx':data['stopLoss'],'newTpTriggerPxType':'last','newSlTriggerPxType':'last','sz':data['sz']}]
         # if both tp and sl are empty, algo id should be empty and takeprofit/stoploss should be 0

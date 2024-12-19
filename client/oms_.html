@@ -221,7 +221,7 @@
                                     
                                             <!-- Timestamp -->
                                             <p id="orderbook-timestamp-1" class="text-center text-muted py-0 my-0 ">
-                                            <strong>Timestamp:</strong> <span>Not Available</span>
+                                            <strong>Ts:</strong> <span>Not Available</span>
                                             </p>
                                         </div>
                                         </div>
@@ -519,8 +519,8 @@
                                     <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
                                     <div class="d-flex">
                                         <div class="form-check form-switch me-3">
-                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
-                                            <label class="form-check-label" for="flexSwitchCheckDefault">Diaoyu</label>
+                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu">
+                                            <label class="form-check-label" for="flexSwitchCheckDiaoyu">Diaoyu</label>
                                         </div>
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
@@ -584,6 +584,14 @@
                                     spreadContainer.style.display = 'none';
                                 }
                             }
+
+                            document.querySelectorAll('.form-check-input').forEach(toggle => {
+                                toggle.addEventListener('change', (event) => {
+                                    const isChecked = event.target.checked;
+                                    console.log(`${event.target.id} is now ${isChecked ? 'ON' : 'OFF'}`);
+                                });
+                            });
+
                         
                             // Initialize form on page load
                             document.addEventListener('DOMContentLoaded', handleOrderTypeChange);

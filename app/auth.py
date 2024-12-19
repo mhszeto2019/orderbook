@@ -188,8 +188,8 @@ def login(cursor):
      # Create JWT token
     payload = {
         'sub': username,  # Subject (user identifier)
-        'iat': datetime.now(),  # Issued at time
-        'exp': datetime.now() + timedelta(hours=10000)  # Expiration time (1 hour)
+        'iat': datetime.utcnow(),  # Issued at time
+        'exp': datetime.utcnow() + timedelta(hours=1000)  # Expiration time (1 hour)
     }
 
     # Encode the JWT token using the SECRET_KEY and HS256 algorithm

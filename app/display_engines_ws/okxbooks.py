@@ -144,11 +144,14 @@ def run_okx_client():
     print('running_okx_client')
     global loop    
     try:
+        if loop!= None:
+            loop.close()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(main())
     except Exception as e:
-        loop.close()
+        print('closing loop in run_okx_client')
+        loop.stop()
 
 @socketio.on('connect')
 def handle_connect(auth):
@@ -175,11 +178,12 @@ def handle_client_change(data):
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    client.close()
-    client.unsubscribe()
+    global loop
+    print('loop in disconnect',loop)
+    # loop.run_until_complete(client.unsubscribe())x
+    loop.stop()
 
     print("Client disconnected")
-    global loop
     if loop and loop.is_running():
         # Stop all running tasks
         for task in asyncio.all_tasks(loop):
