@@ -8,6 +8,10 @@ parser.add_argument("channel", type=str)
 args = parser.parse_args()
 print(f"Starting Channel {args.channel} channel")
 
+# strat will be here
+# strat connects to okx bbo, htx positions and db for user inputs
+
+
 class RedisSubscriber:
     def __init__(self, host='localhost', port=6379):
         self.redis_client = redis.Redis(host=host, port=port, decode_responses=True)
