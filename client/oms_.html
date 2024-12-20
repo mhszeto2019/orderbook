@@ -46,10 +46,7 @@
         <!-- DISPLAY TABLE -->
          
         <div class="col-lg-8 container-fluid mt-4" id="orderbookdisplayContainer">
-
-                       
-           
-
+  
             <!-- Container for the funding rates row -->
             <div class="row">
                  <!--WS STATUS BADGE  -->
@@ -397,8 +394,6 @@
                         </div>
                     </div>
                     
-
-
                 </div>
                   
             
@@ -408,12 +403,12 @@
         <div class="col-lg-4 container-fluid  mt-4">
             <!-- This section will only be visible if the JWT is present -->
             <div id="securedContent" class="alert alert-success" style="display: none;">
-
+                    
                 <h4>Welcome, you have access to secured content!</h4>
                 <p>This section is protected by JWT. You are logged in.</p>
 
                 <!-- Notification Hub Icon and Dropdown -->
-                <div class="position-relative text-end mb-4">
+                <div class="position-relative text-end ">
                     <button id="notification-icon" class="btn btn-light" onclick="toggleNotificationHub()">
                         🛎 Notifications <span id="notification-count" class="badge bg-danger">0</span>
                     </button>
@@ -427,182 +422,250 @@
                     </div>
                 </div>
 
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link active" id="pills-manual-order-tab" data-bs-toggle="pill" data-bs-target="#pills-manual-order" type="button" role="tab" aria-controls="pills-manual-order" aria-selected="true">Manual Order</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="pills-algo-order-tab" data-bs-toggle="pill" data-bs-target="#pills-algo-order" type="button" role="tab" aria-controls="pills-algo-order" aria-selected="false">Algo Order</button>
+                    </li>
+                </ul>
 
-                <!-- User Input Section -->
-                <div class="card p-4 ">
-                    <h2 class="text-center">Place Order</h2>
-                    <form id="order-form">
-                        <form id="order-form">
-                            <div class="row g-2">
-                            
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="leading-exchange-input" class="form-label">
-                                        Leading
-                                        <!-- Tooltip Icon -->
-                                        <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Your order applies to this exchange">
-                                          <i class="bi bi-info-circle"></i>
-                                        </span>
-                                      </label>
-                                      
-                                    <select id="leading-exchange-input" class="form-select" required>
-                                        <option value="" disabled selected>Select Exchange</option>
-                                        <option value="htx">HTX</option>
-                                        <option value="okx" selected>OKX</option>
-                                    </select>
-                                </div>
-                        
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="lagging-exchange-input" class="form-label">Lagging:</label>
-                                    <select id="lagging-exchange-input" class="form-select" required>
-                                        <option value="" disabled selected>Select Exchange</option>
-                                        <option value="htx" selected>HTX</option>
-                                        <option value="okx">OKX</option>
-                                    </select>
-                                </div>
-                        
-                                <!-- Instrument Field for Spot/Swap -->
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="instrument-input" class="form-label">Instrument:</label>
-                                    <select id="instrument-input" class="form-select" required>
-                                        <option value="" disabled selected>Select Instrument</option>
-                                        <option value="spot">Spot</option>
-                                        <option value="swap" selected>Swap</option>
-                                    </select>
-                                </div>
-                        
-                                <!-- Order Type Tabs -->
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="order-type-input" class="form-label">Order Type:</label>
-                                    <select id="order-type-input" class="form-select" required onchange="handleOrderTypeChange()">
-                                        <option value="" disabled selected>Select Order Type</option>
-                                        <option value="market" >Market</option>
-                                        <option value="limit" selected>Limit</option>
-                                        <option value="algo">Algo</option>
-
-                                    </select>
-                                </div>
-                        
-                                <div class="col-12 col-md-12 mb-3">
-                                    <label for="currency-input" class="form-label">Currency Pair:</label>
-                                    <select id="currency-input" class="form-select" required>
-                                        <option value="" disabled selected>Select Currency Pair</option>
-                                        <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
-                                    </select>
-                                </div>
-                        
-                                <!-- Price field (two inputs side by side for Price 1 and Price 2) -->
-                                <div class="col-12 col-md-12 mb-3" id="price-container">
-                                    <div class="row">
-                                        <div class="col-6" id="form-container-price1-input">
-                                            <label for="price-input-1" class="form-label">Price 1:</label>
-                                            <input type="number" id="price-input-1" class="form-control" placeholder="Price" required>
+                
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade show active" id="pills-manual-order" role="tabpanel" aria-labelledby="pills-manual-order-tab">
+                        <!-- User Input Section -->
+                        <div class="card p-4 ">
+                            <h2 class="text-center">Place Order</h2>
+                            <form id="order-form">
+                                <form id="order-form">
+                                    <div class="row g-2">
+                                    
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <label for="leading-exchange-input" class="form-label">
+                                                Leading
+                                                <!-- Tooltip Icon -->
+                                                <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Your order applies to this exchange">
+                                                <i class="bi bi-info-circle"></i>
+                                                </span>
+                                            </label>
+                                            
+                                            <select id="leading-exchange-input" class="form-select" required>
+                                                <option value="" disabled selected>Select Exchange</option>
+                                                <option value="htx">HTX</option>
+                                                <option value="okx" selected>OKX</option>
+                                            </select>
                                         </div>
-                                        <div class="col-6" id="form-container-price2-input">
-                                            <label for="price-input-2" class="form-label">Price 2:</label>
-                                            <input type="number" id="price-input-2" class="form-control" placeholder="Price" required>
+                                
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <label for="lagging-exchange-input" class="form-label">Lagging:</label>
+                                            <select id="lagging-exchange-input" class="form-select" required>
+                                                <option value="" disabled selected>Select Exchange</option>
+                                                <option value="htx" selected>HTX</option>
+                                                <option value="okx">OKX</option>
+                                            </select>
+                                        </div>
+                                
+                                        <!-- Instrument Field for Spot/Swap -->
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <label for="instrument-input" class="form-label">Instrument:</label>
+                                            <select id="instrument-input" class="form-select" required>
+                                                <option value="" disabled selected>Select Instrument</option>
+                                                <option value="spot">Spot</option>
+                                                <option value="swap" selected>Swap</option>
+                                            </select>
+                                        </div>
+                                
+                                        <!-- Order Type Tabs -->
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <label for="order-type-input" class="form-label">Order Type:</label>
+                                            <select id="order-type-input" class="form-select" required onchange="handleOrderTypeChange()">
+                                                <option value="" disabled selected>Select Order Type</option>
+                                                <option value="market" >Market</option>
+                                                <option value="limit" selected>Limit</option>
+                                                <option value="algo">Algo</option>
+
+                                            </select>
+                                        </div>
+                                
+                                        <div class="col-12 col-md-12 mb-3">
+                                            <label for="currency-input" class="form-label">Currency Pair:</label>
+                                            <select id="currency-input" class="form-select" required>
+                                                <option value="" disabled selected>Select Currency Pair</option>
+                                                <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
+                                            </select>
+                                        </div>
+                                
+                                        <!-- Price field (two inputs side by side for Price 1 and Price 2) -->
+                                        <div class="col-12 col-md-12 mb-3" id="price-container">
+                                            <div class="row">
+                                                <div class="col-6" id="form-container-price1-input">
+                                                    <label for="price-input-1" class="form-label">Price 1:</label>
+                                                    <input type="number" id="price-input-1" class="form-control" placeholder="Price" required>
+                                                </div>
+                                                <div class="col-6" id="form-container-price2-input">
+                                                    <label for="price-input-2" class="form-label">Price 2:</label>
+                                                    <input type="number" id="price-input-2" class="form-control" placeholder="Price" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                
+                                        <!-- Spread field -->
+                                        <div class="col-12 col-md-6 mb-3" id="spread-container">
+                                            <label for="spread-input" class="form-label">Spread:</label>
+                                            <input type="number" id="spread-input" class="form-control" placeholder="Spread">
+                                        </div>
+                                
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <label for="qty-input" class="form-label">Quantity:</label>
+                                            <input type="number" id="qty-input" class="form-control" placeholder="Quantity" value="1" required>
+                                        </div>
+                                        
+                                        <!-- Switch field -->
+                                        <div class="col-md-6" id="algo-status-container">
+                                            <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
+                                            <div class="d-flex">
+                                                <div class="form-check form-switch me-3">
+                                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu">
+                                                    <label class="form-check-label" for="flexSwitchCheckDiaoyu">Diaoyu</label>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
+                                                    <label class="form-check-label" for="flexSwitchCheckChecked">Algo2</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                    
+
+                                    </div>
+
+                                    <div id="form-buy-sell-container">
+                                        <div class="d-flex justify-content-between mt-3" >
+                                            <button type="submit" id="buy-button" value="buy" class="btn btn-success w-100 me-1">Buy</button>
+                                            <button type="submit" id="sell-button" value="sell" class="btn btn-danger w-100 ms-1">Sell</button>
                                         </div>
                                     </div>
-                                </div>
-                        
-                                <!-- Spread field -->
-                                <div class="col-12 col-md-6 mb-3" id="spread-container">
-                                    <label for="spread-input" class="form-label">Spread:</label>
-                                    <input type="number" id="spread-input" class="form-control" placeholder="Spread">
-                                </div>
-                        
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="qty-input" class="form-label">Quantity:</label>
-                                    <input type="number" id="qty-input" class="form-control" placeholder="Quantity" value="1" required>
-                                </div>
-
-                                <div class="col-md-6" id="algo-status-container">
-                                    <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
-                                    <div class="d-flex">
-                                        <div class="form-check form-switch me-3">
-                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu">
-                                            <label class="form-check-label" for="flexSwitchCheckDiaoyu">Diaoyu</label>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
-                                            <label class="form-check-label" for="flexSwitchCheckChecked">Algo2</label>
-                                        </div>
-                                    </div>
-                                </div>
+                                
+                                </form>
                                 
                                 
-                               
+                                <script>
+                                    function handleOrderTypeChange() {
 
+                                        console.log('CHANGE')
+
+                                        const orderType = document.getElementById('order-type-input').value;
+                                        const priceContainer = document.getElementById('price-container');
+                                        const spreadContainer = document.getElementById('spread-container');
+                                        const priceInputs = priceContainer.querySelectorAll('input');
+                                        const formBuySellContainer = document.getElementById('form-buy-sell-container');
+                                        const algoStatusContainer = document.getElementById('algo-status-container')
+
+                                        // Show or hide fields based on selected order type
+                                        if (orderType === 'market') {
+                                            priceContainer.style.display = 'none';
+                                            spreadContainer.style.display = 'none';
+                                            formBuySellContainer.style.display = 'block';
+                                            algoStatusContainer.style.display = 'none';
+                                            priceInputs.forEach(input => input.removeAttribute('required'));
+
+                                        } else if (orderType === 'limit') {
+                                            priceContainer.style.display = 'block';
+                                            spreadContainer.style.display = 'none';
+                                            formBuySellContainer.style.display = 'block';
+                                            algoStatusContainer.style.display = 'none';
+
+                                        } else if (orderType === 'algo') {
+                                            formBuySellContainer.style.display = 'none';
+                                            priceContainer.style.display = 'block';
+                                            spreadContainer.style.display = 'block';
+                                            algoStatusContainer.style.display = 'block';
+
+                                        
+                                        } else {
+                                            formBuySellContainer.style.display = 'block';
+                                            algoStatusContainer.style.display = 'none';
+                                            priceContainer.style.display = 'none';
+                                            spreadContainer.style.display = 'none';
+                                        }
+                                    }
+
+                                    document.querySelectorAll('.form-check-input').forEach(toggle => {
+                                        toggle.addEventListener('change', (event) => {
+                                            const isChecked = event.target.checked;
+                                            console.log(`${event.target.id} is now ${isChecked ? 'ON' : 'OFF'}`);
+                                        });
+                                    });
+
+                                
+                                    // Initialize form on page load
+                                    document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
+                                </script>
+
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-algo-order" role="tabpanel" aria-labelledby="pills-algo-order-tab">
+                        <div>
+                            <!-- Algo Strats Table -->
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered align-middle">
+                                    <thead class="table">
+                                        <tr>
+                                            <!-- <th scope="col">#</th> -->
+                                            <th scope="col">Algorithm Name</th>
+                                            <th scope="col">Input 1</th>
+                                            <th scope="col">Input 2</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Switch</th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Row 1 -->
+                                        <tr>
+                                            <!-- <td scope="row">
+                                                <i class="bi bi-play-circle-fill run-button" 
+                                                onclick="runAlgo('Algo 1', 'input1-algo1', 'input2-algo1', 'status-algo1')"></i>
+                                            </td>
+                                            <td scope="row">
+                                                <i class="bi bi-stop-circle-fill stop-button" 
+                                                onclick="stopAlgo('Algo 1', 'input1-algo1', 'input2-algo1', 'status-algo1')"></i>
+                                            </td> -->
+                                            
+                                           
+
+                                            <td>Algo 1</td>
+                                            <td>
+                                                <input type="number" class="form-control" id="input1-algo1" placeholder="Value" value="5">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="input2-algo1" placeholder="Text" value="default">
+                                            </td>
+                                            <td>
+                                                <span id="status-algo1" class="badge bg-secondary">Idle</span>
+                                            </td>
+
+                                            <td>
+                                                <div class="form-check form-switch ">
+                                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu" onclick="handleAlgoToggle(this, 'Algo 1', 'input1-algo1', 'input2-algo1', 'status-algo1')">
+                                                </div>
+
+                                            </td>
+                                        </tr>
+                                       
+                                    </tbody>
+                                </table>
                             </div>
+                        </div>
 
-                            <div id="form-buy-sell-container">
-                                <div class="d-flex justify-content-between mt-3" >
-                                    <button type="submit" id="buy-button" value="buy" class="btn btn-success w-100 me-1">Buy</button>
-                                    <button type="submit" id="sell-button" value="sell" class="btn btn-danger w-100 ms-1">Sell</button>
-                                </div>
-                            </div>
-                        
-                        </form>
-                        
-                        
-                        <script>
-                            function handleOrderTypeChange() {
-
-                                console.log('CHANGE')
-
-                                const orderType = document.getElementById('order-type-input').value;
-                                const priceContainer = document.getElementById('price-container');
-                                const spreadContainer = document.getElementById('spread-container');
-                                const priceInputs = priceContainer.querySelectorAll('input');
-                                const formBuySellContainer = document.getElementById('form-buy-sell-container');
-                                const algoStatusContainer = document.getElementById('algo-status-container')
-
-                                // Show or hide fields based on selected order type
-                                if (orderType === 'market') {
-                                    priceContainer.style.display = 'none';
-                                    spreadContainer.style.display = 'none';
-                                    formBuySellContainer.style.display = 'block';
-                                    algoStatusContainer.style.display = 'none';
-                                    priceInputs.forEach(input => input.removeAttribute('required'));
-
-                                } else if (orderType === 'limit') {
-                                    priceContainer.style.display = 'block';
-                                    spreadContainer.style.display = 'none';
-                                    formBuySellContainer.style.display = 'block';
-                                    algoStatusContainer.style.display = 'none';
-
-                                } else if (orderType === 'algo') {
-                                    formBuySellContainer.style.display = 'none';
-                                    priceContainer.style.display = 'block';
-                                    spreadContainer.style.display = 'block';
-                                    algoStatusContainer.style.display = 'block';
-
-                                
-                                } else {
-                                    formBuySellContainer.style.display = 'block';
-                                    algoStatusContainer.style.display = 'none';
-                                    priceContainer.style.display = 'none';
-                                    spreadContainer.style.display = 'none';
-                                }
-                            }
-
-                            document.querySelectorAll('.form-check-input').forEach(toggle => {
-                                toggle.addEventListener('change', (event) => {
-                                    const isChecked = event.target.checked;
-                                    console.log(`${event.target.id} is now ${isChecked ? 'ON' : 'OFF'}`);
-                                });
-                            });
-
-                        
-                            // Initialize form on page load
-                            document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
-                        </script>
-
-                    </form>
+                    </div>
                 </div>
-
-               
-
             </div>
+        </div>
 
             <!-- This section will be visible if the JWT is NOT present -->
             <div id="loginPrompt" class="alert alert-warning">
@@ -629,7 +692,6 @@
                 </ul>
                 <div class="tab-content mt-3">
                     <!-- Assets & Positions Tab -->
-                                    
                     <div class="tab-pane fade show active" id="assets-positions" role="tabpanel">
                         
                         <p >
@@ -784,6 +846,13 @@
             clearNotifications();
         });
 
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/db/get_db')
+                .then(response => response.json())
+                .then(data => populateTable(data))
+                .catch(error => console.error('Error fetching data:', error));
+        });
+
 
         let currency_pair = null;
         
@@ -898,6 +967,42 @@
         console.log(currency_pair)
     }
 
+    function handleAlgoToggle(checkbox, algoName, input1Id, input2Id, statusId) {
+        const isChecked = checkbox.checked;
+
+        if (isChecked) {
+            runAlgo(algoName, input1Id, input2Id, statusId);
+        } else {
+            stopAlgo(algoName, input1Id, input2Id, statusId);
+        }
+    }
+
+    function stopAlgo(algoName, input1Id, input2Id, statusId) {
+        const statusElement = document.getElementById(statusId);
+
+        statusElement.innerText = 'Stopped';
+        statusElement.className = 'badge bg-secondary';
+
+        console.log(`Stopped ${algoName}`);
+    }
+    function runAlgo(algoName, input1Id, input2Id, statusId) {
+            const input1 = document.getElementById(input1Id).value;
+            const input2 = document.getElementById(input2Id).value;
+            const statusElement = document.getElementById(statusId);
+
+            // Set status to running
+            statusElement.innerText = 'Running...';
+            statusElement.className = 'badge bg-warning';
+
+            console.log(`Running ${algoName} with Input 1: ${input1}, Input 2: ${input2}`);
+
+            // Simulate execution delay
+            setTimeout(() => {
+                statusElement.innerText = 'Completed';
+                statusElement.className = 'badge bg-success';
+                console.log(`${algoName} execution completed.`);
+            }, 2000); // 2-second delay
+        }
 
     $('.OMStable').DataTable({
         paging: true,
@@ -926,6 +1031,8 @@
         }
     });
        
+
+
     </script>
 
 <style>
@@ -1017,6 +1124,23 @@
         color: green;
     }
 
+    .run-button {
+            color: #1db954; /* Spotify green */
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: transform 0.2s ease;
+        }
+    .stop-button {
+        color: #df0d0d; /* Spotify green */
+        cursor: pointer;
+        font-size: 1.5rem;
+        transition: transform 0.2s ease;
+    }
+        
+
+    .table-hover tbody tr:hover {
+        background-color: #f9f9f9; /* Subtle hover effect */
+    }
 
 </style>
 

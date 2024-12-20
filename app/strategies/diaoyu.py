@@ -160,6 +160,11 @@ notification_subs = [
     {
         "op": "sub",
         "cid": str(uuid.uuid1()),
+        "topic": "orders.BTC-USD"
+    },
+     {
+        "op": "sub",
+        "cid": str(uuid.uuid1()),
         "topic": "positions.BTC-USD"
     }
 ]
@@ -172,7 +177,7 @@ if __name__ == '__main__':
     print("SUBSCRIBING")
 
     # Wait for a while to allow subscription
-    time.sleep(5)
+    time.sleep(50)
 
     print("STOPPING")
     ws1.stop()
