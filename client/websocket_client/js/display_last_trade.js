@@ -26,7 +26,6 @@ function initializeCurrencyPair(exchange, instrument,currencyPair) {
 
 // Function to update the last trades
 function updateLastTrades(exchange, currencyPair,instrument, message) {
-    console.log('msg',exchange,currencyPair,instrument,message)
     initializeCurrencyPair(exchange,instrument,currencyPair);
     
     let tradesList = lastTrades[exchange][instrument][currencyPair];
@@ -40,7 +39,6 @@ function updateLastTrades(exchange, currencyPair,instrument, message) {
         }
 
     })
-    console.log(lastTrades)
     
 }
 
@@ -124,7 +122,6 @@ htxsocketLastTrades.on('connect', () => {
 // Event: Handle incoming messages
 htxsocketLastTrades.on('htx_trade_history', (data) => {
     formattedData = htx2okxLastTrade(data)
-    console.log(formattedData)
     updateLastTrades(data['exchange'],data['ccy'],data['instrument'],formattedData);
     onLastTradeWsDataReceived(data['exchange'],data['ccy'], data['instrument'])
 });
@@ -156,7 +153,6 @@ function htx2okxLastTrade(htxData){
 function onLastTradeWsDataReceived(exchange,currency,instrument) {
     try {
         populateLastTrades(exchange,currency,instrument)
-        console.log(exchange,)
     
     } catch (error) {
         console.error("Error processing WebSocket data:", error);
@@ -171,10 +167,8 @@ function populateLastTrades(exchange,currency,instrument) {
         // Get the selected exchange for the current table
         const selectedExchange = document.getElementById(`selected-exchange-lastprice-${i}`).innerText.toUpperCase();
         const selectedCcy= document.getElementById(`selected-ccy-lastprice-${i}`).innerText;
-        console.log(selectedExchange,selectedCcy)
         // Check if the value ends with '-SWAP' and remove it if true
         const processedSelectedCcy = selectedCcy.endsWith('-SWAP') ? selectedCcy.replace('-SWAP', '') : selectedCcy;
-        console.log(exchange,currency,instrument)
         data = lastTrades[exchange][instrument][currency]
         
         
@@ -196,7 +190,6 @@ function populateLastTrades(exchange,currency,instrument) {
                 //     <td class ='${trade.direction}'>${trade.price}</td>
                 //     <td class='${trade.direction}'>${trade.direction}(${trade.amount})</td>
                 // `;
-                console.log
                 row.innerHTML = `
                     <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
 

@@ -13,59 +13,48 @@ def get_algo_list(cursor):
     # user input username and password
     username = request.form.get('username')
     password = request.form.get('password')
-
+    print(request)
     # Execute SELECT query to check for existing users
-    cursor.execute("select * from algo_dets ad left join (SELECT username, algo_name, MAX(updated_at) AS latest_timestamp FROM algo_state GROUP BY username, algo_name) t1 on ad.username = t1.username and ad.algo_name = t1.algo_name where ad.username = %s", ('brennan',))
-    x = cursor.fetchall()
-    print(x)
-    return 200
+    cursor.execute("SELECT jsonb_build_object('username', username,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s;", ('brennan',))
+    result = cursor.fetchall()
+    return jsonify(result)
 
 
-
-@app.route('/db/create_state', methods=['GET'])
+@app.route('/db/modify_status', methods=['POST'])
 @with_db_connection
-def create_state(cursor, username, algo_name, lead_exchange, lag_exchange, spread, qty, state):
-    """Creates a new state record."""
+def modify_status(cursor):
+    # Parse JSON data from the request
+    data = request.json
+    print(data)
+    if not data:
+        return jsonify({"error": "Invalid input"}), 400
+
+    username = data.get('username')
+    algo_name = data.get('algo_name')
+    lead_exchange = data.get('lead_exchange')
+    lag_exchange = data.get('lag_exchange')
+    spread = data.get('spread')
+    qty = data.get('qty')
+    ccy = data.get('ccy')
+    state = data.get('state')
+    if not username or not algo_name:
+        return jsonify({"error": "Missing required fields"}), 400
+
     try:
         query = """
-        INSERT INTO algo_state (username, algo_name, lead_exchange, lag_exchange, spread, qty, state)
-        VALUES (%s, %s, %s,%s, %s, %s,%s)
-        RETURNING username, algo_name, lead_exchange, lag_exchange, spread, state,qty, updated_at;
-        """
-        cursor.execute(query, (username, algo_name, lead_exchange, lag_exchange, spread, qty, state))
-        cursor.connection.commit()  # Commit the transaction
-        result = cursor.fetchone()
-        print("Record inserted:", result)
-    except ProgrammingError as e:
-        print(f"Programming error during insert: {e}")
-    except DatabaseError as e:
-        print(f"Database error during insert: {e}")
-
-@app.route('/db/read_state', methods=['GET'])
-@with_db_connection
-def read_state(cursor, username, algo_name):
-    """Reads the latest state record for the given username and algo_name."""
-    try:
-        query = """
-        SELECT lead_exchange, lag_exchange, spread, state,qty, state, updated_at
-        FROM algo_state
+        UPDATE algo_dets 
+        SET lead_exchange = %s, lag_exchange = %s, spread = %s, qty = %s, ccy = %s, state = %s, updated_at = CURRENT_TIMESTAMP 
         WHERE username = %s AND algo_name = %s
-        ORDER BY updated_at DESC
-        LIMIT 1;
         """
-        # print("Executing query:", query)
-        cursor.execute(query, (username, algo_name))
-        result = cursor.fetchone()
-        if result:
-            print("Latest state fetched:", result)
-            return result
-        else:
-            print("No state found for the given criteria.")
-            return None
+        cursor.execute(query, (lead_exchange, lag_exchange, spread, qty, ccy, state, username, algo_name))
+        cursor.connection.commit()  # Commit the transaction
+
+        return jsonify({"message": "Status updated successfully"}), 200
+    
     except ProgrammingError as e:
-        print(f"Programming error during read: {e}")
+        return jsonify({"error": f"Programming error: {e}"}), 500
     except DatabaseError as e:
-        print(f"Database error during read: {e}")
+        return jsonify({"error": f"Database error: {e}"}), 500
 
 
 # for i in range(100):
@@ -81,4 +70,4 @@ def read_state(cursor, username, algo_name):
 # read_state('username','algo_name')
 
 if __name__ == "__main__":
-    app.run(port=5060)
+    app.run(host= '0.0.0.0',port=5020)

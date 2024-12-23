@@ -931,51 +931,52 @@
    
     // Function to update the table for the selected currency
     function updateTableForCurrency(currency) {
-        console.log(currency_pair)
+        // console.log(currency_pair)
         
         document.querySelector('h4').innerText = `Order Book Comparison for ${currency}`;
         // TODO: Fetch new data and update order books dynamically here
         alert(`Order books updated for ${currency}`);
         currency_pair = currency
-        console.log(currency_pair)
+        // console.log(currency_pair)
     }
 
-    function handleAlgoToggle(checkbox, algoName, input1Id, input2Id, statusId) {
-        const isChecked = checkbox.checked;
+    // function handleAlgoToggle(checkbox, algoName, input1Id, input2Id, statusId) {
+    //     const isChecked = checkbox.checked;
 
-        if (isChecked) {
-            runAlgo(algoName, input1Id, input2Id, statusId);
-        } else {
-            stopAlgo(algoName, input1Id, input2Id, statusId);
-        }
-    }
+    //     if (isChecked) {
+    //         runAlgo(algoName, input1Id, input2Id, statusId);
+    //     } else {
+    //         stopAlgo(algoName, input1Id, input2Id, statusId);
+    //     }
+    // }
 
-    function stopAlgo(algoName, input1Id, input2Id, statusId) {
-        const statusElement = document.getElementById(statusId);
+    // function stopAlgo(algoName, input1Id, input2Id, statusId) {
+    //     const statusElement = document.getElementById(statusId);
 
-        statusElement.innerText = 'Stopped';
-        statusElement.className = 'badge bg-secondary';
+    //     statusElement.innerText = 'Stopped';
+    //     statusElement.className = 'badge bg-secondary';
 
-        console.log(`Stopped ${algoName}`);
-    }
-    function runAlgo(algoName, input1Id, input2Id, statusId) {
-            const input1 = document.getElementById(input1Id).value;
-            const input2 = document.getElementById(input2Id).value;
-            const statusElement = document.getElementById(statusId);
+    //     console.log(`Stopped ${algoName}`);
+    // }
 
-            // Set status to running
-            statusElement.innerText = 'Running...';
-            statusElement.className = 'badge bg-warning';
+    // function runAlgo(algoName, input1Id, input2Id, statusId) {
+    //         const input1 = document.getElementById(input1Id).value;
+    //         const input2 = document.getElementById(input2Id).value;
+    //         const statusElement = document.getElementById(statusId);
 
-            console.log(`Running ${algoName} with Input 1: ${input1}, Input 2: ${input2}`);
+    //         // Set status to running
+    //         statusElement.innerText = 'Running...';
+    //         statusElement.className = 'badge bg-warning';
 
-            // Simulate execution delay
-            setTimeout(() => {
-                statusElement.innerText = 'Completed';
-                statusElement.className = 'badge bg-success';
-                console.log(`${algoName} execution completed.`);
-            }, 2000); // 2-second delay
-        }
+    //         console.log(`Running ${algoName} with Input 1: ${input1}, Input 2: ${input2}`);
+
+    //         // Simulate execution delay
+    //         setTimeout(() => {
+    //             statusElement.innerText = 'Completed';
+    //             statusElement.className = 'badge bg-success';
+    //             console.log(`${algoName} execution completed.`);
+    //         }, 2000); // 2-second delay
+    //     }
 
     $('.OMStable').DataTable({
         paging: true,
