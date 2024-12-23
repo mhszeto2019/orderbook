@@ -523,7 +523,7 @@
                                         </div>
                                         
                                         <!-- Switch field -->
-                                        <div class="col-md-6" id="algo-status-container">
+                                        <!-- <div class="col-md-6" id="algo-status-container">
                                             <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
                                             <div class="d-flex">
                                                 <div class="form-check form-switch me-3">
@@ -535,7 +535,7 @@
                                                     <label class="form-check-label" for="flexSwitchCheckChecked">Algo2</label>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> -->
                                         
                                         
                                     
@@ -562,32 +562,27 @@
                                         const spreadContainer = document.getElementById('spread-container');
                                         const priceInputs = priceContainer.querySelectorAll('input');
                                         const formBuySellContainer = document.getElementById('form-buy-sell-container');
-                                        const algoStatusContainer = document.getElementById('algo-status-container')
 
                                         // Show or hide fields based on selected order type
                                         if (orderType === 'market') {
                                             priceContainer.style.display = 'none';
                                             spreadContainer.style.display = 'none';
                                             formBuySellContainer.style.display = 'block';
-                                            algoStatusContainer.style.display = 'none';
                                             priceInputs.forEach(input => input.removeAttribute('required'));
 
                                         } else if (orderType === 'limit') {
                                             priceContainer.style.display = 'block';
                                             spreadContainer.style.display = 'none';
                                             formBuySellContainer.style.display = 'block';
-                                            algoStatusContainer.style.display = 'none';
 
                                         } else if (orderType === 'algo') {
                                             formBuySellContainer.style.display = 'none';
                                             priceContainer.style.display = 'block';
                                             spreadContainer.style.display = 'block';
-                                            algoStatusContainer.style.display = 'block';
 
                                         
                                         } else {
                                             formBuySellContainer.style.display = 'block';
-                                            algoStatusContainer.style.display = 'none';
                                             priceContainer.style.display = 'none';
                                             spreadContainer.style.display = 'none';
                                         }
@@ -628,49 +623,11 @@
                                         </tr>
                                     </thead>
                                     
-                                    <tbody>
-                                        <!-- Row 1 -->
-                                        <tr>
-                                            <!-- <td scope="row">
-                                                <i class="bi bi-play-circle-fill run-button" 
-                                                onclick="runAlgo('Algo 1', 'input1-algo1', 'input2-algo1', 'status-algo1')"></i>
-                                            </td>
-                                            <td scope="row">
-                                                <i class="bi bi-stop-circle-fill stop-button" 
-                                                onclick="stopAlgo('Algo 1', 'input1-algo1', 'input2-algo1', 'status-algo1')"></i>
-                                            </td> -->
-                                            
-                                           
-
-                                            <td>Algo 1</td>
-                                            <td>
-                                                <input type="number" class="form-control" id="input1-algo1" placeholder="Value" value="5">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control" id="input2-algo1" placeholder="Text" value="default">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control" id="input2-algo1" placeholder="Text" value="default">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control" id="input2-algo1" placeholder="Text" value="default">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control" id="input2-algo1" placeholder="Text" value="default">
-                                            </td>
-                                            
-                                            <td>
-                                                <span id="status-algo1" class="badge bg-secondary">Idle</span>
-                                            </td>
-
-                                            <td>
-                                                <div class="form-check form-switch ">
-                                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu" onclick="handleAlgoToggle(this, 'Algo 1', 'input1-algo1', 'input2-algo1', 'status-algo1')">
-                                                </div>
-
-                                            </td>
-                                        </tr>
-                                       
+                                    <tbody id="algo-list">
+                                        <div class="text-end mb-3">
+                                            <button class="btn btn-primary " onclick="addNewRow()">Add Row</button>
+    
+                                        </div>
                                     </tbody>
                                 </table>
                             </div>
@@ -834,6 +791,8 @@
     <script src="websocket_client/js/display_position.js"></script>
     <script src="websocket_client/js/display_open_orders.js"></script>
     <script src="websocket_client/js/arbButton.js"></script>
+    <script src="websocket_client/js/createAlgoOrders.js"></script>
+
     <!-- <script src="websocket_client/js/display_trade_history.js"></script> -->
 
 

@@ -19,7 +19,6 @@ from util import token_required
 from util import get_logger 
 logger = get_logger(os.path.basename(__file__))
 
-
 CORS(app)
 config_source = 'htx_live_trade'
 secretKey = config[config_source]['secretKey']
@@ -35,8 +34,6 @@ from htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 import asyncio
 import base64
 from cryptography.fernet import Fernet
-
-
 
 @token_required
 @app.route('/htx/swap/place_market_order', methods=['POST'])
@@ -206,7 +203,6 @@ async def place_limit_order():
         api_creds_dict = json.loads(decrypted_data)
         print(f"API credentials for {username}", api_creds_dict)
 
-
     side = data['side']
     if side == 'buy':
         posSide = 'long'
@@ -218,7 +214,6 @@ async def place_limit_order():
     side= side
     ordType=  data["ordType"]
     sz= str(data["sz"]) 
-
 
     try:
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
@@ -251,24 +246,6 @@ async def place_limit_order():
 
     except Exception as e:
         return jsonify(result), 500
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     # try:
