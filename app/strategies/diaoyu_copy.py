@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-
 import datetime
 import uuid
-import urllib
+import urllib.parse
 import asyncio
 import websockets
 import json
@@ -10,115 +8,132 @@ import hmac
 import base64
 import hashlib
 import gzip
-import traceback
+import datetime
+import uuid
+import urllib.parse
+import json
 
-# from app.htx2.template_swap_trade_ws import subscribe
+import datetime
+import uuid
+import urllib.parse
+import json
+import hmac
+import base64
+import hashlib
+import gzip
+import threading
+import asyncio
+import websockets
+import time
 
-class Diaoyu():
-    def __init__(self,url,endpoint,access_key,secret_key,is_open=False):
-        
+class Diaoyu:
+    def __init__(self, url, endpoint, access_key, secret_key):
         self.url = url
         self.endpoint = endpoint
-        self.accesskey= access_key
-        self.secretkey= secret_key
-        self.is_open = is_open
-        self.ws = ""
+        self.accesskey = access_key
+        self.secretkey = secret_key
+        self.is_open = False
+        self.ws = None
+        self._stop_event = threading.Event()
+        self.loop = None
+        self.thread = None
 
-    async def subscribe(self, subs,  auth=False):
-        """ Huobi Future subscribe websockets.
-
-        Args:
-            url: the url to be signatured.
-            access_key: API access_key.
-            secret_key: API secret_key.
-            subs: the data list to subscribe.
-            callback: the callback function to handle the ws data received. 
-            auth: True: Need to be signatured. False: No need to be signatured.
-
-
-        """
-        url = self.url
-        endpoint = self.endpoint
-        access_key = self.accesskey
-        secret_key = self.secretkey
+    def start(self, subs, auth=False, callback=None):
+        """ Start the subscription process in a separate thread. """
+        if self.thread and self.thread.is_alive():
+            print("Already running. Please stop the current thread first.")
+            return
+        self._stop_event = threading.Event()
         self.is_open = True
-        async with websockets.connect(url) as websocket:
-            self.ws = websocket
-            if auth:
-                timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-                data = {
-                    "AccessKeyId": access_key,
-                    "SignatureMethod": "HmacSHA256",
-                    "SignatureVersion": "2",
-                    "Timestamp": timestamp
-                }
-                # sign = generate_signature(url,"GET", data, "/swap-trade", secret_key)
-                sign = self.generate_signature(url,"GET", data, endpoint, secret_key)
+        self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
+        self.thread.start()
 
-                data["op"] = "auth"
-                data["type"] = "api"
-                data["Signature"] = sign
-                msg_str = json.dumps(data)
-                await websocket.send(msg_str)
-                print(f"send: {msg_str}")
-            for sub in subs:
-                sub_str = json.dumps(sub)
-                await websocket.send(sub_str)
-                print(f"send: {sub_str}")
-            while self.is_open:
-                print(self.is_open)
-                rsp = await websocket.recv()
-                data = json.loads(gzip.decompress(rsp).decode())
-                # print(f"recevie<--: {data}")
-                if "op" in data and data.get("op") == "ping":
-                    pong_msg = {"op": "pong", "ts": data.get("ts")}
-                    await websocket.send(json.dumps(pong_msg))
-                    print(f"send: {pong_msg}")
-                    continue
-                if "ping" in data: 
-                    pong_msg = {"pong": data.get("ping")}
-                    await websocket.send(json.dumps(pong_msg))
-                    print(f"send: {pong_msg}")
-                    continue
-                rsp = await self.handle_ws_data(data)
+    def stop(self):
+        """ Stop the subscription process. """
+        self.is_open = False
+        self._stop_event.set()
+        print(self.loop)
+        # if self.ws:
+        #     self._close()
+        self.thread.join(timeout=5)  # Allow the thread to exit gracefully
 
-    async def unsubscribe(self, params: list, callback):
-        self.callback = callback
-        payload = json.dumps({
-            "op": "unsubscribe",
-            "args": params
-        })
-        # logger.info(f"unsubscribe: {payload}")
-        await self.ws.send(payload)
+    def _run(self, subs, auth=False, callback=None):
+        """ Run the WebSocket subscription in a new event loop. """
+        self.loop =  asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
 
-    async def handle_ws_data(*args, **kwargs):
-        """ callback function
+        try:
+            self.loop.run_until_complete(self._subscribe(subs, auth, callback))
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        finally:
+            self.loop.close()
+
+    async def _subscribe(self, subs, auth=False, callback=None):
+        try:
+            async with websockets.connect(self.url) as websocket:
+                self.ws = websocket
+                if auth:
+                    await self.authenticate(websocket)
+
+                # Send all subscriptions
+                for sub in subs:
+                    sub_str = json.dumps(sub)
+                    await websocket.send(sub_str)
+                    print(f"send: {sub_str}")
+
+                while self.is_open and not self._stop_event.is_set():
+                    try:
+                        rsp = await websocket.recv()
+                        data = json.loads(gzip.decompress(rsp).decode())
+                        if "op" in data and data.get("op") == "ping":
+                            pong_msg = {"op": "pong", "ts": data.get("ts")}
+                            await websocket.send(json.dumps(pong_msg))
+                            print(f"send: {pong_msg}")
+                        if "ping" in data:
+                            pong_msg = {"pong": data.get("ping")}
+                            await websocket.send(json.dumps(pong_msg))
+                            print(f"send: {pong_msg}")
+                        if callback:
+                            callback(data)
+                    except websockets.ConnectionClosed:
+                        print("WebSocket connection closed.")
+                        self.is_open = False
+                        break  # Break out of the loop when connection is closed
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            self.is_open = False
+
+    async def authenticate(self, websocket):
+        """ Perform authentication on the WebSocket.
+
         Args:
-            args: values
-            kwargs: key-values.
+            websocket: The WebSocket object.
         """
+        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        data = {
+            "AccessKeyId": self.accesskey,
+            "SignatureMethod": "HmacSHA256",
+            "SignatureVersion": "2",
+            "Timestamp": timestamp
+        }
+        sign = self.generate_signature(self.url, "GET", data, self.endpoint, self.secretkey)
+        data["op"] = "auth"
+        data["type"] = "api"
+        data["Signature"] = sign
+        msg_str = json.dumps(data)
+        await websocket.send(msg_str)
+        print(f"send: {msg_str}")
 
-        print(args[1].get('event'))
-        # print(args[0].get('event'))
-        # print(args)
-        # if args[0].get('event') == 'order.match':
-        #     print("ORDER MATCH MEANS BOUGHT")
-        
+    def _close(self):
+        if self.ws:
+            self.ws.close()
+            print("WebSocket connection closed.")
+            self.ws = None
+
     @classmethod
-    def generate_signature(self,host, method, params, request_path, secret_key):
-        """Generate signature of huobi future.
-        
-        Args:
-            host: api domain url.PS: colo user should set this host as 'api.hbdm.com',not colo domain.
-            method: request method.
-            params: request params.
-            request_path: "/notification"
-            secret_key: api secret_key
-
-        Returns:
-            singature string.
-
-        """
+    def generate_signature(cls, host, method, params, request_path, secret_key):
         host_url = urllib.parse.urlparse(host).hostname.lower()
         sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
         encode_params = urllib.parse.urlencode(sorted_params)
@@ -131,25 +146,54 @@ class Diaoyu():
         signature = signature.decode()
         return signature
 
-import time
 
-if __name__ == "__main__":
-    ####  input your access_key and secret_key below:
-    access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
-    secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
-    notification_url = 'wss://api.hbdm.com/swap-notification'
-    notification_endpoint = '/swap-notification'
-   
-    notification_subs = [
-                {
-                    "op": "sub",
-                    "cid": str(uuid.uuid1()),
-                    "topic": "positions.BTC-USD"
-                }
-            ]
-    ws = Diaoyu(notification_url,notification_endpoint,access_key,secret_key)
-    asyncio.get_event_loop().run_until_complete(ws.subscribe(notification_subs,auth=True))
-    print('running')
+# Usage example
+def publicCallback(message):
+    print("Callback received:", message)
+
+# def main():
+access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
+secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
+notification_url = 'wss://api.hbdm.com/swap-notification'
+notification_endpoint = '/swap-notification'
+notification_subs = [
+    {
+        "op": "sub",
+        "cid": str(uuid.uuid1()),
+        "topic": "orders.BTC-USD"
+    },
+     {
+        "op": "sub",
+        "cid": str(uuid.uuid1()),
+        "topic": "positions.BTC-USD"
+    }
+]
+
+
+if __name__ == '__main__':
+        
+    ws1 = Diaoyu(notification_url, notification_endpoint, access_key, secret_key)
+    ws1.start(notification_subs, auth=True, callback=publicCallback)
+    print("SUBSCRIBING")
+
+    # Wait for a while to allow subscription
+    # time.sleep(50)
+    while True: 
+        continue
+    # print("STOPPING")
+    # ws1.stop()
+    # time.sleep(15)
+
+    # print("RESTARTING")
+    # ws1.start(notification_subs, auth=True, callback=publicCallback)
+    # time.sleep(15)
+
+    # ws1.stop()
+
+
+
+    # access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
+    # secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
     # ws.subscribe(notification_subs,auth=True)
     # time.sleep(5)
     # print('unsubsring')

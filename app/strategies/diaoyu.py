@@ -1,21 +1,6 @@
 import datetime
 import uuid
 import urllib.parse
-import asyncio
-import websockets
-import json
-import hmac
-import base64
-import hashlib
-import gzip
-import datetime
-import uuid
-import urllib.parse
-import json
-
-import datetime
-import uuid
-import urllib.parse
 import json
 import hmac
 import base64
@@ -26,7 +11,74 @@ import asyncio
 import websockets
 import time
 
-class Diaoyu:
+import asyncio
+from okx.websocket.WsPublicAsync import WsPublicAsync
+import redis
+import json
+import os
+import json
+import configparser
+config = configparser.ConfigParser()
+config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
+# print("Config file path:", config_file_path)
+# Read the configuration file
+config.read(config_file_path)
+config_source = 'redis'
+REDIS_HOST = config[config_source]['host']
+REDIS_PORT = config[config_source]['port']
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+import requests
+
+class OkxBbo:
+    def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
+        self.url = url
+        self.ws = None
+        self.subscribed_pairs = []  # To keep track of subscribed pairs
+
+
+    async def start(self):
+        """Start the WebSocket connection."""
+        self.ws = WsPublicAsync(url=self.url)
+        await self.ws.start()
+
+    async def subscribe(self, channel, inst_id, callback):
+        """Subscribe to a specific channel and instrument ID."""
+        arg = {"channel": channel, "instId": inst_id}
+        self.subscribed_pairs.append(inst_id)  # Track the subscription
+        await self.ws.subscribe([arg], callback)  # Subscribe using the args list
+
+    async def run(self,channel ,currency_pairs, callback):
+        """Run the WebSocket client, subscribing to the given currency pairs."""
+        await self.start()
+        
+        # Subscribe to all specified currency pairs
+        for pair in currency_pairs:
+            await self.subscribe(channel, pair, callback)
+
+        # Keep the connection alive
+        try:
+            while True:
+                await asyncio.sleep(1)  # Keep the event loop running
+        except KeyboardInterrupt:
+            print("Disconnecting...")
+            await self.unsubscribe()  # Unsubscribe when exiting
+        finally:
+            await self.close()  # Ensure WebSocket is closed when done
+
+    async def unsubscribe(self):
+        """Unsubscribe from all channels."""
+        if self.ws:
+            print("Unsubscribing from all channels...")
+            await self.ws.unsubscribe(self.subscribed_pairs)
+
+    async def close(self):
+        """Close the WebSocket connection."""
+        if self.ws:
+            await self.ws.close()
+            print("WebSocket connection closed.")
+
+   
+class HtxPositions:
     def __init__(self, url, endpoint, access_key, secret_key):
         self.url = url
         self.endpoint = endpoint
@@ -80,7 +132,7 @@ class Diaoyu:
                 for sub in subs:
                     sub_str = json.dumps(sub)
                     await websocket.send(sub_str)
-                    print(f"send: {sub_str}")
+                    # print(f"send: {sub_str}")
 
                 while self.is_open and not self._stop_event.is_set():
                     try:
@@ -147,49 +199,116 @@ class Diaoyu:
         return signature
 
 
-# Usage example
-def publicCallback(message):
-    print("Callback received:", message)
+    
+class Strat:
+    def __init__(self):
+        self.okx_api_key = None
+        self.okx_secret_key = None
 
-# def main():
-access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
-secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
-notification_url = 'wss://api.hbdm.com/swap-notification'
-notification_endpoint = '/swap-notification'
-notification_subs = [
-    {
-        "op": "sub",
-        "cid": str(uuid.uuid1()),
-        "topic": "orders.BTC-USD"
-    },
-     {
-        "op": "sub",
-        "cid": str(uuid.uuid1()),
-        "topic": "positions.BTC-USD"
-    }
-]
+
+        self.okx_client = None
+        self.htx_thread = None
+        # from okxbbo
+        self.best_bid = None
+        self.best_bid_sz = None
+        self.best_ask = None
+        self.best_ask_sz = None
+
+        #user input
+        self.qty = None
+        self.ccy = None
+        self.size = None
+        self.lead_exchange = None
+        self.lagging_exchange = None
+        self.state = False
+
+
+
+    async def run_okx_bbo(self):
+        """Run the OkxBbo WebSocket client."""
+        self.okx_client = OkxBbo()
+        currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
+        channel = "bbo-tbt"
+        await self.okx_client.run(channel, currency_pairs, self.okx_publicCallback)
+        
+    def run_htx_positions(self):
+        """Run the HtxPositions WebSocket client."""
+        access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
+        secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
+        notification_url = 'wss://api.hbdm.com/swap-notification'
+        notification_endpoint = '/swap-notification'
+        notification_subs = [
+            {
+                "op": "sub",
+                "cid": str(uuid.uuid1()),
+                "topic": "orders.BTC-USD"
+            },
+            {
+                "op": "sub",
+                "cid": str(uuid.uuid1()),
+                "topic": "positions.BTC-USD"
+            }
+        ]
+
+        ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
+        ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
+
+    def start_clients(self):
+        """Start both WebSocket clients."""
+        # Start HtxPositions in a separate thread
+        self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
+        self.htx_thread.start()
+        # Run OkxBbo in the main asyncio event loop
+        asyncio.run(self.run_okx_bbo())
+
+    def stop_clients(self):
+        """Stop both WebSocket clients gracefully."""
+        if self.okx_client:
+            self.okx_client.stop()  # Assuming the OkxBbo class has a stop method
+        if self.htx_thread and self.htx_thread.is_alive():
+            # Implement stopping mechanism for HtxPositions if necessary
+            print("Stopping HtxPositions thread... (implement specific logic as needed)")
+
+    def okx_publicCallback(self,message):
+        """Callback function to handle incoming messages."""
+        json_data = json.loads(message)
+        if json_data.get('data'):
+            currency_pair = json_data["arg"]["instId"]
+            instrument = 'SPOT'
+            if 'SWAP' in currency_pair:
+                instrument = 'SWAP'
+            channel = json_data["arg"]["channel"]
+           
+            self.best_bid = json_data["data"][0]["bids"][0][0]
+            self.best_bid_sz = json_data["data"][0]["bids"][0][1]
+            self.best_ask = json_data["data"][0]["asks"][0][0]
+            self.best_ask_sz = json_data["data"][0]["asks"][0][1]
+
+            # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
+            x = requests.post('')
+            # when place order, we need to keep track of id. 
+
+    
+        # Usage example
+    def htx_publicCallback(self,message):
+        # print(self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+        # print(message)
+        # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
+
+        print("Callback received:", message)
+
+
+
+
 
 
 if __name__ == '__main__':
-        
-    ws1 = Diaoyu(notification_url, notification_endpoint, access_key, secret_key)
-    ws1.start(notification_subs, auth=True, callback=publicCallback)
-    print("SUBSCRIBING")
-
-    # Wait for a while to allow subscription
-    time.sleep(50)
-
-    print("STOPPING")
-    ws1.stop()
-    time.sleep(15)
-
-    print("RESTARTING")
-    ws1.start(notification_subs, auth=True, callback=publicCallback)
-    time.sleep(15)
-
-    ws1.stop()
-
-
+    strat = Strat()
+    try:
+        strat.start_clients()
+    except KeyboardInterrupt:
+        print("Stopping clients...")
+        strat.stop_clients()
 
     # access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
     # secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
