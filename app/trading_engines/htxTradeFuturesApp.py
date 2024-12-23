@@ -172,7 +172,7 @@ async def place_market_order():
 
         if result['status'] == 'error':
             return jsonify({"error": "Bad Requestss"}), 400  # Th
-        return jsonify(result)
+        return jsonify(result),200
 
     except Exception as e:
         return jsonify(result), 500
@@ -241,10 +241,13 @@ async def place_limit_order():
             "order_price_type": ordType
         })
         logger.info("Order request response {}".format(result))
-        
-        if result['status'] == 'error':
+        print('ending here')
+        print(result)
+        if 'status' in result and result['status'] == 'error':
             return jsonify({"error": "Bad Requestss"}), 400  # Th
-        return jsonify(result)
+        print('ending here2')
+        
+        return jsonify(result),200
 
     except Exception as e:
         return jsonify(result), 500

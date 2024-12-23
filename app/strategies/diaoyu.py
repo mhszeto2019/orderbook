@@ -204,7 +204,8 @@ class Strat:
     def __init__(self):
         self.okx_api_key = None
         self.okx_secret_key = None
-
+        self.okx_passphrase = None
+        
 
         self.okx_client = None
         self.htx_thread = None
@@ -285,7 +286,7 @@ class Strat:
             self.best_ask_sz = json_data["data"][0]["asks"][0][1]
 
             # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
-            x = requests.post('')
+            # x = requests.post('')
             # when place order, we need to keep track of id. 
 
     

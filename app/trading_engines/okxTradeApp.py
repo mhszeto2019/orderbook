@@ -101,7 +101,7 @@ def place_market_order():
 @token_required
 def place_limit_order():
     data = request.get_json()
-
+    
     side = data['side']
     username = data.get('username')
     # Get the order data from the request
