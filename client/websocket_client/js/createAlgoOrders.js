@@ -1,34 +1,179 @@
 
 
-// Function to add a new row to the DB and update the frontend
 function addNewRow() {
-    const data = {
-        leadingExchange: "okx",  // Default or user-selected
-        laggingExchange: "htx",  // Default or user-selected
-        param1: "default",       // Default or user-entered value
-        param2: "default",       // Default or user-entered value
-        param3: "default"        // Default or user-entered value
-    };
+    const algoList = document.getElementById('algo-list');
 
-    // Send the data to the server to add to the database
-    fetch('/add_algo', {  // Change '/add_algo' to your server's endpoint for adding data
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            // If the row was added successfully, refresh the table
-            fetchAlgoData();  // Refresh table with new data from the DB
-        }
-    })
-    .catch(error => {
-        console.error('Error adding new row:', error);
-    });
+    // Check if a new row already exists
+    if (document.getElementById('new-row')) {
+        alert('You can only add one new row at a time.');
+        return;
+    }
+
+    // Create a new table row with a unique ID
+    const newRow = document.createElement('tr');
+    newRow.id = 'new-row'; // Unique identifier for the new row
+    newRow.innerHTML = `
+        <td>
+            <input type="text" class="form-control" placeholder="Algo Name" id="new-algo-name">
+        </td>
+        <td>
+            <select class="form-control" id="new-lead-exchange">
+                <option value="okx">okx</option>
+                <option value="htx">htx</option>
+            </select>
+        </td>
+        <td>
+            <select class="form-control" id="new-lag-exchange">
+                <option value="okx">okx</option>
+                <option value="htx">htx</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control" placeholder="Spread" id="new-spread">
+        </td>
+        <td>
+            <input type="number" class="form-control" placeholder="Qty" id="new-qty" >
+        </td>
+       <td>
+            <input type="text" class="form-control" placeholder="Ccy" id="new-ccy" required title="Please enter a value for Ccy.">
+        </td>
+
+        <td>
+            <span class="badge bg-secondary">New</span>
+        </td>
+        <td>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="new-status" >
+            </div>
+        </td>
+        <td class="flex justify-content-between align-items-center">
+            <button class="btn btn-success btn-sm flex-grow-1 me-1" style="min-width: 80px;" onclick="saveRow(this)">Save</button>
+            <button class="btn btn-danger btn-sm flex-grow-1" style="min-width: 80px;" onclick="deleteActionRow(this)" >Delete</button>
+        </td>
+    `;
+
+    // Append the new row to the table
+    algoList.appendChild(newRow);
 }
+
+// Function to delete a row, including the new row
+function deleteActionRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+}
+
+
+function deleteRow(button) {
+    deleteAlgo(username,algoname)
+
+    const row = button.parentElement.parentElement; // Get the row containing the button
+    row.remove(); // Remove the row from the table
+}
+
+function saveRow(){
+    const ccyInput = document.querySelector('#new-ccy');
+
+    // Check if the "Ccy" input is empty
+    if (!ccyInput.value.trim()) {
+        // If the "Ccy" field is empty, show a custom message and add a red border to the input field
+        ccyInput.setCustomValidity('Please enter a value for Ccy.');
+        ccyInput.reportValidity(); // This will show the validity message
+        return; // Prevent saving if the field is invalid
+    } else {
+        // If the input is valid, proceed to save the row
+        ccyInput.setCustomValidity(''); // Reset any previous validation messages
+
+        // Implement your save logic here (e.g., send the data to the server or add the row to the table)
+        console.log('Row saved');
+        // For example, you can replace "New" badge with a "Saved" status or submit the data
+    }
+    
+    username= localStorage.getItem('username')
+    algo_name= document.getElementById('new-algo-name').value
+    lead_exchange= document.getElementById('new-lead-exchange').value
+    lag_exchange= document.getElementById('new-lag-exchange').value
+    spread=document.getElementById('new-spread').value
+    qty=document.getElementById('new-qty').value
+    ccy=document.getElementById('new-ccy').value
+    state=document.getElementById('new-status').checked
+    console.log(username, algo_name,lead_exchange, lag_exchange, spread, qty, ccy, state)
+    addAlgo(username, algo_name,lead_exchange, lag_exchange, spread, qty, ccy, state)
+    // fetchAlgoData()
+}
+
+function addAlgo(username, algo_name,lead_exchange, lag_exchange, spread, qty, ccy, state){
+    const requestBody = {
+        lead_exchange: lead_exchange,
+        lag_exchange: lag_exchange,
+        spread: spread,
+        qty: qty,
+        ccy: ccy,
+        state:state,
+        username: username,
+        algo_name: algo_name,
+    };
+    
+    fetch("http://localhost:5020/db/add_algo", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            fetchAlgoData()
+            return response.json();
+        })
+        .then(data => {
+            console.log("Success:", data);
+            // Handle successful response here
+        })
+        .catch(error => {
+            alert(`Error sending request (DB Error):${error}`)
+            console.error("Error sending POST request:", error);
+            return
+        });
+}
+
+function deleteAlgo(username,algoname){
+    console.log(username,algoname)
+    const requestBody = {
+        username: username,
+        algo_name: algoname
+    };
+    
+    fetch("http://localhost:5020/db/delete_algo", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            fetchAlgoData()
+            return response.json();
+        })
+        .then(data => {
+            console.log("Success:", data);
+            // Handle successful response here
+        })
+        .catch(error => {
+            alert(`Error sending request (DB Error):${error}`)
+            console.error("Error sending POST request:", error);
+            return
+        });
+}
+
 function fetchAlgoData() {
-    fetch('http://127.0.0.1:5020/db/get_algo_list')
+    const username = localStorage.getItem('username');
+    console.log(username)
+    fetch(`http://127.0.0.1:5020/db/get_algo_list?username=${username}`)
         .then(response => response.json())
         .then(data => {
             const algoList = document.getElementById('algo-list');
@@ -55,24 +200,27 @@ function fetchAlgoData() {
                         </select>
                     </td>
                     <td>
-                        <input type="text" class="form-control editable-field" id="input-${algoName}-spread" placeholder="Quantity" value="${algo.qty}">
+                        <input type="text" class="form-control editable-field" id="input-${algoName}-spread" placeholder="Spread" value="${algo.spread}">
                     </td>
                     <td>
-                        <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Spread" value="${algo.spread}">
+                        <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}">
                     </td>
                     <td>
                         <input type="text" class="form-control editable-field" id="input-${algoName}-ccy" placeholder="Currency" value="${algo.ccy}">
                     </td>
                     <td>
                         <span id="status-algo${algoName}" class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">
-                            ${isRunning ? 'Running' : 'Idle'}
+                            ${isRunning ? 'Running' : 'Stopped'}
                         </span>
                     </td>
                     <td>
                         <div class="form-check form-switch ">
                             <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu-${algoName}" ${isRunning ? 'checked' : ''} 
-                            onclick="handleAlgoToggle(this, '${algoName}','${algo.algo_name}' , 'status-algo${algoName}')">
+                            onclick="handleAlgoToggle(this, '${algoName}','${algoName}' , 'status-algo${algoName}')">
                         </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAlgo('${username}','${algoName}')">Delete</button>
                     </td>
                 `;
 
@@ -214,7 +362,7 @@ function handleAlgoToggle(checkbox, algo_name, algo, statusId) {
         statusBadge.classList.remove('bg-secondary');
         statusBadge.classList.add('bg-success');
     } else {
-        statusBadge.textContent = `Idle`;
+        statusBadge.textContent = `Stopped`;
         statusBadge.classList.remove('bg-success');
         statusBadge.classList.add('bg-secondary');
     }

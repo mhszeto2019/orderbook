@@ -46,7 +46,7 @@
     <div class = "row">
         <!-- DISPLAY TABLE -->
          
-        <div class="col-lg-8 container-fluid mt-4" id="orderbookdisplayContainer">
+        <div class="col-lg-7 container-fluid mt-4" id="orderbookdisplayContainer">
   
             <!-- Container for the funding rates row -->
             <div class="row">
@@ -401,7 +401,7 @@
         </div>
 
         <!-- FORM for ordering -->
-        <div class="col-lg-4 container-fluid  mt-4">
+        <div class="col-lg-5 container-fluid  mt-4">
             <!-- This section will only be visible if the JWT is present -->
             <div id="securedContent" class="alert alert-success" style="display: none;">
                     
@@ -522,20 +522,7 @@
                                             <input type="number" id="qty-input" class="form-control" placeholder="Quantity" value="1" required>
                                         </div>
                                         
-                                        <!-- Switch field -->
-                                        <!-- <div class="col-md-6" id="algo-status-container">
-                                            <label for="algo-status-input" class="form-label">Algo Status (off/on)</label>
-                                            <div class="d-flex">
-                                                <div class="form-check form-switch me-3">
-                                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDiaoyu">
-                                                    <label class="form-check-label" for="flexSwitchCheckDiaoyu">Diaoyu</label>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
-                                                    <label class="form-check-label" for="flexSwitchCheckChecked">Algo2</label>
-                                                </div>
-                                            </div>
-                                        </div> -->
+                                       
                                         
                                         
                                     
@@ -608,28 +595,31 @@
                         <div>
                             <!-- Algo Strats Table -->
                             <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead class="table-light small-header">
-                                        <tr>
-                                            <!-- <th scope="col">#</th> -->
-                                            <th scope="col">Algo Name</th>
-                                            <th scope="col">Leading Exchange</th>
-                                            <th scope="col">Lagging Exchange</th>
-                                            <th scope="col">Spread</th>
-                                            <th scope="col">Qty</th>
-                                            <th scope="col">Ccy</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col">Switch</th>
-                                        </tr>
-                                    </thead>
-                                    
-                                    <tbody id="algo-list">
-                                        <div class="text-end mb-3">
-                                            <button class="btn btn-primary " onclick="addNewRow()">Add Row</button>
-    
-                                        </div>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive  rounded bg-white p-3">
+                                    <table class="table align-middle mb-0">
+                                        <thead class="table-primary text-center">
+                                            <tr>
+                                                <th scope="col" style="width: 13%;">Algo Name</th>
+                                                <th scope="col" >Lead Exchange</th>
+                                                <th scope="col" >Lag Exchange</th>
+                                                <th scope="col" >Spread</th>
+                                                <th scope="col" >Qty</th>
+                                                <th scope="col" >Ccy</th>
+                                                <th scope="col" >Status</th>
+                                                <th scope="col" >Switch</th>
+                                                <th scope="col" style="width: 20%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="algo-list" class="text-center">
+                                            <!-- Dynamic rows will be inserted here -->
+                                        </tbody>
+                                    </table>
+                                    <div class="text-end mt-3">
+                                        <button class="btn btn-success btn-sm" onclick="addNewRow()">Add New Algo</button>
+                                    </div>
+                                </div>
+                                
+                                
                             </div>
                         </div>
 

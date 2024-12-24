@@ -11,11 +11,9 @@ CORS(app)
 @with_db_connection
 def get_algo_list(cursor):
     # user input username and password
-    username = request.form.get('username')
-    password = request.form.get('password')
-    print(request)
+    username = request.args.get('username')
     # Execute SELECT query to check for existing users
-    cursor.execute("SELECT jsonb_build_object('username', username,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s;", ('brennan',))
+    cursor.execute("SELECT jsonb_build_object('username', username,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s;", (username,))
     result = cursor.fetchall()
     return jsonify(result)
 
@@ -25,10 +23,8 @@ def get_algo_list(cursor):
 def modify_status(cursor):
     # Parse JSON data from the request
     data = request.json
-    print(data)
     if not data:
         return jsonify({"error": "Invalid input"}), 400
-
     username = data.get('username')
     algo_name = data.get('algo_name')
     lead_exchange = data.get('lead_exchange')
@@ -57,17 +53,77 @@ def modify_status(cursor):
         return jsonify({"error": f"Database error: {e}"}), 500
 
 
-# for i in range(100):
-#     if i%2 == 0:
-#         create_state('username','algo_state',False)
-#     else:
-#         create_state('username','algo_state',True)
+@app.route('/db/add_algo', methods=['POST'])
+@with_db_connection
+def add_algo(cursor):
+    data = request.json
+    print(data)
+    if not data:
+        return jsonify({"error": "Invalid input"}), 400
+    username = data.get('username')
+    algo_name = data.get('algo_name')
+    lead_exchange = data.get('lead_exchange')
+    lag_exchange = data.get('lag_exchange')
+    spread = data.get('spread')
+    qty = data.get('qty')
+    ccy = data.get('ccy')
+    state = data.get('state')
+    print(username, algo_name, lead_exchange, lag_exchange, spread, qty, ccy, state)
+    if not username or not algo_name:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    try:
+        # Execute the INSERT query with RETURNING
+        query = """
+        INSERT INTO algo_dets (username, algo_name, lead_exchange, lag_exchange, spread, qty, ccy, state)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING 'Insertion successful' AS status;
+        """
+        cursor.execute(query, (username, algo_name, lead_exchange, lag_exchange, spread, qty, ccy, state))
+        result = cursor.fetchone()  # Fetch the returning status message
+
+        cursor.connection.commit()  # Commit the transaction
+        return jsonify({"status": result[0]}), 201  # Return the status message in the response
 
 
-# username, algo_name, lead_exchange, lag_exchange, spread,qty, state
-# create_state('username','algo_name','OKX','HTX','200','10',True)
+    except Exception as e:
+        # Handle any other unexpected errors
+        print('error!!')
+        return jsonify({"error": str(e)}), 400
+    
 
-# read_state('username','algo_name')
+@app.route('/db/delete_algo', methods=['POST'])
+@with_db_connection
+def delete_algo(cursor):
+    data = request.json
+    print(data)
+    if not data:
+        return jsonify({"error": "Invalid input"}), 400
+    username = data.get('username')
+    algo_name = data.get('algo_name')
+    
+    if not username or not algo_name:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    try:
+        # Execute the INSERT query with RETURNING
+        query = """
+        DELETE FROM algo_dets WHERE username = %s and algo_name =%s
+        RETURNING 'Delete successful' AS status;
+        """
+        cursor.execute(query, (username, algo_name))
+        result = cursor.fetchone()  # Fetch the returning status message
+
+        cursor.connection.commit()  # Commit the transaction
+        return jsonify({"status": result[0]}), 201  # Return the status message in the response
+
+
+    except Exception as e:
+        # Handle any other unexpected errors
+        print('error!!')
+        return jsonify({"error": str(e)}), 400
+
+
 
 if __name__ == "__main__":
     app.run(host= '0.0.0.0',port=5020)
