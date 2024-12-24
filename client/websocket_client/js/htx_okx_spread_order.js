@@ -70,18 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = localStorage.getItem('username')
         const redis_key = localStorage.getItem('key')
         const side = event.submitter.value;
-        // console.log(
-        //     leadingExchange,
-        //     laggingExchange,
-        //     instrument,
-        //     ordType,
-        //     instId,
-        //     px1,
-        //     px2,
-        //     spread,
-        //     sz,
-        //     side
-        // )
+        console.log(
+            leadingExchange,
+            laggingExchange,
+            instrument,
+            ordType,
+            instId,
+            px1,
+            px2,
+            spread,
+            sz,
+            side
+        )
         // Create order object
         const orderData = {
             leadingExchange,

@@ -76,6 +76,28 @@ class HuobiCoinFutureRestTradeAPI:
         # print("open_orders,json_dict",json_dict)
         # print('json_response2',json_response2)
         return json_response2
+    
+    async def place_contract_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        print('placing contract swap cross order')
+        """ Get open order information.
+
+        Args:
+            symbol: Currency name, e.g. BTC.
+            index: Page index, default 1st page.
+            size: Page size, Default 20，no more than 50.
+
+        Returns:
+            success: Success results, otherwise it's None.
+            error: Error information, otherwise it's None.
+        """
+        uri = "/linear-swap-api/v1/swap_order"
+        print('body',body)
+        json_dict = await self.request("POST", uri, body=body, auth=True)
+        print(json_dict)
+        json_response2 = self.format_message(json_dict)
+        # print("open_orders,json_dict",json_dict)
+        # print('json_response2',json_response2)
+        return json_response2
 
     async def revoke_order_all(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
             """ Revoke all orders.

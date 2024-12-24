@@ -35,7 +35,6 @@ function addNewRow() {
             <input type="number" class="form-control" placeholder="Qty" id="new-qty" >
         </td>
        <td>
-            <input type="text" class="form-control" placeholder="Ccy" id="new-ccy" required title="Please enter a value for Ccy.">
              <select class="form-control" id="new-ccy">
                 <option value="BTC-USD-SWAP">BTC-USD-SWAP</option>
             </select>
@@ -304,6 +303,7 @@ function fetchAlgoData() {
 document.addEventListener('DOMContentLoaded', fetchAlgoData);
 
 function modifyAlgo(lead_exchange,lag_exchange,spread,qty,ccy,state,username,algo_name){
+    
     const requestBody = {
         lead_exchange: lead_exchange,
         lag_exchange: lag_exchange,
@@ -333,6 +333,7 @@ function modifyAlgo(lead_exchange,lag_exchange,spread,qty,ccy,state,username,alg
             // Handle successful response here
         })
         .catch(error => {
+            
             console.error("Error sending POST request:", error);
         });
 }

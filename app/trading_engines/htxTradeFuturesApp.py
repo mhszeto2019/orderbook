@@ -208,13 +208,12 @@ async def place_limit_order():
         posSide = 'long'
     else:
         posSide = 'short'
-
-    instId= data["instId"].replace("-SWAP", "")
+    if 'SWAP' in data['instId']:
+        instId= data["instId"].replace("-SWAP", "")
     tdMode= "cross"
     side= side
     ordType=  data["ordType"]
     sz= str(data["sz"]) 
-
     try:
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
 
@@ -223,7 +222,7 @@ async def place_limit_order():
         instId = data.get("instId")
         side = data.get("side")
         ordType = data.get("ordType")
-        
+        print(instId,side,ordType)
         # Call the asynchronous place_order function
         result = await tradeApi.place_order(instId,body = {
             "contract_code": instId,
@@ -248,85 +247,136 @@ async def place_limit_order():
         return jsonify(result), 500
 
 
-    # try:
-    #     # Get or create an event loop
-    #     try:
-    #         loop = asyncio.get_running_loop()
-    #     except RuntimeError:  # No running loop
-    #         loop = asyncio.new_event_loop()
-    #         asyncio.set_event_loop(loop)
+import datetime
+@token_required
+@app.route('/htx/futures/place_limit_order', methods=['POST'])
+async def place_limit_contract_order():
+    data = request.get_json()
+    print(data)
+    username = data.get('username')
+    # Get the order data from the request
+    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+    key_string = data.get('redis_key')
+    cleaned_key_string = key_string.strip("b'")
+
+    # Now decode the base64 string into bytes
+    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+    key_bytes = cleaned_key_string.encode('utf-8')
+    # You can now use the key with Fernet
+    cipher_suite = Fernet(key_bytes)
+    
+    cache_key = f"user:{username}:api_credentials"
+    # Fetch the encrypted credentials from Redis
+    encrypted_data = r.get(cache_key)   
+    
+    if encrypted_data:
+    # Decrypt the credentials
+        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+        api_creds_dict = json.loads(decrypted_data)
+        print(f"API credentials for {username}", api_creds_dict)
+
+    side = data['side']
+    if side == 'buy':
+        posSide = 'long'
+    else:
+        posSide = 'short'
+    if 'SWAP' in data['instId']:
+        instId= data["instId"].replace("-SWAP", "")
+    tdMode= "cross"
+    side= side
+    ordType=  data["ordType"]
+    sz= str(data["sz"]) 
+    try:
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+
+        # Data received from the client (assuming JSON body)
+        # Extract necessary parameters from the request
+        instId = data.get("instId")
+        side = data.get("side")
+        ordType = data.get("ordType")
+        instId = 'BTC-USDT-280325'
+        print(instId,side,ordType)
+
+        # Call the asynchronous place_order function
+        print({
+            "contract_code": instId,
+            "price": str(data["px"]) if data["px"] else "",
+            "created_at": str(datetime.datetime.now()),
+            "volume": str(data["sz"]),
+            "direction": side,
+            "offset": "open",
+            "lever_rate": 5,
+            "order_price_type": ordType
+        })
+        result = await tradeApi.place_contract_order(instId,body = {
+            "contract_code": instId,
+            "price": str(data["px"]) if data["px"] else "",
+            "created_at": str(datetime.datetime.now()),
+            "volume": str(data["sz"]),
+            "direction": side,
+            "offset": "open",
+            "lever_rate": 5,
+            "order_price_type": ordType
+        })
+
+        logger.info("Order request response {}".format(result))
+        print('ending here')
+        print(result)
+        if 'status' in result and result['status'] == 'error':
+            return jsonify({"error": "Bad Requestss"}), 400  # Th
+        print('ending here2')
         
-    #     # Run the async function using the obtained loop
-    #     result, error = loop.run_until_complete(
-    #         tradeApi.place_order(
-    #             instId,body = {
-    #                 "contract_code":instId,
-    #                 # "order_id":123456,
-    #                 "price":str(data["px"]) if data["px"] else "",
-    #                 "created_at":str(datetime.datetime.now()),
-    #                 "volume":str(data["sz"]),
-    #                 "direction":side,
-    #                 "offset":"open",
-    #                 "lever_rate":3,
-    #                 "order_price_type":ordType
-    #                 }
-    #         )
-    #     )
+        return jsonify(result),200
 
-    #     if error:
-    #         return jsonify({"error": str(error)}), 500
-
-    #     return jsonify(result)
-
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify(result), 500
 
     
-@app.route('/get_order_list', methods=['GET'])
-def get_order_list():
-    result = tradeApi.get_order_list()
-    data = result.get('data',[])
-    print(data)
-    order_list = []
-    for row in data:
-        order_list.append({"instId":row['instId'], "ordId":row['ordId']})
+# @app.route('/get_order_list', methods=['GET'])
+# def get_order_list():
+#     result = tradeApi.get_order_list()
+#     data = result.get('data',[])
+#     print(data)
+#     order_list = []
+#     for row in data:
+#         order_list.append({"instId":row['instId'], "ordId":row['ordId']})
     
-    return order_list
+#     return order_list
 
-@app.route('/get_order_history', methods=['GET'])
-def get_order_history():
-    result = tradeApi.get_orders_history(instType="SPOT")
-    print(result)
-    return result
+# @app.route('/get_order_history', methods=['GET'])
+# def get_order_history():
+#     result = tradeApi.get_orders_history(instType="SPOT")
+#     print(result)
+#     return result
 
 
-# not tested yet
-@app.route('/cancel_order', methods=['POST'])
-def cancel_order():
-    data = request.get_json()
+# # not tested yet
+# @app.route('/cancel_order', methods=['POST'])
+# def cancel_order():
+#     data = request.get_json()
     
-    print(tradeApi.cancel_order(instId=data['instId'],ordId=data['ordId']))
+#     print(tradeApi.cancel_order(instId=data['instId'],ordId=data['ordId']))
     
 
-@app.route('/cancel_multiple_orders', methods=['POST'])
-def cancel_multiple_order():
-    data = request.get_json()
-    cancel_orders_list = data
-    result = tradeApi.cancel_multiple_orders(cancel_orders_list)
-    print(result)
-    return result
+# @app.route('/cancel_multiple_orders', methods=['POST'])
+# def cancel_multiple_order():
+#     data = request.get_json()
+#     cancel_orders_list = data
+#     result = tradeApi.cancel_multiple_orders(cancel_orders_list)
+#     print(result)
+#     return result
     
-@app.route('/cancel_all_orders',methods=['POST'])
-def cancel_all_orders():
-    order_list = tradeApi.get_orders_history(instType="SPOT")
-    data = order_list.get('data',[])
-    print(data)
-    order_list = []
-    for row in data:
-        order_list.append({"instId":row['instId'], "ordId":row['ordId']})
-    result = tradeApi.cancel_multiple_orders(order_list)
+# @app.route('/cancel_all_orders',methods=['POST'])
+# def cancel_all_orders():
+#     order_list = tradeApi.get_orders_history(instType="SPOT")
+#     data = order_list.get('data',[])
+#     print(data)
+#     order_list = []
+#     for row in data:
+#         order_list.append({"instId":row['instId'], "ordId":row['ordId']})
+#     result = tradeApi.cancel_multiple_orders(order_list)
     
-    return result
+#     return result
 
 if __name__ == "__main__":
     app.run(port=5081)

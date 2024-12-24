@@ -125,8 +125,9 @@
                                   <select id="currency-input" class="form-select" aria-label="Currency" onchange="updateCurrency()">
                                     <option value="">Select Currency</option>
                                     <option value="BTC-USDC">BTC-USDC</option>
-                                    <option value="BTC-USDT">BTC-USDT</option>
-                                    <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
+                                    <option value="BTC-USD-SWAP">BTC-USD-SWAP</option>
+                                    <option value="BTC-USDT-SWAP">BTC-USDT-SWAP</option>
+                                    <option value="BTC-USDT-280325" selected>BTC-USD-0328</option>
 
                                   </select>
                                 </div>
@@ -453,6 +454,7 @@
                                             
                                             <select id="leading-exchange-input" class="form-select" required>
                                                 <option value="" disabled selected>Select Exchange</option>
+                                                <option value="none">NA</option>
                                                 <option value="htx">HTX</option>
                                                 <option value="okx" selected>OKX</option>
                                             </select>
@@ -462,6 +464,7 @@
                                             <label for="lagging-exchange-input" class="form-label">Lagging:</label>
                                             <select id="lagging-exchange-input" class="form-select" required>
                                                 <option value="" disabled selected>Select Exchange</option>
+                                                <option value="none">NA</option>
                                                 <option value="htx" selected>HTX</option>
                                                 <option value="okx">OKX</option>
                                             </select>
@@ -474,6 +477,8 @@
                                                 <option value="" disabled selected>Select Instrument</option>
                                                 <option value="spot">Spot</option>
                                                 <option value="swap" selected>Swap</option>
+                                                <option value="futures" selected>futures</option>
+
                                             </select>
                                         </div>
                                 
@@ -492,8 +497,8 @@
                                         <div class="col-12 col-md-12 mb-3">
                                             <label for="currency-input" class="form-label">Currency Pair:</label>
                                             <select id="currency-input" class="form-select" required>
-                                                <option value="" disabled selected>Select Currency Pair</option>
-                                                <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
+                                                <option value="" >Select Currency Pair</option>
+                                                <option value="BTC-USD-0328" >BTC-USD-0328</option>
                                             </select>
                                         </div>
                                 
