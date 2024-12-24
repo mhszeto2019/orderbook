@@ -5,20 +5,24 @@ import os
 from okx.websocket.WebSocketFactory import WebSocketFactory
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
+
 # Logging configuration
 LOG_DIR = '/var/www/html/orderbook/logs'
 log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
 os.makedirs(LOG_DIR, exist_ok=True)
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(log_filename),
-        # logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger("WsPublic")
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format="%(asctime)s [%(levelname)s] %(message)s",
+#     handlers=[
+#         # logging.FileHandler(log_filename),
+#         # logging.StreamHandler()
+#     ]
+# )
+# logger = logging.getLogger("WsPublic")
+# for handler in logger.handlers[:]:
+#     handler.close()
+#     logger.removeHandler(handler)
 
 class WsPublicAsync:
     def __init__(self, url):
@@ -53,7 +57,6 @@ class WsPublicAsync:
         while True:
             try:
                 async for message in self.websocket:
-                    # logger.info("Received message: {%s}", message)
                     if self.callback:
                         self.callback(message)
             except ConnectionClosedError as e:
@@ -69,23 +72,6 @@ class WsPublicAsync:
         await self.cleanup()
 
 
-    # async def consume(self):
-    #     """Continuously consume messages from the WebSocket, handling disconnections."""
-    #     while True:
-    #         try:
-    #             async for message in self.websocket:
-    #                 logger.info("Received message: {%s}", message)
-    #                 if self.callback:
-    #                     self.callback(message)
-    #         except ConnectionClosedError as e:
-    #             logger.error(f"WebSocket closed unexpectedly: {e}. Reconnecting...")
-    #             await self.reconnect()  # Attempt to reconnect
-    #         except ConnectionClosedOK:
-    #             logger.info("WebSocket connection closed gracefully.")
-    #             break
-    #         except Exception as e:
-    #             logger.error(f"Unexpected error in consume: {e}")
-    #             break
 
     async def subscribe(self, params: list, callback):
         """Subscribe to WebSocket channels."""

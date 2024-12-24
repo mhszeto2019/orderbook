@@ -18,14 +18,14 @@ function addNewRow() {
         </td>
         <td>
             <select class="form-control" id="new-lead-exchange">
-                <option value="okx">okx</option>
+                <option value="okx" selected>okx</option>
                 <option value="htx">htx</option>
             </select>
         </td>
         <td>
             <select class="form-control" id="new-lag-exchange">
                 <option value="okx">okx</option>
-                <option value="htx">htx</option>
+                <option value="htx" selected>htx</option>
             </select>
         </td>
         <td>
@@ -36,6 +36,9 @@ function addNewRow() {
         </td>
        <td>
             <input type="text" class="form-control" placeholder="Ccy" id="new-ccy" required title="Please enter a value for Ccy.">
+             <select class="form-control" id="new-ccy">
+                <option value="BTC-USD-SWAP">BTC-USD-SWAP</option>
+            </select>
         </td>
 
         <td>
@@ -250,6 +253,16 @@ function fetchAlgoData() {
                                 field.style.border = ''; // Remove red border
                                 field.dataset.edited = true; // Mark field as confirmed
                                 confirmWrapper.remove(); // Remove the buttons
+                                jwt_token = localStorage.getItem('jwt_token')
+                                key = localStorage.getItem('key')
+                                // getting new fields
+                                lead_exchange = document.getElementById(`input-${algoName}-leading-exchange`).value
+                                lag_exchange = document.getElementById(`input-${algoName}-lagging-exchange`).value
+                                spread = document.getElementById(`input-${algoName}-spread`).value
+                                qty = document.getElementById(`input-${algoName}-qty`).value
+                                ccy = document.getElementById(`input-${algoName}-ccy`).value
+                                state = document.getElementById(`flexSwitchCheckDiaoyu-${algoName}`).checked
+                                modifyAlgo(lead_exchange,lag_exchange,spread,qty,ccy,state,username,algoName)
                             });
 
                             // Cross button
@@ -290,7 +303,39 @@ function fetchAlgoData() {
 // Call the function to fetch data and populate the table when the page loads
 document.addEventListener('DOMContentLoaded', fetchAlgoData);
 
-
+function modifyAlgo(lead_exchange,lag_exchange,spread,qty,ccy,state,username,algo_name){
+    const requestBody = {
+        lead_exchange: lead_exchange,
+        lag_exchange: lag_exchange,
+        spread: spread,
+        qty: qty,
+        ccy: ccy,
+        state: state,
+        username: username,
+        algo_name: algo_name,
+    };
+    
+    fetch("http://localhost:5020/db/modify_status", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Success:", data);
+            // Handle successful response here
+        })
+        .catch(error => {
+            console.error("Error sending POST request:", error);
+        });
+}
 
 
 // Handle the toggle change
@@ -316,39 +361,8 @@ function handleAlgoToggle(checkbox, algo_name, algo, statusId) {
 
 
     console.log(lead_exchange,lag_exchange,spread,qty,ccy,checkbox.checked,username,algo_name)
-    // Step1: update database by modifying - required input: username and algo_name
-    const requestBody = {
-        lead_exchange: lead_exchange,
-        lag_exchange: lag_exchange,
-        spread: spread,
-        qty: qty,
-        ccy: ccy,
-        state: checkbox.checked,
-        username: username,
-        algo_name: algo_name,
-    };
-    
-    fetch("http://localhost:5020/db/modify_status", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log("Success:", data);
-            // Handle successful response here
-        })
-        .catch(error => {
-            console.error("Error sending POST request:", error);
-        });
-      
+   
+    modifyAlgo(lead_exchange,lag_exchange,spread,qty,ccy,checkbox.checked,username,algo_name)
 
     // Step2: Switch on strat with subproces
 

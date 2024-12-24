@@ -7,7 +7,7 @@ import os
 import json
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+from app.util import unix_ts_to_datetime
 import configparser
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
@@ -26,21 +26,27 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
 socketio = SocketIO(app, cors_allowed_origins="*",async_mode='gevent')
-# Logging configuration
+
+# Set log directory and filename
 LOG_DIR = '/var/www/html/orderbook/logs'
 log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
 os.makedirs(LOG_DIR, exist_ok=True)
+
+# Set up basic logging configuration
 import logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(log_filename),
-        # logging.StreamHandler()
-    ]
-)
-from util import get_logger 
-logger = get_logger(os.path.basename(__file__))
+
+log_filename = '/var/www/html/orderbook/logs/orderbooks_okx_data.log'
+file_handler = logging.FileHandler(log_filename)
+
+# Set up a basic formatter
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(formatter)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)  # Set log level
+
+# Add the file handler to the logger
+logger.addHandler(file_handler)
 
 class OKXWebSocketClient:
     def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
@@ -122,12 +128,14 @@ class OKXWebSocketClient:
 
             }
             socketio.emit(currency_pair,redis_data)
+            logger.info(redis_data['timestamp'])
             # print('sending to client')
             if 'SWAP' in currency_pair:
                 instrument = 'SWAP'
-            logger.debug('test')
             
 client = None
+loop = None
+
 # Example usage
 async def main():
     global client
@@ -138,7 +146,6 @@ async def main():
     channel = 'books5'
     await client.run(channel,currency_pairs, client.publicCallback)
 
-loop = None
 
 def run_okx_client():
     print('running_okx_client')

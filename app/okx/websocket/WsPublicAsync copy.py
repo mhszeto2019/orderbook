@@ -66,7 +66,7 @@ class WsPublicAsync:
 
     async def consume(self):
         async for message in self.websocket:
-            logger.info("Received message: {%s}", message)
+            # logger.info("Received message: {%s}", message)
             
             if self.callback:
                 self.callback(message)
