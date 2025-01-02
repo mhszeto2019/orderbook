@@ -463,8 +463,8 @@ class Diaoyu:
             # order will be placed to buy on htx side
             self.limit_buy_price = float(self.best_ask) - float(self.spread)
             self.limit_buy_size = self.qty
-            # result = await self.place_limit_order_htx()
-                    # Call the asynchronous function in a blocking way
+
+            # # Call the asynchronous function in a blocking way
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # If the loop is already running, create a new task
@@ -475,7 +475,7 @@ class Diaoyu:
 
     async def place_limit_order_htx(self):
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size)
+        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,)
 
         # result = await tradeApi.place_contract_order(self.ccy,body = {
         #     "contract_code": self.ccy,
@@ -498,6 +498,7 @@ class Diaoyu:
         print(self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
         # from db - latest received data
         print(self.qty, self.ccy)
+
         # from htx 
         # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
         print("Callback received:", message)
