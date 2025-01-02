@@ -10,6 +10,8 @@ import threading
 import asyncio
 import websockets
 import time
+# from app.trading_engines.htxTradeFuturesApp import place_limit_contract_order
+from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 
 import asyncio
 from okx.websocket.WsPublicAsync import WsPublicAsync
@@ -95,7 +97,7 @@ class HtxPositions:
         self._stop_event = threading.Event()
         self.loop = None
         self.thread = None
-
+        
     def start(self, subs, auth=False, callback=None):
         """ Start the subscription process in a separate thread. """
         if self.thread and self.thread.is_alive():
@@ -291,12 +293,14 @@ class DatabaseNotificationListener:
             print(f"Received invalid JSON payload: {notify.payload}")
     
 class Diaoyu:
-    def __init__(self,username,key,jwt_token,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state):
+    def __init__(self,username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state):
 
         self.username = username
         self.key = key
         self.jwt_token = jwt_token
         self.algoname = algoname
+        self.htx_apikey =    apikey
+        self.htx_secretkey = secretkey
 
         self.okx_api_key = None
         self.okx_secret_key = None
@@ -322,6 +326,9 @@ class Diaoyu:
         self.lead_exchange = lead_exchange
         self.lag_exchange = lag_exchange
         self.state = state
+        # derived from okx and user input
+        self.limit_buy_price = None
+        self.limit_buy_size = None
 
         self.received_data = None  # Variable to store received data
 
@@ -339,7 +346,6 @@ class Diaoyu:
         self.lead_exchange = json_data['data']['lead_exchange']
         self.lag_exchange = json_data['data']['lag_exchange']
         self.state = json_data['data']['state']
-        print(self.qty,self.state)
 
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -352,8 +358,10 @@ class Diaoyu:
     # connection with htx positions and orders
     def run_htx_positions(self):
         """Run the HtxPositions WebSocket client."""
-        access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
-        secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
+        # access_key = 
+        # secret_key = 
+        access_key = self.htx_apikey
+        secret_key = self.htx_secretkey
         # for swaps
         notification_url = 'wss://api.hbdm.com'
         notification_endpoint = '/swap-notification'
@@ -420,7 +428,6 @@ class Diaoyu:
         )
         self.dbsubscriber = listener
         self.dbsubscriber.listen()  # Start listening for database notifications
-        
 
     def start_clients(self):
         """Start both WebSocket clients."""
@@ -430,8 +437,8 @@ class Diaoyu:
         self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
         self.htx_thread.start()
         # Run OkxBbo in the main asyncio event loop
-        # asyncio.run(self.run_okx_bbo())
-        time.sleep(100)
+        asyncio.run(self.run_okx_bbo())
+        # time.sleep(100)
 
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
@@ -454,8 +461,34 @@ class Diaoyu:
             # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
             # when place order, we need to keep track of id. 
             # order will be placed to buy on htx side
-            limit_buy_price = self.best_ask - self.spread
-            limit_buy_size = self.qty
+            self.limit_buy_price = float(self.best_ask) - float(self.spread)
+            self.limit_buy_size = self.qty
+            # result = await self.place_limit_order_htx()
+                    # Call the asynchronous function in a blocking way
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If the loop is already running, create a new task
+                asyncio.create_task(self.place_limit_order_htx())
+            else:
+                # Run the async function to completion in the current thread
+                loop.run_until_complete(self.place_limit_order_htx())
+
+    async def place_limit_order_htx(self):
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size)
+
+        # result = await tradeApi.place_contract_order(self.ccy,body = {
+        #     "contract_code": self.ccy,
+        #     "price": self.limit_buy_price if self.limit_buy_price else "",
+        #     "created_at": str(datetime.datetime.now()),
+        #     "volume": self.limit_buy_size,
+        #     "direction": 'buy',
+        #     "offset": "open",
+        #     "lever_rate": 5,
+        #     "order_price_type": "limit"
+        # })
+        # print(result)
+        # return await result
             
     
         # Usage example
@@ -476,8 +509,8 @@ if __name__ == '__main__':
     # 1 strat = 1 algo 
     # 1 class has 1 algo, okx connector , htx connector and db notification connector 
     # username , algoname
-    username,key,jwt_token,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state = 'brennan','key','jwt_token','test1',10,'BTC-USD',20,'OKX','HTX',False
-    strat = Diaoyu(username,key,jwt_token,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state)
+    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False
+    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state)
     try:
         strat.start_clients()
     except KeyboardInterrupt:

@@ -244,78 +244,6 @@ async def place_limit_order():
         return jsonify(result), 500
 
 
-# import datetime
-# @token_required
-# @app.route('/htx/futures/place_limit_order', methods=['POST'])
-# async def place_limit_contract_order():
-#     data = request.get_json()
-#     print(data)
-    
-#     username = data.get('username')
-#     # Get the order data from the request
-#     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-#     key_string = data.get('redis_key')
-#     cleaned_key_string = key_string.strip("b'")
-
-#     # Now decode the base64 string into bytes
-#     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-#     key_bytes = cleaned_key_string.encode('utf-8')
-#     # You can now use the key with Fernet
-#     cipher_suite = Fernet(key_bytes)
-    
-#     cache_key = f"user:{username}:api_credentials"
-#     # Fetch the encrypted credentials from Redis
-#     encrypted_data = r.get(cache_key)   
-    
-#     if encrypted_data:
-#     # Decrypt the credentials
-#         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-#         api_creds_dict = json.loads(decrypted_data)
-#         print(f"API credentials for {username}", api_creds_dict)
-
-#     side = data['side']
-#     if side == 'buy':
-#         posSide = 'long'
-#     else:
-#         posSide = 'short'
-#     if 'SWAP' in data['instId']:
-#         instId= data["instId"].replace("-SWAP", "")
-#     tdMode= "cross"
-#     side= side
-#     ordType=  data["ordType"]
-#     sz= str(data["sz"]) 
-#     try:
-#         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
-
-#         # Data received from the client (assuming JSON body)
-#         # Extract necessary parameters from the request
-#         instId = data.get("instId")
-#         side = data.get("side")
-#         ordType = data.get("ordType")
-#         symbol = 'btc'
-#         contract_type = data.get('contract_type')
-#         print(instId,side,ordType,contract_type)
-
-#         result = await tradeApi.place_contract_order(instId,body = {
-#             "symbol": instId,
-#             "contract_type":contract_type,
-#             "price": str(data["px"]) if data["px"] else "",
-#             "created_at": str(datetime.datetime.now()),
-#             "volume": str(data["sz"]),
-#             "direction": side,
-#             "offset": "open",
-#             "lever_rate": 5,
-#             "order_price_type": ordType
-#         })
-
-#         logger.info("Order request response {}".format(result))
-#         print(result)
-#         if 'status' in result and result['status'] == 'error':
-#             return jsonify({"error": "Bad Requestss"}), 400  # Th
-#         return jsonify(result),200
-
-#     except Exception as e:
-#         return jsonify(result), 500
 
 
 @token_required
@@ -368,7 +296,6 @@ async def place_limit_contract_order():
         if data['ordType'] == 'market':
             ordType = 'optimal_20'
         data["ordType"]=  'optimal_20'
-       
         # Initialize TradeAPI
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
         print('GETING POSITIONS')
