@@ -463,7 +463,7 @@ class Diaoyu:
             # order will be placed to buy on htx side
             self.limit_buy_price = float(self.best_ask) - float(self.spread)
             self.limit_buy_size = self.qty
-
+            print(self.username,self.algoname,self.limit_buy_price,self.limit_buy_size)
             # # Call the asynchronous function in a blocking way
             # loop = asyncio.get_event_loop()
             # if loop.is_running():

@@ -162,19 +162,27 @@ def run_all_algo():
     for row in algo_details:
         # Initialize class and start AlgoRunTime
         print('Running row:', row)
-        
+        username =  row[1]
+        algo_type = row[2]
+        algo_name = row[3]
+        lead_exchange = row[4]
+        lag_exchange = row[5]
+        qty = row[6]
+        spread = row[7]
+        state = row[11]
+
+
+
         # Create a unique instance ID
         instance_id = f"{row[1]}_{row[2]}_{row[3]}"
         print(f"Instance ID: {instance_id}")
         
         # Replace with values from `row` or provide defaults for testing
-        username, key, jwt_token, apikey, secretkey, algoname, qty, ccy, spread, lead_exchange, lag_exchange, state, instrument = \
-            'brennan', 'key', 'jwt_token', 'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f', '109e924e-68a4de6a-0fd08753-22dcc', \
-            'test1', 10, 'BTC-USD', 20, 'OKX', 'HTX', False, 'swap'
+        key, jwt_token, apikey, secretkey,  ccy,    instrument =  'key', 'jwt_token', 'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f', '109e924e-68a4de6a-0fd08753-22dcc', 'BTC-USD',   'swap'
 
         # Initialize the strategy
         strat = Diaoyu(
-            username, key, jwt_token, apikey, secretkey, algoname, qty, ccy, spread,
+            username, key, jwt_token, apikey, secretkey, algo_name, qty, ccy, spread,
             lead_exchange, lag_exchange, state, instrument, contract_type=None
         )
         
@@ -186,6 +194,7 @@ def run_all_algo():
         algo_factory.addToDict(instance_id, strat)
         
         print(f"Currently running instances: {list(algo_factory.algo_instance_list.keys())}")
+
     time.sleep(1000)
 
 async def run_thread(strat):
@@ -221,8 +230,10 @@ def listen_for_updates():
                 algo_factory.addToDict(instance_id,AlgoRunTime)
                 print(algo_factory.algo_instance_list)
             else:
-
-                print('')
+                algo_instance = algo_factory.algo_instance_list[instance_id]
+                print("ALGO INSTANCE",algo_instance)
+                # print(json_data)
+                algo_instance.update_with_notification(algo_details)
 
 # need one script that assumes we start from 0 algos and another script to refresh the algo 
 
