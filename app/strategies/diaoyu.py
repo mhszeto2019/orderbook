@@ -293,7 +293,7 @@ class DatabaseNotificationListener:
             print(f"Received invalid JSON payload: {notify.payload}")
     
 class Diaoyu:
-    def __init__(self,username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state):
+    def __init__(self,username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None):
 
         self.username = username
         self.key = key
@@ -326,11 +326,20 @@ class Diaoyu:
         self.lead_exchange = lead_exchange
         self.lag_exchange = lag_exchange
         self.state = state
+        self.instrument = instrument
+        self.contract_type = contract_type
+
         # derived from okx and user input
         self.limit_buy_price = None
         self.limit_buy_size = None
+        self.order_id = None
 
         self.received_data = None  # Variable to store received data
+
+        # status
+        self.htx_filled_volume = 0
+        self.okx_triggered_place_order = True
+        self.htx_triggered_place_order = True
 
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
@@ -473,23 +482,57 @@ class Diaoyu:
                 # Run the async function to completion in the current thread
                 loop.run_until_complete(self.place_limit_order_htx())
 
+    # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,)
-
-        # result = await tradeApi.place_contract_order(self.ccy,body = {
-        #     "contract_code": self.ccy,
-        #     "price": self.limit_buy_price if self.limit_buy_price else "",
-        #     "created_at": str(datetime.datetime.now()),
-        #     "volume": self.limit_buy_size,
-        #     "direction": 'buy',
-        #     "offset": "open",
-        #     "lever_rate": 5,
-        #     "order_price_type": "limit"
-        # })
-        # print(result)
-        # return await result
-            
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.contract_type)
+        
+        if self.okx_triggered_place_order:
+            try:
+                if self.order_id :
+                    # Extract necessary parameters from the request
+                    tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
+                    revoke_orders = await tradeApi.revoke_order(self.ccy,
+                        body = {
+                        "order_id":self.order_id,
+                        "contract_code": self.ccy
+                        }
+                    )
+                    # print('input',data)
+                    revoke_order_data = revoke_orders.get('data', [])
+                    if len(revoke_order_data['errors']) == 0:
+                        # Call the asynchronous place_order function
+                        result = await tradeApi.place_order(self.ccy,body = {
+                            "contract_code": self.ccy,
+                            "price": self.limit_buy_price if self.limit_buy_price else "",
+                            "created_at": str(datetime.datetime.now()),
+                            "volume": self.limit_buy_size,
+                            "direction": 'buy',
+                            "offset": "open",
+                            "lever_rate": 5,
+                            "order_price_type": 'limit'
+                        })
+                        print(result)
+                        print('order placed')
+                    return revoke_order_data
+                else:
+                    result = await tradeApi.place_order(self.ccy,body = {
+                            "contract_code": self.ccy,
+                            "price": self.limit_buy_price if self.limit_buy_price else "",
+                            "created_at": str(datetime.datetime.now()),
+                            "volume": self.limit_buy_size,
+                            "direction": 'buy',
+                            "offset": "open",
+                            "lever_rate": 5,
+                            "order_price_type": 'limit'
+                        })
+                    print(result)
+                    self.order_id = result['order_id']
+                    print('order placed')
+                    return result
+                
+            except Exception as e:
+                print(e)
     
         # Usage example
     def htx_publicCallback(self,message):
@@ -501,8 +544,81 @@ class Diaoyu:
 
         # from htx 
         # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-        print("Callback received:", message)
+        # if order id from message # Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008450, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 6, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [{'trade_id': 251300058558640, 'id': '251300058558640-1324420309708902401-1', 'trade_volume': 1, 'trade_price': 98000, 'trade_turnover': 100.0, 'created_at': 1735808008446, 'role': 'maker'}], 'uid': '502448972', 'volume': 1, 'trade_volume': 1, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
+        if self.order_id == message['trade']['id'].split('-')[1]:
+            self.okx_triggered_place_order = False
+            self.htx_filled_volume += message['volume']
+            # place market order on okx with filled volume
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If the loop is already running, create a new task
+                asyncio.create_task(self.place_market_order_kx())
+            else:
+                # Run the async function to completion in the current thread
+                loop.run_until_complete(self.place_market_order_kx())
+        
+        # if specified limit volume is fulfilled, we terminate the algo and reset the values
+        if self.htx_filled_volume == self.limit_buy_size:
+            self.state = False
+            self.htx_filled_volume = 0
 
+        print("Callback received:", message)
+        
+    async def place_market_order_kx(self):
+        try:
+            side = 'sell'
+            username = self.username
+            # Get the order data from the request
+            # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+            key_string = data.get('redis_key')
+            if key_string.startswith("b'") and key_string.endswith("'"):
+                cleaned_key_string = key_string[2:-1]
+            else:
+                cleaned_key_string = key_string  # Fallback if the format is unexpected
+
+            # Now decode the base64 string into bytes
+            key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+            key_bytes = cleaned_key_string.encode('utf-8')
+            # You can now use the key with Fernet
+            cipher_suite = Fernet(key_bytes)
+            
+            cache_key = f"user:{username}:api_credentials"
+            # Fetch the encrypted credentials from Redis
+            encrypted_data = r.get(cache_key)   
+            if encrypted_data:
+            # Decrypt the credentials
+                decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+                api_creds_dict = json.loads(decrypted_data)
+                
+            # Initialize TradeAPI
+            tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+            print("username:",username)
+
+            result = tradeApi.place_order(
+                instId= data["instId"],
+                tdMode= "cross", 
+                side= side, 
+                posSide='', 
+                ordType=  data["ordType"],
+                sz= str(data["sz"]) 
+            )
+            result['data'][0]['exchange']='okx'
+            print(result)
+            if result["code"] == "0":
+                result['data'][0]['sCode'] = 200
+
+                # print("Successful order request，order_id = ",result["data"][0]["ordId"])
+
+            else:
+                result['data'][0]['sCode'] = 400
+
+                # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+
+            logger.info("Order request resposne {}".format(result))
+
+            return result
+        except Exception as e:
+            print(e)
     
 
 
@@ -510,8 +626,8 @@ if __name__ == '__main__':
     # 1 strat = 1 algo 
     # 1 class has 1 algo, okx connector , htx connector and db notification connector 
     # username , algoname
-    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False
-    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state)
+    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False,'swap'
+    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type)
     try:
         strat.start_clients()
     except KeyboardInterrupt:
