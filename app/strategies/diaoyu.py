@@ -12,26 +12,21 @@ import websockets
 import time
 # from app.trading_engines.htxTradeFuturesApp import place_limit_contract_order
 from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
-
-import asyncio
+from okx import Trade
+import select
+import os
+import psycopg2
 from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
-import json
-import os
-import json
 import configparser
+
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
-# print("Config file path:", config_file_path)
-# Read the configuration file
 config.read(config_file_path)
 config_source = 'redis'
 REDIS_HOST = config[config_source]['host']
 REDIS_PORT = config[config_source]['port']
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-import requests
-import pg8000
-import select
 
 config_source = 'localdb'
 dbusername = config[config_source]['username']
@@ -206,91 +201,86 @@ class HtxPositions:
         signature = signature.decode()
         return signature
 
-import time
-import select
-import configparser
-import os
-import json
-import psycopg2
 
-class DatabaseNotificationListener:
-    def __init__(self, db_config, channel, filter_username=None, filter_algoname= None, callback = None):
-        """
-        Initialize the DatabaseNotificationListener.
 
-        :param config_file: Path to the configuration file.
-        :param config_source: The section name in the configuration file.
-        :param channel: The PostgreSQL notification channel to listen to.
-        :param filter_username: Optional username to filter notifications by.
-        """
-        print(filter_username,filter_algoname)
-        self.channel = channel
-        self.filter_username = filter_username
-        self.filter_algoname = filter_algoname
-        self.db_config = db_config
-        self.callback = callback
+# class DatabaseNotificationListener:
+#     def __init__(self, db_config, channel, filter_username=None, filter_algoname= None, callback = None):
+#         """
+#         Initialize the DatabaseNotificationListener.
 
-    def listen(self):
-        """
-        Start listening for PostgreSQL notifications on the specified channel.
-        """
-        try:
-            # Connect to the PostgreSQL database
-            conn = psycopg2.connect(
-                                    dbname=self.db_config['database'],
-                                    user=self.db_config['user'],
-                                    password=self.db_config['password'],
-                                    host=self.db_config['host'],
-                                    port=self.db_config['port']
-                                    )
-            conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-            cur = conn.cursor()
+#         :param config_file: Path to the configuration file.
+#         :param config_source: The section name in the configuration file.
+#         :param channel: The PostgreSQL notification channel to listen to.
+#         :param filter_username: Optional username to filter notifications by.
+#         """
+#         print(filter_username,filter_algoname)
+#         self.channel = channel
+#         self.filter_username = filter_username
+#         self.filter_algoname = filter_algoname
+#         self.db_config = db_config
+#         self.callback = callback
 
-            # Start listening to the channel
-            cur.execute(f"LISTEN {self.channel};")
-            print(f"Listening for notifications on '{self.channel}'...")
+#     def listen(self):
+#         """
+#         Start listening for PostgreSQL notifications on the specified channel.
+#         """
+#         try:
+#             # Connect to the PostgreSQL database
+#             conn = psycopg2.connect(
+#                                     dbname=self.db_config['database'],
+#                                     user=self.db_config['user'],
+#                                     password=self.db_config['password'],
+#                                     host=self.db_config['host'],
+#                                     port=self.db_config['port']
+#                                     )
+#             conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+#             cur = conn.cursor()
 
-            while True:
-                # Wait for a notification with a timeout
-                if select.select([conn], [], [], 5) == ([], [], []):
-                    print("No notification received within 5 seconds.")
-                    continue
+#             # Start listening to the channel
+#             cur.execute(f"LISTEN {self.channel};")
+#             print(f"Listening for notifications on '{self.channel}'...")
+
+#             while True:
+#                 # Wait for a notification with a timeout
+#                 if select.select([conn], [], [], 5) == ([], [], []):
+#                     print("No notification received within 5 seconds.")
+#                     continue
                 
-                # Poll the connection for notifications
-                conn.poll()
-                while conn.notifies:
-                    notify = conn.notifies.pop()
-                    self._process_notification(notify)
+#                 # Poll the connection for notifications
+#                 conn.poll()
+#                 while conn.notifies:
+#                     notify = conn.notifies.pop()
+#                     self._process_notification(notify)
 
-        except Exception as e:
-            print(f"Error listening for notifications: {e}")
-            time.sleep(5)  # Retry delay
-            self.listen()  # Retry listening
+#         except Exception as e:
+#             print(f"Error listening for notifications: {e}")
+#             time.sleep(5)  # Retry delay
+#             self.listen()  # Retry listening
 
-    def _process_notification(self, notify):
-        """
-        Process a received PostgreSQL notification.
-        :param notify: The notification object.
-        """
-        try:
-            # Parse the payload as JSON
-            payload = json.loads(notify.payload)
-            operation = payload.get('operation')
-            data = payload.get('data')
-            # username = self.filter_username
-            # algoname = self.filter_algoname
-            self.callback(payload)
+#     def _process_notification(self, notify):
+#         """
+#         Process a received PostgreSQL notification.
+#         :param notify: The notification object.
+#         """
+#         try:
+#             # Parse the payload as JSON
+#             payload = json.loads(notify.payload)
+#             operation = payload.get('operation')
+#             data = payload.get('data')
+#             # username = self.filter_username
+#             # algoname = self.filter_algoname
+#             self.callback(payload)
 
-            # Check if the username matches the filter
-            if self.filter_username is None or username == self.filter_username:
-                print(
-                    f"Notification received for user '{username}': {operation} - {data}"
-                )
-            else:
-                print(f"Ignored notification for user '{username}'.")
+#             # Check if the username matches the filter
+#             if self.filter_username is None or username == self.filter_username:
+#                 print(
+#                     f"Notification received for user '{username}': {operation} - {data}"
+#                 )
+#             else:
+#                 print(f"Ignored notification for user '{username}'.")
 
-        except json.JSONDecodeError:
-            print(f"Received invalid JSON payload: {notify.payload}")
+#         except json.JSONDecodeError:
+#             print(f"Received invalid JSON payload: {notify.payload}")
     
 class Diaoyu:
     def __init__(self,username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None):
@@ -319,6 +309,7 @@ class Diaoyu:
         self.best_ask_sz = None
         # from htx
         self.order_id = None
+
         # user input
         self.qty = qty
         self.ccy = ccy
@@ -411,40 +402,40 @@ class Diaoyu:
             # }
         ]
         # swap client
-        # ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
-        # ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
+        ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
+        ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
         # futures client
-        ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
-        ws_futures_client.start(notification_futures_subs, auth=True, callback=self.htx_publicCallback)
+        # ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
+        # ws_futures_client.start(notification_futures_subs, auth=True, callback=self.htx_publicCallback)
 
-    # connection with db
-    def subsciribe2DB(self):
-        db_config = {
-            'host': 'localhost',  # Replace with your host
-            'user': dbusername,  # Replace with your username
-            'port':'5432',
-            'password': dbpassword,  # Replace with your password
-            'database': dbname # Replace with your database name
-        }
-        channel = 'algo_dets_channel'  # Channel to listen to
-        print('self2',self.username,self.algoname)
-        listener = DatabaseNotificationListener(
-            db_config,
-            channel,
-            filter_username=self.username,
-            filter_algoname=self.algoname,
-            callback=self.update_with_notification  # Pass the callback method
-        )
-        self.dbsubscriber = listener
-        self.dbsubscriber.listen()  # Start listening for database notifications
+    # # connection with db
+    # def subsciribe2DB(self):
+    #     db_config = {
+    #         'host': 'localhost',  # Replace with your host
+    #         'user': dbusername,  # Replace with your username
+    #         'port':'5432',
+    #         'password': dbpassword,  # Replace with your password
+    #         'database': dbname # Replace with your database name
+    #     }
+    #     channel = 'algo_dets_channel'  # Channel to listen to
+    #     print('self2',self.username,self.algoname)
+    #     listener = DatabaseNotificationListener(
+    #         db_config,
+    #         channel,
+    #         filter_username=self.username,
+    #         filter_algoname=self.algoname,
+    #         callback=self.update_with_notification  # Pass the callback method
+    #     )
+    #     self.dbsubscriber = listener
+    #     self.dbsubscriber.listen()  # Start listening for database notifications
 
     def start_clients(self):
         """Start both WebSocket clients."""
         # Start HtxPositions in a separate thread
-        self.db_thread = threading.Thread(target=self.subsciribe2DB, daemon=True)
+        # self.db_thread = threading.Thread(target=self.subsciribe2DB, daemon=True)
         # self.db_thread.start()
-        self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
-        self.htx_thread.start()
+        # self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
+        # self.htx_thread.start()
         # Run OkxBbo in the main asyncio event loop
         asyncio.run(self.run_okx_bbo())
         # time.sleep(100)
@@ -474,13 +465,13 @@ class Diaoyu:
             self.limit_buy_size = self.qty
 
             # # Call the asynchronous function in a blocking way
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If the loop is already running, create a new task
-                asyncio.create_task(self.place_limit_order_htx())
-            else:
-                # Run the async function to completion in the current thread
-                loop.run_until_complete(self.place_limit_order_htx())
+            # loop = asyncio.get_event_loop()
+            # if loop.is_running():
+            #     # If the loop is already running, create a new task
+            #     asyncio.create_task(self.place_limit_order_htx())
+            # else:
+            #     # Run the async function to completion in the current thread
+            #     loop.run_until_complete(self.place_limit_order_htx())
 
     # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
@@ -534,91 +525,91 @@ class Diaoyu:
             except Exception as e:
                 print(e)
     
-        # Usage example
+
     def htx_publicCallback(self,message):
         # we need to compare htx data with okx data. When a trade is made, we will then fire data to place trade on okx
         # from okxbbo 
         print(self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
         # from db - latest received data
         print(self.qty, self.ccy)
-
+        print(message)
         # from htx 
         # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-        # if order id from message # Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008450, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 6, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [{'trade_id': 251300058558640, 'id': '251300058558640-1324420309708902401-1', 'trade_volume': 1, 'trade_price': 98000, 'trade_turnover': 100.0, 'created_at': 1735808008446, 'role': 'maker'}], 'uid': '502448972', 'volume': 1, 'trade_volume': 1, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
-        if self.order_id == message['trade']['id'].split('-')[1]:
-            self.okx_triggered_place_order = False
-            self.htx_filled_volume += message['volume']
-            # place market order on okx with filled volume
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If the loop is already running, create a new task
-                asyncio.create_task(self.place_market_order_kx())
-            else:
-                # Run the async function to completion in the current thread
-                loop.run_until_complete(self.place_market_order_kx())
+        # if self.order_id == message['trade']['id'].split('-')[1]:
+        #     self.okx_triggered_place_order = False
+        #     self.htx_filled_volume += message['volume']
+        #     # place market order on okx with filled volume
+        #     loop = asyncio.get_event_loop()
+        #     if loop.is_running():
+        #         # If the loop is already running, create a new task
+        #         asyncio.create_task(self.place_market_order_kx())
+        #     else:
+        #         # Run the async function to completion in the current thread
+        #         loop.run_until_complete(self.place_market_order_kx())
         
-        # if specified limit volume is fulfilled, we terminate the algo and reset the values
-        if self.htx_filled_volume == self.limit_buy_size:
-            self.state = False
-            self.htx_filled_volume = 0
+        # # if specified limit volume is fulfilled, we terminate the algo and reset the values
+        # if self.htx_filled_volume == self.limit_buy_size:
+        #     self.state = False
+        #     self.htx_filled_volume = 0
 
-        print("Callback received:", message)
-        
-    async def place_market_order_kx(self):
-        try:
-            side = 'sell'
-            username = self.username
-            # Get the order data from the request
-            # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-            key_string = data.get('redis_key')
-            if key_string.startswith("b'") and key_string.endswith("'"):
-                cleaned_key_string = key_string[2:-1]
-            else:
-                cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # print("Callback received:", message)
 
-            # Now decode the base64 string into bytes
-            key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-            key_bytes = cleaned_key_string.encode('utf-8')
-            # You can now use the key with Fernet
-            cipher_suite = Fernet(key_bytes)
+    async def place_market_order_okx(self):
+        print("PLACE MARKET ORDER ON OKX")
+        # try:
+        #     side = 'sell'
+        #     username = self.username
+        #     # Get the order data from the request
+        #     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        #     key_string = data.get('redis_key')
+        #     if key_string.startswith("b'") and key_string.endswith("'"):
+        #         cleaned_key_string = key_string[2:-1]
+        #     else:
+        #         cleaned_key_string = key_string  # Fallback if the format is unexpected
+
+        #     # Now decode the base64 string into bytes
+        #     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        #     key_bytes = cleaned_key_string.encode('utf-8')
+        #     # You can now use the key with Fernet
+        #     cipher_suite = Fernet(key_bytes)
             
-            cache_key = f"user:{username}:api_credentials"
-            # Fetch the encrypted credentials from Redis
-            encrypted_data = r.get(cache_key)   
-            if encrypted_data:
-            # Decrypt the credentials
-                decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-                api_creds_dict = json.loads(decrypted_data)
+        #     cache_key = f"user:{username}:api_credentials"
+        #     # Fetch the encrypted credentials from Redis
+        #     encrypted_data = r.get(cache_key)   
+        #     if encrypted_data:
+        #     # Decrypt the credentials
+        #         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+        #         api_creds_dict = json.loads(decrypted_data)
                 
-            # Initialize TradeAPI
-            tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-            print("username:",username)
+        #     # Initialize TradeAPI
+        #     tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
+        #     print("username:",username)
 
-            result = tradeApi.place_order(
-                instId= data["instId"],
-                tdMode= "cross", 
-                side= side, 
-                posSide='', 
-                ordType=  data["ordType"],
-                sz= str(data["sz"]) 
-            )
-            result['data'][0]['exchange']='okx'
-            print(result)
-            if result["code"] == "0":
-                result['data'][0]['sCode'] = 200
+        #     result = tradeApi.place_order(
+        #         instId= data["instId"],
+        #         tdMode= "cross", 
+        #         side= side, 
+        #         posSide='', 
+        #         ordType=  data["ordType"],
+        #         sz= str(data["sz"]) 
+        #     )
+        #     result['data'][0]['exchange']='okx'
+        #     print(result)
+        #     if result["code"] == "0":
+        #         result['data'][0]['sCode'] = 200
 
-                # print("Successful order request，order_id = ",result["data"][0]["ordId"])
+        #         # print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-            else:
-                result['data'][0]['sCode'] = 400
+        #     else:
+        #         result['data'][0]['sCode'] = 400
 
-                # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+        #         # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
 
-            logger.info("Order request resposne {}".format(result))
+        #     logger.info("Order request resposne {}".format(result))
 
-            return result
-        except Exception as e:
-            print(e)
+        #     return result
+        # except Exception as e:
+        #     print(e)
     
 
 
@@ -626,8 +617,8 @@ if __name__ == '__main__':
     # 1 strat = 1 algo 
     # 1 class has 1 algo, okx connector , htx connector and db notification connector 
     # username , algoname
-    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False,'swap'
-    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type)
+    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False,'swap'
+    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None)
     try:
         strat.start_clients()
     except KeyboardInterrupt:
