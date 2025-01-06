@@ -19,7 +19,7 @@ import psycopg2
 from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
 import configparser
-
+import decimal
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
 config.read(config_file_path)
@@ -283,18 +283,18 @@ class HtxPositions:
 #             print(f"Received invalid JSON payload: {notify.payload}")
     
 class Diaoyu:
-    def __init__(self,username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None):
+    def __init__(self,username,key,jwt_token,htx_apikey,htx_secretkey,okx_apikey,okx_secretkey,okx_passphrase,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None):
 
         self.username = username
         self.key = key
         self.jwt_token = jwt_token
         self.algoname = algoname
-        self.htx_apikey =    apikey
-        self.htx_secretkey = secretkey
+        self.htx_apikey =    htx_apikey
+        self.htx_secretkey = htx_secretkey
 
-        self.okx_api_key = None
-        self.okx_secret_key = None
-        self.okx_passphrase = None
+        self.okx_api_key = okx_apikey
+        self.okx_secret_key = okx_secretkey
+        self.okx_passphrase = okx_passphrase
 
         # db
         self.dbsubscriber = None
@@ -329,8 +329,10 @@ class Diaoyu:
 
         # status
         self.htx_filled_volume = 0
-        self.okx_triggered_place_order = True
-        self.htx_triggered_place_order = True
+
+        # Switch to on and off place order
+        self.okx_place_order_trigger = False
+        self.htx_place_order_trigger = False
 
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
@@ -461,28 +463,31 @@ class Diaoyu:
             # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
             # when place order, we need to keep track of id. 
             # order will be placed to buy on htx side
-            self.limit_buy_price = float(self.best_ask) - float(self.spread)
+            self.limit_buy_price = (decimal.Decimal(self.best_bid) - decimal.Decimal(self.spread))
             self.limit_buy_size = self.qty
-            print(self.username,self.algoname,self.limit_buy_price,self.limit_buy_size)
+            # print(self.username,self.algoname,self.limit_buy_price,self.limit_buy_size)
             # # Call the asynchronous function in a blocking way
-            # loop = asyncio.get_event_loop()
-            # if loop.is_running():
-            #     # If the loop is already running, create a new task
-            #     asyncio.create_task(self.place_limit_order_htx())
-            # else:
-            #     # Run the async function to completion in the current thread
-            #     loop.run_until_complete(self.place_limit_order_htx())
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If the loop is already running, create a new task
+                asyncio.create_task(self.place_limit_order_htx())
+            else:
+                # Run the async function to completion in the current thread
+                loop.run_until_complete(self.place_limit_order_htx())
 
     # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
-        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.contract_type)
-        
-        if self.okx_triggered_place_order:
+        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
+        # print(self.okx_triggered_place_order)
+        print(self.order_id)
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        # time.sleep(3)
+        if self.state:
             try:
+                # check if theres is an order_id. if dont have, it will be a new order
                 if self.order_id :
                     # Extract necessary parameters from the request
-                    tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
+                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
                     revoke_orders = await tradeApi.revoke_order(self.ccy,
                         body = {
                         "order_id":self.order_id,
@@ -507,6 +512,7 @@ class Diaoyu:
                         print('order placed')
                     return revoke_order_data
                 else:
+                    print("NO CURRENT ORDERS")
                     result = await tradeApi.place_order(self.ccy,body = {
                             "contract_code": self.ccy,
                             "price": self.limit_buy_price if self.limit_buy_price else "",
@@ -518,7 +524,7 @@ class Diaoyu:
                             "order_price_type": 'limit'
                         })
                     print(result)
-                    self.order_id = result['order_id']
+                    # self.order_id = result['order_id']
                     print('order placed')
                     return result
                 
@@ -532,7 +538,7 @@ class Diaoyu:
         print(self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
         # from db - latest received data
         print(self.qty, self.ccy)
-        print(message)
+        # print(message)
         # from htx 
         # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
         # if self.order_id == message['trade']['id'].split('-')[1]:

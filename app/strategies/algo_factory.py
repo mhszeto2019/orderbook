@@ -157,32 +157,59 @@ def get_db_connection():
 def run_all_algo():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("select * from algo_dets")
+    # cur.execute("select * from algo_dets")
+    cur.execute("""select
+        ad.username,
+        ad.algo_type,
+        ad.algo_name,
+        ad.lead_exchange,
+        ad.lag_exchange ,
+        ad.spread,
+        ad.qty,
+        ad.ccy,
+        ad.instrument,
+        ad.contract_type,
+        ad.state,
+        MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
+        MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
+        MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
+        MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
+        MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase   
+        FROM algo_dets ad left join api_credentials ac on ad.username = ac.username  group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
+    )
     algo_details = cur.fetchall()
     for row in algo_details:
         # Initialize class and start AlgoRunTime
         print('Running row:', row)
-        username =  row[1]
-        algo_type = row[2]
-        algo_name = row[3]
-        lead_exchange = row[4]
-        lag_exchange = row[5]
+        username =  row[0]
+        algo_type = row[1]
+        algo_name = row[2]
+        lead_exchange = row[3]
+        lag_exchange = row[4]
+        spread = row[5]
         qty = row[6]
-        spread = row[7]
-        state = row[11]
-
-
+        ccy = row[7]
+        instrument = row[8]
+        contract_type = row[9]
+        state = row[10]
+        htx_apikey = row[11]
+        htx_secretkey = row[12]
+        okx_apikey = row[13]
+        okx_secretkey = row[14]
+        okx_passphrase = row[15]
+        
 
         # Create a unique instance ID
-        instance_id = f"{row[1]}_{row[2]}_{row[3]}"
+        instance_id = f"{username}_{algo_type}_{algo_name}"
         print(f"Instance ID: {instance_id}")
-        
+        # print(username,key,jwt_token,htx_apikey,htx_secretkey,okx_apikey,okx_secretkey,okx_passphrase,algo_name,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type)
         # Replace with values from `row` or provide defaults for testing
-        key, jwt_token, apikey, secretkey,  ccy,    instrument =  'key', 'jwt_token', 'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f', '109e924e-68a4de6a-0fd08753-22dcc', 'BTC-USD',   'swap'
-
+        # key, jwt_token, apikey, secretkey,okx_apikey,okx_secretkey,okx_passphrase ccy, instrument = 'key', 'jwt_token', 'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f', '109e924e-68a4de6a-0fd08753-22dcc', 'BTC-USD', 'swap'
+        key,jwt_token = '',''
         # Initialize the strategy
+        # Since Diaoyu is trading SWAP, we will keep contract type as None
         strat = Diaoyu(
-            username, key, jwt_token, apikey, secretkey, algo_name, qty, ccy, spread,
+            username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_name, qty, ccy, spread,
             lead_exchange, lag_exchange, state, instrument, contract_type=None
         )
         
@@ -193,7 +220,7 @@ def run_all_algo():
         # Add the strategy instance to the factory
         algo_factory.addToDict(instance_id, strat)
         
-        print(f"Currently running instances: {list(algo_factory.algo_instance_list.keys())}")
+        # print(f"Currently running instances: {list(algo_factory.algo_instance_list.keys())}")
 
     time.sleep(1000)
 
@@ -215,27 +242,29 @@ def listen_for_updates():
         conn.poll()
         while conn.notifies:
             notify = conn.notifies.pop()
-            print(f"Received notification: {notify.payload}")
+            # print(f"Received notification: {notify.payload}")
             algo_details = json.loads(notify.payload)
             json_data = algo_details['data']
             operation = algo_details['operation']
-            print(algo_details)
-            print(operation)
+            # print(algo_details)
+            # print(operation)
             # Initialize and start new AlgoRunTime instance
             instance_id = f"{json_data['username']}_{json_data['algo_type']}_{json_data['algo_name']}"
-
+            print(algo_factory.algo_instance_list)
+            # For new strategies being inserted
             if operation == "INSERT":
                 algo_runtime = Diaoyu(instance_id)
                 threading.Thread(target=algo_runtime.start).start()
                 algo_factory.addToDict(instance_id,AlgoRunTime)
-                print(algo_factory.algo_instance_list)
+                # print(algo_factory.algo_instance_list)
+            # For updates
             else:
                 algo_instance = algo_factory.algo_instance_list[instance_id]
-                print("ALGO INSTANCE",algo_instance)
+                # print("ALGO INSTANCE",algo_instance)
                 # print(json_data)
                 algo_instance.update_with_notification(algo_details)
 
-# need one script that assumes we start from 0 algos and another script to refresh the algo 
+# Require one script that assumes we start from 0 algos and another script to refresh the algo 
 
 if __name__ == "__main__":
     # algo_factory = AlgoFactory()
