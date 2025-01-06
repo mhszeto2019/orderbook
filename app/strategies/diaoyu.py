@@ -372,15 +372,21 @@ class Diaoyu:
         notification_futures_endpoint = '/notification'
         
         notification_subs = [
+            # {
+            #     "op": "sub",
+            #     "cid": str(uuid.uuid1()),
+            #     "topic": "orders.BTC-USD"
+            # },
+            # {
+            #     "op": "sub",
+            #     "cid": str(uuid.uuid1()),
+            #     "topic": "positions.BTC-USD"
+            # }
+            # ,
             {
                 "op": "sub",
                 "cid": str(uuid.uuid1()),
-                "topic": "orders.BTC-USD"
-            },
-            {
-                "op": "sub",
-                "cid": str(uuid.uuid1()),
-                "topic": "positions.BTC-USD"
+                "topic": "matchOrders.BTC-USD"
             }
             
         ]
@@ -436,8 +442,8 @@ class Diaoyu:
         # Start HtxPositions in a separate thread
         # self.db_thread = threading.Thread(target=self.subsciribe2DB, daemon=True)
         # self.db_thread.start()
-        # self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
-        # self.htx_thread.start()
+        self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
+        self.htx_thread.start()
         # Run OkxBbo in the main asyncio event loop
         asyncio.run(self.run_okx_bbo())
         # time.sleep(100)
@@ -478,57 +484,56 @@ class Diaoyu:
     # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
         print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
-        # print(self.okx_triggered_place_order)
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        # time.sleep(3)
-        if self.state:
-            try:
-                # check if theres is an order_id. if dont have, it will be a new order
-                if self.order_id :
-                    # Extract necessary parameters from the request
-                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
-                    revoke_orders = await tradeApi.revoke_order(self.ccy,
-                        body = {
-                        "order_id":self.order_id,
-                        "contract_code": self.ccy
-                        }
-                    )
-                    # print('input',data)
-                    revoke_order_data = revoke_orders.get('data', [])
-                    if len(revoke_order_data['errors']) == 0:
-                        # Call the asynchronous place_order function
-                        result = await tradeApi.place_order(self.ccy,body = {
-                            "contract_code": self.ccy,
-                            "price": self.limit_buy_price if self.limit_buy_price else "",
-                            "created_at": str(datetime.datetime.now()),
-                            "volume": self.limit_buy_size,
-                            "direction": 'buy',
-                            "offset": "open",
-                            "lever_rate": 5,
-                            "order_price_type": 'limit'
-                        })
-                        print('result',result)
-                        print('order placed')
-                    return revoke_order_data
-                else:
-                    print("NO CURRENT ORDERS")
-                    result = await tradeApi.place_order(self.ccy,body = {
-                            "contract_code": self.ccy,
-                            "price": self.limit_buy_price if self.limit_buy_price else "",
-                            "created_at": str(datetime.datetime.now()),
-                            "volume": self.limit_buy_size,
-                            "direction": 'buy',
-                            "offset": "open",
-                            "lever_rate": 5,
-                            "order_price_type": 'limit'
-                        })
-                    print(result)
-                    # self.order_id = result['order_id']
-                    print('order placed')
-                    return result
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        # # time.sleep(3)
+        # if self.state:
+        #     try:
+        #         # check if theres is an order_id. if dont have, it will be a new order
+        #         if self.order_id :
+        #             # Extract necessary parameters from the request
+        #             # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
+        #             revoke_orders = await tradeApi.revoke_order(self.ccy,
+        #                 body = {
+        #                 "order_id":self.order_id,
+        #                 "contract_code": self.ccy
+        #                 }
+        #             )
+        #             # print('input',data)
+        #             revoke_order_data = revoke_orders.get('data', [])
+        #             if len(revoke_order_data['errors']) == 0:
+        #                 # Call the asynchronous place_order function
+        #                 result = await tradeApi.place_order(self.ccy,body = {
+        #                     "contract_code": self.ccy,
+        #                     "price": self.limit_buy_price if self.limit_buy_price else "",
+        #                     "created_at": str(datetime.datetime.now()),
+        #                     "volume": self.limit_buy_size,
+        #                     "direction": 'buy',
+        #                     "offset": "open",
+        #                     "lever_rate": 5,
+        #                     "order_price_type": 'limit'
+        #                 })
+        #                 print('result',result)
+        #                 print('order placed')
+        #             return revoke_order_data
+        #         else:
+        #             print("NO CURRENT ORDERS")
+        #             result = await tradeApi.place_order(self.ccy,body = {
+        #                     "contract_code": self.ccy,
+        #                     "price": self.limit_buy_price if self.limit_buy_price else "",
+        #                     "created_at": str(datetime.datetime.now()),
+        #                     "volume": self.limit_buy_size,
+        #                     "direction": 'buy',
+        #                     "offset": "open",
+        #                     "lever_rate": 5,
+        #                     "order_price_type": 'limit'
+        #                 })
+        #             print(result)
+        #             # self.order_id = result['order_id']
+        #             print('order placed')
+        #             return result
                 
-            except Exception as e:
-                print(e)
+        #     except Exception as e:
+        #         print(e)
     
 
     def htx_publicCallback(self,message):
