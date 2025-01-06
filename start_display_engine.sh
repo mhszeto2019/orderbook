@@ -65,3 +65,4 @@ tmux send-keys -t okx_last_public_trades "source $okxenv && gunicorn -k geventwe
 tmux new-session -d -s htx_last_public_trades
 # Create a new window within that session, ensuring the environment is sourced
 tmux send-keys -t htx_last_public_trades "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_last_trades_port app.display_engines_ws.htx_trade_history:app" C-m
+

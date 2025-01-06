@@ -1,4 +1,4 @@
-from util import with_db_connection
+from app.util import with_db_connection
 from pg8000.dbapi import ProgrammingError, DatabaseError
 from flask import Flask, jsonify, request
 from flask_cors import CORS  # Import CORS
@@ -130,7 +130,6 @@ def delete_algo(cursor):
         # Handle any other unexpected errors
         print('error!!')
         return jsonify({"error": str(e)}), 400
-
 
 
 if __name__ == "__main__":
