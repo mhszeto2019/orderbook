@@ -463,7 +463,7 @@ class Diaoyu:
             # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
             # when place order, we need to keep track of id. 
             # order will be placed to buy on htx side
-            self.limit_buy_price = (decimal.Decimal(self.best_bid) - decimal.Decimal(self.spread))
+            self.limit_buy_price = float(self.best_bid) - float(self.spread)
             self.limit_buy_size = self.qty
             # print(self.username,self.algoname,self.limit_buy_price,self.limit_buy_size)
             # # Call the asynchronous function in a blocking way
@@ -479,7 +479,6 @@ class Diaoyu:
     async def place_limit_order_htx(self):
         print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
         # print(self.okx_triggered_place_order)
-        print(self.order_id)
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
         # time.sleep(3)
         if self.state:
@@ -508,7 +507,7 @@ class Diaoyu:
                             "lever_rate": 5,
                             "order_price_type": 'limit'
                         })
-                        print(result)
+                        print('result',result)
                         print('order placed')
                     return revoke_order_data
                 else:
@@ -538,7 +537,7 @@ class Diaoyu:
         print(self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
         # from db - latest received data
         print(self.qty, self.ccy)
-        # print(message)
+        print(message)
         # from htx 
         # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
         # if self.order_id == message['trade']['id'].split('-')[1]:

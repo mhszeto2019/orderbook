@@ -193,6 +193,7 @@ function fetchAlgoData() {
 
             data.forEach((algo_arr, index) => {
                 const algo = algo_arr[0];
+                
                 const newRow = document.createElement('tr');
                 const isRunning = algo.state;
                 const algoName = algo.algo_name
@@ -228,14 +229,19 @@ function fetchAlgoData() {
                     </td>
                    
                     <td>
-                        <select class="form-control editable-field " 
-                                id="input-${algoName}-ccy" >
-                            <option value="">Select Currency Pair</option>
-                            ${instrument === 'futures' 
-                                ? '<option value="BTC" ${algo.ccy === "BTC" ? "selected" : ""}>BTC</option>'
-                                : '<option value="BTC-USD-SWAP" ${algo.ccy === "BTC-USD-SWAP" ? "selected" : ""}>BTC-USD-SWAP</option>'
-                            }
-                        </select>
+                        <select class="form-control editable-field" 
+                            id="input-${algoName}-ccy">
+                        <option value="">Select Currency Pair</option>
+                        ${instrument === 'futures' 
+                            ? `
+                                <option value="BTC" ${algo.ccy === "BTC" ? "selected" : ""}>BTC</option>
+                            `
+                            : `
+                                <option value="BTC-USD-SWAP" ${algo.ccy === "BTC-USD-SWAP" ? "selected" : ""}>BTC-USD-SWAP</option>
+                            `
+                        }
+                    </select>
+
                     </td>
                     <td>
                         <div>

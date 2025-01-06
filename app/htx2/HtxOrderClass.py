@@ -248,15 +248,14 @@ class HuobiCoinFutureRestTradeAPI:
         if uri.startswith("http://") or uri.startswith("https://"):
             url = uri
         else:
+            
             url = self._host + uri
         if auth:
             timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-
             # Encode the timestamp with URI encoding in uppercase
             encoded_timestamp = urllib.parse.quote(timestamp, safe='')
 
             # print(timestamp,encoded_timestamp)
-
             params = params if params else {}
             params.update({"AccessKeyId": self._access_key,
                            "SignatureMethod": "HmacSHA256",
@@ -266,7 +265,6 @@ class HuobiCoinFutureRestTradeAPI:
             # print(params)
             params["Signature"] = self.generate_signature(method, params, uri)
             
-
 
         if not headers:
             headers = {}
@@ -286,11 +284,9 @@ class HuobiCoinFutureRestTradeAPI:
 
             # body['contract_code'] =  body['contract_code'].split('-SWAP')[0]
 
-            print(body)
             try:
-            
                 response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
-                # print('python response',response_dict)
+                print('python response',response_dict)
                 response_dict['data'] = response_dict.get('data',[])
                 response_dict['data']['sMsg'] = 'Orders placed'
                 response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]
