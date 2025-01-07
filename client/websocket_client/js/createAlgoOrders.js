@@ -227,6 +227,14 @@ function fetchAlgoData() {
                         </div>
 
                     </td>
+                    <td>
+                        <div id ="filled-volume-${algoName}">
+                            Filled:
+                        </div>
+                        <div id="input-${algoName}-total">
+                            Total:${algo.qty}
+                        </div>
+                    </td>
                    
                     <td>
                         <select class="form-control editable-field" 
@@ -253,19 +261,19 @@ function fetchAlgoData() {
                             </select>
                         </div>
                         <div id="input-${algoName}-contract-type-container" 
-                        style="display: ${instrument === 'futures' ? 'block' : 'none'};">
-                    <select class="form-control editable-field" 
-                            id="input-${algoName}-contract-type">
-                        <option value="">Select Contract Type</option>
-                        <option value="thisweek" ${contractType === 'thisweek' ? 'selected' : ''}>This Week</option>
-                        <option value="nextweek" ${contractType === 'nextweek' ? 'selected' : ''}>Next Week</option>
-                        <option value="quarter" ${contractType === 'quarter' ? 'selected' : ''}>Quarter</option>
-                           
-                        }
-                    </select>
-                </div>
+                            style="display: ${instrument === 'futures' ? 'block' : 'none'};">
+                            <select class="form-control editable-field" 
+                                    id="input-${algoName}-contract-type">
+                                <option value="">Select Contract Type</option>
+                                <option value="thisweek" ${contractType === 'thisweek' ? 'selected' : ''}>This Week</option>
+                                <option value="nextweek" ${contractType === 'nextweek' ? 'selected' : ''}>Next Week</option>
+                                <option value="quarter" ${contractType === 'quarter' ? 'selected' : ''}>Quarter</option>
+                            </select>
+
+                        </div>
 
                     </td>
+
 
                     <td>
                         <span id="status-algo-${algoName}" class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">

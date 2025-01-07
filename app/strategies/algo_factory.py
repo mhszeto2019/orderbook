@@ -206,8 +206,8 @@ def run_all_algo():
         # Initialize the strategy
         # Since Diaoyu is trading SWAP, we will keep contract type as None
         strat = Diaoyu(
-            username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_name, qty, ccy, spread,
-            lead_exchange, lag_exchange, state, instrument, contract_type=None
+            username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_type,algo_name, qty, ccy, spread,
+            lead_exchange, lag_exchange, state, instrument,cur, contract_type=None
         )
         # Start the strategy in a new thread
         thread = threading.Thread(target=strat.start_clients, daemon=True)
@@ -238,10 +238,10 @@ def listen_for_updates():
         conn.poll()
         while conn.notifies:
             notify = conn.notifies.pop()
-            # print(f"Received notification: {notify.payload}")
+            print(f"Received notification: {notify.payload}")
             algo_details = json.loads(notify.payload)
             json_data = algo_details['data']
-            operation = algo_details['operation']
+            operation = algo_details['operation'] # db operations: update,insert...
             # print(algo_details)
             # print(operation)
             # Initialize and start new AlgoRunTime instance
