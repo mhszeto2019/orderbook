@@ -326,7 +326,7 @@ async def ammend_order():
             "contract_code": instId
             }
         )
-        print('input',data)
+        # print('input',data)
         revoke_order_data = revoke_orders.get('data', [])
         if len(revoke_order_data['errors']) == 0:
             print('revoked')

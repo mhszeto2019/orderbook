@@ -197,14 +197,11 @@ def run_all_algo():
         okx_apikey = row[13]
         okx_secretkey = row[14]
         okx_passphrase = row[15]
-        
 
         # Create a unique instance ID
         instance_id = f"{username}_{algo_type}_{algo_name}"
-        print(f"Instance ID: {instance_id}")
-        # print(username,key,jwt_token,htx_apikey,htx_secretkey,okx_apikey,okx_secretkey,okx_passphrase,algo_name,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type)
-        # Replace with values from `row` or provide defaults for testing
-        # key, jwt_token, apikey, secretkey,okx_apikey,okx_secretkey,okx_passphrase ccy, instrument = 'key', 'jwt_token', 'fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f', '109e924e-68a4de6a-0fd08753-22dcc', 'BTC-USD', 'swap'
+        # print(f"Instance ID: {instance_id}")
+        
         key,jwt_token = '',''
         # Initialize the strategy
         # Since Diaoyu is trading SWAP, we will keep contract type as None
@@ -212,7 +209,6 @@ def run_all_algo():
             username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_name, qty, ccy, spread,
             lead_exchange, lag_exchange, state, instrument, contract_type=None
         )
-        
         # Start the strategy in a new thread
         thread = threading.Thread(target=strat.start_clients, daemon=True)
         thread.start()
