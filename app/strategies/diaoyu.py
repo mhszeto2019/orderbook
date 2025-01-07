@@ -469,7 +469,6 @@ class Diaoyu:
     async def place_limit_order_htx(self):
         # print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        self.ccy = 'BTC-USD'
         if int(self.spread) < 0:
             self.htx_direction = 'sell'
             self.okx_direction = 'buy'
@@ -477,58 +476,58 @@ class Diaoyu:
             self.htx_direction = 'buy'
             self.okx_direction = 'sell'
 
-        # if self.state:
-        #     try:
-        #         # check if theres is an order_id. if dont have, it will be a new order
-        #         if self.order_id :
-        #             # Extract necessary parameters from the request
-        #             # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
-        #             revoke_orders = await tradeApi.revoke_order(self.ccy,
-        #                 body = {
-        #                 "order_id":self.order_id,
-        #                 "contract_code": self.ccy
-        #                 }
-        #             )
-        #             # reset after cancel
-        #             # print('input',data)
-        #             revoke_order_data = revoke_orders.get('data', [])
-        #             if len(revoke_order_data['errors']) == 0:
-        #                 # Call the asynchronous place_order function
-        #                 result = await tradeApi.place_order(self.ccy,body = {
-        #                     "contract_code": self.ccy,
-        #                     "price": self.limit_buy_price if self.limit_buy_price else "",
-        #                     "created_at": str(datetime.datetime.now()),
-        #                     "volume": self.limit_buy_size,
-        #                     "direction": self.htx_direction,
-        #                     "offset": "open",
-        #                     "lever_rate": 5,
-        #                     "order_price_type": 'limit'
-        #                 })
-        #                 # print('result',result)
-        #                 # print('order placed')
-        #                 self.order_id = result['data'][0]['ordId']
-        #                 print(self.order_id)
-        #             return revoke_order_data
-        #         else:
-        #             print("NO CURRENT ORDERS")
-        #             result = await tradeApi.place_order(self.ccy,body = {
-        #                     "contract_code": self.ccy,
-        #                     "price": self.limit_buy_price if self.limit_buy_price else "",
-        #                     "created_at": str(datetime.datetime.now()),
-        #                     "volume": self.limit_buy_size,
-        #                     "direction": self.htx_direction,
-        #                     "offset": "open",
-        #                     "lever_rate": 5,
-        #                     "order_price_type": 'limit'
-        #                 })
+        if self.state:
+            try:
+                # check if theres is an order_id. if dont have, it will be a new order
+                if self.order_id :
+                    # Extract necessary parameters from the request
+                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
+                    revoke_orders = await tradeApi.revoke_order(self.ccy,
+                        body = {
+                        "order_id":self.order_id,
+                        "contract_code": self.ccy.replace('-SWAP','')
+                        }
+                    )
+                    # reset after cancel
+                    # print('input',data)
+                    revoke_order_data = revoke_orders.get('data', [])
+                    if len(revoke_order_data['errors']) == 0:
+                        # Call the asynchronous place_order function
+                        result = await tradeApi.place_order(self.ccy,body = {
+                            "contract_code": self.ccy.replace('-SWAP',''),
+                            "price": self.limit_buy_price if self.limit_buy_price else "",
+                            "created_at": str(datetime.datetime.now()),
+                            "volume": self.limit_buy_size,
+                            "direction": self.htx_direction,
+                            "offset": "open",
+                            "lever_rate": 5,
+                            "order_price_type": 'limit'
+                        })
+                        # print('result',result)
+                        # print('order placed')
+                        self.order_id = result['data'][0]['ordId']
+                        print(self.order_id)
+                    return revoke_order_data
+                else:
+                    print("NO CURRENT ORDERS")
+                    print(self.ccy)
+                    result = await tradeApi.place_order(self.ccy,body = {
+                            "contract_code": self.ccy.replace('-SWAP',''),
+                            "price": self.limit_buy_price if self.limit_buy_price else "",
+                            "created_at": str(datetime.datetime.now()),
+                            "volume": self.limit_buy_size,
+                            "direction": self.htx_direction,
+                            "offset": "open",
+                            "lever_rate": 5,
+                            "order_price_type": 'limit'
+                        })
                   
-        #             self.order_id = result['data'][0]['ordId']
-        #             # print('order placed')
-        #             # print('ending orderid ',self.order_id)
-        #             return result
+                    self.order_id = result['data'][0]['ordId']
+                    
+                    return result
                 
-        #     except Exception as e:
-        #         print(e)
+            except Exception as e:
+                print(e)
     
 
     def htx_publicCallback(self,message):
@@ -536,7 +535,6 @@ class Diaoyu:
         # from okxbbo 
         print('bbo',self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume)
         # from db - latest received data
-        print(self.qty, self.ccy)
 
         # before order filled
         # Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008380, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 3, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [], 'uid': '502448972', 'volume': 1, 'trade_volume': 0, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
@@ -644,14 +642,16 @@ if __name__ == '__main__':
     # 1 strat = 1 algo 
     # 1 class has 1 algo, okx connector , htx connector and db notification connector 
     # username , algoname
-    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False,'swap'
-    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None)
+    # no longer working
+   
+    # strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None)
     try:
-        strat.start_clients()
+        print('try start')
+          # strat.start_clients()
     except KeyboardInterrupt:
         print("Stopping clients...")
-        strat.stop_clients()
-
+        # strat.stop_clients()
+# 
     # access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
     # secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
     # ws.subscribe(notification_subs,auth=True)

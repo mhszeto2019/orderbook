@@ -229,10 +229,10 @@ function fetchAlgoData() {
                     </td>
                     <td>
                         <div id ="filled-volume-${algoName}">
-                            Filled:
+                            Filled | Total :
                         </div>
                         <div id="input-${algoName}-total">
-                            Total:${algo.qty}
+                            ${"placeholder"} | ${algo.qty}
                         </div>
                     </td>
                    
