@@ -240,7 +240,7 @@ def listen_for_updates():
         conn.poll()
         while conn.notifies:
             # use redis publisher to inform frontend
-            publisher.publish('my_channel', 'test')
+            # publisher.publish('my_channel', 'test')
             notify = conn.notifies.pop()
             print(f"Received notification: {notify.payload}")
             algo_details = json.loads(notify.payload)

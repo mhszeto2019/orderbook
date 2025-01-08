@@ -257,6 +257,7 @@ class Diaoyu:
 
         # status
         self.htx_filled_volume = 0
+        self.htx_is_filled = False
 
         # Switch to on and off place order
         self.okx_place_order_trigger = False
@@ -355,7 +356,7 @@ class Diaoyu:
             # order will be placed to buy on htx side
             self.limit_buy_price = float(self.best_bid) - float(self.spread)
             self.limit_buy_size = self.qty
-
+            # time.sleep(2)
             #Call the asynchronous function in a blocking way
             loop = asyncio.get_event_loop()
             if loop.is_running():
@@ -369,6 +370,8 @@ class Diaoyu:
     async def place_limit_order_htx(self):
         # print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        print('algo values',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
+
         if int(self.spread) < 0:
             self.htx_direction = 'sell'
             self.okx_direction = 'buy'
@@ -395,7 +398,7 @@ class Diaoyu:
                         # Call the asynchronous place_order function
                         result = await tradeApi.place_order(self.ccy,body = {
                             "contract_code": self.ccy.replace('-SWAP',''),
-                            "price": self.limit_buy_price if self.limit_buy_price else "",
+                            "price": self.limit_buy_price ,
                             "created_at": str(datetime.datetime.now()),
                             "volume": self.limit_buy_size,
                             "direction": self.htx_direction,
@@ -406,14 +409,14 @@ class Diaoyu:
                         # print('result',result)
                         # print('order placed')
                         self.order_id = result['data'][0]['ordId']
-                        print(self.order_id)
+                        print(self.order_id,self.limit_buy_price,self.limit_buy_size)
                     return revoke_order_data
                 else:
-                    # print("NO CURRENT ORDERS")
+                    print("NO CURRENT ORDERS")
                     # print(self.ccy)
                     result = await tradeApi.place_order(self.ccy,body = {
                             "contract_code": self.ccy.replace('-SWAP',''),
-                            "price": self.limit_buy_price if self.limit_buy_price else "",
+                            "price": self.limit_buy_price ,
                             "created_at": str(datetime.datetime.now()),
                             "volume": self.limit_buy_size,
                             "direction": self.htx_direction,
@@ -433,7 +436,7 @@ class Diaoyu:
     def htx_publicCallback(self,message):
         # we need to compare htx data with okx data. When a trade is made, we will then fire data to place trade on okx
         # from okxbbo 
-        print('bbo',self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume)
+        print('algo values',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
         # from db - latest received data
 
         # before order filled
@@ -448,9 +451,17 @@ class Diaoyu:
 
         trade = message.get('trade',[])
         print(trade)
-        if trade and message['status'] in [4,5,6]:
+
+        if trade and message['status'] in [4,5,6] and self.order_id == message['order_id']:
             filled_volume = message['trade'][0]['trade_volume']
             self.htx_filled_volume += filled_volume
+            print('htx_filled_vol',self.htx_filled_volume,filled_volume,self.limit_buy_size,self.htx_filled_volume == self.limit_buy_size)
+            # print(type(self.htx_filled_volume),type(self.limit_buy_size),type(int(self.limit_buy_size)),int(self.limit_buy_size))
+            total_htx_filled_vol = self.htx_filled_volume
+            total_limit_buy_size = self.limit_buy_size
+            total_limit_buy_size_int = int(total_limit_buy_size)
+            print(total_limit_buy_size_int)
+            self.htx_is_filled = total_htx_filled_vol == total_limit_buy_size_int
             #  when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
             # place market order on okx with filled volume
             loop = asyncio.get_event_loop()
@@ -462,15 +473,14 @@ class Diaoyu:
                 loop.run_until_complete(self.place_market_order_okx(filled_volume))
         
         # if specified limit volume is fulfilled, we terminate the algo and reset the values
-        if self.htx_filled_volume == self.limit_buy_size:
-            self.state = False
-            self.htx_filled_volume = 0
+      
+            # self.htx_filled_volume = 0
 
-        print("Callback received:", message)
+        # print("Callback received:", message)
 
-        if self.htx_filled_volume == self.limit_buy_size:
+        # if self.htx_filled_volume == self.limit_buy_size:
             # switch off algo
-            self.update_db(self.username,self.algotype,self.algoname)
+            
         
         
         
@@ -518,6 +528,10 @@ class Diaoyu:
             if result["code"] == "0":
                 result['data'][0]['sCode'] = 200
 
+                if self.htx_is_filled:
+                    self.state = False
+                    print("SWITCHING OFF",self.username,self.algotype,self.algoname)
+                    self.update_db()
                 # print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
             else:
@@ -531,12 +545,15 @@ class Diaoyu:
         except Exception as e:
             print(e)
     
-    def update_db(self,username,algotype,algoname):
+    def update_db(self):
+        print('UPDATE DB UPON COMPLETION!!!!!!!!!!!!!!!! ',self.username,self.algotype,self.algoname)
         # input should be unique so it should be username,algo_type and algoname
         # update based on parameters. by updating here it will trigger the algo listener
-        self.cursor.execute("update algo_dets set state = false where username='%s' and algo_type='%s' and algo_name='%s'",(username,algotype,algoname))
+        self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
         self.cursor.connection.commit()
+
         print('connection with db')
+        return 
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 
