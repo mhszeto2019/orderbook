@@ -225,6 +225,7 @@ class Diaoyu:
         self.dbsubscriber = None
         self.db_thread = None
         # okx
+        self.loop = None
         self.okx_client = None
         self.htx_thread = None
         # from okxbbo
@@ -270,7 +271,11 @@ class Diaoyu:
     def update_with_notification(self, json_data):
         """Update the main class with data received from the listener."""
         print(f"Updating main class with data: {json_data},{type(json_data)}")
-    
+        # if switch off, we need to revoke the order
+        print(self.order_id,'old_state',self.state,'new_state',json_data['data']['state'])
+        
+
+
         self.received_data = json_data
         # print(json_data['data'][])
         # self.algoname = json_data['data']['algoname']
@@ -280,7 +285,40 @@ class Diaoyu:
         self.lead_exchange = json_data['data']['lead_exchange']
         self.lag_exchange = json_data['data']['lag_exchange']
         self.state = json_data['data']['state']
+        # print(type(self.state),type(json_data['data']['state']))
+        # print(self.state == True, json_data['data']['state'] == False)
+        if json_data['data']['state'] == False:
+            print("REVOKING ORDER AFTER OFF")
+            # we will revoke order
+            # if self.loop.is_running():
+            #     # If the loop is already running, create a new task
+            #     asyncio.create_task(self.revoke_order_by_id(self.order_id))
+            # else:
+            #     # Run the async function to completion in the current thread
+            #     self.loop.run_until_complete(self.revoke_order_by_id(self.order_id))
+            try:
+                # Use the global loop (should already be initialized)
+                loop = self.loop
+                
+                # Submit the async function to the global loop from a background thread
+                asyncio.run_coroutine_threadsafe(self.revoke_order_by_id(), loop)
+            
+            except RuntimeError as e:
+                print(f"Error: {e}")
 
+    async def revoke_order_by_id(self):
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        revoke_orders = await tradeApi.revoke_order(self.ccy,
+                                body = {
+                                "order_id":self.order_id,
+                                "contract_code": self.ccy.replace('-SWAP','')
+                                }
+                            )
+        print(revoke_orders)
+        print('ORDER REVOKED')
+        self.order_id = None
+        return 
+    
     # connection with okx bbo
     async def run_okx_bbo(self):
         """Run the OkxBbo WebSocket client."""
@@ -358,19 +396,19 @@ class Diaoyu:
             self.limit_buy_size = self.qty
             # time.sleep(2)
             #Call the asynchronous function in a blocking way
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
+            self.loop = asyncio.get_event_loop()
+            if self.loop.is_running():
                 # If the loop is already running, create a new task
                 asyncio.create_task(self.place_limit_order_htx())
             else:
                 # Run the async function to completion in the current thread
-                loop.run_until_complete(self.place_limit_order_htx())
+                self.loop.run_until_complete(self.place_limit_order_htx())
 
     # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
         # print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        print('algo values',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
+        print('algo values1',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
 
         if int(self.spread) < 0:
             self.htx_direction = 'sell'
@@ -378,7 +416,7 @@ class Diaoyu:
         else:
             self.htx_direction = 'buy'
             self.okx_direction = 'sell'
-
+        print('algo values2',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
         if self.state:
             try:
                 # check if theres is an order_id. if dont have, it will be a new order
@@ -436,7 +474,7 @@ class Diaoyu:
     def htx_publicCallback(self,message):
         # we need to compare htx data with okx data. When a trade is made, we will then fire data to place trade on okx
         # from okxbbo 
-        print('algo values',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
+        print('htx_algo values',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
         # from db - latest received data
 
         # before order filled
@@ -450,7 +488,6 @@ class Diaoyu:
         print(self.htx_filled_volume,self.limit_buy_size,self.htx_filled_volume == self.limit_buy_size)
 
         trade = message.get('trade',[])
-        print(trade)
 
         if trade and message['status'] in [4,5,6] and self.order_id == message['order_id']:
             filled_volume = message['trade'][0]['trade_volume']
@@ -460,7 +497,6 @@ class Diaoyu:
             total_htx_filled_vol = self.htx_filled_volume
             total_limit_buy_size = self.limit_buy_size
             total_limit_buy_size_int = int(total_limit_buy_size)
-            print(total_limit_buy_size_int)
             self.htx_is_filled = total_htx_filled_vol == total_limit_buy_size_int
             #  when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
             # place market order on okx with filled volume
@@ -531,7 +567,12 @@ class Diaoyu:
                 if self.htx_is_filled:
                     self.state = False
                     print("SWITCHING OFF",self.username,self.algotype,self.algoname)
+                    # reset values after fill
+                    self.htx_is_filled = False
+                    self.htx_filled_volume = 0 
                     self.update_db()
+                    self.order_id = None
+
                 # print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
             else:

@@ -449,33 +449,16 @@ function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
 // create a listener to listen for notification of db updates. if there is an update in db, it should fetch data from the database again.
 
 
- // Connect to the WebSocket server
- const socket = new WebSocket('ws://localhost:8765');
+// // // Set up the scheduler
+function startAlgoOrderDetailsFetchScheduler(interval = 5000) {
+    // Call getTradeHistory immediately
+    fetchAlgoData();
 
- // Get reference to the message list
-//  const messagesList = document.getElementById('messages');
+    // Schedule getTradeHistory to run every few seconds
+    setInterval(fetchAlgoData, interval);
+}
 
- // WebSocket open event
- socket.onopen = () => {
-   console.log('Connected to redis pubsub WebSocket server.');
- };
-
- // WebSocket message event
- socket.onmessage = (event) => {
-   console.log('Message received:', event.data);
-
-   // Display the message in the browser
-   const li = document.createElement('li');
-   li.textContent = event.data;
-   messagesList.appendChild(li);
- };
-
- // WebSocket close event
- socket.onclose = () => {
-   console.log('WebSocket connection closed.');
- };
-
- // WebSocket error event
- socket.onerror = (error) => {
-   console.error('WebSocket error:', error);
- };
+// Start the scheduler when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    startAlgoOrderDetailsFetchScheduler();
+});
