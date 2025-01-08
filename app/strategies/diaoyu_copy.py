@@ -19,7 +19,7 @@ import psycopg2
 from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
 import configparser
-
+import decimal
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
 config.read(config_file_path)
@@ -34,7 +34,7 @@ dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 
 class OkxBbo:
-    def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
+    def __init__(self, url="wss://ws.okx.com:8443/ws/v5/public"):
         self.url = url
         self.ws = None
         self.subscribed_pairs = []  # To keep track of subscribed pairs
@@ -179,7 +179,7 @@ class HtxPositions:
         data["Signature"] = sign
         msg_str = json.dumps(data)
         await websocket.send(msg_str)
-        print(f"send: {msg_str}")
+        # print(f"send: {msg_str}")
 
     def _close(self):
         if self.ws:
@@ -203,98 +203,21 @@ class HtxPositions:
 
 
 
-class DatabaseNotificationListener:
-    def __init__(self, db_config, channel, filter_username=None, filter_algoname= None, callback = None):
-        """
-        Initialize the DatabaseNotificationListener.
-
-        :param config_file: Path to the configuration file.
-        :param config_source: The section name in the configuration file.
-        :param channel: The PostgreSQL notification channel to listen to.
-        :param filter_username: Optional username to filter notifications by.
-        """
-        print(filter_username,filter_algoname)
-        self.channel = channel
-        self.filter_username = filter_username
-        self.filter_algoname = filter_algoname
-        self.db_config = db_config
-        self.callback = callback
-
-    def listen(self):
-        """
-        Start listening for PostgreSQL notifications on the specified channel.
-        """
-        try:
-            # Connect to the PostgreSQL database
-            conn = psycopg2.connect(
-                                    dbname=self.db_config['database'],
-                                    user=self.db_config['user'],
-                                    password=self.db_config['password'],
-                                    host=self.db_config['host'],
-                                    port=self.db_config['port']
-                                    )
-            conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-            cur = conn.cursor()
-
-            # Start listening to the channel
-            cur.execute(f"LISTEN {self.channel};")
-            print(f"Listening for notifications on '{self.channel}'...")
-
-            while True:
-                # Wait for a notification with a timeout
-                if select.select([conn], [], [], 5) == ([], [], []):
-                    print("No notification received within 5 seconds.")
-                    continue
-                
-                # Poll the connection for notifications
-                conn.poll()
-                while conn.notifies:
-                    notify = conn.notifies.pop()
-                    self._process_notification(notify)
-
-        except Exception as e:
-            print(f"Error listening for notifications: {e}")
-            time.sleep(5)  # Retry delay
-            self.listen()  # Retry listening
-
-    def _process_notification(self, notify):
-        """
-        Process a received PostgreSQL notification.
-        :param notify: The notification object.
-        """
-        try:
-            # Parse the payload as JSON
-            payload = json.loads(notify.payload)
-            operation = payload.get('operation')
-            data = payload.get('data')
-            # username = self.filter_username
-            # algoname = self.filter_algoname
-            self.callback(payload)
-
-            # Check if the username matches the filter
-            if self.filter_username is None or username == self.filter_username:
-                print(
-                    f"Notification received for user '{username}': {operation} - {data}"
-                )
-            else:
-                print(f"Ignored notification for user '{username}'.")
-
-        except json.JSONDecodeError:
-            print(f"Received invalid JSON payload: {notify.payload}")
     
 class Diaoyu:
-    def __init__(self,username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None):
+    def __init__(self,username,key,jwt_token,htx_apikey,htx_secretkey,okx_apikey,okx_secretkey,okx_passphrase,algo_type,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,cursor,contract_type=None):
 
         self.username = username
         self.key = key
         self.jwt_token = jwt_token
+        self.algotype = algo_type
         self.algoname = algoname
-        self.htx_apikey =    apikey
-        self.htx_secretkey = secretkey
+        self.htx_apikey =    htx_apikey
+        self.htx_secretkey = htx_secretkey
 
-        self.okx_api_key = None
-        self.okx_secret_key = None
-        self.okx_passphrase = None
+        self.okx_api_key = okx_apikey
+        self.okx_secret_key = okx_secretkey
+        self.okx_passphrase = okx_passphrase
 
         # db
         self.dbsubscriber = None
@@ -324,13 +247,21 @@ class Diaoyu:
         self.limit_buy_price = None
         self.limit_buy_size = None
         self.order_id = None
+        self.htx_direction = None
+        self.okx_direction = None
+
 
         self.received_data = None  # Variable to store received data
 
         # status
         self.htx_filled_volume = 0
-        self.okx_triggered_place_order = True
-        self.htx_triggered_place_order = True
+
+        # Switch to on and off place order
+        self.okx_place_order_trigger = False
+        self.htx_place_order_trigger = False
+
+        # db connection
+        self.cursor = cursor
 
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
@@ -373,67 +304,26 @@ class Diaoyu:
             {
                 "op": "sub",
                 "cid": str(uuid.uuid1()),
-                "topic": "orders.BTC-USD"
-            },
-            {
-                "op": "sub",
-                "cid": str(uuid.uuid1()),
-                "topic": "positions.BTC-USD"
+                "topic": "matchOrders.BTC-USD"
             }
-            
         ]
         notification_futures_subs = [
-            # {
-            #     "op": "sub",
-            #     "cid": str(uuid.uuid1()),
-            #     "topic": "orders.*"
-            # }
-            # ,
             {
                 "op": "sub",
                 "cid": str(uuid.uuid1()),
                 "topic": "matchOrders.*"
             }
-            # ,
-            # {
-            #     "op": "sub",
-            #     "cid": str(uuid.uuid1()),
-            #     "topic": "positions.*"
-            # }
         ]
         # swap client
-        # ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
-        # ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
+        ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
+        ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
         # futures client
-        ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
-        ws_futures_client.start(notification_futures_subs, auth=True, callback=self.htx_publicCallback)
-
-    # connection with db
-    def subsciribe2DB(self):
-        db_config = {
-            'host': 'localhost',  # Replace with your host
-            'user': dbusername,  # Replace with your username
-            'port':'5432',
-            'password': dbpassword,  # Replace with your password
-            'database': dbname # Replace with your database name
-        }
-        channel = 'algo_dets_channel'  # Channel to listen to
-        print('self2',self.username,self.algoname)
-        listener = DatabaseNotificationListener(
-            db_config,
-            channel,
-            filter_username=self.username,
-            filter_algoname=self.algoname,
-            callback=self.update_with_notification  # Pass the callback method
-        )
-        self.dbsubscriber = listener
-        self.dbsubscriber.listen()  # Start listening for database notifications
+        # ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
+        # ws_futures_client.start(notification_futures_subs, auth=True, callback=self.htx_publicCallback)
 
     def start_clients(self):
         """Start both WebSocket clients."""
-        # Start HtxPositions in a separate thread
-        self.db_thread = threading.Thread(target=self.subsciribe2DB, daemon=True)
-        self.db_thread.start()
+        # Start Htx match orders with positions in a separate thread
         self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
         self.htx_thread.start()
         # Run OkxBbo in the main asyncio event loop
@@ -461,10 +351,10 @@ class Diaoyu:
             # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
             # when place order, we need to keep track of id. 
             # order will be placed to buy on htx side
-            self.limit_buy_price = float(self.best_ask) - float(self.spread)
+            self.limit_buy_price = float(self.best_bid) - float(self.spread)
             self.limit_buy_size = self.qty
 
-            # # Call the asynchronous function in a blocking way
+            #Call the asynchronous function in a blocking way
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # If the loop is already running, create a new task
@@ -475,77 +365,99 @@ class Diaoyu:
 
     # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
-        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.contract_type)
-        
-        if self.okx_triggered_place_order:
+        # print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+        if int(self.spread) < 0:
+            self.htx_direction = 'sell'
+            self.okx_direction = 'buy'
+        else:
+            self.htx_direction = 'buy'
+            self.okx_direction = 'sell'
+
+        if self.state:
             try:
+                # check if theres is an order_id. if dont have, it will be a new order
                 if self.order_id :
                     # Extract necessary parameters from the request
-                    tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
+                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
                     revoke_orders = await tradeApi.revoke_order(self.ccy,
                         body = {
                         "order_id":self.order_id,
-                        "contract_code": self.ccy
+                        "contract_code": self.ccy.replace('-SWAP','')
                         }
                     )
+                    # reset after cancel
                     # print('input',data)
                     revoke_order_data = revoke_orders.get('data', [])
                     if len(revoke_order_data['errors']) == 0:
                         # Call the asynchronous place_order function
                         result = await tradeApi.place_order(self.ccy,body = {
-                            "contract_code": self.ccy,
+                            "contract_code": self.ccy.replace('-SWAP',''),
                             "price": self.limit_buy_price if self.limit_buy_price else "",
                             "created_at": str(datetime.datetime.now()),
                             "volume": self.limit_buy_size,
-                            "direction": 'buy',
+                            "direction": self.htx_direction,
                             "offset": "open",
                             "lever_rate": 5,
                             "order_price_type": 'limit'
                         })
-                        print(result)
-                        print('order placed')
+                        # print('result',result)
+                        # print('order placed')
+                        self.order_id = result['data'][0]['ordId']
+                        print(self.order_id)
                     return revoke_order_data
                 else:
+                    # print("NO CURRENT ORDERS")
+                    # print(self.ccy)
                     result = await tradeApi.place_order(self.ccy,body = {
-                            "contract_code": self.ccy,
+                            "contract_code": self.ccy.replace('-SWAP',''),
                             "price": self.limit_buy_price if self.limit_buy_price else "",
                             "created_at": str(datetime.datetime.now()),
                             "volume": self.limit_buy_size,
-                            "direction": 'buy',
+                            "direction": self.htx_direction,
                             "offset": "open",
                             "lever_rate": 5,
                             "order_price_type": 'limit'
                         })
-                    print(result)
-                    self.order_id = result['order_id']
-                    print('order placed')
+                  
+                    self.order_id = result['data'][0]['ordId']
+                    
                     return result
                 
             except Exception as e:
                 print(e)
     
-        # Usage example
+
     def htx_publicCallback(self,message):
         # we need to compare htx data with okx data. When a trade is made, we will then fire data to place trade on okx
         # from okxbbo 
-        print(self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+        print('bbo',self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume)
         # from db - latest received data
-        print(self.qty, self.ccy)
 
-        # from htx 
-        # when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-        if self.order_id == message['trade']['id'].split('-')[1]:
-            self.okx_triggered_place_order = False
-            self.htx_filled_volume += message['volume']
+        # before order filled
+        # Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008380, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 3, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [], 'uid': '502448972', 'volume': 1, 'trade_volume': 0, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
+        # order filled
+        #Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008450, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 6, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [{'trade_id': 251300058558640, 'id': '251300058558640-1324420309708902401-1', 'trade_volume': 1, 'trade_price': 98000, 'trade_turnover': 100.0, 'created_at': 1735808008446, 'role': 'maker'}], 'uid': '502448972', 'volume': 1, 'trade_volume': 1, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
+        print(message)
+        # when order matches, it will update the self.htx_filled_volume
+        # status code number - 	1. Ready to submit the orders; 3. Ready to submit the orders; 3. Have sumbmitted the orders; 4. Orders partially matched; 5. Orders cancelled with partially matched; 6. Orders fully matched; 7. Orders cancelled; 
+
+        print(self.htx_filled_volume,self.limit_buy_size,self.htx_filled_volume == self.limit_buy_size)
+
+        trade = message.get('trade',[])
+        print(trade)
+        if trade and message['status'] in [4,5,6]:
+            filled_volume = message['trade'][0]['trade_volume']
+            self.htx_filled_volume += filled_volume
+            #  when order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
             # place market order on okx with filled volume
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # If the loop is already running, create a new task
-                asyncio.create_task(self.place_market_order_kx())
+                asyncio.create_task(self.place_market_order_okx(filled_volume))
             else:
                 # Run the async function to completion in the current thread
-                loop.run_until_complete(self.place_market_order_kx())
+                loop.run_until_complete(self.place_market_order_okx(filled_volume))
         
         # if specified limit volume is fulfilled, we terminate the algo and reset the values
         if self.htx_filled_volume == self.limit_buy_size:
@@ -554,114 +466,86 @@ class Diaoyu:
 
         print("Callback received:", message)
 
-    async def place_market_order_okx(self):
-        print("PLACE MARKET ORDER ON OKX")
-        # try:
-        #     side = 'sell'
-        #     username = self.username
-        #     # Get the order data from the request
-        #     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-        #     key_string = data.get('redis_key')
-        #     if key_string.startswith("b'") and key_string.endswith("'"):
-        #         cleaned_key_string = key_string[2:-1]
-        #     else:
-        #         cleaned_key_string = key_string  # Fallback if the format is unexpected
+        if self.htx_filled_volume == self.limit_buy_size:
+            # switch off algo
+            self.update_db(self.username,self.algotype,self.algoname)
+        
+        
+        
 
-        #     # Now decode the base64 string into bytes
-        #     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-        #     key_bytes = cleaned_key_string.encode('utf-8')
-        #     # You can now use the key with Fernet
-        #     cipher_suite = Fernet(key_bytes)
+    async def place_market_order_okx(self,filled_volume):
+        print("PLACing MARKET ORDER ON OKX", self.qty, self.htx_filled_volume, filled_volume)
+        try:
+            # side = 'sell'
+            # username = self.username
+            # # Get the order data from the request
+            # # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+            # if key_string.startswith("b'") and key_string.endswith("'"):
+            #     cleaned_key_string = key_string[2:-1]
+            # else:
+            #     cleaned_key_string = key_string  # Fallback if the format is unexpected
+
+            # # Now decode the base64 string into bytes
+            # key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+            # key_bytes = cleaned_key_string.encode('utf-8')
+            # # You can now use the key with Fernet
+            # cipher_suite = Fernet(key_bytes)
             
-        #     cache_key = f"user:{username}:api_credentials"
-        #     # Fetch the encrypted credentials from Redis
-        #     encrypted_data = r.get(cache_key)   
-        #     if encrypted_data:
-        #     # Decrypt the credentials
-        #         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        #         api_creds_dict = json.loads(decrypted_data)
+            # cache_key = f"user:{username}:api_credentials"
+            # # Fetch the encrypted credentials from Redis
+            # encrypted_data = r.get(cache_key)   
+            # if encrypted_data:
+            # # Decrypt the credentials
+            #     decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            #     api_creds_dict = json.loads(decrypted_data)
                 
-        #     # Initialize TradeAPI
-        #     tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-        #     print("username:",username)
+            # Initialize TradeAPI
+            tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
+            print("username:",self.username)
 
-        #     result = tradeApi.place_order(
-        #         instId= data["instId"],
-        #         tdMode= "cross", 
-        #         side= side, 
-        #         posSide='', 
-        #         ordType=  data["ordType"],
-        #         sz= str(data["sz"]) 
-        #     )
-        #     result['data'][0]['exchange']='okx'
-        #     print(result)
-        #     if result["code"] == "0":
-        #         result['data'][0]['sCode'] = 200
+            result = tradeApi.place_order(
+                instId= 'BTC-USD-SWAP',
+                tdMode= "cross", 
+                side= self.okx_direction, 
+                posSide= '', 
+                ordType= 'market',
+                sz= filled_volume
+            )
+            result['data'][0]['exchange']='okx'
+            print(result)
+            if result["code"] == "0":
+                result['data'][0]['sCode'] = 200
 
-        #         # print("Successful order request，order_id = ",result["data"][0]["ordId"])
+                # print("Successful order request，order_id = ",result["data"][0]["ordId"])
 
-        #     else:
-        #         result['data'][0]['sCode'] = 400
+            else:
+                result['data'][0]['sCode'] = 400
 
-        #         # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
+                # print("Unsuccessful order request，error_code = ",result["data"][0]["sCode"], ", Error_message = ", result["data"][0]["sMsg"])
 
-        #     logger.info("Order request resposne {}".format(result))
+            print("Order request resposne {}".format(result))
 
-        #     return result
-        # except Exception as e:
-        #     print(e)
+            return result
+        except Exception as e:
+            print(e)
     
-
+    def update_db(self,username,algotype,algoname):
+        # input should be unique so it should be username,algo_type and algoname
+        # update based on parameters. by updating here it will trigger the algo listener
+        self.cursor.execute("update algo_dets set state = false where username='%s' and algo_type='%s' and algo_name='%s'",(username,algotype,algoname))
+        self.cursor.connection.commit()
+        print('connection with db')
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 
     # 1 class has 1 algo, okx connector , htx connector and db notification connector 
     # username , algoname
-    username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type = 'brennan','key','jwt_token','fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f','109e924e-68a4de6a-0fd08753-22dcc','test1',10,'BTC-USD',20,'OKX','HTX',False,'swap'
-    strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type)
+    # no longer working
+   
+    # strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None)
     try:
-        strat.start_clients()
+        print('try start')
+          # strat.start_clients()
     except KeyboardInterrupt:
         print("Stopping clients...")
-        strat.stop_clients()
-
-    # access_key = "fd0bb22e-bg5t6ygr6y-57ca5a15-4ae1f"
-    # secret_key = "109e924e-68a4de6a-0fd08753-22dcc"
-    # ws.subscribe(notification_subs,auth=True)
-    # time.sleep(5)
-    # print('unsubsring')
-    # ws.unsubscribe()
-    # while True: 
-    #     try:
-    #         asyncio.get_event_loop().run_until_complete(subscribe(notification_url, notification_endpoint ,access_key,  secret_key, notification_subs, handle_ws_data, auth=True))
-    #         # asyncio.get_event_loop().run_until_complete(subscribe(place_order_url, access_key,  secret_key, place_order_subs, handle_ws_data, auth=True))
-    #     #except (websockets.exceptions.ConnectionClosed):
-    #     except Exception as e:
-    #         traceback.print_exc()
-    #         print('websocket connection error. reconnect rightnow')
-
-
-
-# recevie<--: {'op': 'notify', 'topic': 'orders.btc-usd', 'ts': 1734410654405, 'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1, 'price': 106426, 'order_price_type': 'limit', 'direction': 'buy', 'offset': 'open', 'status': 3, 'lever_rate': 5, 'order_id': 1318559382298243072, 'order_id_str': '1318559382298243072', 'client_order_id': None, 'order_source': 'web', 'order_type': 1, 'created_at': 1734410654384, 'trade_volume': 0, 'trade_turnover': 0, 'fee': 0, 'trade_avg_price': 0, 'margin_frozen': 0.000187924003532971, 'profit': 0, 'trade': [], 'canceled_at': 0, 'fee_asset': 'BTC', 'uid': '502448972', 'liquidation_type': '0', 'is_tpsl': 0, 'real_profit': 0}
-# callback param {'op': 'notify', 'topic': 'orders.btc-usd', 'ts': 1734410654405, 'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1, 'price': 106426, 'order_price_type': 'limit', 'direction': 'buy', 'offset': 'open', 'status': 3, 'lever_rate': 5, 'order_id': 1318559382298243072, 'order_id_str': '1318559382298243072', 'client_order_id': None, 'order_source': 'web', 'order_type': 1, 'created_at': 1734410654384, 'trade_volume': 0, 'trade_turnover': 0, 'fee': 0, 'trade_avg_price': 0, 'margin_frozen': 0.000187924003532971, 'profit': 0, 'trade': [], 'canceled_at': 0, 'fee_asset': 'BTC', 'uid': '502448972', 'liquidation_type': '0', 'is_tpsl': 0, 'real_profit': 0}
-# recevie<--: {'op': 'ping', 'ts': '1734410655315'}
-# send: {'op': 'pong', 'ts': '1734410655315'}
-
-# LIMIT ORDER TO POSITION
-# recevie<--: {'op': 'notify', 'topic': 'orders.btc-usd', 'ts': 1734410815118, 'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1, 'price': 106587, 'order_price_type': 'limit', 'direction': 'buy', 'offset': 'open', 'status': 6, 'lever_rate': 5, 'order_id': 1318559941178667008, 'order_id_str': '1318559941178667008', 'client_order_id': None, 'order_source': 'web', 'order_type': 1, 'created_at': 1734410787632, 'trade_volume': 1, 'trade_turnover': 100.0, 'fee': 2.8146021559e-08, 'trade_avg_price': 106587.00000000006, 'margin_frozen': 0.0, 'profit': 0, 'trade': [{'trade_fee': 2.8146021559e-08, 'fee_asset': 'BTC', 'real_profit': 0, 'profit': 0, 'trade_id': 100002460772968, 'id': '100002460772968-1318559941178667008-1', 'trade_volume': 1, 'trade_price': 106587, 'trade_turnover': 100.0, 'created_at': 1734410815099, 'role': 'maker'}], 'canceled_at': 0, 'fee_asset': 'BTC', 'uid': '502448972', 'liquidation_type': '0', 'is_tpsl': 0, 'real_profit': 0}
-# callback param {'op': 'notify', 'topic': 'orders.btc-usd', 'ts': 1734410815118, 'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1, 'price': 106587, 'order_price_type': 'limit', 'direction': 'buy', 'offset': 'open', 'status': 6, 'lever_rate': 5, 'order_id': 1318559941178667008, 'order_id_str': '1318559941178667008', 'client_order_id': None, 'order_source': 'web', 'order_type': 1, 'created_at': 1734410787632, 'trade_volume': 1, 'trade_turnover': 100.0, 'fee': 2.8146021559e-08, 'trade_avg_price': 106587.00000000006, 'margin_frozen': 0.0, 'profit': 0, 'trade': [{'trade_fee': 2.8146021559e-08, 'fee_asset': 'BTC', 'real_profit': 0, 'profit': 0, 'trade_id': 100002460772968, 'id': '100002460772968-1318559941178667008-1', 'trade_volume': 1, 'trade_price': 106587, 'trade_turnover': 100.0, 'created_at': 1734410815099, 'role': 'maker'}], 'canceled_at': 0, 'fee_asset': 'BTC', 'uid': '502448972', 'liquidation_type': '0', 'is_tpsl': 0, 'real_profit': 0}
-# recevie<--: {'op': 'ping', 'ts': '1734410817396'}
-
-# CLOSE POSITION
-# recevie<--: {'op': 'notify', 'topic': 'orders.btc-usd', 'ts': 1734410838874, 'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'price': 0, 'order_price_type': 'market', 'direction': 'sell', 'offset': 'close', 'status': 6, 'lever_rate': 5, 'order_id': 1318560155979558912, 'order_id_str': '1318560155979558912', 'client_order_id': None, 'order_source': 'web', 'order_type': 1, 'created_at': 1734410838790, 'trade_volume': 1, 'trade_turnover': 100.0, 'fee': -3.00415888245e-07, 'trade_avg_price': 106519.0000000001, 'margin_frozen': 0, 'profit': -5.989321048e-07, 'trade': [{'trade_fee': -3.00415888245e-07, 'fee_asset': 'BTC', 'real_profit': -5.989321048e-07, 'profit': -5.989321048e-07, 'trade_id': 100002460773958, 'id': '100002460773958-1318560155979558912-1', 'trade_volume': 1, 'trade_price': 106519, 'trade_turnover': 100.0, 'created_at': 1734410838856, 'role': 'taker'}], 'canceled_at': 0, 'fee_asset': 'BTC', 'uid': '502448972', 'liquidation_type': '0', 'is_tpsl': 0, 'real_profit': -5.989321048e-07}
-# callback param {'op': 'notify', 'topic': 'orders.btc-usd', 'ts': 1734410838874, 'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'price': 0, 'order_price_type': 'market', 'direction': 'sell', 'offset': 'close', 'status': 6, 'lever_rate': 5, 'order_id': 1318560155979558912, 'order_id_str': '1318560155979558912', 'client_order_id': None, 'order_source': 'web', 'order_type': 1, 'created_at': 1734410838790, 'trade_volume': 1, 'trade_turnover': 100.0, 'fee': -3.00415888245e-07, 'trade_avg_price': 106519.0000000001, 'margin_frozen': 0, 'profit': -5.989321048e-07, 'trade': [{'trade_fee': -3.00415888245e-07, 'fee_asset': 'BTC', 'real_profit': -5.989321048e-07, 'profit': -5.989321048e-07, 'trade_id': 100002460773958, 'id': '100002460773958-1318560155979558912-1', 'trade_volume': 1, 'trade_price': 106519, 'trade_turnover': 100.0, 'created_at': 1734410838856, 'role': 'taker'}], 'canceled_at': 0, 'fee_asset': 'BTC', 'uid': '502448972', 'liquidation_type': '0', 'is_tpsl': 0, 'real_profit': -5.989321048e-07}
-
-# order.match
-# {'op': 'notify', 'topic': 'positions.btc-usd', 'ts': 1734419182416, 'event': 'order.match', 'data': [{'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'available': 1.0, 'frozen': 0.0, 'cost_open': 106745.10000000002, 'cost_hold': 106745.10000000002, 'profit_unreal': 7.72237654e-08, 'profit_rate': 0.00041216292800446, 'profit': 7.72237654e-08, 'position_margin': 0.000187346785457018, 'lever_rate': 5, 'direction': 'buy', 'last_price': 106753.9, 'adl_risk_percent': 1}], 'uid': '502448972'}
-
-
-# order match for futures
-# Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008380, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 3, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [], 'uid': '502448972', 'volume': 1, 'trade_volume': 0, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
-# None None None None
-# 10 BTC-USD
-# Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008450, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 6, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [{'trade_id': 251300058558640, 'id': '251300058558640-1324420309708902401-1', 'trade_volume': 1, 'trade_price': 98000, 'trade_turnover': 100.0, 'created_at': 1735808008446, 'role': 'maker'}], 'uid': '502448972', 'volume': 1, 'trade_volume': 1, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
+        # strat.stop_clients()

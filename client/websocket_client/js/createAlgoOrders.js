@@ -269,7 +269,6 @@ function fetchAlgoData() {
                                 <option value="nextweek" ${contractType === 'nextweek' ? 'selected' : ''}>Next Week</option>
                                 <option value="quarter" ${contractType === 'quarter' ? 'selected' : ''}>Quarter</option>
                             </select>
-
                         </div>
 
                     </td>
@@ -445,3 +444,38 @@ function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
         statusBadge.classList.add('bg-secondary');
     }
 }
+
+
+// create a listener to listen for notification of db updates. if there is an update in db, it should fetch data from the database again.
+
+
+ // Connect to the WebSocket server
+ const socket = new WebSocket('ws://localhost:8765');
+
+ // Get reference to the message list
+//  const messagesList = document.getElementById('messages');
+
+ // WebSocket open event
+ socket.onopen = () => {
+   console.log('Connected to redis pubsub WebSocket server.');
+ };
+
+ // WebSocket message event
+ socket.onmessage = (event) => {
+   console.log('Message received:', event.data);
+
+   // Display the message in the browser
+   const li = document.createElement('li');
+   li.textContent = event.data;
+   messagesList.appendChild(li);
+ };
+
+ // WebSocket close event
+ socket.onclose = () => {
+   console.log('WebSocket connection closed.');
+ };
+
+ // WebSocket error event
+ socket.onerror = (error) => {
+   console.error('WebSocket error:', error);
+ };

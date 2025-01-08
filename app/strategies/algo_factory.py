@@ -28,6 +28,8 @@ from app.strategies.diaoyu import Diaoyu
 import time
 import json
 import select
+from app.strategies.redis_pubsub import RedisPublisher
+
 
 class DatabaseNotificationListener:
     def __init__(self, db_config, channel, filter_username=None, filter_algoname= None, callback = None):
@@ -136,11 +138,10 @@ class AlgoRunTime:
         print(f"Instance {self.instance_id} stopped. Reason: {reason}")
 
  
-
-
 class AlgoFactory:
     def __init__(self,instance_id=None, algo_instance = None):
         self.algo_instance_list = {instance_id:algo_instance} if algo_instance is not None else {}
+        self.publisher = RedisPublisher()
 
     def addToDict(self,instance_id,algo_instance):
         self.algo_instance_list[instance_id] =(algo_instance)
@@ -209,6 +210,7 @@ def run_all_algo():
             username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_type,algo_name, qty, ccy, spread,
             lead_exchange, lag_exchange, state, instrument,cur, contract_type=None
         )
+
         # Start the strategy in a new thread
         thread = threading.Thread(target=strat.start_clients, daemon=True)
         thread.start()
@@ -237,6 +239,8 @@ def listen_for_updates():
     while True:
         conn.poll()
         while conn.notifies:
+            # use redis publisher to inform frontend
+            publisher.publish('my_channel', 'test')
             notify = conn.notifies.pop()
             print(f"Received notification: {notify.payload}")
             algo_details = json.loads(notify.payload)
@@ -264,6 +268,7 @@ def listen_for_updates():
 
 if __name__ == "__main__":
     # algo_factory = AlgoFactory()
+    
     algo_factory = AlgoFactory()
     threading.Thread(target=listen_for_updates, daemon=True).start()
     run_all_algo()  # Start existing instances
