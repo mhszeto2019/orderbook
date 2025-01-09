@@ -17,7 +17,7 @@ async function populateOpenOrders() {
     }
 
     const request_data = { "username": username, "redis_key": redis_key };
-
+    
     // Set up both the OKX and HTX requests
     const [okxResponse, htxResponse] = await Promise.all([
         fetch(`http://${hostname}:5080/okx/get_all_okx_open_orders`, {

@@ -111,7 +111,7 @@ async def place_market_order():
         data["ordType"]=  'optimal_20'
        
 
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
         positions = await tradeApi.get_positions(instId,body = {
             "contract_code": instId
@@ -246,7 +246,7 @@ async def place_limit_order():
 
 
     try:
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
         # Data received from the client (assuming JSON body)
         

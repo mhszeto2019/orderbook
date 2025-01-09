@@ -147,7 +147,8 @@ def get_logger(app_name):
     
     return logger
 
-config_source = 'localdb'
+# config_source = 'localdb'
+config_source = config['dbchoice']['db']
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']

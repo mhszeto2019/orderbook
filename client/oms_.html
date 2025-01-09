@@ -917,6 +917,8 @@
     <script src="websocket_client/js/display_fundingrate.js"></script>
 
     <script>
+        console.log(hostname)
+      
         // Clear JWT token from localStorage when no longer needed
         function clearAuthToken() {
             localStorage.removeItem('jwt_token');
@@ -934,12 +936,12 @@
             clearNotifications();
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('/db/get_db')
-                .then(response => response.json())
-                .then(data => populateTable(data))
-                .catch(error => console.error('Error fetching data:', error));
-        });
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     fetch('/db/get_db')
+        //         .then(response => response.json())
+        //         .then(data => populateTable(data))
+        //         .catch(error => console.error('Error fetching data:', error));
+        // });
 
 
         let currency_pair = null;

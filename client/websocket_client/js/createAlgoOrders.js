@@ -90,7 +90,7 @@ function deleteRow(button) {
 
 
 function saveNewAlgoRow(){
-    console.log('newalgodata')
+    // console.log('newalgodata')
     // const ccyInput = document.querySelector('#new-ccy');
     username= localStorage.getItem('username')
    
@@ -125,7 +125,7 @@ function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, 
         state:state
     };
     
-    fetch("http://localhost:5020/db/add_algo", {
+    fetch(`http://${hostname}:5020/db/add_algo`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -157,7 +157,7 @@ function deleteAlgo(username,algoname){
         algo_name: algoname
     };
     
-    fetch("http://localhost:5020/db/delete_algo", {
+    fetch(`http://${hostname}:5020/db/delete_algo`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -185,7 +185,7 @@ function deleteAlgo(username,algoname){
 function fetchAlgoData() {
     const username = localStorage.getItem('username');
     console.log(username)
-    fetch(`http://127.0.0.1:5020/db/get_algo_list?username=${username}`)
+    fetch(`http://${hostname}:5020/db/get_algo_list?username=${username}`)
         .then(response => response.json())
         .then(data => {
             const algoList = document.getElementById('algo-list');
@@ -385,7 +385,7 @@ function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spr
         state: state,
     };
    
-    fetch("http://localhost:5020/db/modify_algo", {
+    fetch(`http://${hostname}:5020/db/modify_algo`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

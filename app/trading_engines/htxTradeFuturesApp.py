@@ -84,7 +84,8 @@ async def place_market_order():
         data["ordType"]=  'optimal_20'
        
         # Initialize TradeAPI
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
         positions = await tradeApi.get_positions(instId,body = {
             "contract_code": instId
@@ -209,7 +210,8 @@ async def place_limit_order():
     tdMode= "cross"
     sz= str(data["sz"]) 
     try:
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
         # Data received from the client (assuming JSON body)
         # Extract necessary parameters from the request
@@ -297,7 +299,9 @@ async def place_limit_contract_order():
             ordType = 'optimal_20'
         data["ordType"]=  'optimal_20'
         # Initialize TradeAPI
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
         print('GETING POSITIONS')
         positions = await tradeApi.get_contract_positions(instId,body = {
             "symbol": instId
@@ -450,7 +454,9 @@ async def place_market_contract_order():
         data["ordType"]=  'optimal_20'
        
         # Initialize TradeAPI
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
 
         positions = await tradeApi.get_contract_positions(instId,body = {
             "contract_code": instId

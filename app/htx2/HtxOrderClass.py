@@ -13,6 +13,7 @@ from urllib.parse import urljoin
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append('/var/www/html/orderbook/htx2')
 
 
 from alpha.utils.request import AsyncHttpRequests

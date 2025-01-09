@@ -21,9 +21,9 @@ logger = get_logger(os.path.basename(__file__))
 
 
 CORS(app)
-config_source = 'htx_live_trade'
-secretKey = config[config_source]['secretKey']
-apiKey = config[config_source]['apiKey']
+# config_source = 'htx_live_trade'
+# secretKey = config[config_source]['secretKey']
+# apiKey = config[config_source]['apiKey']
 
 redis_host ='localhost'
 redis_port = 6379
@@ -72,7 +72,7 @@ async def get_order_info():
         instId= instId.replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
         print('data',data)
         order_infos = await tradeApi.get_order_info(instId,
             body = {
@@ -122,7 +122,9 @@ async def get_tpsl_info():
         instId= instId.replace("-SWAP", "")
         tdMode= "isolated"
         # Extract necessary parameters from the request
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
         # print('data',data)
         # data['ordId'] = 1313907123482300416
         # data['ccy'] = 'BTC-USD'
@@ -144,6 +146,7 @@ async def get_tpsl_info():
 @app.route('/htx/swap/get_all_htx_open_orders', methods=['POST'])
 async def get_all_htx_open_orders():
     data = request.get_json()
+    print(data)
     username = data.get('username')
     # Get the order data from the request
     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
@@ -173,7 +176,9 @@ async def get_all_htx_open_orders():
         # instId= data["instId"].replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
         open_orders = await tradeApi.get_open_orders(
             instId,body = {
             "contract_code": instId
@@ -220,7 +225,9 @@ async def cancel_all_htx_open_order_by_ccy():
         # instId= data["instId"].replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
         open_orders_request = await tradeApi.revoke_order_all(
             instId,body = {
             "contract_code": instId
@@ -267,7 +274,9 @@ async def cancel_order_by_id():
         instId= instId.replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
         revoke_orders = await tradeApi.revoke_order(instId,
             body = {
             "order_id":data['ordId'],
@@ -319,7 +328,9 @@ async def ammend_order():
         instId= instId.replace("-SWAP", "")
         tdMode= "cross"
         # Extract necessary parameters from the request
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
         revoke_orders = await tradeApi.revoke_order(instId,
             body = {
             "order_id":data['ordId'],

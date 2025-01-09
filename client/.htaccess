@@ -1,4 +1,4 @@
-<!-- # Disable directory listing
+# Disable directory listing
 Options -Indexes
 
 # Allow access to only specific static file types
@@ -12,6 +12,3 @@ Options -Indexes
 </FilesMatch>
 
 # Allow local server processes to access .log files for writing
-<Directory "/var/www/html/logs">
-    Require local
-</Directory> -->

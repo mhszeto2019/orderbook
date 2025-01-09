@@ -16,7 +16,8 @@ print("Config file path:", config_file_path)
 config.read(config_file_path)
 app = Flask(__name__)
 CORS(app)
-config_source = 'localdb'
+
+config_source = config['dbchoice']['db']
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']

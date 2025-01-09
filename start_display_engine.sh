@@ -20,6 +20,9 @@ okx_display_engine_funding_rate_port=$OKX_DISPLAY_FUNDING_RATE_PORT
 
 htx_display_engine_last_trades_port=$HTX_DISPLAY_LAST_TRADES_PORT
 okx_display_engine_last_trades_port=$OKX_DISPLAY_LAST_TRADES_PORT
+
+db_port=$DB_PORT
+
 # Start a new tmux session for okx_fundingrate_app
 # tmux new-session -d -s redis_connector
 # tmux send-keys -t redis_connector "source $venv && gunicorn -w 1 -b 0.0.0.0:$REDIS_CONNECTOR_PORT app.redis_connector:app " C-m
@@ -65,4 +68,8 @@ tmux send-keys -t okx_last_public_trades "source $okxenv && gunicorn -k geventwe
 tmux new-session -d -s htx_last_public_trades
 # Create a new window within that session, ensuring the environment is sourced
 tmux send-keys -t htx_last_public_trades "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_last_trades_port app.display_engines_ws.htx_trade_history:app" C-m
+
+tmux new-session -d -s db_connection
+# Create a new window within that session, ensuring the environment is sourced
+tmux send-keys -t db_connection "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$db_port app.db.db_connection:app" C-m
 

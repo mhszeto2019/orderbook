@@ -28,7 +28,8 @@ REDIS_HOST = config[config_source]['host']
 REDIS_PORT = config[config_source]['port']
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
-config_source = 'localdb'
+# config_source = 'localdb'
+config_source = config['dbchoice']['db']
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']

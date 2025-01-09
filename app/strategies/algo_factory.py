@@ -8,7 +8,8 @@ config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
 config.read(config_file_path)
 
-config_source = 'localdb'
+# config_source = 'localdb'
+config_source = config['dbchoice']['db']
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
@@ -23,6 +24,8 @@ DB_CONFIG = {
     "host": "localhost",
     "port": 5432
 }
+
+
 
 from app.strategies.diaoyu import Diaoyu
 import time
@@ -66,7 +69,6 @@ class DatabaseNotificationListener:
             # Start listening to the channel
             cur.execute(f"LISTEN {self.channel};")
             print(f"Listening for notifications on '{self.channel}'...")
-
             while True:
                 # Wait for a notification with a timeout
                 if select.select([conn], [], [], 5) == ([], [], []):
@@ -242,20 +244,62 @@ def listen_for_updates():
             # use redis publisher to inform frontend
             # publisher.publish('my_channel', 'test')
             notify = conn.notifies.pop()
-            print(f"Received notification: {notify.payload}")
+            print(f"Received notification2: {notify.payload}")
             algo_details = json.loads(notify.payload)
+            print('algodets',algo_details)
+            # print('algo_details',type(algo_details),algo_details)
             json_data = algo_details['data']
             operation = algo_details['operation'] # db operations: update,insert...
             # print(algo_details)
             # print(operation)
             # Initialize and start new AlgoRunTime instance
-            instance_id = f"{json_data['username']}_{json_data['algo_type']}_{json_data['algo_name']}"
-            print(algo_factory.algo_instance_list)
+            username = json_data['username']
+            algo_type = json_data['algo_type']
+            algo_name = json_data['algo_name']
+            instance_id = f"{username}_{algo_type}_{algo_name}"
+            # print(algo_factory.algo_instance_list)
             # For new strategies being inserted
             if operation == "INSERT":
-                algo_runtime = Diaoyu(instance_id)
-                threading.Thread(target=algo_runtime.start).start()
-                algo_factory.addToDict(instance_id,AlgoRunTime)
+                print("INSERTING OPERATION")
+                conn = get_db_connection()
+                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                # cur.execute("select * from algo_dets")
+                cur.execute(f"""select
+                    ad.username,
+                    ad.algo_type,
+                    ad.algo_name,
+                    ad.lead_exchange,
+                    ad.lag_exchange ,
+                    ad.spread,
+                    ad.qty,
+                    ad.ccy,
+                    ad.instrument,
+                    ad.contract_type,
+                    ad.state,
+                    MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
+                    MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
+                    MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
+                    MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
+                    MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase   
+                    FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
+                )
+                new_algo_detail = cur.fetchone()
+                print('new_algo_detail',new_algo_detail)
+                # Diaoyu(
+                #     username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_type,algo_name, qty, ccy, spread,
+                #     lead_exchange, lag_exchange, state, instrument,cur, contract_type=None
+                # )
+                algo_runtime = Diaoyu(username, 'key', 'jwt_token', new_algo_detail[11], new_algo_detail[12], new_algo_detail[13], new_algo_detail[14], new_algo_detail[15], algo_type,algo_name, new_algo_detail[6], json_data['ccy'],new_algo_detail[5], new_algo_detail[3], new_algo_detail[4],new_algo_detail[10], new_algo_detail[8],cur, contract_type=None)
+                # threading.Thread(target=algo_runtime.start_clients).start()
+                thread = threading.Thread(target=algo_runtime.start_clients, daemon=True).start()
+                print('b4',algo_factory.algo_instance_list)
+                algo_factory.addToDict(instance_id,algo_runtime)
+                print('after',algo_factory.algo_instance_list)
+                algo_instance = algo_factory.algo_instance_list[instance_id]
+                # algo_instance.update_with_notification(algo_details)
+
+                # algo_instance = algo_factory.algo_instance_list[instance_id]
+
                 # print(algo_factory.algo_instance_list)
             # For updates
             else:
