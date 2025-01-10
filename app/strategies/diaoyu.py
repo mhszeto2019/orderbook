@@ -305,7 +305,7 @@ class Diaoyu:
         # if switch off, we need to revoke the order
         print(self.order_id,'old_state',self.state,'new_state',json_data['data']['state'])
         
-
+        
 
         self.received_data = json_data
         # print(json_data['data'][])
@@ -416,7 +416,7 @@ class Diaoyu:
     def okx_publicCallback(self,message):
         """Callback function to handle incoming messages."""
         json_data = json.loads(message)
- 
+        print(json_data)
 
         if json_data.get('data'):
             currency_pair = json_data["arg"]["instId"]
@@ -431,21 +431,30 @@ class Diaoyu:
             self.limit_buy_price = float(self.best_bid) - float(self.spread)
             self.limit_buy_size = self.qty
             # time.sleep(2)
+            self.place_limit_order_htx_sync()
             #Call the asynchronous function in a blocking way
-            self.loop = asyncio.get_event_loop()
-            if self.loop.is_running():
-                # If the loop is already running, create a new task
-                asyncio.create_task(self.place_limit_order_htx())
-            else:
-                # Run the async function to completion in the current thread
-                self.loop.run_until_complete(self.place_limit_order_htx())
+            
+    
+    def place_limit_order_htx_sync(self):
 
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Create a coroutine object by calling the async function
+            coro = self.place_limit_order_htx()
+            # Schedule it in the existing event loop and wait for the result
+            future = asyncio.run_coroutine_threadsafe(coro, loop)
+        else:
+            # If no event loop is running, run the coroutine to completion
+            return loop.run_until_complete(self.place_limit_order_htx())
+        
     # place limit order which is a swap order NOT CONTRACT
     async def place_limit_order_htx(self):
         # print(self.htx_apikey,self.htx_secretkey,self.ccy,self.limit_buy_price,self.limit_buy_size,self.username,self.algoname,self.instrument,self.state)
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        tradeApi = self.htx_tradeapi
-
+        # tradeApi = self.htx_tradeapi
+        print(self.algoname,self.limit_buy_price)
+        print(f"Attributes: algoname={self.algoname}, limit_buy_price={self.limit_buy_price},  {self.best_bid}")
+        
         # print('algo values1',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
         if int(self.spread) < 0:
             self.htx_direction = 'sell'
@@ -454,12 +463,16 @@ class Diaoyu:
             self.htx_direction = 'buy'
             self.okx_direction = 'sell'
         # print('algo values2',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
+        print(f"Attributes2: algoname={self.algoname}, limit_buy_price={self.limit_buy_price},  {self.best_bid}")
+        
         if self.state:
+
             try:
                 # check if theres is an order_id. if dont have, it will be a new order
                 if self.order_id :
                     # Extract necessary parameters from the request
-                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_secretkey,self.htx_apikey)
+                    tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+                    
                     revoke_orders = await tradeApi.revoke_order(self.ccy,
                         body = {
                         "order_id":self.order_id,
@@ -471,10 +484,11 @@ class Diaoyu:
                     logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",revoke_orders)
                     revoke_order_data = revoke_orders.get('data', [])
                     if len(revoke_order_data['errors']) == 0:
+
                         # Call the asynchronous place_order function
                         result = await tradeApi.place_order(self.ccy,body = {
                             "contract_code": self.ccy.replace('-SWAP',''),
-                            "price": self.limit_buy_price ,
+                            "price": self.limit_buy_price,
                             "created_at": str(datetime.datetime.now()),
                             "volume": self.limit_buy_size,
                             "direction": self.htx_direction,
@@ -482,13 +496,14 @@ class Diaoyu:
                             "lever_rate": 5,
                             "order_price_type": 'limit'
                         })
-                        # print('result',result)
-                        # print('order placed')
                         self.order_id = result['data'][0]['ordId']
                         # print(self.order_id,self.limit_buy_price,self.limit_buy_size)
-                    return revoke_order_data
+                    # return revoke_order_data
                 else:
                     # print("NO CURRENT ORDERS")
+                    # time.sleep(0.05)
+                    tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+
                     result = await tradeApi.place_order(self.ccy,body = {
                             "contract_code": self.ccy.replace('-SWAP',''),
                             "price": self.limit_buy_price ,
@@ -503,11 +518,10 @@ class Diaoyu:
                     self.order_id = result['data'][0]['ordId']
                     logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
                     
-                    return result
-                
             except Exception as e:
                 print(e)
     
+        return result
 
     def htx_publicCallback(self,message):
         # we need to compare htx data with okx data. When a trade is made, we will then fire data to place trade on okx

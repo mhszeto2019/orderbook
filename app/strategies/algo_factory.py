@@ -150,7 +150,6 @@ class AlgoFactory:
 
     def removeFromDict(self,instance_id,algo_instance):
         self.algo_instance_list[instance_id] = None 
-
     
 import threading
 
@@ -229,7 +228,7 @@ async def run_thread(strat):
 
 
 def listen_for_updates():
-    print('listneing')
+    print('listening')
 
     conn = get_db_connection()
     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
