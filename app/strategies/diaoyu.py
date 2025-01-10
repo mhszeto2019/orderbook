@@ -296,7 +296,7 @@ class Diaoyu:
         # throttle
         self.last_call_time = 0
         self.call_interval = 1
-        
+
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
         """Update the main class with data received from the listener."""
@@ -330,8 +330,10 @@ class Diaoyu:
                     loop = self.loop
                     
                     # Submit the async function to the global loop from a background thread
-                    asyncio.run_coroutine_threadsafe(self.revoke_order_by_id(), loop)
-                
+                    # asyncio.run_coroutine_threadsafe(self.revoke_order_by_id(), loop)
+                    asyncio.ensure_future(self.revoke_order_by_id())
+                    logger.debug('after revoking')
+                    
                 except RuntimeError as e:
                     print(f"Error: {e}")
 
@@ -346,8 +348,10 @@ class Diaoyu:
                                 "contract_code": self.ccy.replace('-SWAP','')
                                 }
                             )
-        print(revoke_orders)
-        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",revoke_orders)
+        
+        # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
+        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+
         print('ORDER REVOKED')
         self.order_id = None
     
@@ -481,6 +485,8 @@ class Diaoyu:
                     # reset after cancel
                     # print('input',data)
                     revoke_order_data = revoke_orders.get('data', [])
+                    logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
+
                     if len(revoke_order_data['errors']) == 0:
 
                         # Call the asynchronous place_order function
@@ -495,7 +501,7 @@ class Diaoyu:
                             "order_price_type": 'limit'
                         })
                         self.order_id = result['data'][0]['ordId']
-                        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
+                        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
 
                         # print(self.order_id,self.limit_buy_price,self.limit_buy_size)
                     # return revoke_order_data
@@ -516,7 +522,7 @@ class Diaoyu:
                         })
 
                     self.order_id = result['data'][0]['ordId']
-                    logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
+                    logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
                     
             except Exception as e:
                 print("EXCEPTIOPN CALLED" ,e)
