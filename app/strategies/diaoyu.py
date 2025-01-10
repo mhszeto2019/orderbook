@@ -434,21 +434,29 @@ class Diaoyu:
             # time.sleep(2)
             # self.place_limit_order_htx_sync()
             limit_buy_price = float(self.best_bid) - float(self.spread)
-            limit_buy_size = self.qty
+            limit_ask_price = float(self.best_ask) - float(self.spread)
+            limit_qty = self.qty
             if int(self.spread) < 0:
                 htx_direction = 'sell'
                 okx_direction = 'buy'
             else:
                 htx_direction = 'buy'
                 okx_direction = 'sell'
+            
             best_bid = json_data["data"][0]["bids"][0][0]
+            best_ask = json_data['data'][0]['asks'][0][0]
             # self.place_limit_order_htx_sync(self.algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction)
             
             # Throttle: Ensure minimum interval between API calls
             current_time = time.time()
             if current_time - self.last_call_time >= self.call_interval:
                 self.last_call_time = current_time
-                asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction))
+
+                if htx_direction == 'sell':
+                    asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
+                elif htx_direction == 'bid':
+                    asyncio.create_task(self.place_limit_order_htx(self.algoname, best_ask,limit_ask_price, limit_qty,htx_direction,okx_direction))
+                    
             #Call the asynchronous function in a blocking way
             
     # def place_limit_order_htx_sync(self,algoname, best_bid, limit_buy_price, limit_buy_size,htx_direction,okx_direction):
