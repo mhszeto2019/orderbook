@@ -289,8 +289,6 @@ def listen_for_updates():
             # print('algo_details',type(algo_details),algo_details)
             json_data = algo_details['data']
             operation = algo_details['operation'] # db operations: update,insert...
-            # print(algo_details)
-            # print(operation)
             # Initialize and start new AlgoRunTime instance
             username = json_data['username']
             algo_type = json_data['algo_type']
@@ -301,7 +299,6 @@ def listen_for_updates():
             if operation == "INSERT":
                 conn = get_db_connection()
                 cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                # cur.execute("select * from algo_dets")
                 cur.execute(f"""select
                     ad.username,
                     ad.algo_type,
@@ -340,7 +337,6 @@ def listen_for_updates():
                 print("ALGO INSTANCE",algo_instance)
                 # # print(json_data)
                 algo_instance.update_with_notification(algo_details)
-                # print('step3')
 
 
 

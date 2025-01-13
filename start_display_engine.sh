@@ -54,11 +54,11 @@ tmux send-keys -t htx_display_open_orders_engine "source $venv && gunicorn -k ge
 # ~~~ FUNDING RATE~~~
 tmux new-session -d -s okx_funding_rate
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t okx_funding_rate "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_funding_rate_port app.display_engines_rest.get_okx_funding_rate:app" C-m
+tmux send-keys -t okx_funding_rate "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$okx_display_engine_funding_rate_port app.display_engines_rest.get_okx_funding_rate:app" C-m
 
 tmux new-session -d -s htx_funding_rate
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t htx_funding_rate "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_funding_rate_port app.display_engines_rest.get_htx_funding_rate:app" C-m
+tmux send-keys -t htx_funding_rate "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_funding_rate_port app.display_engines_rest.get_htx_funding_rate:app" C-m
 
 # ~~~ LAST TRADES BY PUBLIC ~~~
 tmux new-session -d -s okx_last_public_trades
