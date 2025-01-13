@@ -247,7 +247,27 @@ def run_all_algo():
 async def run_thread(strat):
     threading.Thread(target=strat.start_clients()).start()
 
+async def initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id):
+    # Initialize the strategy
+    new_strat = await Diaoyu(
+        username, 'key', 'jwt_token', 
+        new_algo_detail[11], new_algo_detail[12], new_algo_detail[13], new_algo_detail[14], new_algo_detail[15],
+        algo_type, algo_name, 
+        new_algo_detail[6], json_data['ccy'], 
+        new_algo_detail[5], new_algo_detail[3], new_algo_detail[4],
+        new_algo_detail[10], new_algo_detail[8], cur, contract_type=None
+    )
 
+    # Log the created strategy
+    logger.debug(new_strat)
+    thread = threading.Thread(target=new_strat.start_clients, daemon=True)
+    thread.start()
+ 
+
+    # Optionally add it to a dictionary or other tracking system
+    algo_factory.addToDict(instance_id, new_strat)
+    logger.debug(algo_factory.algo_instance_list)
+import asyncio
 def listen_for_updates():
     print('listening')
 
@@ -310,8 +330,9 @@ def listen_for_updates():
                 # )
 
                 # new_strat = Diaoyu(username, 'key', 'jwt_token', new_algo_detail[11], new_algo_detail[12], new_algo_detail[13], new_algo_detail[14], new_algo_detail[15], algo_type,algo_name, new_algo_detail[6], json_data['ccy'],new_algo_detail[5], new_algo_detail[3], new_algo_detail[4],new_algo_detail[10], new_algo_detail[8],cur, contract_type=None)
-                initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id)
-                logger.info(algo_factory.algo_instance_list)
+                asyncio.ensure_future(initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id))
+                logger.debug('async after')
+                # logger.info(algo_factory.algo_instance_list)
                 # logger.info(new_strat)
                 # thread = threading.Thread(target=new_strat.start_clients, daemon=True)
                 # thread.start()
@@ -331,36 +352,13 @@ def listen_for_updates():
             # For updates
             else:
                 logger.info('hello')
-                # algo_instance = algo_factory.algo_instance_list[instance_id]
-                # print("ALGO INSTANCE",algo_instance)
+                algo_instance = algo_factory.algo_instance_list[instance_id]
+                print("ALGO INSTANCE",algo_instance)
                 # # print(json_data)
-                # algo_instance.update_with_notification(algo_details)
+                algo_instance.update_with_notification(algo_details)
                 # print('step3')
 
 
-def initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id):
-    # Initialize the strategy
-    new_strat = Diaoyu(
-        username, 'key', 'jwt_token', 
-        new_algo_detail[11], new_algo_detail[12], new_algo_detail[13], new_algo_detail[14], new_algo_detail[15],
-        algo_type, algo_name, 
-        new_algo_detail[6], json_data['ccy'], 
-        new_algo_detail[5], new_algo_detail[3], new_algo_detail[4],
-        new_algo_detail[10], new_algo_detail[8], cur, contract_type=None
-    )
-
-    # Log the created strategy
-    logger.info(new_strat)
-
-    # Start the clients or other async operations
-    try:
-        new_strat.start_clients()
-    except Exception as e:
-        logger.error(f"Failed to start strategy: {e}")
-
-    # Optionally add it to a dictionary or other tracking system
-    algo_factory.addToDict(instance_id, new_strat)
-    return 
 
 # Require one script that assumes we start from 0 algos and another script to refresh the algo 
 if __name__ == "__main__":

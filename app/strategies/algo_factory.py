@@ -47,13 +47,11 @@ DB_CONFIG = {
 }
 
 
-
 from app.strategies.diaoyu import Diaoyu
 import time
 import json
 import select
 from app.strategies.redis_pubsub import RedisPublisher
-
 
 class DatabaseNotificationListener:
     def __init__(self, db_config, channel, filter_username=None, filter_algoname= None, callback = None):
@@ -160,7 +158,6 @@ class AlgoRunTime:
         self.running = False
         print(f"Instance {self.instance_id} stopped. Reason: {reason}")
 
- 
 class AlgoFactory:
     def __init__(self,instance_id=None, algo_instance = None):
         self.algo_instance_list = {instance_id:algo_instance} if algo_instance is not None else {}
@@ -259,14 +256,14 @@ async def initialize_and_start_strategy(new_algo_detail, json_data, algo_type, a
     )
 
     # Log the created strategy
-    logger.debug(new_strat)
+    # logger.debug(new_strat)
     thread = threading.Thread(target=new_strat.start_clients, daemon=True)
     thread.start()
  
-
     # Optionally add it to a dictionary or other tracking system
     algo_factory.addToDict(instance_id, new_strat)
     logger.debug(algo_factory.algo_instance_list)
+
 import asyncio
 def listen_for_updates():
     print('listening')
@@ -274,7 +271,6 @@ def listen_for_updates():
     conn = get_db_connection()
     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
-
     cur.execute("LISTEN algo_dets_channel;")
     # logger.info("Listening for updates on algo_dets...")
 
@@ -324,49 +320,263 @@ def listen_for_updates():
                 new_algo_detail = cur.fetchone()
                 logger.info(new_algo_detail)
                 
-                # Diaoyu(
-                #     username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_type,algo_name, qty, ccy, spread,
-                #     lead_exchange, lag_exchange, state, instrument,cur, contract_type=None
-                # )
-
-                # new_strat = Diaoyu(username, 'key', 'jwt_token', new_algo_detail[11], new_algo_detail[12], new_algo_detail[13], new_algo_detail[14], new_algo_detail[15], algo_type,algo_name, new_algo_detail[6], json_data['ccy'],new_algo_detail[5], new_algo_detail[3], new_algo_detail[4],new_algo_detail[10], new_algo_detail[8],cur, contract_type=None)
-                asyncio.ensure_future(initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id))
+               
+                # asyncio.ensure_future(initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id))
                 logger.debug('async after')
-                # logger.info(algo_factory.algo_instance_list)
-                # logger.info(new_strat)
-                # thread = threading.Thread(target=new_strat.start_clients, daemon=True)
-                # thread.start()
-                # algo_factory.addToDict(instance_id, new_strat)
-
-                # threading.Thread(target=algo_runtime.start_clients).start()
-                # threading.Thread(target=algo_runtime.start_clients, daemon=True).start()
-                # print('b4',algo_factory.algo_instance_list)
-                # algo_factory.addToDict(instance_id,algo_runtime)
-                # print('after',algo_factory.algo_instance_list)
-                # algo_instance = algo_factory.algo_instance_list[instance_id]
-                # algo_instance.update_with_notification(algo_details)
-
-                # algo_instance = algo_factory.algo_instance_list[instance_id]
-
-                # print(algo_factory.algo_instance_list)
-            # For updates
+                #
             else:
-                logger.info('hello')
-                algo_instance = algo_factory.algo_instance_list[instance_id]
-                print("ALGO INSTANCE",algo_instance)
-                # # print(json_data)
-                algo_instance.update_with_notification(algo_details)
-                # print('step3')
+                print('hello')
+            # For updates
+            # else:
+                # logger.info('hello')
+                # algo_instance = algo_factory.algo_instance_list[instance_id]
+                # print("ALGO INSTANCE",algo_instance)
+                
+                # algo_instance.update_with_notification(algo_details)
+         
 
 
 
-# Require one script that assumes we start from 0 algos and another script to refresh the algo 
+
+# # Require one script that assumes we start from 0 algos and another script to refresh the algo 
+# if __name__ == "__main__":
+#     # algo_factory = AlgoFactory()
+    
+#     algo_factory = AlgoFactory()
+#     threading.Thread(target=listen_for_updates, daemon=True).start()
+#     run_all_algo()  # Start existing instances
+
+
+    
+
+import threading
+import multiprocessing
+import time
+import random
+
+
+class Algo:
+    """Represents an algorithm instance."""
+    def __init__(self, algo_id, config):
+        self.algo_id = algo_id
+        self.config = config
+
+    def execute(self):
+        """Execute the algorithm logic."""
+        print(f"Executing Algo {self.algo_id} with config: {self.config}")
+        time.sleep(random.uniform(0.5, 2))  # Simulate work
+
+
+
+class AlgoFactory:
+    """Manages Algo instances and listens for updates."""
+    def __init__(self):
+        self.algos = {}
+        self.lock = threading.Lock()
+        self.conn = psycopg2.connect(**DB_CONFIG)
+
+    def create_or_update_algo(self, algo_id, algo_details):
+        logger.debug('updating')
+        """Create or update an Algo instance."""
+        logger.debug(self.algos)
+        logger.debug(algo_id)
+        logger.debug(algo_id in self.algos)
+        with self.lock:
+            logger.debug(self.lock)
+            if algo_id in self.algos:
+
+                logger.debug(f"Updating Algo {algo_id} with new config: {algo_details}")
+                logger.debug('algo_id',algo_id,algo_details)
+                logger.debug(self.algos[algo_id])
+                self.algos[algo_id].update_with_notification(algo_details)
+            # else:
+            #     print(f"Creating Algo {algo_id} with config: {algo_details}")
+            #     self.algos[algo_id] = Diaoyu(algo_id, algo_details)
+
+    def remove_algo(self, algo_id):
+        """Remove an Algo instance."""
+        with self.lock:
+            if algo_id in self.algos:
+                print(f"Removing Algo {algo_id}")
+                del self.algos[algo_id]
+
+    def get_algo(self, algo_id):
+        """Get an Algo instance."""
+        with self.lock:
+            return self.algos.get(algo_id)
+
+    
+    def execute_all(self):
+        """Execute all algorithms in parallel using multiprocessing."""
+        processes = []
+        cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        # cur.execute("select * from algo_dets")
+        cur.execute("""select
+            ad.username,
+            ad.algo_type,
+            ad.algo_name,
+            ad.lead_exchange,
+            ad.lag_exchange ,
+            ad.spread,
+            ad.qty,
+            ad.ccy,
+            ad.instrument,
+            ad.contract_type,
+            ad.state,
+            MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
+            MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
+            MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
+            MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
+            MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase   
+            FROM algo_dets ad left join api_credentials ac on ad.username = ac.username  group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
+        )
+        algo_details = cur.fetchall()
+
+        for row in algo_details:
+            # Initialize class and start AlgoRunTime
+            print('Running row:', row)
+            username =  row[0]
+            algo_type = row[1]
+            algo_name = row[2]
+            lead_exchange = row[3]
+            lag_exchange = row[4]
+            spread = row[5]
+            qty = row[6]
+            ccy = row[7]
+            instrument = row[8]
+            contract_type = row[9]
+            state = row[10]
+            htx_apikey = row[11]
+            htx_secretkey = row[12]
+            okx_apikey = row[13]
+            okx_secretkey = row[14]
+            okx_passphrase = row[15]
+
+            # Create a unique instance ID
+            instance_id = f"{username}_{algo_type}_{algo_name}"
+            # print(f"Instance ID: {instance_id}")
+            
+            key,jwt_token = '',''
+            # Initialize the strategy
+            # Since Diaoyu is trading SWAP, we will keep contract type as None
+            strat = Diaoyu(
+                username, key, jwt_token, htx_apikey, htx_secretkey,okx_apikey, okx_secretkey, okx_passphrase, algo_type,algo_name, qty, ccy, spread,
+                lead_exchange, lag_exchange, state, instrument,cur, contract_type=None
+            )
+            self.algos[instance_id] = strat
+            print('ALGOS!!!!!!!!!!!!!!!!!!!!!!', self.algos)
+            # Start the strategy in a new thread
+            # thread = threading.Thread(target=strat.start_clients, daemon=True)
+            # thread.start()
+            p = multiprocessing.Process(target=strat.start_clients)
+            processes.append(p)
+            p.start()
+
+        for p in processes:
+            p.join()
+
+
+class DBListener(threading.Thread):
+    """Simulates a database listener."""
+    def __init__(self, factory):
+        super().__init__()
+        self.running = True
+        self.factory = factory
+        self.conn = psycopg2.connect(**DB_CONFIG)
+        
+
+    def run(self):
+        self.conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        cur = self.conn.cursor()
+        cur.execute("LISTEN algo_dets_channel;")
+
+        """Continuously listen for database updates."""
+        while self.running:
+            # Simulate database update events
+            # event = random.choice(["create", "update", "delete"])
+            self.conn.poll()
+            while self.conn.notifies:
+                # use redis publisher to inform frontend
+                # publisher.publish('my_channel', 'test')
+                notify = self.conn.notifies.pop()
+                # logger.info(f"Received notification2: {notify.payload}")
+                algo_details = json.loads(notify.payload)
+                json_data = algo_details['data']
+                operation = algo_details['operation'] # db operations: update,insert...
+                # print(algo_details)
+                # print(operation)
+                # Initialize and start new AlgoRunTime instance
+                username = json_data['username']
+                algo_type = json_data['algo_type']
+                algo_name = json_data['algo_name']
+                instance_id = f"{username}_{algo_type}_{algo_name}"
+                
+                print(username,algo_type,algo_name,instance_id)
+                if operation == "INSERT":
+                    cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                    # cur.execute("select * from algo_dets")
+                    cur.execute(f"""select
+                        ad.username,
+                        ad.algo_type,
+                        ad.algo_name,
+                        ad.lead_exchange,
+                        ad.lag_exchange ,
+                        ad.spread,
+                        ad.qty,
+                        ad.ccy,
+                        ad.instrument,
+                        ad.contract_type,
+                        ad.state,
+                        MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
+                        MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
+                        MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
+                        MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
+                        MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase   
+                        FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
+                    )
+                    new_algo_detail = cur.fetchone()
+                    print(new_algo_detail)
+                    # logger.info(new_algo_detail)
+                    # asyncio.ensure_future(initialize_and_start_strategy(new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id))
+
+                    # logger.debug('async after')
+                    #
+                # For updates
+                elif operation == 'UPDATE':
+                    logger.debug('hello')
+                    # print('hello')
+                    # config = new_algo_detail, json_data, algo_type, algo_name, username, logger,cur,instance_id
+                    # print(self.factory.algos)
+                    # self.factory.create_or_update_algo(instance_id,algo_details)
+                    
+                    self.factory.algos[instance_id].update_with_notification(algo_details)
+                    # algo_instance = self.factory.algos[instance_id]
+                    # print("ALGO INSTANCE",algo_instance)
+                else:
+                    self.factory.remove_algo(instance_id)
+                    # algo_instance.update_with_notification(algo_details)
+     
+
+    def stop(self):
+        """Stop the listener."""
+        self.running = False
+
+
 if __name__ == "__main__":
-    # algo_factory = AlgoFactory()
-    
-    algo_factory = AlgoFactory()
-    threading.Thread(target=listen_for_updates, daemon=True).start()
-    run_all_algo()  # Start existing instances
+    # Instantiate AlgoFactory
+    factory = AlgoFactory()
 
+    # Start the DB listener in a separate thread
+    db_listener = DBListener(factory)
+    db_listener.start()
 
-    
+    try:
+        while True:
+            # Periodically execute all algorithms
+            print("Executing all algorithms...")
+            factory.execute_all()
+            # time.sleep(5)
+    except KeyboardInterrupt:
+        print("Shutting down...")
+        db_listener.stop()
+        db_listener.join()

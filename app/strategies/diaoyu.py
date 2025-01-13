@@ -271,6 +271,7 @@ class Diaoyu:
         self.spread = spread
         self.lead_exchange = lead_exchange
         self.lag_exchange = lag_exchange
+        # true or false state
         self.state = state
         self.instrument = instrument
         self.contract_type = contract_type
@@ -300,10 +301,13 @@ class Diaoyu:
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
         """Update the main class with data received from the listener."""
-        print(f"Updating main class with data: {json_data},{type(json_data)}")
+        logger.debug(f"Updating main class with data: {json_data},{type(json_data)}")
         # if switch off, we need to revoke the order
-        print(self.order_id,'old_state',self.state,'new_state',json_data['data']['state'])
         
+        logger.debug(self.order_id)
+        logger.debug(self.state)
+        logger.debug(json_data['data']['state'])
+        logger.debug(self.order_id,'old_state',self.state,'new_state',json_data['data']['state'])
         self.received_data = json_data
         # print(json_data['data'][])
         # self.algoname = json_data['data']['algoname']
@@ -315,25 +319,17 @@ class Diaoyu:
         self.state = json_data['data']['state']
         # print(type(self.state),type(json_data['data']['state']))
         # print(self.state == True, json_data['data']['state'] == False)
-        if json_data['data']['state'] == False:
+        if not json_data['data']['state']:
             if self.order_id:
-                print("REVOKING ORDER AFTER OFF")
-                # we will revoke order
-                # if self.loop.is_running():
-                #     # If the loop is already running, create a new task
-                #     asyncio.create_task(self.revoke_order_by_id(self.order_id))
-                # else:
-                #     # Run the async function to completion in the current thread
-                #     self.loop.run_until_complete(self.revoke_order_by_id(self.order_id))
+                logger.debug("REVOKING ORDER AFTER OFF")
+          
                 try:
                     # Use the global loop (should already be initialized)
-                    loop = self.loop
-                    
                     # Submit the async function to the global loop from a background thread
-                    # asyncio.run_coroutine_threadsafe(self.revoke_order_by_id(), loop)
+                   
                     asyncio.ensure_future(self.revoke_order_by_id())
                     logger.debug('after revoking')
-                    
+
                 except RuntimeError as e:
                     print(f"Error: {e}")
 
@@ -403,6 +399,7 @@ class Diaoyu:
         # Start Htx match orders with positions in a separate thread
         self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
         self.htx_thread.start()
+
         # Run OkxBbo in the main asyncio event loop
         asyncio.run(self.run_okx_bbo())
         
@@ -435,6 +432,8 @@ class Diaoyu:
             limit_buy_price = float(self.best_bid) - float(self.spread)
             limit_ask_price = float(self.best_ask) - float(self.spread)
             limit_qty = self.qty
+            
+
             if int(self.spread) < 0:
                 htx_direction = 'sell'
                 okx_direction = 'buy'
