@@ -11,6 +11,8 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="websocket_client/css/arbButton.css">
 <link rel="stylesheet" href="websocket_client/css/util.css">
+<link rel="stylesheet" href="websocket_client/css/algoTable.css">
+
 
 
 
@@ -25,7 +27,10 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Falconstead</a>
+            <a class="navbar-brand" href="#">Falconstead </a>  
+            <a >Welcome <tag id ="username_intro"></tag></a>
+            <script> document.getElementById('username_intro').innerHTML = localStorage.getItem('username')</script>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -622,6 +627,9 @@
                                 </tr>
                             </thead>
                             <tbody id="algo-list">
+                                <!-- Dynamically added rows will appear here -->
+                            </tbody>
+                            <tbody id="algo-list-new">
                                 <!-- Dynamically added rows will appear here -->
                             </tbody>
                         </table>

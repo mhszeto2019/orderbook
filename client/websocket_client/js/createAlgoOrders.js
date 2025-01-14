@@ -32,11 +32,11 @@ function saveAlgo() {
         return;
     }
 
-    const algoList = document.getElementById('algo-list');
+    const algoList_temp = document.getElementById('algo-list-new');
+    const algoList = document.getElementById('algo-list')
     const newRow = document.createElement('tr');
-    
     newRow.innerHTML = `
-       <td>${algoType}-${algoName}</td>
+       <td >${algoType}-${algoName}</td>
         <td>
             <div>
                 <span>${leadExchange}</span><br />
@@ -44,10 +44,13 @@ function saveAlgo() {
             </div>
         </td>
         <td>${spread} - ${quantity}</td>
+        <td>
+            <span class="badge bg-warning">Unfilled</span>
+        </td>
         <td>${ccy}</td>
         <td>${instrument} (${contractType})</td>
         <td>
-            <span class="badge bg-success">New</span>
+            <span class="badge bg-warning">New Order</span>
         </td>
         <td>
             <span class="badge ${status === 'Active' ? 'bg-success' : 'bg-danger'}">
@@ -66,7 +69,7 @@ function saveAlgo() {
         </td>
 
     `;
-    algoList.appendChild(newRow);
+    algoList_temp.appendChild(newRow);
 
     closeAlgoModal(); // Close modal after saving
 }
@@ -200,17 +203,106 @@ function fetchAlgoData() {
                 const algoType = algo.algo_type
                 var contractType = algo.contract_type
                 var instrument = algo.instrument
+                // newRow.innerHTML = `
+                //     <td>${algoType}-${algoName}</td>
+                //     <td>
+                //         <div>
+                //             <div class=" " id="input-${algoName}-leading-exchange">
+                //                 ${algo.lead_exchange}
+                //             </div>
+                //         </div>
+                //         <div>
+                //             <div class=" " id="input-${algoName}-lagging-exchange">
+                //                 ${algo.lag_exchange}
+                //             </div>
+                //         </div>
+                        
+                //     </td>
+                    
+                //     <td>
+                //         <div>
+                //             <div type="text" class="" id="input-${algoName}-spread" placeholder="Spread" value="${algo.spread}">
+                //             ${algo.spread}
+                //             </div>
+                //         </div>
+                //         <div>
+                //             <div type="text" class="" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}">
+                //             ${algo.qty}
+                //             </div>
+                //         </div>
+
+                //     </td>
+                //     <td>
+                //         <div id ="filled-volume-${algoName}">
+                //             Filled | Total :
+                //         </div>
+                //         <div id="input-${algoName}-total">
+                //             ${"placeholder"} | ${algo.qty}
+                //         </div>
+                //     </td>
+                   
+                //     <td>
+                //         <div class="" 
+                //             id="input-${algoName}-ccy">
+                //             ${instrument === 'futures' 
+                //                 ? `
+                //                     <option value="BTC" ${algo.ccy === "BTC" ? "selected" : ""}>BTC</option>
+                //                 `
+                //                 : `
+                //                     <option value="BTC-USD-SWAP" ${algo.ccy === "BTC-USD-SWAP" ? "selected" : ""}>BTC-USD-SWAP</option>
+                //                 `
+                //             }
+                //     </div>
+
+                //     </td>
+                //     <td>
+                //         <div>
+                //             <div class="" 
+                //                     id="input-${algoName}-instrument" 
+                //                     onchange="updateCurrencyOptionsGeneral('input-${algoName}-instrument', 'input-${algoName}-ccy', 'input-${algoName}-contract-type-container')">
+                //                     ${instrument}
+                //                     ${contractType}
+
+                //             </div>
+                //         </div>
+                //         <div id="input-${algoName}-contract-type-container" 
+                //             style="display: ${instrument === 'futures' ? 'block' : 'none'};">
+                //             <div class="form-control editable-field" 
+                //                     id="input-${algoName}-contract-type">
+                //                 ${contractType}
+                //             </div>
+                //         </div>
+
+                //     </td>
+
+
+                //     <td>
+                //         <span id="status-algo-${algoName}" class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">
+                //             ${isRunning ? 'Running' : 'Stopped'}
+                //         </span>
+                //     </td>
+                //     <td>
+                //         <div class="form-check form-switch ">
+                //             <input class="form-check-input" type="checkbox" id="${algoType}-${algoName}" ${isRunning ? 'checked' : ''} 
+                //             onclick="handleAlgoToggle(this, '${algoName}','${algoType}','status-algo-${algoName}')">
+                //         </div>
+                //     </td>
+                //     <td>
+                //         <button class="btn btn-danger justify-content-around" onclick="deleteAlgo('${username}','${algoName}')"><i class="bi bi-trash"></i> Delete</button>
+                //     </td>
+                // `;
+
                 newRow.innerHTML = `
                     <td>${algoType}-${algoName}</td>
                     <td>
                         <div>
-                            <select class="form-control editable-field" id="input-${algoName}-leading-exchange">
+                            <select class="form-control editable-field" id="input-${algoName}-leading-exchange" disabled>
                                 <option value="okx" ${algo.lead_exchange === 'okx' ? 'selected' : ''}>okx</option>
                                 <option value="htx" ${algo.lead_exchange === 'htx' ? 'selected' : ''}>htx</option>
                             </select>
                         </div>
                         <div>
-                            <select class="form-control editable-field" id="input-${algoName}-lagging-exchange">
+                            <select class="form-control editable-field" id="input-${algoName}-lagging-exchange" disabled>
                                 <option value="okx" ${algo.lag_exchange === 'okx' ? 'selected' : ''}>okx</option>
                                 <option value="htx" ${algo.lag_exchange === 'htx' ? 'selected' : ''}>htx</option>
                             </select>
@@ -220,26 +312,25 @@ function fetchAlgoData() {
                     
                     <td>
                         <div>
-                            <input type="text" class="form-control editable-field" id="input-${algoName}-spread" placeholder="Spread" value="${algo.spread}">
+                            <input type="text" class="form-control editable-field" id="input-${algoName}-spread" placeholder="Spread" value="${algo.spread}" disabled>
                         </div>
                         <div>
-                            <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}">
+                            <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}" disabled>
                         </div>
 
                     </td>
                     <td>
                         <div id ="filled-volume-${algoName}">
-                            Filled | Total :
                         </div>
-                        <div id="input-${algoName}-total">
-                            ${"placeholder"} | ${algo.qty}
+                        <div id="input-${algoName}-total" disabled>
+                            ${"0"} | ${algo.qty}
                         </div>
                     </td>
                    
                     <td>
                         <select class="form-control editable-field" 
-                            id="input-${algoName}-ccy">
-                        <option value="">Select Currency Pair</option>
+                            id="input-${algoName}-ccy" disabled>
+                        <option value="" >Select Currency Pair</option>
                         ${instrument === 'futures' 
                             ? `
                                 <option value="BTC" ${algo.ccy === "BTC" ? "selected" : ""}>BTC</option>
@@ -255,7 +346,7 @@ function fetchAlgoData() {
                         <div>
                             <select class="form-control editable-field" 
                                     id="input-${algoName}-instrument" 
-                                    onchange="updateCurrencyOptionsGeneral('input-${algoName}-instrument', 'input-${algoName}-ccy', 'input-${algoName}-contract-type-container')">
+                                    onchange="updateCurrencyOptionsGeneral('input-${algoName}-instrument', 'input-${algoName}-ccy', 'input-${algoName}-contract-type-container')" disabled>
                                 <option value="swap" ${instrument === 'swap' ? 'selected' : ''}>Swap</option>
                                 <option value="futures" ${instrument === 'futures' ? 'selected' : ''}>Futures</option>
                             </select>
@@ -263,7 +354,7 @@ function fetchAlgoData() {
                         <div id="input-${algoName}-contract-type-container" 
                             style="display: ${instrument === 'futures' ? 'block' : 'none'};">
                             <select class="form-control editable-field" 
-                                    id="input-${algoName}-contract-type">
+                                    id="input-${algoName}-contract-type" disabled>
                                 <option value="">Select Contract Type</option>
                                 <option value="thisweek" ${contractType === 'thisweek' ? 'selected' : ''}>This Week</option>
                                 <option value="nextweek" ${contractType === 'nextweek' ? 'selected' : ''}>Next Week</option>
@@ -290,12 +381,13 @@ function fetchAlgoData() {
                     </td>
                 `;
 
+
                 algoList.appendChild(newRow);
 
                 // Add event listeners for all inputs and selects in the row
                 const editableFields = newRow.querySelectorAll('.editable-field');
                 editableFields.forEach(field => {
-                    const originalValue = field.value || field.selectedOptions[0]?.value;
+                    // const originalValue = field.value || field.selectedOptions[0]?.value;
                     
                     field.addEventListener('change', (event) => {
                         // Highlight the field with a red border
@@ -411,7 +503,7 @@ function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spr
 
 // Handle the toggle change
 function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
-    console.log('fetchiong along',checkbox,algo_name,algo_type)
+    console.log('fetching along',checkbox,algo_name,algo_type)
     //update db to stop algo
     username = localStorage.getItem('username')
     jwt_token = localStorage.getItem('jwt_token')
@@ -427,11 +519,9 @@ function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
     amended_instrument = document.getElementById(`input-${algo_name}-instrument`).value
     contractType = document.getElementById(`input-${algo_name}-contract-type`).value
     state = checkbox.checked
-
    
     modifyAlgo(username,algo_type, algo_name,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state)
 
-    // Step2: Switch on strat with subproces   
 
     const statusBadge = document.getElementById(statusId);
     if (checkbox.checked) {
