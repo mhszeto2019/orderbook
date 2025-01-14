@@ -399,18 +399,22 @@ class Diaoyu:
 
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
+        logger.debug('STOPPING DIAOYU')
         if self.okx_client:
-            self.okx_client.stop()  # Assuming the OkxBbo class has a stop method
+            # self.okx_client.unsubscribe()  # Assuming the OkxBbo class has a stop method
+            # self.okx_client.close()  # Assuming the OkxBbo class has a stop method
+            print('close okx')
         if self.htx_thread and self.htx_thread.is_alive():
             # Implement stopping mechanism for HtxPositions if necessary
             print("Stopping HtxPositions thread... (implement specific logic as needed)")
-
+        # if self.row['order_id']:
+        self.revoke_order_by_id()
+        self.update_db()
     
     def okx_publicCallback(self,message):
         """Callback function to handle incoming messages."""
         json_data = json.loads(message)
-
-        print('TEST!!!!!!!!!!!!!!!!',self.username,self.algoname,self.row['state'])
+        # print('TEST!!!!!!!!!!!!!!!!',self.username,self.algoname,self.row['state'])
         if json_data.get('data'):
             currency_pair = json_data["arg"]["instId"]
            

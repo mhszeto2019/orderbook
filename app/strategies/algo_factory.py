@@ -79,7 +79,8 @@ class AlgoFactory:
         self.conn = psycopg2.connect(**DB_CONFIG)
         self.manager = multiprocessing.Manager()
         self.shared_states = {}
-
+        self.processes = []
+        
     def add_or_update_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
         if instance_id in self.algos:
@@ -87,8 +88,8 @@ class AlgoFactory:
             # Update existing strategy
             shared_state = self.shared_states[instance_id]
             #  {'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '200', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'htx_apikey': 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', 'htx_secretkey': '7d4bac9e-780e3558-de6db8f8-5a0df', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024', 'order_id': 1328717969429176320}
-#             algo_details
-#  {'operation': 'UPDATE', 'data': {'id': 143, 'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1234', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '5000', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'updated_at': '2025-01-14T14:51:04.940568'}}
+            # algo_details
+            # {'operation': 'UPDATE', 'data': {'id': 143, 'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1234', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '5000', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'updated_at': '2025-01-14T14:51:04.940568'}}
             json_data = algo_details.get('data','')
             self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
             self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
@@ -98,45 +99,54 @@ class AlgoFactory:
             self.shared_states[instance_id]['instrument'] = json_data['instrument']
             self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
             self.shared_states[instance_id]['state'] =  json_data['state']
-            # self.factory.shared_states[instance_id]['htx_apikey'] = json_data['contract_type']
-            # self.factory.shared_states[instance_id]['htx_secretkey'] = json_data['contract_type']
-            # self.factory.shared_states[instance_id]['okx_apikey'] = json_data['contract_type']
-            # self.factory.shared_states[instance_id]['okx_secretkey'] = json_data['contract_type']
-            # self.factory.shared_states[instance_id]['okx_passphrase'] = json_data['contract_type']
-            # self.factory.shared_states[instance_id]['order_id'] = json_data['contract_type']
-
-
+     
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
             logger.debug('algofactory updating state',self.shared_states[instance_id]['state'] )
-            
-         
 
             logger.debug(f"Updated strategy {instance_id} with new details.")
+
         else:
             # Add a new strategy
             logger.debug(f"Adding new strategy {instance_id}...")
-            
+            logger.debug(algo_details)
             # Create a shared state dictionary
-            shared_state = self.manager.dict(algo_details['data'])
-            
+            #  ['brennan_st', 'diaoyu', '123abc', 'okx', 'htx', '999', '1', 'na', 'swap', 'thisweek', False, 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', '7d4bac9e-780e3558-de6db8f8-5a0df', 'a0de3940-5679-4939-957a-51c87a8502d9', 'FA44BCAAC3788C2AB4AFC77047930792', 'falconstead@Trading2024']
+            row_dict  = {}
+            row_dict['username'] =  algo_details[0]
+            row_dict['algo_type'] = algo_details[1]
+            row_dict['algo_name'] = algo_details[2]
+            row_dict['lead_exchange'] = algo_details[3]
+            row_dict['lag_exchange'] = algo_details[4]
+            row_dict['spread']= algo_details[5]
+            row_dict['qty'] = algo_details[6]
+            row_dict['ccy'] = algo_details[7]
+            row_dict['instrument'] = algo_details[8]
+            row_dict['contract_type'] = algo_details[9]
+            row_dict['state'] = algo_details[10]
+            row_dict['htx_apikey'] = algo_details[11]
+            row_dict['htx_secretkey'] = algo_details[12]
+            row_dict['okx_apikey'] = algo_details[13]
+            row_dict['okx_secretkey'] = algo_details[14]
+            row_dict['okx_passphrase'] = algo_details[15]
+            instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
+
+            self.shared_states[instance_id] = self.manager.dict(row_dict)
+            logger.debug(self.shared_states)
             # Create the new strategy instance (Diaoyu)
-            strat = Diaoyu(shared_state, self.conn.cursor())
-            
+            strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
             # Create a new process for the strategy
             process = multiprocessing.Process(target=strat.start_clients)
-            
             # Store the strategy and process in the `algos` dictionary
             self.algos[instance_id] = (strat, process)
-            
             # Store the shared state for the instance
-            self.shared_states[instance_id] = shared_state
-            
             # Start the process
             process.start()
+            self.processes.append(process)
 
             logger.debug(f"Added new strategy {instance_id} and started process.")
-
+        for p in self.processes:
+            p.join
 
     def remove_algo(self, algo_id):
         """Remove an Algo instance."""
@@ -153,7 +163,6 @@ class AlgoFactory:
     
     def execute_all(self):
         """Execute all algorithms in parallel using multiprocessing."""
-        processes = []
         cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         # cur.execute("select * from algo_dets")
         cur.execute("""select
@@ -210,8 +219,34 @@ class AlgoFactory:
             p = multiprocessing.Process(target=strat.start_clients)
             self.algos[instance_id] = (strat, p)  # Update with the new process
             p.start()
+            self.processes.append(p)
+        for p in self.processes:
+            p.join()
 
+    def stop_all(self):
+        """Stop all strategies and terminate their processes."""
+        print("Stopping all strategies and processes...")
+        for instance_id, (strat, process) in self.algos.items():
+            logger.debug('STOPPING')
+            logger.debug(process)
+            logger.debug(process.is_alive())
+            logger.debug(instance_id)
+            logger.debug(strat)
+            strat.stop_clients()
 
+        #     if process.is_alive():
+        #         try:
+        #             print(f"Stopping strategy for {instance_id}...")
+        #             strat.stop()  # Call the strategy's stop function
+        #             process.terminate()  # Terminate the process
+        #             process.join()  # Wait for the process to shut down
+        #         except Exception as e:
+        #             print(f"Error while stopping strategy for {instance_id}: {e}")
+        # self.processes.clear()  # Clear the process list
+        # self.algos.clear()  # Clear the algos dictionary
+        # print("All strategies and processes stopped.")
+
+    
 
 class DBListener(threading.Thread):
     """Simulates a database listener."""
@@ -266,7 +301,7 @@ class DBListener(threading.Thread):
                         FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
                     )
                     new_algo_detail = cur.fetchone()
-                    self.factory.add_or_update_algo(algo_details)
+                    self.factory.add_or_update_algo(instance_id,new_algo_detail)
 
 
                     #
@@ -304,6 +339,12 @@ if __name__ == "__main__":
         factory.execute_all()
             # time.sleep(5)
     except KeyboardInterrupt:
-        print("Shutting down...")
+        print("KeyboardInterrupt detected. Shutting down gracefully...")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    finally:
+        # Ensure cleanup happens no matter what
+        print("Cleaning up...")
+        factory.stop_all()
         db_listener.stop()
         db_listener.join()
