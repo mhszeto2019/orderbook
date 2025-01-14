@@ -237,17 +237,16 @@ class Diaoyu:
     def __init__(self,row_dict,cursor):
         # shared_state
         self.row = row_dict
-        # logger.debug(self.row)
         # self.row = row_dict
-        self.username = row_dict['username']
-        self.algotype = row_dict['algo_type']
-        self.algoname = row_dict['algo_name']
-        self.htx_apikey =    row_dict['htx_apikey']
-        self.htx_secretkey = row_dict['htx_secretkey']
-        self.htx_tradeapi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",row_dict['htx_apikey'],row_dict['htx_secretkey'])
-        self.okx_api_key = row_dict['okx_apikey']
-        self.okx_secret_key = row_dict['okx_secretkey']
-        self.okx_passphrase = row_dict['okx_passphrase']
+        self.username = self.row['username']
+        self.algotype = self.row['algo_type']
+        self.algoname = self.row['algo_name']
+        self.htx_apikey =    self.row['htx_apikey']
+        self.htx_secretkey = self.row['htx_secretkey']
+        self.htx_tradeapi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.row['htx_apikey'],self.row['htx_secretkey'])
+        self.okx_api_key = self.row['okx_apikey']
+        self.okx_secret_key = self.row['okx_secretkey']
+        self.okx_passphrase = self.row['okx_passphrase']
         self.okx_tradeapi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key,self.okx_passphrase, False, '0')
 
         # db
@@ -265,15 +264,15 @@ class Diaoyu:
         # from htx
 
         # user input
-        self.qty = row_dict['qty']
-        self.ccy = row_dict['ccy']
-        self.spread = row_dict['spread']
-        self.lead_exchange = row_dict['lead_exchange']
-        self.lag_exchange =  row_dict['lag_exchange']
+        self.qty = self.row['qty']
+        self.ccy = self.row['ccy']
+        self.spread = self.row['spread']
+        self.lead_exchange = self.row['lead_exchange']
+        self.lag_exchange =  self.row['lag_exchange']
         # true or false state
-        self.row['state'] = row_dict['state']
-        self.instrument = row_dict['instrument']
-        self.contract_type = row_dict['contract_type']
+        self.state = self.row['state']
+        self.instrument = self.row['instrument']
+        self.contract_type = self.row['contract_type']
 
         # derived from okx and user input
         self.limit_buy_price = None
@@ -297,37 +296,6 @@ class Diaoyu:
         self.last_call_time = 0
         self.call_interval = 1
 
-    def update_state(self,new_state):
-        logger.debug(new_state)
-        self.row['state'] = new_state
-        logger.debug(self.row['state'])
-        logger.debug('STATE IS BEING UPDATED')
-        
-    def update_from_shared_state(self):
-        # logger.debug('updating from shared_State')
-        # logger.debug('new_row',dict(self.row))
-        """Update the class attributes based on the shared_state."""
-        self.username = self.row.get('username')
-        self.algotype = self.row.get('algo_type')
-        self.algoname = self.row.get('algo_name')
-        self.htx_apikey = self.row.get('htx_apikey')
-        self.htx_secretkey = self.row.get('htx_secretkey')
-        self.okx_api_key = self.row.get('okx_apikey')
-        self.okx_secret_key = self.row.get('okx_secretkey')
-        self.okx_passphrase = self.row.get('okx_passphrase')
-        self.qty = self.row.get('qty')
-        self.ccy = self.row.get('ccy')
-        self.spread = self.row.get('spread')
-        self.lead_exchange = self.row.get('lead_exchange')
-        self.lag_exchange = self.row.get('lag_exchange')
-        self.row['state'] = self.row.get('state')
-        self.instrument = self.row.get('instrument')
-        self.contract_type = self.row.get('contract_type')
-
-    # def update_shared_state(self, new_details):
-    #     """Update the shared state and trigger attribute updates."""
-    #     self.row.update(new_details)
-    #     self.update_from_shared_state()  
 
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
@@ -340,10 +308,10 @@ class Diaoyu:
         self.spread = json_data['data']['spread']
         self.lead_exchange = json_data['data']['lead_exchange']
         self.lag_exchange = json_data['data']['lag_exchange']
-        self.row['state'] = json_data['data']['state']
+        self.state = json_data['data']['state']
         
-        # print(type(self.row['state']),type(json_data['data']['state']))
-        # print(self.row['state'] == True, json_data['data']['state'] == False)
+        # print(type(self.state),type(json_data['data']['state']))
+        # print(self.state == True, json_data['data']['state'] == False)
         if not json_data['data']['state']:
             if self.row['order_id'] :
                 logger.debug("REVOKING ORDER AFTER OFF")

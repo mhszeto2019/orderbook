@@ -83,40 +83,33 @@ class AlgoFactory:
     def add_or_update_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
         if instance_id in self.algos:
+            logger.debug(algo_details)
             # Update existing strategy
             shared_state = self.shared_states[instance_id]
             #  {'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '200', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'htx_apikey': 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', 'htx_secretkey': '7d4bac9e-780e3558-de6db8f8-5a0df', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024', 'order_id': 1328717969429176320}
-            self.factory.shared_states[instance_id]['lead_exchange'] = True
-            self.factory.shared_states[instance_id]['lag_exchange'] = True
-            self.factory.shared_states[instance_id]['spread'] = True
-            self.factory.shared_states[instance_id]['qty'] = True
-            self.factory.shared_states[instance_id]['ccy'] = True
-            self.factory.shared_states[instance_id]['instrument'] = True
-            self.factory.shared_states[instance_id]['contract_type'] = True
-            self.factory.shared_states[instance_id]['state'] = True
-            self.factory.shared_states[instance_id]['htx_apikey'] = True
-            self.factory.shared_states[instance_id]['htx_secretkey'] = True
-            self.factory.shared_states[instance_id]['okx_apikey'] = True
-            self.factory.shared_states[instance_id]['okx_secretkey'] = True
-            self.factory.shared_states[instance_id]['okx_passphrase'] = True
-            self.factory.shared_states[instance_id]['order_id'] = True
+#             algo_details
+#  {'operation': 'UPDATE', 'data': {'id': 143, 'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1234', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '5000', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'updated_at': '2025-01-14T14:51:04.940568'}}
+            json_data = algo_details.get('data','')
+            self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
+            self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
+            self.shared_states[instance_id]['spread'] = json_data['lead_exchange']
+            self.shared_states[instance_id]['qty'] = json_data['qty']
+            self.shared_states[instance_id]['ccy'] = json_data['ccy']
+            self.shared_states[instance_id]['instrument'] = json_data['instrument']
+            self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
+            self.shared_states[instance_id]['state'] =  json_data['state']
+            # self.factory.shared_states[instance_id]['htx_apikey'] = json_data['contract_type']
+            # self.factory.shared_states[instance_id]['htx_secretkey'] = json_data['contract_type']
+            # self.factory.shared_states[instance_id]['okx_apikey'] = json_data['contract_type']
+            # self.factory.shared_states[instance_id]['okx_secretkey'] = json_data['contract_type']
+            # self.factory.shared_states[instance_id]['okx_passphrase'] = json_data['contract_type']
+            # self.factory.shared_states[instance_id]['order_id'] = json_data['contract_type']
 
 
-
-            
-
-
-
-            # Update the shared state with the new details
-            # shared_state.update(algo_details['data'])
-            # Update the internal attributes of the Diaoyu instance
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
-            logger.debug('algofactory updating state')
-            strat.update_state(True)
-            process = strat_and_process[0]
+            logger.debug('algofactory updating state',self.shared_states[instance_id]['state'] )
             
-            strat.state = True
          
 
             logger.debug(f"Updated strategy {instance_id} with new details.")
