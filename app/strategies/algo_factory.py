@@ -85,6 +85,27 @@ class AlgoFactory:
         if instance_id in self.algos:
             # Update existing strategy
             shared_state = self.shared_states[instance_id]
+            #  {'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '200', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'htx_apikey': 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', 'htx_secretkey': '7d4bac9e-780e3558-de6db8f8-5a0df', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024', 'order_id': 1328717969429176320}
+            self.factory.shared_states[instance_id]['lead_exchange'] = True
+            self.factory.shared_states[instance_id]['lag_exchange'] = True
+            self.factory.shared_states[instance_id]['spread'] = True
+            self.factory.shared_states[instance_id]['qty'] = True
+            self.factory.shared_states[instance_id]['ccy'] = True
+            self.factory.shared_states[instance_id]['instrument'] = True
+            self.factory.shared_states[instance_id]['contract_type'] = True
+            self.factory.shared_states[instance_id]['state'] = True
+            self.factory.shared_states[instance_id]['htx_apikey'] = True
+            self.factory.shared_states[instance_id]['htx_secretkey'] = True
+            self.factory.shared_states[instance_id]['okx_apikey'] = True
+            self.factory.shared_states[instance_id]['okx_secretkey'] = True
+            self.factory.shared_states[instance_id]['okx_passphrase'] = True
+            self.factory.shared_states[instance_id]['order_id'] = True
+
+
+
+            
+
+
 
             # Update the shared state with the new details
             # shared_state.update(algo_details['data'])
@@ -262,10 +283,10 @@ class DBListener(threading.Thread):
                     logger.debug(self.factory.shared_states)
                     logger.debug('UPDATE')
                     logger.debug(self.factory.shared_states[instance_id])
-                    self.factory.shared_states[instance_id]['state'] = True
+                    # self.factory.shared_states[instance_id]['state'] = True
+                    self.factory.add_or_update_algo(instance_id,algo_details)
                     logger.debug(self.factory.shared_states[instance_id])
 
-                    # self.factory.add_or_update_algo(instance_id,algo_details)
                 else:
                     self.factory.remove_algo(instance_id)
      
