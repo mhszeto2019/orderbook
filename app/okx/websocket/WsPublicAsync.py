@@ -1,28 +1,28 @@
 import asyncio
 import json
-import logging
 import os
 from okx.websocket.WebSocketFactory import WebSocketFactory
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
-
-# Logging configuration
-LOG_DIR = '/var/www/html/orderbook/logs'
-log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
+from pathlib import Path
+LOG_DIR = Path('/var/www/html/orderbook/logs')
+log_filename = LOG_DIR / (Path(__file__).stem + '.log')
+import os
 os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
+import logging
+file_handler = logging.FileHandler(log_filename)
+# Set up a basic formatter
 
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     format="%(asctime)s [%(levelname)s] %(message)s",
-#     handlers=[
-#         # logging.FileHandler(log_filename),
-#         # logging.StreamHandler()
-#     ]
-# )
-# logger = logging.getLogger("WsPublic")
-# for handler in logger.handlers[:]:
-#     handler.close()
-#     logger.removeHandler(handler)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(formatter)
+logger = logging.getLogger('WsPublicAsync')
+
+logger.setLevel(logging.DEBUG)  # Set log level
+# Add the file handler to the logger
+logger.addHandler(file_handler)
+
+
 
 class WsPublicAsync:
     def __init__(self, url):
