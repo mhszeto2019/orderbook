@@ -652,7 +652,7 @@
                                         <form id="new-algoForm">
                                             <div class="row">
                                                 <div class="input-group mb-3">
-                                                    <div class="input-group-prepend">
+                                                    <!-- <div class="input-group-prepend">
                                                       <button 
                                                         class="btn btn-outline-secondary dropdown-toggle"  
                                                         type="button" 
@@ -664,14 +664,20 @@
                                                       </button>
                                                       <div class="dropdown-menu" id="new-algo-type" >
                                                         <a class="dropdown-item" data-value="diaoyu" onclick="setnewAlgoType(this)">Diaoyu</a>
-                                                        <!-- <a class="dropdown-item" data-value="Algo type 2" onclick="setnewAlgoType(this)" disabled>Algo type 2</a>
-                                                        <div role="separator" class="dropdown-divider" ></div>
-                                                        <a class="dropdown-item" href="#"disabled>NA</a> -->
+                                                   
                                                       </div>
                                                       
-                                                    </div>
+                                                    </div> -->
                                                     <!-- Input Field -->
+                                                    <div class="input-group-prepend">
+                                                        <select class="form-select" id="new-algo-type" onchange="setnewAlgoType(this)" required>
+                                                            <option value="" disabled selected>Select Algo Type</option>
+                                                            <option value="diaoyu">Diaoyu</option>
+                                                            <!-- Additional options can be added here -->
+                                                        </select>
+                                                    </div>
                                                     
+
                                                     <input 
                                                     type="text" 
                                                     class="form-control" 

@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from datetime import datetime
 import psycopg2
 import psycopg2.extras
-
+import sys
 from pathlib import Path
 
 # Logger 
@@ -223,6 +223,17 @@ class AlgoFactory:
             self.processes.append(p)
         for p in self.processes:
             p.join()
+        
+    def handle_termination_signal(self,signum, frame):
+        """Signal handler for termination signals (SIGINT, SIGTERM)."""
+        print(f"Received signal {signum}, cleaning up and exiting...")
+        # Gracefully terminate child processes
+        for process in self.processes:
+            process.terminate()  # Gracefully terminate the worker processes
+            process.join()       # Wait for processes to finish
+
+        print("All processes terminated. Exiting...")
+        sys.exit(0)  # Exit the main process after cleanup
 
     def stop_all(self):
         """Stop all strategies and terminate their processes."""
@@ -348,4 +359,5 @@ if __name__ == "__main__":
         print("Cleaning up...")
         factory.stop_all()
         db_listener.stop()
+        factory.handle_termination_signal(None,None)
         db_listener.join()

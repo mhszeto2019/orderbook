@@ -13,7 +13,7 @@ def get_algo_list(cursor):
     # user input username and password
     username = request.args.get('username')
     # Execute SELECT query to check for existing users
-    cursor.execute("SELECT jsonb_build_object('username', username,'algo_type', algo_type,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'instrument',instrument,'contract_type',contract_type,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s;", (username,))
+    cursor.execute("SELECT jsonb_build_object('username', username,'algo_type', algo_type,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'instrument',instrument,'contract_type',contract_type,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s order by algo_name;", (username,))
     result = cursor.fetchall()
     return jsonify(result)
 
