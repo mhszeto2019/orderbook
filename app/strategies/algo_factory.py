@@ -84,7 +84,7 @@ class AlgoFactory:
     def add_or_update_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
         if instance_id in self.algos:
-            logger.debug(algo_details)
+            # logger.debug(algo_details)
             # Update existing strategy
             shared_state = self.shared_states[instance_id]
             #  {'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '200', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'htx_apikey': 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', 'htx_secretkey': '7d4bac9e-780e3558-de6db8f8-5a0df', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024', 'order_id': 1328717969429176320}
@@ -102,16 +102,17 @@ class AlgoFactory:
      
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
-            logger.debug('algofactory updating state',self.shared_states[instance_id]['state'] )
+            # logger.debug('algofactory updating state',self.shared_states[instance_id]['state'] )
 
-            logger.debug(f"Updated strategy {instance_id} with new details.")
+            # logger.debug(f"Updated strategy {instance_id} with new details.")
 
         else:
             # Add a new strategy
             logger.debug(f"Adding new strategy {instance_id}...")
             logger.debug(algo_details)
             # Create a shared state dictionary
-            #  ['brennan_st', 'diaoyu', '123abc', 'okx', 'htx', '999', '1', 'na', 'swap', 'thisweek', False, 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', '7d4bac9e-780e3558-de6db8f8-5a0df', 'a0de3940-5679-4939-957a-51c87a8502d9', 'FA44BCAAC3788C2AB4AFC77047930792', 'falconstead@Trading2024']
+            # ['brennan_st', 'diaoyu', '123abc', 'okx', 'htx', '999', '1', 'na', 'swap', 'thisweek', False, 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', '7d4bac9e-780e3558-de6db8f8-5a0df', 'a0de3940-5679-4939-957a-51c87a8502d9', 'FA44BCAAC3788C2AB4AFC77047930792', 'falconstead@Trading2024']
+            
             row_dict  = {}
             row_dict['username'] =  algo_details[0]
             row_dict['algo_type'] = algo_details[1]
@@ -132,7 +133,7 @@ class AlgoFactory:
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
 
             self.shared_states[instance_id] = self.manager.dict(row_dict)
-            logger.debug(self.shared_states)
+            # logger.debug(self.shared_states)
             # Create the new strategy instance (Diaoyu)
             strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
             # Create a new process for the strategy
@@ -209,7 +210,7 @@ class AlgoFactory:
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
             # print(f"Instance ID: {instance_id}")
-            logger.debug(instance_id)
+            # logger.debug(instance_id)
             key,jwt_token = '',''
             # Initialize the strategy
             # Since Diaoyu is trading SWAP, we will keep contract type as None
@@ -227,11 +228,11 @@ class AlgoFactory:
         """Stop all strategies and terminate their processes."""
         print("Stopping all strategies and processes...")
         for instance_id, (strat, process) in self.algos.items():
-            logger.debug('STOPPING')
-            logger.debug(process)
-            logger.debug(process.is_alive())
-            logger.debug(instance_id)
-            logger.debug(strat)
+            # logger.debug('STOPPING')
+            # logger.debug(process)
+            # logger.debug(process.is_alive())
+            # logger.debug(instance_id)
+            # logger.debug(strat)
             strat.stop_clients()
 
         #     if process.is_alive():
@@ -308,12 +309,12 @@ class DBListener(threading.Thread):
                 # For updates
                 elif operation == 'UPDATE':
                     # self.factory.shared_states[instance_id] = algo_details
-                    logger.debug(self.factory.shared_states)
-                    logger.debug('UPDATE')
-                    logger.debug(self.factory.shared_states[instance_id])
+                    # logger.debug(self.factory.shared_states)
+                    # logger.debug('UPDATE')
+                    # logger.debug(self.factory.shared_states[instance_id])
                     # self.factory.shared_states[instance_id]['state'] = True
                     self.factory.add_or_update_algo(instance_id,algo_details)
-                    logger.debug(self.factory.shared_states[instance_id])
+                    # logger.debug(self.factory.shared_states[instance_id])
 
                 else:
                     self.factory.remove_algo(instance_id)

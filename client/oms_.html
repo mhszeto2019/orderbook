@@ -349,7 +349,7 @@
                     <div class="row">
                         <div id="securedContentBidAskOrder" class="alert alert-success" style="display: none;">
                             <!-- Sync and Reset Buttons (Always at the Bottom) -->
-                            <div class="rfs-spread-base-cell">
+                            <div class="rfs-spread-base-cell p-0">
                                 <!-- Header with Bid, Spread, and Ask -->
                                 <div class="RfsSpreadCell_rfs-spread-card-header-container d-flex justify-content-center">
                                     <!-- <span class="quote-side-text text-success fw-bold">Bid</span> -->
@@ -439,8 +439,7 @@
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane fade show active" id="pills-manual-order" role="tabpanel" aria-labelledby="pills-manual-order-tab">
                         <!-- User Input Section -->
-                        <div class="card p-4 ">
-                            <h2 class="text-center">Place Order</h2>
+                        <div class="card p-3 ">
                             <form id="order-form">
                                 <form id="order-form">
                                     <div class="row g-2">
@@ -608,31 +607,34 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade" id="pills-algo-order" role="tabpanel" aria-labelledby="pills-algo-order-tab">
+                    <div class="tab-pane fade " id="pills-algo-order" role="tabpanel" aria-labelledby="pills-algo-order-tab">
                         <div>
                             <!-- Algo Strats Table -->
                             <!-- Algo List Table -->
-                        <table class="table" >
-                            <thead>
-                                <tr>
-                                    <th>Algo Name</th>
-                                    <th>Lead | Lag</th>
-                                    <th>Spread | Qty</th>
-                                    <th>Filled/Total</th>
-                                    <th>Currency</th>
-                                    <th>Instrument | Contract</th>
-                                    <th>Status</th>
-                                    <th>On / Off</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="algo-list">
-                                <!-- Dynamically added rows will appear here -->
-                            </tbody>
-                            <tbody id="algo-list-new">
-                                <!-- Dynamically added rows will appear here -->
-                            </tbody>
-                        </table>
+                        <div class="scrollable-table" >
+                            <table class="table" >
+                                <thead>
+                                    <tr style="position: sticky; top: 0; z-index: 1020; font-size: small;">
+                                        <th>Algo Name</th>
+                                        <th>Lead | Lag</th>
+                                        <th>Spread | Qty</th>
+                                        <th>Filled/Total</th>
+                                        <th>Currency</th>
+                                        <th>Instrument | Contract</th>
+                                        <th>Status</th>
+                                        <th>On / Off</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                        
+                                    <tbody id="algo-list">
+                                        <!-- Dynamically added rows will appear here -->
+                                    </tbody>
+                                    <tbody id="algo-list-new">
+                                        <!-- Dynamically added rows will appear here -->
+                                    </tbody>
+                            </table>
+                        </div>
 
                         <!-- Button to Open Modal -->
                         <button class="btn btn-primary mt-3" onclick="openAlgoModal()">Add New Algo</button>
@@ -1146,6 +1148,16 @@
         flex-direction: column;
         gap: 5px;  /* Add gap between asks and bids */
         box-sizing: border-box; /* Include padding and border in the element's total width */
+        scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
+        scrollbar-width: thin; 
+    }
+    .scrollable-table {
+        max-height: 550px; /* Set a fixed height for uniformity */
+        overflow-y: auto;  /* Enable vertical scrolling */
+        border: 1px solid #ddd;  /* Optional border styling */
+        /* padding: 10px; */
+        background-color: #f9f9f9; /* Light background for better readability */
+        gap: 5px;  /* Add gap between asks and bids */
         scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
         scrollbar-width: thin; 
     }

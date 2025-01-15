@@ -154,7 +154,7 @@ function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, 
 }
 
 function deleteAlgo(username,algoname){
-    console.log(username,algoname)
+    // console.log(username,algoname)
     const requestBody = {
         username: username,
         algo_name: algoname
@@ -187,7 +187,6 @@ function deleteAlgo(username,algoname){
 
 function fetchAlgoData() {
     const username = localStorage.getItem('username');
-    console.log(username)
     fetch(`http://${hostname}:5020/db/get_algo_list?username=${username}`)
         .then(response => response.json())
         .then(data => {
@@ -392,7 +391,7 @@ function fetchAlgoData() {
                     field.addEventListener('change', (event) => {
                         // Highlight the field with a red border
                         field.style.border = '2px solid red';
-                        console.log(event)
+                        // console.log(event)
                         // Add a confirmation UI (cross and tick buttons)
                         if (!field.nextElementSibling) {
                             const confirmWrapper = document.createElement('div');

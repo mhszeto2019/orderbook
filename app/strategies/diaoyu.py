@@ -26,7 +26,7 @@ from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
 import configparser
 import decimal
-
+from websockets.exceptions import ConnectionClosedError
 from pathlib import Path
 
 # Logger 
@@ -99,6 +99,37 @@ class OkxBbo:
         finally:
             await self.close()  # Ensure WebSocket is closed when done
 
+    async def run(self, channel, currency_pairs, callback):
+        """Run the WebSocket client, subscribing to the given currency pairs."""
+        self.is_running = True
+        retry_attempts = 0
+
+        while self.is_running:
+            try:
+                print("Connecting to WebSocket...")
+                await self.start()
+
+                # Subscribe to all specified currency pairs
+                for pair in currency_pairs:
+                    await self.subscribe(channel, pair, callback)
+
+                print("Subscribed to channels. Listening for messages...")
+                # Keep the connection alive
+                while self.is_running:
+                    await asyncio.sleep(1)
+
+            except ConnectionClosedError as e:
+                print(f"Connection closed unexpectedly: {e}. Retrying...")
+                retry_attempts += 1
+                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))  # Exponential backoff
+            except Exception as e:
+                print(f"Unexpected error: {e}. Retrying...")
+                retry_attempts += 1
+                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))
+            finally:
+                await self.close()
+
+
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
         if self.ws:
@@ -108,9 +139,10 @@ class OkxBbo:
     async def close(self):
         """Close the WebSocket connection."""
         if self.ws:
-            await self.ws.close()
+            await self.ws.factory.close()
             print("WebSocket connection closed.")
 
+  
    
 class HtxPositions:
     def __init__(self, url, endpoint, access_key, secret_key):
@@ -254,7 +286,8 @@ class Diaoyu:
         self.db_thread = None
         # okx
         self.loop = None
-        self.okx_client = None
+        self.row['okx_client'] = None
+        self.row['htx_client'] = None
         self.htx_thread = None
         # from okxbbo
         self.best_bid = None
@@ -347,10 +380,11 @@ class Diaoyu:
     # connection with okx bbo
     async def run_okx_bbo(self):
         """Run the OkxBbo WebSocket client."""
-        self.okx_client = OkxBbo()
+        self.row['okx_client'] = OkxBbo()
         currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
         channel = "bbo-tbt"
-        await self.okx_client.run(channel, currency_pairs, self.okx_publicCallback)
+        logger.debug(self.row['okx_client'])
+        await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
 
     # connection with htx positions and orders
     def run_htx_positions(self):
@@ -382,6 +416,7 @@ class Diaoyu:
         ]
         # swap client
         ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
+        self.row['htx_client'] = ws_client
         ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
         # futures client
         # ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
@@ -400,13 +435,17 @@ class Diaoyu:
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
         logger.debug('STOPPING DIAOYU')
-        if self.okx_client:
+        logger.debug(self.row['okx_client'])
+        logger.debug( self.row['htx_client'])
+        if self.row['okx_client']:
             # self.okx_client.unsubscribe()  # Assuming the OkxBbo class has a stop method
             # self.okx_client.close()  # Assuming the OkxBbo class has a stop method
             print('close okx')
+            logger.debug('close OKX')
         if self.htx_thread and self.htx_thread.is_alive():
             # Implement stopping mechanism for HtxPositions if necessary
             print("Stopping HtxPositions thread... (implement specific logic as needed)")
+            logger.debug('close HTX')
         # if self.row['order_id']:
         self.revoke_order_by_id()
         self.update_db()
@@ -522,7 +561,8 @@ class Diaoyu:
 
                     self.row['order_id']  = result['data'][0]['ordId']
                     logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
-                    
+                    # 'code': '1', 'data': [{'clOrdId': '', 'ordId': '', 'sCode': 200, 'sMsg': 'Insufficient margin available.', 'tag': '', 'ts': '1736914051876', 'exchange': 'htx', 'errorCode': '1047'}], 'inTime': '1736914051923', 'msg': 'All operations failed', 'outTime': '1736914051923'}
+
             except Exception as e:
                 print("EXCEPTIOPN CALLED" ,e)
                 
