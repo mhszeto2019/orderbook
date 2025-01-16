@@ -13,10 +13,14 @@ def get_algo_list(cursor):
     # user input username and password
     username = request.args.get('username')
     # Execute SELECT query to check for existing users
-    cursor.execute("SELECT jsonb_build_object('username', username,'algo_type', algo_type,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'instrument',instrument,'contract_type',contract_type,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s order by algo_name;", (username,))
-    result = cursor.fetchall()
-    return jsonify(result)
-
+    try:
+        cursor.execute("SELECT jsonb_build_object('username', username,'algo_type', algo_type,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'instrument',instrument,'contract_type',contract_type,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s order by algo_name;", (username,))
+        result = cursor.fetchall()
+        return jsonify(result)
+    except DatabaseError as e:
+        print(e)
+    finally:
+        cursor.close()  # Close the cursor
 
 @app.route('/db/modify_algo', methods=['POST'])
 @with_db_connection
@@ -34,12 +38,13 @@ def modify_algo(cursor):
     ccy = data.get('ccy')
     state = data.get('state')
     
-    print(data)
     instrument = data.get('instrument')
     contract_type = data.get('contract_type')
+    print(username,algo_name)
     if not username or not algo_name:
         return jsonify({"error": "Missing required fields"}), 400
-
+    # print(contract_type)
+   
     try:
         query = """
         UPDATE algo_dets 
@@ -48,14 +53,17 @@ def modify_algo(cursor):
         """
         cursor.execute(query, (lead_exchange, lag_exchange, spread, qty, ccy, state,instrument, contract_type, username, algo_name))
         cursor.connection.commit()  # Commit the transaction
-
+        print('Update success')
         return jsonify({"message": "Status updated successfully"}), 200
     
     except ProgrammingError as e:
+        print('error')
         return jsonify({"error": f"Programming error: {e}"}), 500
     except DatabaseError as e:
+        print('error')
         return jsonify({"error": f"Database error: {e}"}), 500
-
+    finally:
+        cursor.close()  # Close the cursor
 
 @app.route('/db/add_algo', methods=['POST'])
 @with_db_connection
@@ -98,7 +106,8 @@ def add_algo(cursor):
         # Handle any other unexpected errors
         print('error!!')
         return jsonify({"error": str(e)}), 400
-    
+    finally:
+        cursor.close()  # Close the cursor
 
 @app.route('/db/delete_algo', methods=['POST'])
 @with_db_connection
@@ -130,7 +139,9 @@ def delete_algo(cursor):
         # Handle any other unexpected errors
         print('error!!')
         return jsonify({"error": str(e)}), 400
-
+    
+    finally:
+        cursor.close()  # Close the cursor
 
 if __name__ == "__main__":
     app.run(host= '0.0.0.0',port=5020)

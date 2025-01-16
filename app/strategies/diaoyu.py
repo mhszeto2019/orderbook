@@ -581,9 +581,8 @@ class Diaoyu:
 
                 else:
                    
-                    # logger.debug('self_row_id NOT present')
-                    # logger.debug(self.row['order_id'])
-
+                    logger.debug('self_row_id NOT present')
+                    
                     result = await self.htx_tradeapi.place_order(self.ccy,body = {
                             "contract_code": self.ccy.replace('-SWAP',''),
                             "price": limit_buy_price ,

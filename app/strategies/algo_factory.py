@@ -103,13 +103,13 @@ class AlgoFactory:
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
             # logger.debug('algofactory updating state',self.shared_states[instance_id]['state'] )
-
             # logger.debug(f"Updated strategy {instance_id} with new details.")
 
         else:
             # Add a new strategy
             logger.debug(f"Adding new strategy {instance_id}...")
             logger.debug(algo_details)
+
             # Create a shared state dictionary
             # ['brennan_st', 'diaoyu', '123abc', 'okx', 'htx', '999', '1', 'na', 'swap', 'thisweek', False, 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', '7d4bac9e-780e3558-de6db8f8-5a0df', 'a0de3940-5679-4939-957a-51c87a8502d9', 'FA44BCAAC3788C2AB4AFC77047930792', 'falconstead@Trading2024']
             
