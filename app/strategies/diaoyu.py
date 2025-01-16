@@ -447,7 +447,7 @@ class Diaoyu:
             logger.debug('close and unsubscribed OKX')
         # if self.htx_thread and self.htx_thread.is_alive():
             # Implement stopping mechanism for HtxPositions if necessary
-        print("HTX thread will automatically close because Daemon is set to True ")
+        # print("HTX thread will automatically close because Daemon is set to True ")
         logger.debug('close HTX')
         # if self.row['order_id']:
         self.revoke_order_by_id()
@@ -486,7 +486,7 @@ class Diaoyu:
             # self.place_limit_order_htx_sync(self.algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction)
             # Throttle: Ensure minimum interval between API calls
             current_time = time.time()
-            print(self.row['state'],htx_direction)
+            # print(self.row['state'],htx_direction)
             if current_time - self.last_call_time >= self.call_interval:
                 self.last_call_time = current_time
                 if self.row['state']:
