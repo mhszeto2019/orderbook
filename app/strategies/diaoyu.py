@@ -347,20 +347,17 @@ class Diaoyu:
         # print(self.state == True, json_data['data']['state'] == False)
         if not json_data['data']['state']:
             if self.row['order_id'] :
-                logger.debug("REVOKING ORDER AFTER OFF")
           
                 try:
                     # Use the global loop (should already be initialized)
                     # Submit the async function to the global loop from a background thread
                    
                     asyncio.ensure_future(self.revoke_order_by_id())
-                    logger.debug('after revoking')
 
                 except RuntimeError as e:
                     print(f"Error: {e}")
 
     async def revoke_order_by_id(self):
-        print('confirming revoke order')
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
         tradeApi = self.htx_tradeapi
 
@@ -374,7 +371,6 @@ class Diaoyu:
         # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
         logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
 
-        print('ORDER REVOKED')
         self.row['order_id']  = None
     
     # connection with okx bbo
@@ -483,33 +479,32 @@ class Diaoyu:
             
             best_bid = json_data["data"][0]["bids"][0][0]
             best_ask = json_data['data'][0]['asks'][0][0]
-            # self.place_limit_order_htx_sync(self.algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction)
             # Throttle: Ensure minimum interval between API calls
             current_time = time.time()
             # print(self.row['state'],htx_direction)
             if current_time - self.last_call_time >= self.call_interval:
                 self.last_call_time = current_time
                 if self.row['state']:
-                    print('placing trade')
                     if htx_direction == 'sell':
                         asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
                     elif htx_direction == 'buy':
                         asyncio.create_task(self.place_limit_order_htx(self.algoname, best_ask,limit_ask_price, limit_qty,htx_direction,okx_direction))
                 else:
                     if self.row['order_id'] :
-                        print('close and revoke')
                         asyncio.create_task(self.revoke_order_by_id())
                         # self.row['order_id']  = None
               
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-        print(f"Placing order with price: {limit_buy_price}, size: {limit_buy_size},algoname={self.algoname}")
+
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
         if self.row['state']:
             # logger.debug(f"Placing limit order HTX (line 509): algoname={algoname}, limit_buy_price={limit_buy_price},  {best_bid}")
-            # logger.debug(self.row['order_id'])
             try:
-                self.okx_direction = okx_direction
+               
+                             
+
+                self.row['okx_direction'] = okx_direction
                 # check if theres is an order_id. if dont have, it will be a new order
                 if self.row['order_id']:
                     # logger.debug('self_row_id present')
@@ -527,7 +522,7 @@ class Diaoyu:
                     # reset after cancel
                     # print('input',data)
                     revoke_order_data = revoke_orders.get('data', [])
-                    logger.debug(f"Revoke order data - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
+                    # logger.debug(f"Revoke order data - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
 
                     if len(revoke_order_data['errors']) == 0:
 
@@ -543,10 +538,7 @@ class Diaoyu:
                             "order_price_type": 'limit'
                         })
                         self.row['order_id']  = result['data'][0]['ordId']
-                        # logger.debug(f"Limit order after revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
-
-                        # print(self.row['order_id'] ,self.limit_buy_price,self.limit_buy_size)
-                    # return revoke_order_data
+                        
 
                     # when order matches, there will be an error raised in the below message
                     # Revoke order data - User:brennan_st algo_type:diaoyu algo_name:spread60minus revoke_order:{'errors': [{'order_id': '1329129226128924672', 'err_code': 1063, 'err_msg': 'The order has been executed.'}], 'successes': '', 'sMsg': 'Orders placed'}
@@ -577,8 +569,8 @@ class Diaoyu:
                                     "order_price_type": 'limit'
                                 })
                             self.row['order_id']  = result['data'][0]['ordId']
-                            logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
-
+                            # logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
+                
                 else:
                    
                     logger.debug('self_row_id NOT present')
@@ -595,50 +587,72 @@ class Diaoyu:
                         })
 
                     self.row['order_id']  = result['data'][0]['ordId']
-                    logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
+                    # logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
                     # 'code': '1', 'data': [{'clOrdId': '', 'ordId': '', 'sCode': 200, 'sMsg': 'Insufficient margin available.', 'tag': '', 'ts': '1736914051876', 'exchange': 'htx', 'errorCode': '1047'}], 'inTime': '1736914051923', 'msg': 'All operations failed', 'outTime': '1736914051923'}
+                # logger.debug('limitORDER orderid')
+                # logger.debug(result['data'][0]['ordId'])
+                logger.debug(f"HTX place limit order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
 
             except Exception as e:
                 print("EXCEPTIOPN CALLED" ,e)
                 
-        print('ending')
 
 
     def htx_publicCallback(self,message):
-
         trade = message.get('trade',[])
         # logger.debug('htx callback trade:',trade )
-        if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
-            filled_volume = message['trade'][0]['trade_volume']
-            self.htx_filled_volume += filled_volume
-            # print('htx_filled_vol',self.htx_filled_volume,filled_volume,self.limit_buy_size,self.htx_filled_volume == self.limit_buy_size)
-            total_htx_filled_vol = self.htx_filled_volume
+        # logger.debug('MATHCORDER orderid')
+        # logger.debug(message)
+        logger.debug("Mathcorder id ")
+        logger.debug(message)
+
+        logger.debug('limitorder id')
+        logger.debug(self.row['order_id'])
+        # if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
+        if trade and message['status'] in {4,5,6} :
+
+            logger.debug(message['trade'][0]['trade_volume'])
+            # volume that is filled in this trade
+            self.row['filled_volume'] = message['trade'][0]['trade_volume']
+            # we need to add volume of this trade into total volume filled for htx
+            self.htx_filled_volume += self.row['filled_volume']
+
+            # the quantity that we want to buy or sell
             total_limit_buy_size = self.limit_buy_size
             total_limit_buy_size_int = int(total_limit_buy_size)
-            self.htx_is_filled = total_htx_filled_vol == total_limit_buy_size_int
+
+            self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
             # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
             # place market order on okx with filled volume
             loop = asyncio.get_event_loop()
-            if loop.is_running():
 
+            if loop.is_running():
                 # If the loop is already running, create a new task
-                asyncio.create_task(self.place_market_order_okx(filled_volume))
+                asyncio.create_task(self.place_market_order_okx(self.row['filled_volume']))
             else:
                 # Run the async function to completion in the current thread
-                loop.run_until_complete(self.place_market_order_okx(filled_volume))
+                loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume']))
         
     async def place_market_order_okx(self,filled_volume):
+        logger.debug("GOING TO PLACE MARKET ORDER")
+        logger.debug(filled_volume)
+
+
         # print("PLACing MARKET ORDER ON OKX", self.qty, self.htx_filled_volume, filled_volume)
 
         try:
             # Initialize TradeAPI
             # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
             tradeApi = self.okx_tradeapi
+            logger.debug('market order buy:')
+            logger.debug('filled_vol')
+            logger.debug(filled_volume)
+
 
             result = tradeApi.place_order(
                 instId= 'BTC-USD-SWAP',
                 tdMode= "cross", 
-                side= self.okx_direction, 
+                side= self.row['okx_direction'], 
                 posSide= '', 
                 ordType= 'market',
                 sz= filled_volume
@@ -654,15 +668,22 @@ class Diaoyu:
                     # reset values after fill
                     self.htx_is_filled = False
                     self.htx_filled_volume = 0 
-                    self.update_db()
-                    self.row['order_id']  = None
+                self.update_db()
+                self.row['order_id']  = None
 
             else:
+                logger.debug('OKX MARKET TRADE FAILED')
+                logger.debug(result)
                 result['data'][0]['sCode'] = 400
 
             # print("Order request response {}".format(result))
             # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
-            logger.debug(f"OKX market order placed:{result}")
+            # logger.debug(f"OKX market order placed:{result}")
+            logger.debug(f"OKX place market order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:okx_place_order result:{result}")
+            logger.debug(self.htx_filled_volume)
+            logger.debug(self.htx_is_filled)
+
+
 
             # logger.audit(f"Trade audit log: User={user_id}, Trade={trade_id}, Price={price}, Quantity={quantity}")
             return result
@@ -673,6 +694,7 @@ class Diaoyu:
         # print('UPDATE DB UPON COMPLETION!!!!!!!!!!!!!!!! ',self.username,self.algotype,self.algoname)
         # input should be unique so it should be username,algo_type and algoname
         # update based on parameters. by updating here it will trigger the algo listener
+        logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
         self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
         self.cursor.connection.commit()
         # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
