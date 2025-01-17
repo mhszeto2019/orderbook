@@ -338,7 +338,7 @@ class Diaoyu:
         with self.lock:
             # Read or update shared resource
             data = self.shared_resource.get('htx_data', "No data")
-            logger.debug(f"OkxBbo accessed shared resource: {data}")
+            # logger.debug(f"OkxBbo accessed shared resource: {data}")
 
     # update database notification to class such that class is kept updated with the latest information from the db connection
     def update_with_notification(self, json_data):
@@ -608,14 +608,14 @@ class Diaoyu:
         with self.lock:
             
             trade = message.get('trade',[])
-            logger.debug("HTX PUBLIC CALL BACK")
-                # Simulating a critical section
-    
-            logger.debug("Mathcorder id ")
-            logger.debug(message)
+            match_order_id = message.get('order_id','no order id yet')
+            # logger.debug("""Id of the matching order api:%s 'Id of the order placed last:': %s""",(message.get('order_id','No orderid yet')))
+            # logger.debug(message.get('order_id','No orderid yet'))
+            # logger.debug('last placed order id')
+            # logger.debug(self.row['order_id'],match_order_id, self.algoname)
+            logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
 
-            logger.debug('limitorder id')
-            logger.debug(self.row['order_id'])
+            
             if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
             # if trade and message['status'] in {4,5,6} :
 
@@ -642,19 +642,17 @@ class Diaoyu:
                     loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume']))
         
     async def place_market_order_okx(self,filled_volume):
-        logger.debug("GOING TO PLACE MARKET ORDER")
+        # logger.debug("GOING TO PLACE MARKET ORDER")
         logger.debug(filled_volume)
 
-
-        # print("PLACing MARKET ORDER ON OKX", self.qty, self.htx_filled_volume, filled_volume)
 
         try:
             # Initialize TradeAPI
             # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
             tradeApi = self.okx_tradeapi
-            logger.debug('market order buy:')
-            logger.debug('filled_vol')
-            logger.debug(filled_volume)
+            # logger.debug('market order buy:')
+            # logger.debug('filled_vol')
+            # logger.debug(filled_volume)
 
 
             result = tradeApi.place_order(
@@ -688,8 +686,8 @@ class Diaoyu:
             # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
             # logger.debug(f"OKX market order placed:{result}")
             logger.debug(f"OKX place market order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:okx_place_order result:{result}")
-            logger.debug(self.htx_filled_volume)
-            logger.debug(self.htx_is_filled)
+            # logger.debug(self.htx_filled_volume)
+            # logger.debug(self.htx_is_filled)
 
 
 
