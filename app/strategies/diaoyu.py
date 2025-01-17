@@ -336,19 +336,25 @@ class Diaoyu:
 
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        tradeApi = self.htx_tradeapi
+        with self.lock:
+            try:
+                tradeApi = self.htx_tradeapi
 
-        revoke_orders = await tradeApi.revoke_order(self.ccy,
-                                body = {
-                                "order_id":self.row['order_id'] ,
-                                "contract_code": self.ccy.replace('-SWAP','')
-                                }
-                            )
-        
-        # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
-        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+                revoke_orders = await tradeApi.revoke_order(self.ccy,
+                                        body = {
+                                        "order_id":self.row['order_id'] ,
+                                        "contract_code": self.ccy.replace('-SWAP','')
+                                        }
+                                    )
+                
+                # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
+                logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+                # 
+                logger.debug(f"BINGO{revoke_orders}")
+                self.row['order_id']  = None
+            except Exception as e:
+                logger.debug(f'REVOKE ORDER NOT SUCCESSFUL: {revoke_orders}')
 
-        self.row['order_id']  = None
     
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -567,6 +573,7 @@ class Diaoyu:
                         logger.debug(f"HTX place limit order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
 
             except Exception as e:
+                logger.debug("EXCEPTION CALLED",e)
                 print("EXCEPTIOPN CALLED" ,e)
                 
     def htx_publicCallback(self,message):
@@ -600,14 +607,14 @@ class Diaoyu:
 
                 if loop.is_running():
                     # If the loop is already running, create a new task
-                    asyncio.create_task(self.place_market_order_okx(self.row['filled_volume']))
+                    asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
                 else:
                     # Run the async function to completion in the current thread
-                    loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume']))
+                    loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
         
-    async def place_market_order_okx(self,filled_volume):
+    async def place_market_order_okx(self,filled_volume,match_order_id):
         # logger.debug("GOING TO PLACE MARKET ORDER")
-        logger.debug(filled_volume)
+        logger.debug(filled_volume,match_order_id)
 
 
         try:
@@ -632,7 +639,9 @@ class Diaoyu:
                 )
                 result['data'][0]['exchange']='okx'
                 # print(result)
+                
                 if result["code"] == "0":
+                # OKX MARKET ORDER IS SUCCESSFUL
                     result['data'][0]['sCode'] = 200
 
                     if self.htx_is_filled:
@@ -641,7 +650,13 @@ class Diaoyu:
                         # reset values after fill
                         self.htx_is_filled = False
                         self.htx_filled_volume = 0 
-                    self.update_db()
+                        logger.debug('update db b4')
+                        self.update_db()
+                        logger.debug('update db after')
+                    
+                    else:
+                        self.row['order_id']  = match_order_id
+
                     self.row['order_id']  = None
 
                 else:
@@ -667,12 +682,18 @@ class Diaoyu:
         # print('UPDATE DB UPON COMPLETION!!!!!!!!!!!!!!!! ',self.username,self.algotype,self.algoname)
         # input should be unique so it should be username,algo_type and algoname
         # update based on parameters. by updating here it will trigger the algo listener
-        logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
-        self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
-        self.cursor.connection.commit()
+        try:
+            logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
+            self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
+            self.cursor.connection.commit()
+            
         # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
-
-        return 
+        except Exception as e:
+            logger.debug(f"DATABASEERROR {e}")
+        finally:
+            self.cursor.close()  # Close the cursor
+            return 
+        
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 
