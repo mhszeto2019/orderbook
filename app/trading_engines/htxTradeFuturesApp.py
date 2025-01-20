@@ -27,6 +27,7 @@ apiKey = config[config_source]['apiKey']
 redis_host ='localhost'
 redis_port = 6379
 redis_db = 0  # Default database
+
 import redis
 r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
 from htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
@@ -201,7 +202,8 @@ async def place_limit_order():
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
         print(f"API credentials for {username}", api_creds_dict)
-    print(encrypted_data)
+
+        
     side = data['side']
     if side == 'buy':
         posSide = 'long'
@@ -211,10 +213,7 @@ async def place_limit_order():
     tdMode= "cross"
     sz= str(data["sz"]) 
     try:
-        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
-        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
-        # Data received from the client (assuming JSON body)
         # Extract necessary parameters from the request
         if 'SWAP' in data['instId']:
             instId=  data["instId"].replace("-SWAP", "")
@@ -222,9 +221,34 @@ async def place_limit_order():
             instId = data.get("instId")
         side = data.get("side")
         ordType = data.get("ordType")
-        print(instId,side,ordType)
-        # Call the asynchronous place_order function
-        result = await tradeApi.place_order(instId,body = {
+        # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+        tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+        positions = await tradeApi.get_positions(instId,body = {
+            "contract_code": instId
+            }
+            )
+        
+        # print("POSITIONSSSS",positions)
+        position_data = positions.get('data', [])
+
+        # Check if position_data has at least one item to avoid IndexError
+        if position_data:
+            # Extract availability and direction with default values
+            availability = int(position_data[0].get('available', 0))
+            direction = position_data[0].get('direction', None)
+        else:
+            # If no position data is found, set defaults for availability and direction
+            availability = 0
+            direction = None
+        # Data received from the client (assuming JSON body)
+
+
+        print('data sz', data['sz'])
+
+        if direction and side == direction :
+            # same direction so we just add on
+            # print('same direction')
+            result = await tradeApi.place_order(instId,body = {
             "contract_code": instId,
             "price": str(data["px"]) if data["px"] else "",
             "created_at": str(datetime.datetime.now()),
@@ -232,8 +256,72 @@ async def place_limit_order():
             "direction": side,
             "offset": "open",
             "lever_rate": 5,
-            "order_price_type": ordType
-        })
+            "order_price_type": "limit"         }
+            )
+        
+        else: 
+            if direction != None and int(data["sz"]) > availability:
+                # print('first close the available positions - close the long pos')
+                result = await tradeApi.place_order(instId,body = {
+                "contract_code": instId,
+                "price": str(data["px"]) if data["px"] else "",
+                "created_at": str(datetime.datetime.now()),
+                "volume": str(availability) ,
+                "direction": side,
+                "offset": "close",
+                "lever_rate": 5,
+                "order_price_type": "limit"         }
+                )
+                result = await tradeApi.place_order(instId,body = {
+                "contract_code": instId,
+                "price": str(data["px"]) if data["px"] else "",
+                "created_at": str(datetime.datetime.now()),
+                "volume": str(data["sz"] - availability),
+                "direction": side,
+                "offset": "open",
+                "lever_rate": 5,
+                "order_price_type": "limit"         }
+                )
+                # print('second carry on with the trade with sz = sz - availability - buy short')
+            elif direction != None and int(data["sz"]) <= availability:
+                # print('close positions')
+                result = await tradeApi.place_order(instId,body = {
+                "contract_code": instId,
+                "price": str(data["px"]) if data["px"] else "",
+                "created_at": str(datetime.datetime.now()),
+                "volume": str(data["sz"]) ,
+                "direction": side,
+                "offset": "close",
+                "lever_rate": 5,
+                "order_price_type": "limit"         }
+                )
+            else:
+                print('opening a new position, ',instId)
+                result = await tradeApi.place_order(instId,body = {
+                "contract_code": instId,
+                "price": str(data["px"]) if data["px"] else "",
+                "created_at": str(datetime.datetime.now()),
+                "volume": str(data["sz"]) ,
+                "direction": side,
+                "offset": "open",
+                "lever_rate": 5,
+                "order_price_type": "limit"        }
+                )
+
+
+
+
+        # # Call the asynchronous place_order function
+        # result = await tradeApi.place_order(instId,body = {
+        #     "contract_code": instId,
+        #     "price": str(data["px"]) if data["px"] else "",
+        #     "created_at": str(datetime.datetime.now()),
+        #     "volume": str(data["sz"]),
+        #     "direction": side,
+        #     "offset": "open",
+        #     "lever_rate": 5,
+        #     "order_price_type": ordType
+        # })
         logger.info("Order request response {}".format(result))
         print('ending here')
         print(result)
@@ -245,6 +333,78 @@ async def place_limit_order():
 
     except Exception as e:
         return jsonify(result), 500
+
+# import datetime
+# @token_required
+# @app.route('/htx/swap/place_limit_order', methods=['POST'])
+# async def place_limit_order():
+#     data = request.get_json()
+    
+#     username = data.get('username')
+#     # Get the order data from the request
+#     # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+#     key_string = data.get('redis_key')
+#     cleaned_key_string = key_string.strip("b'")
+
+#     # Now decode the base64 string into bytes
+#     key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+#     key_bytes = cleaned_key_string.encode('utf-8')
+#     # You can now use the key with Fernet
+#     cipher_suite = Fernet(key_bytes)
+    
+#     cache_key = f"user:{username}:api_credentials"
+#     # Fetch the encrypted credentials from Redis
+#     encrypted_data = r.get(cache_key)   
+    
+#     if encrypted_data:
+#     # Decrypt the credentials
+#         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+#         api_creds_dict = json.loads(decrypted_data)
+#         print(f"API credentials for {username}", api_creds_dict)
+#     print(encrypted_data)
+#     side = data['side']
+#     if side == 'buy':
+#         posSide = 'long'
+#     else:
+#         posSide = 'short'
+
+#     tdMode= "cross"
+#     sz= str(data["sz"]) 
+#     try:
+#         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
+#         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
+
+#         # Data received from the client (assuming JSON body)
+#         # Extract necessary parameters from the request
+#         if 'SWAP' in data['instId']:
+#             instId=  data["instId"].replace("-SWAP", "")
+#         else:
+#             instId = data.get("instId")
+#         side = data.get("side")
+#         ordType = data.get("ordType")
+#         print(instId,side,ordType)
+#         # Call the asynchronous place_order function
+#         result = await tradeApi.place_order(instId,body = {
+#             "contract_code": instId,
+#             "price": str(data["px"]) if data["px"] else "",
+#             "created_at": str(datetime.datetime.now()),
+#             "volume": str(data["sz"]),
+#             "direction": side,
+#             "offset": "open",
+#             "lever_rate": 5,
+#             "order_price_type": ordType
+#         })
+#         logger.info("Order request response {}".format(result))
+#         print('ending here')
+#         print(result)
+#         if 'status' in result and result['status'] == 'error':
+#             return jsonify({"error": "Bad Requestss"}), 400  # Th
+#         print('ending here2')
+        
+#         return jsonify(result),200
+
+#     except Exception as e:
+#         return jsonify(result), 500
 
 
 

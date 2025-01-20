@@ -121,6 +121,7 @@ async def getfundingrate():
     
     except Exception as e:
         print(e)
+    return "TOKEN ERROR"
 
 if __name__ == "__main__":
     app.run(port='5002')

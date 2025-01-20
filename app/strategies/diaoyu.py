@@ -480,6 +480,7 @@ class Diaoyu:
                         # self.row['order_id']  = None
 
     async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
+        
         # try:
         #     result = await self.htx_tradeapi.place_order(self.ccy,body = {
         #                                     "contract_code": self.ccy.replace('-SWAP',''),
@@ -497,10 +498,8 @@ class Diaoyu:
                 "symbol": self.ccy
                 }
                 )
-            
             # print("POSITIONSSSS",positions)
             position_data = positions.get('data', [])
-
             # Check if position_data has at least one item to avoid IndexError
             if position_data:
                 # Extract availability and direction with default values
@@ -510,13 +509,14 @@ class Diaoyu:
                 # If no position data is found, set defaults for availability and direction
                 availability = 0
                 direction = None
-
+            
             if direction and htx_direction == direction :
                 # same direction so we just add on
-                print('same direction')
 
                 result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                "symbol": self.ccy.replace('-SWAP',''),
+                # "symbol": self.ccy.replace('-SWAP',''),
+                "contract_code": self.ccy.replace('-SWAP',''),
+
                 "price": limit_buy_price,
                 "created_at": str(datetime.datetime.now()),
                 "volume": limit_buy_size,
@@ -527,10 +527,20 @@ class Diaoyu:
                 }
                 )
             else: 
-                if direction != None and limit_buy_size > availability:
-                    print('first close the available positions - close the long pos')
+                # logger.debug(limit_buy_size)
+                # logger.debug(type(limit_buy_size))
+                # logger.debug(availability)
+                # logger.debug(type(availability))
+                # logger.debug('different direction')
+                # logger.debug(limit_buy_size == availability)
+                limit_buy_size = int(limit_buy_size)
+                logger.debug(self.ccy)
+                if limit_buy_size > availability:
+                    
+         
+                    logger.debug('first close the available positions - close the long pos')
                     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-                    "symbol": self.ccy.replace('-SWAP',''),
+                    "contract_code": self.ccy.replace('-SWAP',''),
                     "price":limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
                     "volume": str(availability) ,
@@ -542,8 +552,8 @@ class Diaoyu:
                     )
                     print('second carry on with the trade with sz = sz - availability - buy short')
 
-                    result = await self.htx_tradeapi.place_contract_order(self.ccy.replace('-SWAP',''),body = {
-                    "symbol": self.ccy.replace('-SWAP',''),
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
                     "price":limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
                     "volume": str(limit_buy_size - availability),
@@ -553,10 +563,10 @@ class Diaoyu:
                     "order_price_type":  "limit"        
                     }
                     )
-                elif direction != None and limit_buy_size <= availability:
-                    print('close positions')
-                    result = await self.htx_tradeapi.place_contract_order(self.ccy.replace('-SWAP',''),body = {
-                    "symbol": self.ccy.replace('-SWAP',''),
+                elif int(limit_buy_size) <= int(availability):
+                    logger.debug('close positions')
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
                     "volume": str(limit_buy_size) ,
@@ -567,9 +577,9 @@ class Diaoyu:
                     }
                     )
                 else:
-                    print('opening a new position ')
-                    result =await self.htx_tradeapi.place_contract_order(self.ccy.replace('-SWAP',''),body = {
-                    "symbol": self.ccy.replace('-SWAP',''),
+                    logger.debug('opening a new position ')
+                    result =await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
                     "volume": str(limit_buy_size) ,
@@ -579,8 +589,8 @@ class Diaoyu:
                     "order_price_type":"limit"
                     }
                     )
-            print(result)
-        
+            # print(result)
+            logger.debug(result)
         except Exception as e:
             logger.debug("LIMIT ORDER FUNCTION ERROR:",e)
         return result
@@ -613,7 +623,7 @@ class Diaoyu:
                             # logger.debug(f"Revoke order data - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
 
                             if len(revoke_order_data['errors']) == 0:
-
+                                logger.debug(limit_buy_size,htx_direction)
                                 # Call the asynchronous place_order function
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
