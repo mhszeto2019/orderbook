@@ -86,10 +86,13 @@ class AlgoFactory:
         if instance_id in self.algos:
             # logger.debug(algo_details)
             # Update existing strategy
+            
             shared_state = self.shared_states[instance_id]
+
             #  {'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '200', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'htx_apikey': 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', 'htx_secretkey': '7d4bac9e-780e3558-de6db8f8-5a0df', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024', 'order_id': 1328717969429176320}
             # algo_details
             # {'operation': 'UPDATE', 'data': {'id': 143, 'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1234', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '5000', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'updated_at': '2025-01-14T14:51:04.940568'}}
+
             json_data = algo_details.get('data','')
             self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
             self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']

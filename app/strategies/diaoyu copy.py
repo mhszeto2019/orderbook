@@ -331,57 +331,30 @@ class Diaoyu:
 
         # lock for race conditions
         self.lock = threading.Lock()
-        self.shared_resource = {}
 
-    def access_shared_resource(self):
-        """Thread-safe access to shared resource."""
-        with self.lock:
-            # Read or update shared resource
-            data = self.shared_resource.get('htx_data', "No data")
-            # logger.debug(f"OkxBbo accessed shared resource: {data}")
 
-    # update database notification to class such that class is kept updated with the latest information from the db connection
-    def update_with_notification(self, json_data):
-        """Update the main class with data received from the listener."""
-        self.received_data = json_data
-        # print(json_data['data'][])
-        # self.algoname = json_data['data']['algoname']
-        self.qty = json_data['data']['qty']
-        self.ccy = json_data['data']['ccy']
-        self.spread = json_data['data']['spread']
-        self.lead_exchange = json_data['data']['lead_exchange']
-        self.lag_exchange = json_data['data']['lag_exchange']
-        self.state = json_data['data']['state']
-        
-        # print(type(self.state),type(json_data['data']['state']))
-        # print(self.state == True, json_data['data']['state'] == False)
-        if not json_data['data']['state']:
-            if self.row['order_id'] :
-          
-                try:
-                    # Use the global loop (should already be initialized)
-                    # Submit the async function to the global loop from a background thread
-                   
-                    asyncio.ensure_future(self.revoke_order_by_id())
-
-                except RuntimeError as e:
-                    print(f"Error: {e}")
 
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        tradeApi = self.htx_tradeapi
+        with self.lock:
+            try:
+                tradeApi = self.htx_tradeapi
 
-        revoke_orders = await tradeApi.revoke_order(self.ccy,
-                                body = {
-                                "order_id":self.row['order_id'] ,
-                                "contract_code": self.ccy.replace('-SWAP','')
-                                }
-                            )
-        
-        # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
-        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+                revoke_orders = await tradeApi.revoke_order(self.ccy,
+                                        body = {
+                                        "order_id":self.row['order_id'] ,
+                                        "contract_code": self.ccy.replace('-SWAP','')
+                                        }
+                                    )
+                
+                # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
+                logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+                # 
+                logger.debug(f"BINGO{revoke_orders}")
+                self.row['order_id']  = None
+            except Exception as e:
+                logger.debug(f'REVOKE ORDER NOT SUCCESSFUL: {revoke_orders}')
 
-        self.row['order_id']  = None
     
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -508,7 +481,6 @@ class Diaoyu:
               
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-        # await asyncio.to_thread(self.access_shared_resource)
 
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
         if self.row['state']:
@@ -601,10 +573,9 @@ class Diaoyu:
                         logger.debug(f"HTX place limit order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
 
             except Exception as e:
+                logger.debug("EXCEPTION CALLED",e)
                 print("EXCEPTIOPN CALLED" ,e)
                 
-
-
     def htx_publicCallback(self,message):
         with self.lock:
             
@@ -615,7 +586,6 @@ class Diaoyu:
             # logger.debug('last placed order id')
             # logger.debug(self.row['order_id'],match_order_id, self.algoname)
             logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
-
             
             if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
             # if trade and message['status'] in {4,5,6} :
@@ -637,63 +607,74 @@ class Diaoyu:
 
                 if loop.is_running():
                     # If the loop is already running, create a new task
-                    asyncio.create_task(self.place_market_order_okx(self.row['filled_volume']))
+                    asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
                 else:
                     # Run the async function to completion in the current thread
-                    loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume']))
+                    loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
         
-    async def place_market_order_okx(self,filled_volume):
+    async def place_market_order_okx(self,filled_volume,match_order_id):
         # logger.debug("GOING TO PLACE MARKET ORDER")
-        logger.debug(filled_volume)
+        logger.debug(filled_volume,match_order_id)
 
 
         try:
-            # Initialize TradeAPI
-            # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
-            tradeApi = self.okx_tradeapi
-            # logger.debug('market order buy:')
-            # logger.debug('filled_vol')
-            # logger.debug(filled_volume)
+
+            with self.lock:
+
+                # Initialize TradeAPI
+                # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
+                tradeApi = self.okx_tradeapi
+                # logger.debug('market order buy:')
+                # logger.debug('filled_vol')
+                # logger.debug(filled_volume)
 
 
-            result = tradeApi.place_order(
-                instId= 'BTC-USD-SWAP',
-                tdMode= "cross", 
-                side= self.row['okx_direction'], 
-                posSide= '', 
-                ordType= 'market',
-                sz= filled_volume
-            )
-            result['data'][0]['exchange']='okx'
-            # print(result)
-            if result["code"] == "0":
-                result['data'][0]['sCode'] = 200
+                result = tradeApi.place_order(
+                    instId= 'BTC-USD-SWAP',
+                    tdMode= "cross", 
+                    side= self.row['okx_direction'], 
+                    posSide= '', 
+                    ordType= 'market',
+                    sz= filled_volume
+                )
+                result['data'][0]['exchange']='okx'
+                # print(result)
+                
+                if result["code"] == "0":
+                # OKX MARKET ORDER IS SUCCESSFUL
+                    result['data'][0]['sCode'] = 200
 
-                if self.htx_is_filled:
-                    self.row['state'] = False
-                    # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
-                    # reset values after fill
-                    self.htx_is_filled = False
-                    self.htx_filled_volume = 0 
-                self.update_db()
-                self.row['order_id']  = None
+                    if self.htx_is_filled:
+                        self.row['state'] = False
+                        # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
+                        # reset values after fill
+                        self.htx_is_filled = False
+                        self.htx_filled_volume = 0 
+                        logger.debug('update db b4')
+                        self.update_db()
+                        logger.debug('update db after')
+                    
+                    else:
+                        self.row['order_id']  = match_order_id
 
-            else:
-                logger.debug('OKX MARKET TRADE FAILED')
-                logger.debug(result)
-                result['data'][0]['sCode'] = 400
+                    self.row['order_id']  = None
 
-            # print("Order request response {}".format(result))
-            # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
-            # logger.debug(f"OKX market order placed:{result}")
-            logger.debug(f"OKX place market order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:okx_place_order result:{result}")
-            # logger.debug(self.htx_filled_volume)
-            # logger.debug(self.htx_is_filled)
+                else:
+                    logger.debug('OKX MARKET TRADE FAILED')
+                    logger.debug(result)
+                    result['data'][0]['sCode'] = 400
+
+                # print("Order request response {}".format(result))
+                # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
+                # logger.debug(f"OKX market order placed:{result}")
+                logger.debug(f"OKX place market order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:okx_place_order result:{result}")
+                # logger.debug(self.htx_filled_volume)
+                # logger.debug(self.htx_is_filled)
 
 
 
-            # logger.audit(f"Trade audit log: User={user_id}, Trade={trade_id}, Price={price}, Quantity={quantity}")
-            return result
+                # logger.audit(f"Trade audit log: User={user_id}, Trade={trade_id}, Price={price}, Quantity={quantity}")
+                return result
         except Exception as e:
             print(e)
     
@@ -701,12 +682,22 @@ class Diaoyu:
         # print('UPDATE DB UPON COMPLETION!!!!!!!!!!!!!!!! ',self.username,self.algotype,self.algoname)
         # input should be unique so it should be username,algo_type and algoname
         # update based on parameters. by updating here it will trigger the algo listener
-        logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
-        self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
-        self.cursor.connection.commit()
+        try:
+            logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
+            # self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
+            query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
+            self.cursor.connection.commit()
+            with self.cursor.connection.cursor() as cursor:
+                cursor.execute(query, (self.username, self.algotype, self.algoname))
+                self.cursor.connection.commit()
+            # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
         # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
-
-        return 
+        except Exception as e:
+            logger.debug(f"DATABASEERROR {e}")
+        # finally:
+        #     self.cursor.close()  # Close the cursor
+        #     return 
+        
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 

@@ -64,7 +64,7 @@ async def place_market_order():
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
         print(f"API credentials for {username}", api_creds_dict)
-        
+    print("DATA",data)
        
     try:
         # Data received from the client (assuming JSON body)
@@ -74,14 +74,14 @@ async def place_market_order():
         posSide='long'
         sz_int = int(data['sz'])
         sz= str(data["sz"]) 
-    
         # Extract necessary parameters from the request
-        instId = data.get("instId")
+        # instId = data.get("instId")
         side = data.get("side")
         # ordType = data.get("ordType")
         if data['ordType'] == 'market':
             ordType = 'optimal_20'
         data["ordType"]=  'optimal_20'
+        print(instId)
        
         # Initialize TradeAPI
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
@@ -104,11 +104,11 @@ async def place_market_order():
             # If no position data is found, set defaults for availability and direction
             availability = 0
             direction = None
-
+        print('direction',direction)
         
         if direction and side == direction :
             # same direction so we just add on
-            print('same direction')
+            # print('same direction')
             result = await tradeApi.place_order(instId,body = {
             "contract_code": instId,
             "created_at": str(datetime.datetime.now()),
@@ -116,11 +116,12 @@ async def place_market_order():
             "direction": side,
             "offset": "open",
             "lever_rate": 5,
-            "order_price_type": ordType        }
+            "order_price_type": "optimal_20"         }
             )
+        
         else: 
             if direction != None and sz_int > availability:
-                print('first close the available positions - close the long pos')
+                # print('first close the available positions - close the long pos')
                 result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
@@ -128,7 +129,7 @@ async def place_market_order():
                 "direction": side,
                 "offset": "close",
                 "lever_rate": 5,
-                "order_price_type": ordType        }
+                "order_price_type": "optimal_20"         }
                 )
                 result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
@@ -137,11 +138,11 @@ async def place_market_order():
                 "direction": side,
                 "offset": "open",
                 "lever_rate": 5,
-                "order_price_type": ordType        }
+                "order_price_type": "optimal_20"         }
                 )
-                print('second carry on with the trade with sz = sz - availability - buy short')
+                # print('second carry on with the trade with sz = sz - availability - buy short')
             elif direction != None and sz_int <= availability:
-                print('close positions')
+                # print('close positions')
                 result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
@@ -149,10 +150,10 @@ async def place_market_order():
                 "direction": side,
                 "offset": "close",
                 "lever_rate": 5,
-                "order_price_type": ordType        }
+                "order_price_type": "optimal_20"         }
                 )
             else:
-                print('opening a new position ')
+                print('opening a new position, ',instId)
                 result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "created_at": str(datetime.datetime.now()),
@@ -160,9 +161,9 @@ async def place_market_order():
                 "direction": side,
                 "offset": "open",
                 "lever_rate": 5,
-                "order_price_type": ordType        }
+                "order_price_type": "optimal_20"        }
                 )
-        print(result)
+        print("HTX MARKET ORDER: ",result)
         logger.info("Order request response {}".format(result))
 
         if result['status'] == 'error':
@@ -200,7 +201,7 @@ async def place_limit_order():
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
         print(f"API credentials for {username}", api_creds_dict)
-
+    print(encrypted_data)
     side = data['side']
     if side == 'buy':
         posSide = 'long'
@@ -251,7 +252,6 @@ async def place_limit_order():
 @token_required
 @app.route('/htx/futures/place_limit_order', methods=['POST'])
 async def place_limit_contract_order():
-    print("PLACEING LIMIT ORDER")
     data = request.get_json()
     side = data['side']
     username = data.get('username')
@@ -287,7 +287,7 @@ async def place_limit_contract_order():
         side = data.get("side")
         ordType = data.get("ordType")
         contract_type = data.get('contract_type')
-        print(instId,side,ordType,contract_type)
+        # print(instId,side,ordType,contract_type)
         side= side
         sz_int = int(data['sz'])
     
@@ -302,7 +302,7 @@ async def place_limit_contract_order():
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
-        print('GETING POSITIONS')
+        # print('GETING POSITIONS')
         positions = await tradeApi.get_contract_positions(instId,body = {
             "symbol": instId
             }
