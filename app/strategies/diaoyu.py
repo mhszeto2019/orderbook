@@ -684,15 +684,19 @@ class Diaoyu:
         # update based on parameters. by updating here it will trigger the algo listener
         try:
             logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
-            self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
+            # self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
+            query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             self.cursor.connection.commit()
-            
+            with self.cursor.connection.cursor() as cursor:
+                cursor.execute(query, (self.username, self.algotype, self.algoname))
+                self.cursor.connection.commit()
+            # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
         # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
         except Exception as e:
             logger.debug(f"DATABASEERROR {e}")
-        finally:
-            self.cursor.close()  # Close the cursor
-            return 
+        # finally:
+        #     self.cursor.close()  # Close the cursor
+        #     return 
         
 
 if __name__ == '__main__':

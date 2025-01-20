@@ -215,8 +215,8 @@ class AlgoFactory:
             # Initialize the strategy
             # Since Diaoyu is trading SWAP, we will keep contract type as None
             self.shared_states[instance_id] = self.manager.dict(row_dict)
-
-            strat = Diaoyu(self.shared_states[instance_id],self.conn.cursor())
+            # each multiprocess should have its own connection to db
+            strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
             p = multiprocessing.Process(target=strat.start_clients)
             self.algos[instance_id] = (strat, p)  # Update with the new process
             p.start()
