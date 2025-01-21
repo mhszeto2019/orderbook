@@ -350,7 +350,7 @@ class Diaoyu:
                 # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
                 logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
                 # 
-                logger.debug(f"BINGO{revoke_orders}")
+                # logger.debug(f"BINGO{revoke_orders}")
                 self.row['order_id']  = None
             except Exception as e:
                 logger.debug(f'REVOKE ORDER NOT SUCCESSFUL: {revoke_orders}')
@@ -534,7 +534,7 @@ class Diaoyu:
                 # logger.debug('different direction')
                 # logger.debug(limit_buy_size == availability)
                 limit_buy_size = int(limit_buy_size)
-                logger.debug(self.ccy)
+                # logger.debug(self.ccy)
                 if limit_buy_size > availability:
                     
          
@@ -620,7 +620,7 @@ class Diaoyu:
                                 }
                             )
                             revoke_order_data = revoke_orders.get('data', [])
-                            # logger.debug(f"Revoke order data - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
+                            logger.debug(f"Revoke order data (When True and order id present) - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
 
                             if len(revoke_order_data['errors']) == 0:
                                 logger.debug(limit_buy_size,htx_direction)
@@ -674,12 +674,12 @@ class Diaoyu:
             # logger.debug(message.get('order_id','No orderid yet'))
             # logger.debug('last placed order id')
             # logger.debug(self.row['order_id'],match_order_id, self.algoname)
-            logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
+            # logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
             
             if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
             # if trade and message['status'] in {4,5,6} :
 
-                logger.debug(message['trade'][0]['trade_volume'])
+                # logger.debug(message['trade'][0]['trade_volume'])
                 # volume that is filled in this trade
                 self.row['filled_volume'] = message['trade'][0]['trade_volume']
                 # we need to add volume of this trade into total volume filled for htx
@@ -703,7 +703,7 @@ class Diaoyu:
         
     async def place_market_order_okx(self,filled_volume,match_order_id):
         # logger.debug("GOING TO PLACE MARKET ORDER")
-        logger.debug(filled_volume,match_order_id)
+        # logger.debug(filled_volume,match_order_id)
 
 
         try:

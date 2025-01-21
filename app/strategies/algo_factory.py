@@ -149,6 +149,7 @@ class AlgoFactory:
             self.processes.append(process)
 
             logger.debug(f"Added new strategy {instance_id} and started process.")
+
         for p in self.processes:
             p.join
 
@@ -224,6 +225,7 @@ class AlgoFactory:
             self.algos[instance_id] = (strat, p)  # Update with the new process
             p.start()
             self.processes.append(p)
+            
         for p in self.processes:
             p.join()
         
