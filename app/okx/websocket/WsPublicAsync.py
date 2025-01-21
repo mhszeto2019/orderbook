@@ -57,9 +57,12 @@ class WsPublicAsync:
         while True:
             try:
                 async for message in self.websocket:
+                    print(f"Received: {message}")
                     if self.callback:
                         self.callback(message)
+
             except ConnectionClosedError as e:
+                
                 logger.error(f"WebSocket closed unexpectedly: {e}. Attempting to reconnect...")
                 await self.reconnect()  # Attempt to reconnect
                 break  # Exit the loop to reconnect

@@ -59,7 +59,7 @@ async def get_order_info():
     cache_key = f"user:{username}:api_credentials"
     # Fetch the encrypted credentials from Redis
     encrypted_data = r.get(cache_key)   
-    
+    print(encrypted_data)
     if encrypted_data:
     # Decrypt the credentials
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
@@ -80,7 +80,6 @@ async def get_order_info():
             "contract_code": instId
             }
         )
-        print(order_infos)
         order_info = order_infos.get('data', [])
         
         return order_info

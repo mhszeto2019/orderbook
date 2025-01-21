@@ -266,7 +266,7 @@ class HtxPositions:
 
     
 class Diaoyu:
-    def __init__(self,row_dict,cursor):
+    def __init__(self,row_dict,cursor,user_queue):
         # shared_state
         self.row = row_dict
         # self.row = row_dict
@@ -280,7 +280,7 @@ class Diaoyu:
         self.okx_secret_key = self.row['okx_secretkey']
         self.okx_passphrase = self.row['okx_passphrase']
         self.okx_tradeapi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key,self.okx_passphrase, False, '0')
-
+        
         # db
         self.dbsubscriber = None
         self.db_thread = None
@@ -331,8 +331,28 @@ class Diaoyu:
 
         # lock for race conditions
         self.lock = threading.Lock()
+        self.user_queue = user_queue
 
 
+
+    def add_order_to_queue(self, order_details, priority):
+        """Add an order to the user's shared priority queue managed by AlgoFactory."""
+        self.user_queue.put((priority, order_details))  # Order and its priority
+        logger.debug(f"Added order to shared queue for {self.shared_state.get('username')} with priority {priority}.")
+
+    def start_clients(self):
+        """Start the clients (multiprocessing) to run the strategy logic."""
+        logger.debug(f"Starting strategy for {self.shared_state.get('username')}")
+        # Simulate processing orders from the user's shared priority queue
+        while not self.user_queue.empty():
+            priority, order_details = self.user_queue.get()
+            self.place_limit_order(order_details)
+
+    def place_limit_order(self, order_details):
+        """Logic for placing a limit order."""
+        logger.debug(f"Placing limit order for {self.shared_state.get('username')}: {order_details}")
+        # Simulate API call or order placement logic
+        # For example: self.place_order_api(order_details)
 
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
@@ -597,7 +617,9 @@ class Diaoyu:
         
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-
+        if not self.user_queue.empty():
+            priority, order_details = self.user_queue.get()
+            self.place_limit_order(order_details)
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
         if self.row['state']:
             # logger.debug(f"Placing limit order HTX (line 509): algoname={algoname}, limit_buy_price={limit_buy_price},  {best_bid}")

@@ -59,6 +59,7 @@ class OKXWebSocketClient:
         await self.ws.start()
 
     async def subscribe(self, channel, inst_id, callback):
+        
         """Subscribe to a specific channel and instrument ID."""
         arg = {"channel": channel, "instId": inst_id}
         self.subscribed_pairs.append(inst_id)  # Track the subscription

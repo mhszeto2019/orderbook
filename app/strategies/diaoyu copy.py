@@ -332,7 +332,7 @@ class Diaoyu:
         # lock for race conditions
         self.lock = threading.Lock()
 
-
+        
 
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
@@ -350,7 +350,7 @@ class Diaoyu:
                 # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
                 logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
                 # 
-                logger.debug(f"BINGO{revoke_orders}")
+                # logger.debug(f"BINGO{revoke_orders}")
                 self.row['order_id']  = None
             except Exception as e:
                 logger.debug(f'REVOKE ORDER NOT SUCCESSFUL: {revoke_orders}')
@@ -478,7 +478,123 @@ class Diaoyu:
                     if self.row['order_id'] :
                         asyncio.create_task(self.revoke_order_by_id())
                         # self.row['order_id']  = None
-              
+
+    async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
+        
+        # try:
+        #     result = await self.htx_tradeapi.place_order(self.ccy,body = {
+        #                                     "contract_code": self.ccy.replace('-SWAP',''),
+        #                                     "price": limit_buy_price,
+        #                                     "created_at": str(datetime.datetime.now()),
+        #                                     "volume": limit_buy_size,
+        #                                     "direction": htx_direction,
+        #                                     "offset": "open",
+        #                                     "lever_rate": 5,
+        #                                     "order_price_type": 'limit'
+        #                                 })
+        #     return result
+        try:
+            positions = await self.htx_tradeapi.get_positions(self.ccy,body = {
+                "symbol": self.ccy
+                }
+                )
+            # print("POSITIONSSSS",positions)
+            position_data = positions.get('data', [])
+            # Check if position_data has at least one item to avoid IndexError
+            if position_data:
+                # Extract availability and direction with default values
+                availability = int(position_data[0].get('available', 0))
+                direction = position_data[0].get('direction', None)
+            else:
+                # If no position data is found, set defaults for availability and direction
+                availability = 0
+                direction = None
+            
+            if direction and htx_direction == direction :
+                # same direction so we just add on
+
+                result = await self.htx_tradeapi.place_order(self.ccy,body = {
+                # "symbol": self.ccy.replace('-SWAP',''),
+                "contract_code": self.ccy.replace('-SWAP',''),
+
+                "price": limit_buy_price,
+                "created_at": str(datetime.datetime.now()),
+                "volume": limit_buy_size,
+                "direction": htx_direction,
+                "offset": "open",
+                "lever_rate": 5,
+                "order_price_type": "limit"       
+                }
+                )
+            else: 
+                # logger.debug(limit_buy_size)
+                # logger.debug(type(limit_buy_size))
+                # logger.debug(availability)
+                # logger.debug(type(availability))
+                # logger.debug('different direction')
+                # logger.debug(limit_buy_size == availability)
+                limit_buy_size = int(limit_buy_size)
+                # logger.debug(self.ccy)
+                if limit_buy_size > availability:
+                    
+         
+                    logger.debug('first close the available positions - close the long pos')
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price":limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(availability) ,
+                    "direction": htx_direction,
+                    "offset": "close",
+                    "lever_rate": 5,
+                    "order_price_type": "limit"        
+                    }
+                    )
+                    print('second carry on with the trade with sz = sz - availability - buy short')
+
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price":limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(limit_buy_size - availability),
+                    "direction": htx_direction,
+                    "offset": "open",
+                    "lever_rate": 5,
+                    "order_price_type":  "limit"        
+                    }
+                    )
+                elif int(limit_buy_size) <= int(availability):
+                    logger.debug('close positions')
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price": limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(limit_buy_size) ,
+                    "direction": htx_direction,
+                    "offset": "close",
+                    "lever_rate": 5,
+                    "order_price_type":"limit"
+                    }
+                    )
+                else:
+                    logger.debug('opening a new position ')
+                    result =await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price": limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(limit_buy_size) ,
+                    "direction": htx_direction,
+                    "offset": "open",
+                    "lever_rate": 5,
+                    "order_price_type":"limit"
+                    }
+                    )
+            # print(result)
+            logger.debug(result)
+        except Exception as e:
+            logger.debug("LIMIT ORDER FUNCTION ERROR:",e)
+        return result
+        
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
 
@@ -504,21 +620,12 @@ class Diaoyu:
                                 }
                             )
                             revoke_order_data = revoke_orders.get('data', [])
-                            # logger.debug(f"Revoke order data - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
+                            logger.debug(f"Revoke order data (When True and order id present) - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
 
                             if len(revoke_order_data['errors']) == 0:
-
+                                logger.debug(limit_buy_size,htx_direction)
                                 # Call the asynchronous place_order function
-                                result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                                    "contract_code": self.ccy.replace('-SWAP',''),
-                                    "price": limit_buy_price,
-                                    "created_at": str(datetime.datetime.now()),
-                                    "volume": limit_buy_size,
-                                    "direction": htx_direction,
-                                    "offset": "open",
-                                    "lever_rate": 5,
-                                    "order_price_type": 'limit'
-                                })
+                                result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
                                 
 
@@ -540,16 +647,7 @@ class Diaoyu:
                                 else:
                                     self.row['order_id']  = None
                                     # Continue to place limit order since qty has not been filled
-                                    result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                                            "contract_code": self.ccy.replace('-SWAP',''),
-                                            "price": limit_buy_price ,
-                                            "created_at": str(datetime.datetime.now()),
-                                            "volume": limit_buy_size,
-                                            "direction": htx_direction,
-                                            "offset": "open",
-                                            "lever_rate": 5,
-                                            "order_price_type": 'limit'
-                                        })
+                                    result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                     self.row['order_id']  = result['data'][0]['ordId']
                                     # logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
                         
@@ -557,16 +655,7 @@ class Diaoyu:
                         
                             logger.debug('self_row_id NOT present')
                             
-                            result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                                    "contract_code": self.ccy.replace('-SWAP',''),
-                                    "price": limit_buy_price ,
-                                    "created_at": str(datetime.datetime.now()),
-                                    "volume": limit_buy_size,
-                                    "direction": htx_direction,
-                                    "offset": "open",
-                                    "lever_rate": 5,
-                                    "order_price_type": 'limit'
-                                })
+                            result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
 
                             self.row['order_id']  = result['data'][0]['ordId']
                         
@@ -585,12 +674,12 @@ class Diaoyu:
             # logger.debug(message.get('order_id','No orderid yet'))
             # logger.debug('last placed order id')
             # logger.debug(self.row['order_id'],match_order_id, self.algoname)
-            logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
+            # logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
             
             if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
             # if trade and message['status'] in {4,5,6} :
 
-                logger.debug(message['trade'][0]['trade_volume'])
+                # logger.debug(message['trade'][0]['trade_volume'])
                 # volume that is filled in this trade
                 self.row['filled_volume'] = message['trade'][0]['trade_volume']
                 # we need to add volume of this trade into total volume filled for htx
@@ -614,7 +703,7 @@ class Diaoyu:
         
     async def place_market_order_okx(self,filled_volume,match_order_id):
         # logger.debug("GOING TO PLACE MARKET ORDER")
-        logger.debug(filled_volume,match_order_id)
+        # logger.debug(filled_volume,match_order_id)
 
 
         try:
