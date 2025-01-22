@@ -210,7 +210,16 @@ function fetchAlgoData() {
                 
 
                 newRow.innerHTML = `
-                    <td>${algoType}-${algoName}</td>
+
+                    <td >
+                        <div class="badge bg-primary">
+                            ${algoType}
+                        </div>
+                        <div class="text-muted">
+                            ${algoName}
+                        </div>
+                    </td>
+
                     <td>
                         <div>
                             <select class="form-control editable-field" id="input-${algoName}-leading-exchange" disabled>
