@@ -451,8 +451,9 @@ function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
     amended_instrument = document.getElementById(`input-${algo_name}-instrument`).value
     contractType = document.getElementById(`input-${algo_name}-contract-type`).value
     state = checkbox.checked
+    trade_direction = document.getElementById(`input-${algo_name}-trade-direction`).value
    
-    modifyAlgo(username,algo_type, algo_name,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state)
+    modifyAlgo(username,algo_type, algo_name,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state,trade_direction)
 
 
     const statusBadge = document.getElementById(statusId);

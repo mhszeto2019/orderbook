@@ -94,6 +94,8 @@ class AlgoFactory:
             # {'operation': 'UPDATE', 'data': {'id': 143, 'username': 'brennan_st', 'algo_type': 'diaoyu', 'algo_name': 'test1234', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '5000', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': True, 'updated_at': '2025-01-14T14:51:04.940568'}}
 
             json_data = algo_details.get('data','')
+
+            # Update state in multiprocess
             self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
             self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
             self.shared_states[instance_id]['spread'] = json_data['lead_exchange']
@@ -102,6 +104,7 @@ class AlgoFactory:
             self.shared_states[instance_id]['instrument'] = json_data['instrument']
             self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
             self.shared_states[instance_id]['state'] =  json_data['state']
+            self.shared_states[instance_id]['trade_direction'] = json_data['trade_direction']
      
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
@@ -290,9 +293,10 @@ class DBListener(threading.Thread):
             while self.conn.notifies:
                 notify = self.conn.notifies.pop()
                 algo_details = json.loads(notify.payload)
+                logger.debug(algo_details)
                 json_data = algo_details['data']
                 operation = algo_details['operation'] # db operations: update,insert...
-            
+
                 # Initialize and start new AlgoRunTime instance
                 username = json_data['username']
                 algo_type = json_data['algo_type']

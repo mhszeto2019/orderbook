@@ -81,24 +81,7 @@ class OkxBbo:
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
 
-    # async def run(self,channel ,currency_pairs, callback):
-    #     """Run the WebSocket client, subscribing to the given currency pairs."""
-    #     await self.start()
-        
-    #     # Subscribe to all specified currency pairs
-    #     for pair in currency_pairs:
-    #         await self.subscribe(channel, pair, callback)
-
-    #     # Keep the connection alive
-    #     try:
-    #         while True:
-    #             await asyncio.sleep(1)  # Keep the event loop running
-    #     except KeyboardInterrupt:
-    #         print("Disconnecting...")
-    #         await self.unsubscribe()  # Unsubscribe when exiting
-    #     finally:
-    #         await self.close()  # Ensure WebSocket is closed when done
-
+   
     async def run(self, channel, currency_pairs, callback):
         """Run the WebSocket client, subscribing to the given currency pairs."""
         self.is_running = True
@@ -401,13 +384,10 @@ class Diaoyu:
         # swap client
      
         ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
-        # self.row['htx_client'] = ws_client
         self.htx_client = ws_client
         ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
 
-        # futures client
-        # ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
-        # ws_futures_client.start(notification_futures_subs, auth=True, callback=self.htx_publicCallback)
+      
 
     def start_clients(self):
         """Start both WebSocket clients."""
@@ -430,18 +410,17 @@ class Diaoyu:
             self.row['okx_client'].unsubscribe()
             logger.debug('close and unsubscribed OKX')
         # if self.htx_thread and self.htx_thread.is_alive():
-            # Implement stopping mechanism for HtxPositions if necessary
+        # Implement stopping mechanism for HtxPositions if necessary
         # print("HTX thread will automatically close because Daemon is set to True ")
         logger.debug('close HTX')
-        # if self.row['order_id']:
         self.revoke_order_by_id()
         self.update_db()
     
     def okx_publicCallback(self,message):
         try:
+
             """Callback function to handle incoming messages."""
             json_data = json.loads(message)
-            # print('TEST!!!!!!!!!!!!!!!!',self.username,self.algoname,self.row['state'])
             if json_data.get('data'):
                 currency_pair = json_data["arg"]["instId"]
             
@@ -449,16 +428,15 @@ class Diaoyu:
                 self.best_bid_sz = json_data["data"][0]["bids"][0][1]
                 self.best_ask = json_data["data"][0]["asks"][0][0]
                 self.best_ask_sz = json_data["data"][0]["asks"][0][1]
-                # place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
-                # when place order, we need to keep track of id. 
-                # order will be placed to buy on htx side
+                # Place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
+                # When place order, we need to keep track of id. 
+                # Order will be placed to buy on htx side
                 self.limit_buy_price = float(self.best_bid) - float(self.spread)
                 self.limit_buy_size = self.qty
                 limit_buy_price = float(self.best_bid) - float(self.spread)
                 limit_ask_price = float(self.best_ask) - float(self.spread)
                 limit_qty = self.qty
                 
-                # logger.debug(f"CHANGING LIMIT BUY AND SIZE{self.limit_buy_price,self.limit_buy_size}")
                 if int(self.spread) < 0:
                     htx_direction = 'sell'
                     okx_direction = 'buy'
@@ -470,10 +448,11 @@ class Diaoyu:
                 best_ask = json_data['data'][0]['asks'][0][0]
                 # Throttle: Ensure minimum interval between API calls
                 current_time = time.time()
-                # print(self.row['state'],htx_direction)
                 if current_time - self.last_call_time >= self.call_interval:
                     self.last_call_time = current_time
                     if self.row['state']:
+                        logger.debug("HTX_DIRECTION")
+                        logger.debug(htx_direction)
                         if htx_direction == 'sell':
                             asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
                         elif htx_direction == 'buy':
@@ -493,7 +472,6 @@ class Diaoyu:
                 "symbol": self.ccy
                 }
                 )
-            # print("POSITIONSSSS",positions)
             position_data = positions.get('data', [])
             # Check if position_data has at least one item to avoid IndexError
             if position_data:
@@ -509,9 +487,7 @@ class Diaoyu:
                 # same direction so we just add on
 
                 result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                # "symbol": self.ccy.replace('-SWAP',''),
                 "contract_code": self.ccy.replace('-SWAP',''),
-
                 "price": limit_buy_price,
                 "created_at": str(datetime.datetime.now()),
                 "volume": limit_buy_size,
@@ -523,18 +499,9 @@ class Diaoyu:
                 )
 
             else: 
-                # logger.debug(limit_buy_size)
-                # logger.debug(type(limit_buy_size))
-                # logger.debug(availability)
-                # logger.debug(type(availability))
-                # logger.debug('different direction')
-                # logger.debug(limit_buy_size == availability)
                 limit_buy_size = int(limit_buy_size)
-                logger.debug(self.ccy)
-                if limit_buy_size > availability:
-                    
-         
-                    logger.debug('first close the available positions - close the long pos')
+                if availability >0 and limit_buy_size > availability:
+                    logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
                     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price":limit_buy_price,
@@ -546,8 +513,6 @@ class Diaoyu:
                     "order_price_type": "limit"        
                     }
                     )
-
-                    print('second carry on with the trade with sz = sz - availability - buy short')
 
                     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
                     "contract_code": self.ccy.replace('-SWAP',''),
@@ -575,7 +540,7 @@ class Diaoyu:
                     )
 
                 else:
-                    logger.debug('opening a new position ')
+                    logger.debug('opening a new position since there are no positions')
                     result =await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
@@ -588,7 +553,6 @@ class Diaoyu:
                     }
                     )
 
-            # print(result)
             logger.debug(result)
         except Exception as e:
             logger.debug("LIMIT ORDER FUNCTION ERROR:",e)
@@ -599,19 +563,12 @@ class Diaoyu:
 
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
         if self.row['state']:
-            # logger.debug(f"Placing limit order HTX (line 509): algoname={algoname}, limit_buy_price={limit_buy_price},  {best_bid}")
             try:
                 with self.lock:
                     async with asyncio.Lock():
                         self.row['okx_direction'] = okx_direction
-                        # check if theres is an order_id. if dont have, it will be a new order
+                        # Check if theres is an order_id. if dont have, it will be a new order
                         if self.row['order_id']:
-                            # logger.debug('self_row_id present')
-                            # logger.debug(self.row['order_id'])
-
-                            # Extract necessary parameters from the request
-                            # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-                            
                             revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
                                 body = {
                                 "order_id":self.row['order_id'] ,
@@ -622,23 +579,21 @@ class Diaoyu:
                             logger.debug(f"Revoke order data with order_id and True - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
 
                             if len(revoke_order_data['errors']) == 0:
-                                logger.debug(limit_buy_size,htx_direction)
+                                logger.debug(limit_buy_size)
+                                logger.debug(htx_direction)
                                 # Call the asynchronous place_order function
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
-                                
 
-                            # when order matches, there will be an error raised in the below message
-                            # Revoke order data - User:brennan_st algo_type:diaoyu algo_name:spread60minus revoke_order:{'errors': [{'order_id': '1329129226128924672', 'err_code': 1063, 'err_msg': 'The order has been executed.'}], 'successes': '', 'sMsg': 'Orders placed'}
-
+                            
                             else:
                                 # 2 scenarios can be present here:
                                 # 1) when qty_filled matches the desired amount set by trader
                                 # 2) when qty_filled doesnt match the desired amount
                                 if self.htx_is_filled or self.limit_qty == self.htx_filled_volume:
                                     self.row['state'] = False
-                                    # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
-                                    # reset values after fill
+
+                                    # Reset values after fill
                                     self.htx_is_filled = False
                                     self.htx_filled_volume = 0 
                                     self.update_db()
@@ -668,14 +623,8 @@ class Diaoyu:
             with self.lock:
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
-                # logger.debug("""Id of the matching order api:%s 'Id of the order placed last:': %s""",(message.get('order_id','No orderid yet')))
-                # logger.debug(message.get('order_id','No orderid yet'))
-                # logger.debug('last placed order id')
-                # logger.debug(self.row['order_id'],match_order_id, self.algoname)
-                # logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
-                
+            
                 if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
-                # if trade and message['status'] in {4,5,6} :
 
                     logger.debug(message['trade'][0]['trade_volume'])
                     # volume that is filled in this trade
@@ -689,7 +638,7 @@ class Diaoyu:
 
                     self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
                     # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-                    # place market order on okx with filled volume
+                    # Place market order on okx with filled volume
                     loop = asyncio.get_event_loop()
 
                     if loop.is_running():
@@ -708,11 +657,8 @@ class Diaoyu:
             with self.lock:
 
                 # Initialize TradeAPI
-                # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
                 tradeApi = self.okx_tradeapi
-                # logger.debug('market order buy:')
-                # logger.debug('filled_vol')
-                # logger.debug(filled_volume)
+               
 
 
                 result = tradeApi.place_order(
@@ -724,7 +670,6 @@ class Diaoyu:
                     sz= filled_volume
                 )
                 result['data'][0]['exchange']='okx'
-                # print(result)
                 
                 if result["code"] == "0":
                 # OKX MARKET ORDER IS SUCCESSFUL
@@ -732,8 +677,7 @@ class Diaoyu:
 
                     if self.htx_is_filled:
                         self.row['state'] = False
-                        # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
-                        # reset values after fill
+                        # Reset values after fill
                         self.htx_is_filled = False
                         self.htx_filled_volume = 0 
                         logger.debug('update db b4')
@@ -750,44 +694,34 @@ class Diaoyu:
                     logger.debug('OKX MARKET TRADE FAILED')
 
                 logger.debug(f"OKX place market order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:okx_place_order result:{result}")
-                # logger.debug(self.htx_filled_volume)
-                # logger.debug(self.htx_is_filled)
 
-
-
-                # logger.audit(f"Trade audit log: User={user_id}, Trade={trade_id}, Price={price}, Quantity={quantity}")
                 return result
         except Exception as e:
             print(e)
     
     def update_db(self):
-        # print('UPDATE DB UPON COMPLETION!!!!!!!!!!!!!!!! ',self.username,self.algotype,self.algoname)
-        # input should be unique so it should be username,algo_type and algoname
-        # update based on parameters. by updating here it will trigger the algo listener
+        # Input should be unique so it should be username,algo_type and algoname
+        # Update based on parameters. by updating here it will trigger the algo listener
         try:
             logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
-            # self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
+           
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             self.cursor.connection.commit()
             with self.cursor.connection.cursor() as cursor:
                 cursor.execute(query, (self.username, self.algotype, self.algoname))
                 self.cursor.connection.commit()
             # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
-        # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
+            logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
+        
         except Exception as e:
             logger.debug(f"DATABASEERROR {e}")
         # finally:
         #     self.cursor.close()  # Close the cursor
-        #     return 
+            # return 
         
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 
-    # 1 class has 1 algo, okx connector , htx connector and db notification connector 
-    # username , algoname
-    # no longer working
-   
-    # strat = Diaoyu(username,key,jwt_token,apikey,secretkey,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,contract_type=None)
     try:
         print('try start')
           # strat.start_clients()

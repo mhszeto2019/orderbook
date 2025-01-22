@@ -134,6 +134,7 @@ function connectToSocketIO() {
             timeout: 20000   
             // debug: false // Disable debug logging
         });  // Connect to the server
+        
         // Listen for reconnection
         socket.on("reconnect", (attemptNumber) => {
             console.log(`Reconnected after ${attemptNumber} attempts`);
