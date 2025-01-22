@@ -618,7 +618,6 @@
                                         <th>Algo Name</th>
                                         <th>Lead | Lag</th>
                                         <th>Spread | Qty</th>
-                                        <!-- <th>Filled/Total</th> -->
                                         <th>Currency</th>
                                         <th>Instrument | Contract</th>
                                         <th>Status</th>
@@ -730,8 +729,8 @@
                                                 <div class="col-md-6">
                                                     <label for="new-algo-ccy" class="form-label">Currency</label>
                                                     <select class="form-select" id="new-algo-ccy">
-                                                        <option value="na" selected disabled>Select a currency</option>
-                                                        <option value="BTC-USD-SWAP" >BTC-USD</option>
+                                                        <option value="na"  disabled>Select a currency</option>
+                                                        <option value="BTC-USD-SWAP" selected >BTC-USD</option>
 
                                                     </select>
                                                 </div>
@@ -797,7 +796,6 @@
                         <p >
                             <button id="positions-refresh-btn" class="btn btn-primary btn-sm  mb-2" onclick="populatePositions()">Refresh</button>
                             
-
                             <tag class="text-end float-end text-muted">
                                 Last updated: <span id="last-updated-positions">-</span>
                             </tag>

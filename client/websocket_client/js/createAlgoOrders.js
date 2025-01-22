@@ -27,8 +27,14 @@ function saveAlgo() {
     const status = document.getElementById('new-algo-status').checked ? 'Active' : 'Inactive';
     const status_bool = document.getElementById('new-algo-status').checked 
 
+    
     if (!algoName || !spread || !quantity) {
         alert('Please fill in all required fields.');
+        return;
+    }
+
+    if (leadExchange == lagExchange){
+        alert('Please select a different lead and lag exchange')
         return;
     }
 
@@ -44,10 +50,9 @@ function saveAlgo() {
             </div>
         </td>
         <td>${spread} - ${quantity}</td>
-        <td>
-            <span class="badge bg-warning">Unfilled</span>
-        </td>
+       
         <td>${ccy}</td>
+        
         <td>${instrument} (${contractType})</td>
         <td>
             <span class="badge bg-warning">New Order</span>
@@ -318,13 +323,7 @@ function fetchAlgoData() {
                         </div>
 
                     </td>
-                    <td>
-                        <div id ="filled-volume-${algoName}">
-                        </div>
-                        <div id="input-${algoName}-total" disabled>
-                            ${"0"} | ${algo.qty}
-                        </div>
-                    </td>
+                   
                    
                     <td>
                         <select class="form-control editable-field" 

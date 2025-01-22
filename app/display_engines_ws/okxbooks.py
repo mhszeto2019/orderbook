@@ -66,14 +66,15 @@ class OKXWebSocketClient:
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
 
     async def run(self, channel,currency_pairs, callback):
-        """Run the WebSocket client, subscribing to the given currency pairs."""
-        await self.start()
-        # Subscribe to all specified currency pairs
-        for pair in currency_pairs:
-            await self.subscribe(channel, pair, callback)
+        try:
+            
+            """Run the WebSocket client, subscribing to the given currency pairs."""
+            await self.start()
+            # Subscribe to all specified currency pairs
+            for pair in currency_pairs:
+                await self.subscribe(channel, pair, callback)
 
         # Keep the connection alive
-        try:
             while True:
                 await asyncio.sleep(1)  # Keep the event loop running
         except KeyboardInterrupt:
@@ -136,6 +137,7 @@ class OKXWebSocketClient:
             
 client = None
 loop = None
+from threading import Thread
 
 # Example usage
 async def main():
@@ -145,6 +147,7 @@ async def main():
     # currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
     currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
     channel = 'books5'
+
     await client.run(channel,currency_pairs, client.publicCallback)
 
 
@@ -183,6 +186,7 @@ def handle_client_change(data):
             print("Client WebSocket connection cleaned up.")
         except Exception as e:
             print(f"Error during client change cleanup: {e}")
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
