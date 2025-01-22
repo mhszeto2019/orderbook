@@ -58,7 +58,7 @@ import threading
 import multiprocessing
 import time
 import random
-
+import queue
 
 class Algo:
     """Represents an algorithm instance."""
@@ -80,6 +80,7 @@ class AlgoFactory:
         self.manager = multiprocessing.Manager()
         self.shared_states = {}
         self.processes = []
+        self.user_priority_queues = {}
         
     def add_or_update_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
@@ -143,15 +144,38 @@ class AlgoFactory:
             process = multiprocessing.Process(target=strat.start_clients)
             # Store the strategy and process in the `algos` dictionary
             self.algos[instance_id] = (strat, process)
+        
+            spread = float(algo_details[5])
+            priority = abs(1 / spread if spread != 0 else float('inf'))
+
             # Store the shared state for the instance
             # Start the process
-            process.start()
-            self.processes.append(process)
+            # process.start()
+            # self.processes.append(process)
+            if row_dict['username'] not in self.user_priority_queues:
+                logger.debug(f"Creating new PriorityQueue for user {row_dict['username']}")
+                self.user_priority_queues[row_dict['username']] = queue.PriorityQueue()
+
+            try:
+                logger.debug(f"Inserting into queue for user {row_dict['username']} with priority {priority}")
+                strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor(),self.user_priority_queues[row_dict['username']])
+
+                self.user_priority_queues[row_dict['username']].put((priority,instance_id, strat))
+            except Exception as e:
+                logger.error(f"Failed to insert into queue for user {row_dict['username']}: {e}")
+            
 
             logger.debug(f"Added new strategy {instance_id} and started process.")
 
         for p in self.processes:
             p.join
+
+    def start_order_processing(self):
+        """Start the centralized order processing loop (if needed)."""
+        for user_id, instance_id in self.algos:
+            strat, _ = self.algos[(user_id, instance_id)]
+            # Run the Diaoyu logic for this instance (processing orders in priority)
+            strat.start_clients()
 
     def remove_algo(self, algo_id):
         """Remove an Algo instance."""
@@ -210,7 +234,11 @@ class AlgoFactory:
             row_dict['okx_apikey'] = row[13]
             row_dict['okx_secretkey'] = row[14]
             row_dict['okx_passphrase'] = row[15]
-            
+
+            spread = float(row[5])
+            priority = abs(1 / spread if spread != 0 else float('inf'))
+
+
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
             # print(f"Instance ID: {instance_id}")
@@ -220,12 +248,52 @@ class AlgoFactory:
             # Since Diaoyu is trading SWAP, we will keep contract type as None
             self.shared_states[instance_id] = self.manager.dict(row_dict)
             # each multiprocess should have its own connection to db
-            strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
-            p = multiprocessing.Process(target=strat.start_clients)
-            self.algos[instance_id] = (strat, p)  # Update with the new process
-            p.start()
-            self.processes.append(p)
+            # p = multiprocessing.Process(target=strat.start_clients)
+            # self.algos[instance_id] = (strat, p)  # Update with the new process
+            # self.processes.append(p)
+            logger.debug(row_dict['username'])
+            # if row_dict['username'] not in self.user_priority_queues:
+            #     self.user_priority_queues[row_dict['username']] = queue.PriorityQueue()
+            if row_dict['username'] not in self.user_priority_queues:
+                logger.debug(f"Creating new PriorityQueue for user {row_dict['username']}")
+                self.user_priority_queues[row_dict['username']] = queue.PriorityQueue()
 
+            try:
+                logger.debug(f"Inserting into queue for user {row_dict['username']} with priority {priority}")
+                strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor(),self.user_priority_queues[row_dict['username']])
+
+                self.user_priority_queues[row_dict['username']].put((priority,instance_id, strat))
+            except Exception as e:
+                logger.error(f"Failed to insert into queue for user {row_dict['username']}: {e}")
+
+            
+            # self.user_priority_queues[row_dict['username']].put((priority, strat))
+            # logger.debug(f"Added {instance_id} to priority queue with priority {priority}")
+
+        logger.debug(self.user_priority_queues)
+
+
+        # print(self.user_priority_queues)
+
+        logger.debug(self.user_priority_queues)
+        for username in self.user_priority_queues:
+            user_queue = self.user_priority_queues[username]
+            logger.debug(f"Processing queue for user {username}")
+
+            # Process all strategies in the user's queue (based on priority)
+            while not user_queue.empty():
+                print(user_queue)
+                # Retrieve the highest-priority strat (lowest priority number)
+                priority, instance_id,strat = user_queue.get()
+                
+                logger.debug(f"Starting strategy for {username} with priority {priority}")
+
+                # Start a new process for this strategy
+                p = multiprocessing.Process(target=strat.start_clients)
+                self.algos[instance_id] = (strat, p)  # Store strategy and process for the user
+                # self.processes.append(p)
+                p.start()
+            
         for p in self.processes:
             p.join()
         

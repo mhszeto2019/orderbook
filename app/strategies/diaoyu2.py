@@ -26,7 +26,7 @@ from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
 import configparser
 import decimal
-
+from websockets.exceptions import ConnectionClosedError
 from pathlib import Path
 
 # Logger 
@@ -81,23 +81,54 @@ class OkxBbo:
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
 
-    async def run(self,channel ,currency_pairs, callback):
-        """Run the WebSocket client, subscribing to the given currency pairs."""
-        await self.start()
+    # async def run(self,channel ,currency_pairs, callback):
+    #     """Run the WebSocket client, subscribing to the given currency pairs."""
+    #     await self.start()
         
-        # Subscribe to all specified currency pairs
-        for pair in currency_pairs:
-            await self.subscribe(channel, pair, callback)
+    #     # Subscribe to all specified currency pairs
+    #     for pair in currency_pairs:
+    #         await self.subscribe(channel, pair, callback)
 
-        # Keep the connection alive
-        try:
-            while True:
-                await asyncio.sleep(1)  # Keep the event loop running
-        except KeyboardInterrupt:
-            print("Disconnecting...")
-            await self.unsubscribe()  # Unsubscribe when exiting
-        finally:
-            await self.close()  # Ensure WebSocket is closed when done
+    #     # Keep the connection alive
+    #     try:
+    #         while True:
+    #             await asyncio.sleep(1)  # Keep the event loop running
+    #     except KeyboardInterrupt:
+    #         print("Disconnecting...")
+    #         await self.unsubscribe()  # Unsubscribe when exiting
+    #     finally:
+    #         await self.close()  # Ensure WebSocket is closed when done
+
+    async def run(self, channel, currency_pairs, callback):
+        """Run the WebSocket client, subscribing to the given currency pairs."""
+        self.is_running = True
+        retry_attempts = 0
+
+        while self.is_running:
+            try:
+                print("Connecting to WebSocket...")
+                await self.start()
+
+                # Subscribe to all specified currency pairs
+                for pair in currency_pairs:
+                    await self.subscribe(channel, pair, callback)
+
+                print("Subscribed to channels. Listening for messages...")
+                # Keep the connection alive
+                while self.is_running:
+                    await asyncio.sleep(1)
+
+            except ConnectionClosedError as e:
+                print(f"Connection closed unexpectedly: {e}. Retrying...")
+                retry_attempts += 1
+                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))  # Exponential backoff
+            except Exception as e:
+                print(f"Unexpected error: {e}. Retrying...")
+                retry_attempts += 1
+                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))
+            finally:
+                await self.close()
+
 
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
@@ -105,14 +136,13 @@ class OkxBbo:
             print("Unsubscribing from all channels...")
             await self.ws.unsubscribe(self.subscribed_pairs)
 
-    
-                
     async def close(self):
         """Close the WebSocket connection."""
         if self.ws:
-            await self.ws.close()
+            await self.ws.factory.close()
             print("WebSocket connection closed.")
 
+  
    
 class HtxPositions:
     def __init__(self, url, endpoint, access_key, secret_key):
@@ -236,28 +266,28 @@ class HtxPositions:
 
     
 class Diaoyu:
-    def __init__(self,username,key,jwt_token,htx_apikey,htx_secretkey,okx_apikey,okx_secretkey,okx_passphrase,algo_type,algoname,qty,ccy,spread,lead_exchange,lag_exchange,state,instrument,cursor,contract_type=None):
-
-        self.username = username
-        self.key = key
-        self.jwt_token = jwt_token
-        self.algotype = algo_type
-        self.algoname = algoname
-        self.htx_apikey =    htx_apikey
-        self.htx_secretkey = htx_secretkey
-        self.htx_tradeapi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",htx_apikey,htx_secretkey)
-        self.okx_tradeapi = Trade.TradeAPI(okx_apikey, okx_secretkey,okx_passphrase, False, '0')
-
-        self.okx_api_key = okx_apikey
-        self.okx_secret_key = okx_secretkey
-        self.okx_passphrase = okx_passphrase
+    def __init__(self,row_dict,cursor):
+        # shared_state
+        self.row = row_dict
+        # self.row = row_dict
+        self.username = self.row['username']
+        self.algotype = self.row['algo_type']
+        self.algoname = self.row['algo_name']
+        self.htx_apikey =    self.row['htx_apikey']
+        self.htx_secretkey = self.row['htx_secretkey']
+        self.htx_tradeapi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.row['htx_apikey'],self.row['htx_secretkey'])
+        self.okx_api_key = self.row['okx_apikey']
+        self.okx_secret_key = self.row['okx_secretkey']
+        self.okx_passphrase = self.row['okx_passphrase']
+        self.okx_tradeapi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key,self.okx_passphrase, False, '0')
 
         # db
         self.dbsubscriber = None
         self.db_thread = None
         # okx
         self.loop = None
-        self.okx_client = None
+        self.row['okx_client'] = None
+        self.row['htx_client'] = None
         self.htx_thread = None
         # from okxbbo
         self.best_bid = None
@@ -265,22 +295,22 @@ class Diaoyu:
         self.best_ask = None
         self.best_ask_sz = None
         # from htx
-        self.order_id = None
 
         # user input
-        self.qty = qty
-        self.ccy = ccy
-        self.spread = spread
-        self.lead_exchange = lead_exchange
-        self.lag_exchange = lag_exchange
-        self.state = state
-        self.instrument = instrument
-        self.contract_type = contract_type
+        self.qty = self.row['qty']
+        self.ccy = self.row['ccy']
+        self.spread = self.row['spread']
+        self.lead_exchange = self.row['lead_exchange']
+        self.lag_exchange =  self.row['lag_exchange']
+        # true or false state
+        self.state = self.row['state']
+        self.instrument = self.row['instrument']
+        self.contract_type = self.row['contract_type']
 
         # derived from okx and user input
         self.limit_buy_price = None
         self.limit_buy_size = None
-        self.order_id = None
+        self.row['order_id'] = None
         self.htx_direction = None
         self.okx_direction = None
         self.received_data = None  # Variable to store received data
@@ -299,71 +329,42 @@ class Diaoyu:
         self.last_call_time = 0
         self.call_interval = 1
 
-    # update database notification to class such that class is kept updated with the latest information from the db connection
-    def update_with_notification(self, json_data):
-        """Update the main class with data received from the listener."""
-        print(f"Updating main class with data: {json_data},{type(json_data)}")
-        # if switch off, we need to revoke the order
-        print(self.order_id,'old_state',self.state,'new_state',json_data['data']['state'])
+        # lock for race conditions
+        self.lock = threading.Lock()
+
         
-        self.received_data = json_data
-        # print(json_data['data'][])
-        # self.algoname = json_data['data']['algoname']
-        self.qty = json_data['data']['qty']
-        self.ccy = json_data['data']['ccy']
-        self.spread = json_data['data']['spread']
-        self.lead_exchange = json_data['data']['lead_exchange']
-        self.lag_exchange = json_data['data']['lag_exchange']
-        self.state = json_data['data']['state']
-        # print(type(self.state),type(json_data['data']['state']))
-        # print(self.state == True, json_data['data']['state'] == False)
-        if json_data['data']['state'] == False:
-            if self.order_id:
-                print("REVOKING ORDER AFTER OFF")
-                # we will revoke order
-                # if self.loop.is_running():
-                #     # If the loop is already running, create a new task
-                #     asyncio.create_task(self.revoke_order_by_id(self.order_id))
-                # else:
-                #     # Run the async function to completion in the current thread
-                #     self.loop.run_until_complete(self.revoke_order_by_id(self.order_id))
-                try:
-                    # Use the global loop (should already be initialized)
-                    loop = self.loop
-                    
-                    # Submit the async function to the global loop from a background thread
-                    # asyncio.run_coroutine_threadsafe(self.revoke_order_by_id(), loop)
-                    asyncio.ensure_future(self.revoke_order_by_id())
-                    logger.debug('after revoking')
-                    
-                except RuntimeError as e:
-                    print(f"Error: {e}")
 
     async def revoke_order_by_id(self):
-        print('confirming revoke order')
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-        tradeApi = self.htx_tradeapi
+        with self.lock:
+            try:
+                tradeApi = self.htx_tradeapi
 
-        revoke_orders = await tradeApi.revoke_order(self.ccy,
-                                body = {
-                                "order_id":self.order_id,
-                                "contract_code": self.ccy.replace('-SWAP','')
-                                }
-                            )
-        
-        # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
-        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+                revoke_orders = await tradeApi.revoke_order(self.ccy,
+                                        body = {
+                                        "order_id":self.row['order_id'] ,
+                                        "contract_code": self.ccy.replace('-SWAP','')
+                                        }
+                                    )
+                
+                # logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'revoke_orders')
+                logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_orders.get('data',[])}")
+                # 
+                # logger.debug(f"BINGO{revoke_orders}")
+                self.row['order_id']  = None
+            except Exception as e:
+                logger.debug(f'REVOKE ORDER NOT SUCCESSFUL: {revoke_orders}')
 
-        print('ORDER REVOKED')
-        self.order_id = None
     
     # connection with okx bbo
     async def run_okx_bbo(self):
         """Run the OkxBbo WebSocket client."""
-        self.okx_client = OkxBbo()
+        self.row['okx_client'] = OkxBbo()
         currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
         channel = "bbo-tbt"
-        await self.okx_client.run(channel, currency_pairs, self.okx_publicCallback)
+        logger.debug(self.row['okx_client'])
+        await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
+
 
     # connection with htx positions and orders
     def run_htx_positions(self):
@@ -394,8 +395,12 @@ class Diaoyu:
             }
         ]
         # swap client
+     
         ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
+        # self.row['htx_client'] = ws_client
+        self.htx_client = ws_client
         ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
+
         # futures client
         # ws_futures_client = HtxPositions(notification_futures_url, notification_futures_endpoint, access_key, secret_key)
         # ws_futures_client.start(notification_futures_subs, auth=True, callback=self.htx_publicCallback)
@@ -404,6 +409,7 @@ class Diaoyu:
         """Start both WebSocket clients."""
         # Start Htx match orders with positions in a separate thread
         self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
+        self.htx_thread.daemon = True
         self.htx_thread.start()
         # Run OkxBbo in the main asyncio event loop
         asyncio.run(self.run_okx_bbo())
@@ -411,17 +417,27 @@ class Diaoyu:
 
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
-        if self.okx_client:
-            self.okx_client.stop()  # Assuming the OkxBbo class has a stop method
-        if self.htx_thread and self.htx_thread.is_alive():
+        logger.debug('STOPPING DIAOYU')
+        logger.debug(self.row['okx_client'])
+        if self.row['okx_client']:
+            # self.okx_client.unsubscribe()  # Assuming the OkxBbo class has a stop method
+            # self.okx_client.close()  # Assuming the OkxBbo class has a stop method
+            self.row['okx_client'].close()
+            self.row['okx_client'].unsubscribe()
+            logger.debug('close and unsubscribed OKX')
+        # if self.htx_thread and self.htx_thread.is_alive():
             # Implement stopping mechanism for HtxPositions if necessary
-            print("Stopping HtxPositions thread... (implement specific logic as needed)")
-
+        # print("HTX thread will automatically close because Daemon is set to True ")
+        logger.debug('close HTX')
+        # if self.row['order_id']:
+        self.revoke_order_by_id()
+        self.update_db()
     
     def okx_publicCallback(self,message):
+
         """Callback function to handle incoming messages."""
         json_data = json.loads(message)
-        print(json_data)
+        # print('TEST!!!!!!!!!!!!!!!!',self.username,self.algoname,self.row['state'])
         if json_data.get('data'):
             currency_pair = json_data["arg"]["instId"]
            
@@ -437,6 +453,8 @@ class Diaoyu:
             limit_buy_price = float(self.best_bid) - float(self.spread)
             limit_ask_price = float(self.best_ask) - float(self.spread)
             limit_qty = self.qty
+            
+            # logger.debug(f"CHANGING LIMIT BUY AND SIZE{self.limit_buy_price,self.limit_buy_size}")
             if int(self.spread) < 0:
                 htx_direction = 'sell'
                 okx_direction = 'buy'
@@ -446,167 +464,306 @@ class Diaoyu:
             
             best_bid = json_data["data"][0]["bids"][0][0]
             best_ask = json_data['data'][0]['asks'][0][0]
-            # self.place_limit_order_htx_sync(self.algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction)
             # Throttle: Ensure minimum interval between API calls
             current_time = time.time()
-            print(self.state,htx_direction)
+            # print(self.row['state'],htx_direction)
             if current_time - self.last_call_time >= self.call_interval:
                 self.last_call_time = current_time
-                if self.state:
-                    print('placing trade')
+                if self.row['state']:
                     if htx_direction == 'sell':
                         asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
                     elif htx_direction == 'buy':
                         asyncio.create_task(self.place_limit_order_htx(self.algoname, best_ask,limit_ask_price, limit_qty,htx_direction,okx_direction))
                 else:
-                    if self.order_id:
-                        print('close and revoke')
+                    if self.row['order_id'] :
                         asyncio.create_task(self.revoke_order_by_id())
-                        # self.order_id = None
-              
+                        # self.row['order_id']  = None
+
+    async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
+        
+        # try:
+        #     result = await self.htx_tradeapi.place_order(self.ccy,body = {
+        #                                     "contract_code": self.ccy.replace('-SWAP',''),
+        #                                     "price": limit_buy_price,
+        #                                     "created_at": str(datetime.datetime.now()),
+        #                                     "volume": limit_buy_size,
+        #                                     "direction": htx_direction,
+        #                                     "offset": "open",
+        #                                     "lever_rate": 5,
+        #                                     "order_price_type": 'limit'
+        #                                 })
+        #     return result
+        try:
+            positions = await self.htx_tradeapi.get_positions(self.ccy,body = {
+                "symbol": self.ccy
+                }
+                )
+            # print("POSITIONSSSS",positions)
+            position_data = positions.get('data', [])
+            # Check if position_data has at least one item to avoid IndexError
+            if position_data:
+                # Extract availability and direction with default values
+                availability = int(position_data[0].get('available', 0))
+                direction = position_data[0].get('direction', None)
+            else:
+                # If no position data is found, set defaults for availability and direction
+                availability = 0
+                direction = None
+            
+            if direction and htx_direction == direction :
+                # same direction so we just add on
+
+                result = await self.htx_tradeapi.place_order(self.ccy,body = {
+                # "symbol": self.ccy.replace('-SWAP',''),
+                "contract_code": self.ccy.replace('-SWAP',''),
+
+                "price": limit_buy_price,
+                "created_at": str(datetime.datetime.now()),
+                "volume": limit_buy_size,
+                "direction": htx_direction,
+                "offset": "open",
+                "lever_rate": 5,
+                "order_price_type": "limit"       
+                }
+                )
+            else: 
+                # logger.debug(limit_buy_size)
+                # logger.debug(type(limit_buy_size))
+                # logger.debug(availability)
+                # logger.debug(type(availability))
+                # logger.debug('different direction')
+                # logger.debug(limit_buy_size == availability)
+                limit_buy_size = int(limit_buy_size)
+                # logger.debug(self.ccy)
+                if limit_buy_size > availability:
+                    
+         
+                    logger.debug('first close the available positions - close the long pos')
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price":limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(availability) ,
+                    "direction": htx_direction,
+                    "offset": "close",
+                    "lever_rate": 5,
+                    "order_price_type": "limit"        
+                    }
+                    )
+                    print('second carry on with the trade with sz = sz - availability - buy short')
+
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price":limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(limit_buy_size - availability),
+                    "direction": htx_direction,
+                    "offset": "open",
+                    "lever_rate": 5,
+                    "order_price_type":  "limit"        
+                    }
+                    )
+                elif int(limit_buy_size) <= int(availability):
+                    logger.debug('close positions')
+                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price": limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(limit_buy_size) ,
+                    "direction": htx_direction,
+                    "offset": "close",
+                    "lever_rate": 5,
+                    "order_price_type":"limit"
+                    }
+                    )
+                else:
+                    logger.debug('opening a new position ')
+                    result =await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    "contract_code": self.ccy.replace('-SWAP',''),
+                    "price": limit_buy_price,
+                    "created_at": str(datetime.datetime.now()),
+                    "volume": str(limit_buy_size) ,
+                    "direction": htx_direction,
+                    "offset": "open",
+                    "lever_rate": 5,
+                    "order_price_type":"limit"
+                    }
+                    )
+            # print(result)
+            logger.debug(result)
+        except Exception as e:
+            logger.debug("LIMIT ORDER FUNCTION ERROR:",e)
+        return result
+        
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-        print(f"Placing order with price: {limit_buy_price}, size: {limit_buy_size},algoname={self.algoname}")
 
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
-        if self.state:
-            print(f"Attributes2: algoname={algoname}, limit_buy_price={limit_buy_price},  {best_bid}")
-
+        if self.row['state']:
+            # logger.debug(f"Placing limit order HTX (line 509): algoname={algoname}, limit_buy_price={limit_buy_price},  {best_bid}")
             try:
-                # check if theres is an order_id. if dont have, it will be a new order
-                if self.order_id :
-                    # Extract necessary parameters from the request
-                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
-                    
-                    revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
-                        body = {
-                        "order_id":self.order_id,
-                        "contract_code": self.ccy.replace('-SWAP','')
-                        }
-                    )
-                    # reset after cancel
-                    # print('input',data)
-                    revoke_order_data = revoke_orders.get('data', [])
-                    logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
+                with self.lock:
+                    async with asyncio.Lock():
+                        self.row['okx_direction'] = okx_direction
+                        # check if theres is an order_id. if dont have, it will be a new order
+                        if self.row['order_id']:
+                            # logger.debug('self_row_id present')
+                            # logger.debug(self.row['order_id'])
 
-                    if len(revoke_order_data['errors']) == 0:
+                            # Extract necessary parameters from the request
+                            # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+                            
+                            revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
+                                body = {
+                                "order_id":self.row['order_id'] ,
+                                "contract_code": self.ccy.replace('-SWAP','')
+                                }
+                            )
+                            revoke_order_data = revoke_orders.get('data', [])
+                            logger.debug(f"Revoke order data (When True and order id present) - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} revoke_order:{revoke_order_data}")
 
-                        # Call the asynchronous place_order function
-                        result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                            "contract_code": self.ccy.replace('-SWAP',''),
-                            "price": limit_buy_price,
-                            "created_at": str(datetime.datetime.now()),
-                            "volume": limit_buy_size,
-                            "direction": htx_direction,
-                            "offset": "open",
-                            "lever_rate": 5,
-                            "order_price_type": 'limit'
-                        })
-                        self.order_id = result['data'][0]['ordId']
-                        logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
+                            if len(revoke_order_data['errors']) == 0:
+                                logger.debug(limit_buy_size,htx_direction)
+                                # Call the asynchronous place_order function
+                                result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+                                self.row['order_id']  = result['data'][0]['ordId']
+                                
 
-                        # print(self.order_id,self.limit_buy_price,self.limit_buy_size)
-                    # return revoke_order_data
-                else:
-                    # print("NO CURRENT ORDERS")
-                    # time.sleep(0.05)
-                    # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
+                            # when order matches, there will be an error raised in the below message
+                            # Revoke order data - User:brennan_st algo_type:diaoyu algo_name:spread60minus revoke_order:{'errors': [{'order_id': '1329129226128924672', 'err_code': 1063, 'err_msg': 'The order has been executed.'}], 'successes': '', 'sMsg': 'Orders placed'}
 
-                    result = await self.htx_tradeapi.place_order(self.ccy,body = {
-                            "contract_code": self.ccy.replace('-SWAP',''),
-                            "price": limit_buy_price ,
-                            "created_at": str(datetime.datetime.now()),
-                            "volume": limit_buy_size,
-                            "direction": htx_direction,
-                            "offset": "open",
-                            "lever_rate": 5,
-                            "order_price_type": 'limit'
-                        })
+                            else:
+                                # 2 scenarios can be present here:
+                                # 1) when qty_filled matches the desired amount set by trader
+                                # 2) when qty_filled doesnt match the desired amount
+                                if self.htx_is_filled or self.limit_qty == self.htx_filled_volume:
+                                    self.row['state'] = False
+                                    # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
+                                    # reset values after fill
+                                    self.htx_is_filled = False
+                                    self.htx_filled_volume = 0 
+                                    self.update_db()
+                                    self.row['order_id']  = None
+                                else:
+                                    self.row['order_id']  = None
+                                    # Continue to place limit order since qty has not been filled
+                                    result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+                                    self.row['order_id']  = result['data'][0]['ordId']
+                                    # logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
+                        
+                        else:
+                        
+                            logger.debug('self_row_id NOT present')
+                            
+                            result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
 
-                    self.order_id = result['data'][0]['ordId']
-                    logger.debug(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
-                    
+                            self.row['order_id']  = result['data'][0]['ordId']
+                        
+                        logger.debug(f"HTX place limit order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
+
             except Exception as e:
+                logger.debug("EXCEPTION CALLED",e)
                 print("EXCEPTIOPN CALLED" ,e)
                 
-        print('ending')
-
-
     def htx_publicCallback(self,message):
-        # we need to compare htx data with okx data. When a trade is made, we will then fire data to place trade on okx
-        # from okxbbo 
-        # print('htx_algo values',self.username,self.algoname,self.best_bid,self.best_bid_sz,self.limit_buy_price,self.limit_buy_size,self.htx_filled_volume,self.state)
-        # from db - latest received data
+        with self.lock:
+            
+            trade = message.get('trade',[])
+            match_order_id = message.get('order_id','no order id yet')
+            # logger.debug("""Id of the matching order api:%s 'Id of the order placed last:': %s""",(message.get('order_id','No orderid yet')))
+            # logger.debug(message.get('order_id','No orderid yet'))
+            # logger.debug('last placed order id')
+            # logger.debug(self.row['order_id'],match_order_id, self.algoname)
+            # logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
+            
+            if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
+            # if trade and message['status'] in {4,5,6} :
 
-        # before order filled
-        # Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008380, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 3, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [], 'uid': '502448972', 'volume': 1, 'trade_volume': 0, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
-        # order filled
-        #Callback received: {'op': 'notify', 'topic': 'matchOrders.btc', 'ts': 1735808008450, 'symbol': 'BTC', 'contract_code': 'BTC250328', 'contract_type': 'quarter', 'status': 6, 'order_id': 1324420309708902401, 'order_id_str': '1324420309708902401', 'client_order_id': None, 'order_type': 1, 'created_at': 1735808008362, 'trade': [{'trade_id': 251300058558640, 'id': '251300058558640-1324420309708902401-1', 'trade_volume': 1, 'trade_price': 98000, 'trade_turnover': 100.0, 'created_at': 1735808008446, 'role': 'maker'}], 'uid': '502448972', 'volume': 1, 'trade_volume': 1, 'direction': 'sell', 'offset': 'open', 'lever_rate': 5, 'price': 98000, 'order_source': 'api', 'order_price_type': 'limit', 'is_tpsl': 0}
-        # print(message)
-        # when order matches, it will update the self.htx_filled_volume
-        # status code number - 	1. Ready to submit the orders; 3. Ready to submit the orders; 3. Have sumbmitted the orders; 4. Orders partially matched; 5. Orders cancelled with partially matched; 6. Orders fully matched; 7. Orders cancelled; 
+                # logger.debug(message['trade'][0]['trade_volume'])
+                # volume that is filled in this trade
+                self.row['filled_volume'] = message['trade'][0]['trade_volume']
+                # we need to add volume of this trade into total volume filled for htx
+                self.htx_filled_volume += self.row['filled_volume']
 
-        # print(self.htx_filled_volume,self.limit_buy_size,self.htx_filled_volume == self.limit_buy_size)
+                # the quantity that we want to buy or sell
+                total_limit_buy_size = self.limit_buy_size
+                total_limit_buy_size_int = int(total_limit_buy_size)
 
-        trade = message.get('trade',[])
+                self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
+                # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
+                # place market order on okx with filled volume
+                loop = asyncio.get_event_loop()
 
-        if trade and message['status'] in [4,5,6] and self.order_id == message['order_id']:
-            filled_volume = message['trade'][0]['trade_volume']
-            self.htx_filled_volume += filled_volume
-            # print('htx_filled_vol',self.htx_filled_volume,filled_volume,self.limit_buy_size,self.htx_filled_volume == self.limit_buy_size)
-            total_htx_filled_vol = self.htx_filled_volume
-            total_limit_buy_size = self.limit_buy_size
-            total_limit_buy_size_int = int(total_limit_buy_size)
-            self.htx_is_filled = total_htx_filled_vol == total_limit_buy_size_int
-            # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-            # place market order on okx with filled volume
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If the loop is already running, create a new task
-                asyncio.create_task(self.place_market_order_okx(filled_volume))
-            else:
-                # Run the async function to completion in the current thread
-                loop.run_until_complete(self.place_market_order_okx(filled_volume))
+                if loop.is_running():
+                    # If the loop is already running, create a new task
+                    asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+                else:
+                    # Run the async function to completion in the current thread
+                    loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
         
-    async def place_market_order_okx(self,filled_volume):
-        # print("PLACing MARKET ORDER ON OKX", self.qty, self.htx_filled_volume, filled_volume)
+    async def place_market_order_okx(self,filled_volume,match_order_id):
+        # logger.debug("GOING TO PLACE MARKET ORDER")
+        # logger.debug(filled_volume,match_order_id)
+
+
         try:
-            # Initialize TradeAPI
-            # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
-            tradeApi = self.okx_tradeapi
 
-            result = tradeApi.place_order(
-                instId= 'BTC-USD-SWAP',
-                tdMode= "cross", 
-                side= self.okx_direction, 
-                posSide= '', 
-                ordType= 'market',
-                sz= filled_volume
-            )
-            result['data'][0]['exchange']='okx'
-            # print(result)
-            if result["code"] == "0":
-                result['data'][0]['sCode'] = 200
+            with self.lock:
 
-                if self.htx_is_filled:
-                    self.state = False
-                    # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
-                    # reset values after fill
-                    self.htx_is_filled = False
-                    self.htx_filled_volume = 0 
-                    self.update_db()
-                    self.order_id = None
+                # Initialize TradeAPI
+                # tradeApi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key, self.okx_passphrase, False, '0')
+                tradeApi = self.okx_tradeapi
+                # logger.debug('market order buy:')
+                # logger.debug('filled_vol')
+                # logger.debug(filled_volume)
 
 
-            else:
-                result['data'][0]['sCode'] = 400
+                result = tradeApi.place_order(
+                    instId= 'BTC-USD-SWAP',
+                    tdMode= "cross", 
+                    side= self.row['okx_direction'], 
+                    posSide= '', 
+                    ordType= 'market',
+                    sz= filled_volume
+                )
+                result['data'][0]['exchange']='okx'
+                # print(result)
+                
+                if result["code"] == "0":
+                # OKX MARKET ORDER IS SUCCESSFUL
+                    result['data'][0]['sCode'] = 200
+
+                    if self.htx_is_filled:
+                        self.row['state'] = False
+                        # print("SWITCHING OFF",self.username,self.algotype,self.algoname)
+                        # reset values after fill
+                        self.htx_is_filled = False
+                        self.htx_filled_volume = 0 
+                        logger.debug('update db b4')
+                        self.update_db()
+                        logger.debug('update db after')
+                    
+                    else:
+                        self.row['order_id']  = match_order_id
+
+                    self.row['order_id']  = None
+
+                else:
+                    logger.debug('OKX MARKET TRADE FAILED')
+                    logger.debug(result)
+                    result['data'][0]['sCode'] = 400
+
+                # print("Order request response {}".format(result))
+                # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
+                # logger.debug(f"OKX market order placed:{result}")
+                logger.debug(f"OKX place market order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:okx_place_order result:{result}")
+                # logger.debug(self.htx_filled_volume)
+                # logger.debug(self.htx_is_filled)
 
 
-            # print("Order request response {}".format(result))
-            # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",result)
 
-            # logger.audit(f"Trade audit log: User={user_id}, Trade={trade_id}, Price={price}, Quantity={quantity}")
-            return result
+                # logger.audit(f"Trade audit log: User={user_id}, Trade={trade_id}, Price={price}, Quantity={quantity}")
+                return result
         except Exception as e:
             print(e)
     
@@ -614,11 +771,22 @@ class Diaoyu:
         # print('UPDATE DB UPON COMPLETION!!!!!!!!!!!!!!!! ',self.username,self.algotype,self.algoname)
         # input should be unique so it should be username,algo_type and algoname
         # update based on parameters. by updating here it will trigger the algo listener
-        self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
-        self.cursor.connection.commit()
+        try:
+            logger.debug('Updating db- Username:%d algotype:%d algoname:%d',(self.username,self.algotype,self.algoname,))
+            # self.cursor.execute("update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s",(self.username,self.algotype,self.algoname,))
+            query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
+            self.cursor.connection.commit()
+            with self.cursor.connection.cursor() as cursor:
+                cursor.execute(query, (self.username, self.algotype, self.algoname))
+                self.cursor.connection.commit()
+            # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
         # logger.info(f"User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname}",'DB Updated')
-
-        return 
+        except Exception as e:
+            logger.debug(f"DATABASEERROR {e}")
+        # finally:
+        #     self.cursor.close()  # Close the cursor
+        #     return 
+        
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 

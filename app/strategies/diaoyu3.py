@@ -280,7 +280,7 @@ class Diaoyu:
         self.okx_secret_key = self.row['okx_secretkey']
         self.okx_passphrase = self.row['okx_passphrase']
         self.okx_tradeapi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key,self.okx_passphrase, False, '0')
-
+        
         # db
         self.dbsubscriber = None
         self.db_thread = None
@@ -331,8 +331,27 @@ class Diaoyu:
 
         # lock for race conditions
         self.lock = threading.Lock()
+     
 
-        
+
+    def add_order_to_queue(self, order_details, priority):
+        """Add an order to the user's shared priority queue managed by AlgoFactory."""
+        self.user_queue.put((priority, order_details))  # Order and its priority
+        logger.debug(f"Added order to shared queue for {self.shared_state.get('username')} with priority {priority}.")
+
+    def start_clients(self):
+        """Start the clients (multiprocessing) to run the strategy logic."""
+        logger.debug(f"Starting strategy for {self.shared_state.get('username')}")
+        # Simulate processing orders from the user's shared priority queue
+        while not self.user_queue.empty():
+            priority, order_details = self.user_queue.get()
+            self.place_limit_order(order_details)
+
+    def place_limit_order(self, order_details):
+        """Logic for placing a limit order."""
+        logger.debug(f"Placing limit order for {self.shared_state.get('username')}: {order_details}")
+        # Simulate API call or order placement logic
+        # For example: self.place_order_api(order_details)
 
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
@@ -597,11 +616,13 @@ class Diaoyu:
         
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-
+        try:
+            # if not self.user_queue.empty():
+            #     priority, order_details = self.user_queue.get()
+            #     self.place_limit_order(order_details)
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
-        if self.row['state']:
+            if self.row['state']:
             # logger.debug(f"Placing limit order HTX (line 509): algoname={algoname}, limit_buy_price={limit_buy_price},  {best_bid}")
-            try:
                 with self.lock:
                     async with asyncio.Lock():
                         self.row['okx_direction'] = okx_direction
@@ -661,45 +682,48 @@ class Diaoyu:
                         
                         logger.debug(f"HTX place limit order - User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
 
-            except Exception as e:
-                logger.debug("EXCEPTION CALLED",e)
-                print("EXCEPTIOPN CALLED" ,e)
+        except Exception as e:
+            # logger.debug("EXCEPTION CALLED",e)
+            logger.error(f"Error Place Limit order function{e}")
                 
     def htx_publicCallback(self,message):
-        with self.lock:
-            
-            trade = message.get('trade',[])
-            match_order_id = message.get('order_id','no order id yet')
-            # logger.debug("""Id of the matching order api:%s 'Id of the order placed last:': %s""",(message.get('order_id','No orderid yet')))
-            # logger.debug(message.get('order_id','No orderid yet'))
-            # logger.debug('last placed order id')
-            # logger.debug(self.row['order_id'],match_order_id, self.algoname)
-            # logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
-            
-            if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
-            # if trade and message['status'] in {4,5,6} :
+        try:
+            with self.lock:
+                
+                trade = message.get('trade',[])
+                match_order_id = message.get('order_id','no order id yet')
+                # logger.debug("""Id of the matching order api:%s 'Id of the order placed last:': %s""",(message.get('order_id','No orderid yet')))
+                # logger.debug(message.get('order_id','No orderid yet'))
+                # logger.debug('last placed order id')
+                # logger.debug(self.row['order_id'],match_order_id, self.algoname)
+                # logger.debug(f"Order ID: {self.row.get('order_id', 'None')}, Match Order ID: {match_order_id}, Algorithm Name: {self.algoname}")
+                
+                if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
+                # if trade and message['status'] in {4,5,6} :
 
-                # logger.debug(message['trade'][0]['trade_volume'])
-                # volume that is filled in this trade
-                self.row['filled_volume'] = message['trade'][0]['trade_volume']
-                # we need to add volume of this trade into total volume filled for htx
-                self.htx_filled_volume += self.row['filled_volume']
+                    # logger.debug(message['trade'][0]['trade_volume'])
+                    # volume that is filled in this trade
+                    self.row['filled_volume'] = message['trade'][0]['trade_volume']
+                    # we need to add volume of this trade into total volume filled for htx
+                    self.htx_filled_volume += self.row['filled_volume']
 
-                # the quantity that we want to buy or sell
-                total_limit_buy_size = self.limit_buy_size
-                total_limit_buy_size_int = int(total_limit_buy_size)
+                    # the quantity that we want to buy or sell
+                    total_limit_buy_size = self.limit_buy_size
+                    total_limit_buy_size_int = int(total_limit_buy_size)
 
-                self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
-                # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-                # place market order on okx with filled volume
-                loop = asyncio.get_event_loop()
+                    self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
+                    # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
+                    # place market order on okx with filled volume
+                    loop = asyncio.get_event_loop()
 
-                if loop.is_running():
-                    # If the loop is already running, create a new task
-                    asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
-                else:
-                    # Run the async function to completion in the current thread
-                    loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+                    if loop.is_running():
+                        # If the loop is already running, create a new task
+                        asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+                    else:
+                        # Run the async function to completion in the current thread
+                        loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+        except Exception as e:
+            logger.error(f"Error in HTX CALLBACK:{e}")
         
     async def place_market_order_okx(self,filled_volume,match_order_id):
         # logger.debug("GOING TO PLACE MARKET ORDER")

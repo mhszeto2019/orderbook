@@ -122,12 +122,37 @@ function connectToSocketIO() {
     console.log("CONNECTING")
     Object.keys(wsServers).forEach(exchange => {
         const socketUrl = wsServers[exchange];
+        
         // console.log(socketUrl)
         // Create a Socket.IO connection for the exchange
         const socket = io(socketUrl, {
-            transports: ['websocket']
+            transports: ['websocket'],
+            reconnection: true,               // Enable reconnection (default: true)
+            reconnectionAttempts: 10,         // Number of attempts before giving up (default: Infinity)
+            reconnectionDelay: 1000,          // Initial delay between attempts (default: 1000 ms)
+            reconnectionDelayMax: 5000,       // Maximum delay between attempts (default: 5000 ms)
+            timeout: 20000   
             // debug: false // Disable debug logging
         });  // Connect to the server
+        // Listen for reconnection
+        socket.on("reconnect", (attemptNumber) => {
+            console.log(`Reconnected after ${attemptNumber} attempts`);
+        });
+
+        // Listen for reconnection attempts
+        socket.on("reconnect_attempt", (attemptNumber) => {
+            console.log(`Reconnection attempt ${attemptNumber}`);
+        });
+
+        // Listen for reconnection errors
+        socket.on("reconnect_error", (error) => {
+            console.error("Reconnection error:", error);
+        });
+
+        // Listen for reconnection failure
+        socket.on("reconnect_failed", () => {
+            console.error("Reconnection failed after all attempts");
+        });
 
         // Handle Socket.IO connect event
         socket.on('connect', () => {
