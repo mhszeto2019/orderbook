@@ -814,17 +814,17 @@ function updateTime(selectedDOM) {
 }
 
 
-// // // Set up the scheduler
-function startOpenOrderScheduler(interval = 5000) {
-    // Call populateOpenOrders immediately
-    populateOpenOrders();
+// // // // Set up the scheduler
+// function startOpenOrderScheduler(interval = 5000) {
+//     // Call populateOpenOrders immediately
+//     populateOpenOrders();
 
-    // Schedule populateOpenOrders to run every few seconds
-    setInterval(populateOpenOrders, interval);
-}
+//     // Schedule populateOpenOrders to run every few seconds
+//     setInterval(populateOpenOrders, interval);
+// }
 
-// Start the scheduler when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    startOpenOrderScheduler();
-});
+// // Start the scheduler when the page loads
+// document.addEventListener('DOMContentLoaded', () => {
+//     startOpenOrderScheduler();
+// });
 
