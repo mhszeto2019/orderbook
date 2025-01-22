@@ -620,9 +620,9 @@
                                         <th>Spread | Qty</th>
                                         <th>Currency</th>
                                         <th>Instrument | Contract</th>
+                                        <th>Trade Direction</th>
                                         <th>Status</th>
                                         <th>On / Off</th>
-                                        <th>Order Type</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -643,6 +643,7 @@
                         <div class="modal" id="algoModal" tabindex="-1">
                             <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
+
                                     <div class="modal-header">
                                         <h5 class="modal-title">Add New Algo</h5>
                                         <button type="button" class="btn-close" onclick="closeAlgoModal()"></button>
@@ -650,24 +651,9 @@
                                     
                                     <div class="modal-body">
                                         <form id="new-algoForm">
+                                            <!-- Algo Type and Algo name -->
                                             <div class="row">
                                                 <div class="input-group mb-3">
-                                                    <!-- <div class="input-group-prepend">
-                                                      <button 
-                                                        class="btn btn-outline-secondary dropdown-toggle"  
-                                                        type="button" 
-                                                        data-bs-toggle="dropdown" 
-                                                        aria-haspopup="true" 
-                                                        aria-expanded="false"
-                                                        id="new-algo-algoType-button" >
-                                                        Select Algo Type
-                                                      </button>
-                                                      <div class="dropdown-menu" id="new-algo-type" >
-                                                        <a class="dropdown-item" data-value="diaoyu" onclick="setnewAlgoType(this)">Diaoyu</a>
-                                                   
-                                                      </div>
-                                                      
-                                                    </div> -->
                                                     <!-- Input Field -->
                                                     <div class="input-group-prepend">
                                                         <select class="form-select" id="new-algo-type" onchange="setnewAlgoType(this)" required>
@@ -676,16 +662,11 @@
                                                             <!-- Additional options can be added here -->
                                                         </select>
                                                     </div>
-                                                    
                                                     <input type="text" class="form-control" id="new-algo-name" placeholder="Type algo name" >
-
-
                                                 </div>
-                                                  
-                                                  
-                                                  
                                             </div>
                                             
+
                                             <!-- Lead and Lag Exchanges -->
                                             <div class="row">
                                                 <div class="col-md-6">
@@ -740,11 +721,29 @@
                                                     </select>
                                                 </div>
                                             </div>
+
                                             <!-- Status -->
+                                            <div class="row mt-3" >
+                                                <div class="col-md-6">
+                                                    <label for="new-algo-instrument" class="form-label">Trade Direction</label>
+                                                    <!-- Trade Direction: Open Long or Close Short -->
+                                                    <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Trade Direction: Open Long or Close Short">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    </span>
+                                                    <select class="form-select" id="new-algo-trade-direction">
+                                                        <option value="open">Open</option>
+                                                        <option value="close" selected>Close</option>
+                                                    </select>
+                                                    
+                                                </div>
+                                                
+                                            </div>
+                                            
                                             <div class="form-check form-switch mt-3">
                                                 <input class="form-check-input" type="checkbox" id="new-algo-status">
                                                 <label class="form-check-label" for="new-algo-status">Active</label>
                                             </div>
+                                            
                                         </form>
                                     </div>
                                     <div class="modal-footer">

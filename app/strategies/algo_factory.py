@@ -127,12 +127,13 @@ class AlgoFactory:
             row_dict['ccy'] = algo_details[7]
             row_dict['instrument'] = algo_details[8]
             row_dict['contract_type'] = algo_details[9]
-            row_dict['state'] = algo_details[10]
-            row_dict['htx_apikey'] = algo_details[11]
-            row_dict['htx_secretkey'] = algo_details[12]
-            row_dict['okx_apikey'] = algo_details[13]
-            row_dict['okx_secretkey'] = algo_details[14]
-            row_dict['okx_passphrase'] = algo_details[15]
+            row_dict['state'] = algo_details[10]    
+            row_dict['trade_direction'] = algo_details[11]
+            row_dict['htx_apikey'] = algo_details[12]
+            row_dict['htx_secretkey'] = algo_details[13]
+            row_dict['okx_apikey'] = algo_details[14]
+            row_dict['okx_secretkey'] = algo_details[15]
+            row_dict['okx_passphrase'] = algo_details[16]
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
 
             self.shared_states[instance_id] = self.manager.dict(row_dict)
@@ -182,6 +183,7 @@ class AlgoFactory:
             ad.instrument,
             ad.contract_type,
             ad.state,
+            ad.trade_direction,
             MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
             MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
             MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
@@ -205,11 +207,12 @@ class AlgoFactory:
             row_dict['instrument'] = row[8]
             row_dict['contract_type'] = row[9]
             row_dict['state'] = row[10]
-            row_dict['htx_apikey'] = row[11]
-            row_dict['htx_secretkey'] = row[12]
-            row_dict['okx_apikey'] = row[13]
-            row_dict['okx_secretkey'] = row[14]
-            row_dict['okx_passphrase'] = row[15]
+            row_dict['trade_direction'] = row[11]
+            row_dict['htx_apikey'] = row[12]
+            row_dict['htx_secretkey'] = row[13]
+            row_dict['okx_apikey'] = row[14]
+            row_dict['okx_secretkey'] = row[15]
+            row_dict['okx_passphrase'] = row[16]
             
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
@@ -310,6 +313,7 @@ class DBListener(threading.Thread):
                         ad.instrument,
                         ad.contract_type,
                         ad.state,
+                        ad.trade_direction,
                         MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
                         MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
                         MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,

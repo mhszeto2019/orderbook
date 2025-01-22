@@ -14,7 +14,7 @@ def get_algo_list(cursor):
     username = request.args.get('username')
     # Execute SELECT query to check for existing users
     try:
-        cursor.execute("SELECT jsonb_build_object('username', username,'algo_type', algo_type,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'instrument',instrument,'contract_type',contract_type,'state',state,'updated_at', updated_at) FROM algo_dets WHERE username = %s order by algo_name;", (username,))
+        cursor.execute("SELECT jsonb_build_object('username', username,'algo_type', algo_type,'algo_name', algo_name,'lead_exchange',lead_exchange ,'lag_exchange', lag_exchange,'spread',spread ,'qty',qty ,'ccy',ccy,'instrument',instrument,'contract_type',contract_type,'state',state,'trade_direction',trade_direction,'updated_at', updated_at) FROM algo_dets WHERE username = %s order by algo_name;", (username,))
         result = cursor.fetchall()
         return jsonify(result)
     except DatabaseError as e:
@@ -37,7 +37,7 @@ def modify_algo(cursor):
     qty = data.get('qty')
     ccy = data.get('ccy')
     state = data.get('state')
-    
+    trade_direction = data.get('trade_direction')
     instrument = data.get('instrument')
     contract_type = data.get('contract_type')
     print(username,algo_name)
@@ -48,10 +48,10 @@ def modify_algo(cursor):
     try:
         query = """
         UPDATE algo_dets 
-        SET lead_exchange = %s, lag_exchange = %s, spread = %s, qty = %s, ccy = %s, state = %s,instrument=%s,contract_type=%s, updated_at = CURRENT_TIMESTAMP 
+        SET lead_exchange = %s, lag_exchange = %s, spread = %s, qty = %s, ccy = %s, state = %s,instrument=%s,contract_type=%s,trade_direction=%s, updated_at = CURRENT_TIMESTAMP 
         WHERE username = %s AND algo_name = %s
         """
-        cursor.execute(query, (lead_exchange, lag_exchange, spread, qty, ccy, state,instrument, contract_type, username, algo_name))
+        cursor.execute(query, (lead_exchange, lag_exchange, spread, qty, ccy, state,instrument, contract_type,trade_direction, username, algo_name))
         cursor.connection.commit()  # Commit the transaction
         print('Update success')
         return jsonify({"message": "Status updated successfully"}), 200
@@ -84,18 +84,19 @@ def add_algo(cursor):
     instrument = data.get('instrument')
     contract_type = data.get('contract_type')
     state = data.get('state')
-    print(username, algo_type,algo_name, lead_exchange, lag_exchange, spread, qty, ccy,instrument,contract_type, state)
+    trade_direction = data.get('trade_direction')
+    print(username, algo_type,algo_name, lead_exchange, lag_exchange, spread, qty, ccy,instrument,contract_type, state,trade_direction)
     if not username or not algo_name:
         return jsonify({"error": "Missing required fields"}), 400
     
     try:
         # Execute the INSERT query with RETURNING
         query = """
-        INSERT INTO algo_dets (username,algo_type, algo_name, lead_exchange, lag_exchange, spread, qty, ccy,instrument,contract_type, state)
-        VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
+        INSERT INTO algo_dets (username,algo_type, algo_name, lead_exchange, lag_exchange, spread, qty, ccy,instrument,contract_type, state,trade_direction)
+        VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s)
         RETURNING 'Insertion successful' AS status;
         """
-        cursor.execute(query, (username, algo_type,algo_name, lead_exchange, lag_exchange, spread, qty, ccy,instrument,contract_type, state))
+        cursor.execute(query, (username, algo_type,algo_name, lead_exchange, lag_exchange, spread, qty, ccy,instrument,contract_type, state,trade_direction))
         result = cursor.fetchone()  # Fetch the returning status message
 
         cursor.connection.commit()  # Commit the transaction

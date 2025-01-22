@@ -26,7 +26,7 @@ function saveAlgo() {
     const contractType = document.getElementById('new-algo-contract-type').value;
     const status = document.getElementById('new-algo-status').checked ? 'Active' : 'Inactive';
     const status_bool = document.getElementById('new-algo-status').checked 
-
+    const trade_direction = document.getElementById('new-algo-trade-direction').value
     
     if (!algoName || !spread || !quantity) {
         alert('Please fill in all required fields.');
@@ -53,7 +53,12 @@ function saveAlgo() {
        
         <td>${ccy}</td>
         
-        <td>${instrument} (${contractType})</td>
+        <td>
+            ${instrument} (${contractType})
+        </td>
+        <td>
+            ${trade_direction}
+        </td>
         <td>
             <span class="badge bg-warning">New Order</span>
         </td>
@@ -62,6 +67,7 @@ function saveAlgo() {
                 ${status}
             </span>
         </td>
+        
         <td>
             <div class="d-flex justify-content-around">
                 <button class="btn btn-success btn-sm me-1" onclick="saveNewAlgoRow()">
@@ -112,13 +118,14 @@ function saveNewAlgoRow(){
     const instrument = document.getElementById('new-algo-instrument').value;
     const contractType = document.getElementById('new-algo-contract-type').value;
     const state = document.getElementById('new-algo-status').checked 
-   
-    addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state)
+    const trade_direction = document.getElementById('new-algo-trade-direction').value
+    
+    addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state,trade_direction)
     // fetchAlgoData()
 }
 
 
-function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state){
+function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state,trade_direction){
     const requestBody = {
         username: username,
         algo_type:algoType,
@@ -130,7 +137,8 @@ function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, 
         ccy: ccy,
         instrument:instrument,
         contract_type:contractType,
-        state:state
+        state:state,
+        trade_direction:trade_direction
     };
     
     fetch(`http://${hostname}:5020/db/add_algo`, {
@@ -284,12 +292,15 @@ function fetchAlgoData() {
 
                     </td>
 
-
+                    <td>
+                        <input type="text" class="form-control editable-field" id="input-${algoName}-trade-direction" placeholder="Quantity" value="${algo.trade_direction}" disabled>
+                    </td>
                     <td>
                         <span id="status-algo-${algoName}" class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">
                             ${isRunning ? 'Running' : 'Stopped'}
                         </span>
                     </td>
+                    
                     <td>
                         <div class="form-check form-switch ">
                             <input class="form-check-input" type="checkbox" id="${algoType}-${algoName}" ${isRunning ? 'checked' : ''} 
@@ -381,7 +392,7 @@ function fetchAlgoData() {
 // Call the function to fetch data and populate the table when the page loads
 document.addEventListener('DOMContentLoaded', fetchAlgoData);
 
-function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state){
+function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state,trade_direction){
     
     const requestBody = {
         username: username,
@@ -395,6 +406,7 @@ function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spr
         instrument:instrument,
         contract_type:contractType,
         state: state,
+        trade_direction:trade_direction
     };
    
     fetch(`http://${hostname}:5020/db/modify_algo`, {

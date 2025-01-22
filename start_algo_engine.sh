@@ -10,4 +10,4 @@ okxenv=$OKXENV_PATH
 
 tmux new-session -d -s algo_factory
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t algo_factory "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$ALGO_PORT app.strategies.algo_factory:app" C-m
+tmux send-keys -t algo_factory "source $okxenv && python3 -m app.strategies.algo_factory" C-m
