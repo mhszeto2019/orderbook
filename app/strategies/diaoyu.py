@@ -631,7 +631,7 @@ class Diaoyu:
                 # finding how many vol to close and how mnay available to increase position
                 # if len(position_data) > 1:
                 for pos in position_data:
-                    pos_vol = int(pos['volume'])
+                    pos_vol = int(pos['available'])
                     net_pos_size = 0
                     # closing size
                     if pos['direction'] != htx_direction:
@@ -676,7 +676,26 @@ class Diaoyu:
             else: 
 
                 #there is position that we need to close and there is availability to increase in another direction
-                if (closing_size > 0 and availability == 0 ) :
+                if closing_size > 0:
+                    if int(closing_size) >= int(limit_buy_size):
+                        logger.debug('number2b')
+                        # if there is position that can be closed and there are no more excess positions to carry on
+                        logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
+                    
+                        # when theres pos we need to close but no more availability to increase pos
+                        logger.debug('close positions')
+                        result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                        "contract_code": self.ccy.replace('-SWAP',''),
+                        "price": limit_buy_price,
+                        "created_at": str(datetime.datetime.now()),
+                        "volume": str(limit_buy_size),
+                        "direction": htx_direction,
+                        "offset": "close",
+                        "lever_rate": 5,
+                        "order_price_type":"limit"
+                        }
+                        )
+                    else:
                         logger.debug('number2')
                         # if there is position that can be closed and there are no more excess positions to carry on
                         logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
@@ -694,8 +713,6 @@ class Diaoyu:
                         "order_price_type":"limit"
                         }
                         )
-                        
-
                     # else:
                     #     logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
                     #     # when theres pos we need to close but no more availability to increase pos
