@@ -57,6 +57,25 @@ class HuobiCoinFutureRestTradeAPI:
         print("JSON DICT",json_dict)
 
         return json_dict
+    
+    async def get_cross_positions(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        """ Get open order information.
+
+        Args:
+            symbol: Currency name, e.g. BTC.
+            index: Page index, default 1st page.
+            size: Page size, Default 20，no more than 50.
+
+        Returns:
+            success: Success results, otherwise it's None.
+            error: Error information, otherwise it's None.
+        """
+        uri = "/swap-api/v1/swap_cross_position_info"
+
+        json_dict = await self.request("POST", uri, body=body, auth=True)
+        print("JSON DICT",json_dict)
+
+        return json_dict
 
     async def place_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         """ Get open order information.
