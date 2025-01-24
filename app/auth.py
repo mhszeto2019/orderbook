@@ -9,6 +9,7 @@ import configparser
 from app.util import token_required
 from app.util import get_logger 
 logger = get_logger(os.path.basename(__file__))
+
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', 'config_folder', 'credentials.ini')
 print("Config file path:", config_file_path)

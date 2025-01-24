@@ -473,6 +473,7 @@ class Diaoyu:
                 }
                 )
             position_data = positions.get('data', [])
+            logger.debug(position_data)
             # Check if position_data has at least one item to avoid IndexError
             if position_data:
                 # Extract availability and direction with default values

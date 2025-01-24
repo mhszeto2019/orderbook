@@ -16,14 +16,26 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','htx2')))
 
 from util import token_required
-from util import get_logger 
-logger = get_logger(os.path.basename(__file__))
 
+# Logger 
+# Define the log directory and the log file name
+from pathlib import Path
+LOG_DIR = Path('/var/www/html/orderbook/logs')
+log_filename = LOG_DIR / (Path(__file__).stem + '.log')
+import os
+os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
+import logging
+file_handler = logging.FileHandler(log_filename)
+# Set up a basic formatter
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(formatter)
+logger = logging.getLogger('htx_open_orders')
+logger.setLevel(logging.INFO)  # Set log level
+# Add the file handler to the logger
+logger.addHandler(file_handler)
 
 CORS(app)
-# config_source = 'htx_live_trade'
-# secretKey = config[config_source]['secretKey']
-# apiKey = config[config_source]['apiKey']
 
 redis_host ='localhost'
 redis_port = 6379
@@ -41,31 +53,30 @@ from cryptography.fernet import Fernet
 @token_required
 @app.route('/htx/swap/get_order_info', methods=['POST'])
 async def get_order_info():
-    data = request.get_json()
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    print(encrypted_data)
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        
     try:
+        data = request.get_json()
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+        
 
         # Data received from the client (assuming JSON body)
         instId = data.get('ccy','')
@@ -85,36 +96,37 @@ async def get_order_info():
         return order_info
     
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 @token_required
 @app.route('/htx/swap/get_tpsl_info', methods=['POST'])
 async def get_tpsl_info():
-    data = request.get_json()
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        
     try:
+        
+        data = request.get_json()
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+        
 
         # Data received from the client (assuming JSON body)
         instId = data.get('ccy','')
@@ -139,37 +151,35 @@ async def get_tpsl_info():
         return order_info
     
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 @token_required
 @app.route('/htx/swap/get_all_htx_open_orders', methods=['POST'])
 async def get_all_htx_open_orders():
-    data = request.get_json()
-    print(data)
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        
     try:
+        data = request.get_json()
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+        
         # Data received from the client (assuming JSON body)
         instId = data.get('instId','')
         # instId= data["instId"].replace("-SWAP", "")
@@ -188,36 +198,37 @@ async def get_all_htx_open_orders():
         return open_order_data
     
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 @token_required
 @app.route('/htx/swap/cancel_all_htx_open_order_by_ccy', methods=['POST'])
 async def cancel_all_htx_open_order_by_ccy():
-    data = request.get_json()
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        
     try:
+    
+        data = request.get_json()
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+            
 
         # Data received from the client (assuming JSON body)
         instId = data.get('ccy','')
@@ -236,38 +247,38 @@ async def cancel_all_htx_open_order_by_ccy():
         return open_orders_request
     
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 
 @token_required
 @app.route('/htx/swap/cancel_order_by_id', methods=['POST'])
 async def cancel_order_by_id():
-    data = request.get_json()
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        
     try:
-
+        
+        data = request.get_json()
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+            
         # Data received from the client (assuming JSON body)
         instId = data.get('ccy','')
         instId= instId.replace("-SWAP", "")
@@ -288,40 +299,37 @@ async def cancel_order_by_id():
         return revoke_order_data
     
     except Exception as e:
-        print(e)
-
-
+        logger.error(e)
 
 @token_required
 @app.route('/htx/swap/ammend_order', methods=['POST'])
 async def ammend_order():
-    data = request.get_json()
-    username = data.get('username')
-    # Get the order data from the request
-    # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
-    key_string = data.get('redis_key')
-    if key_string.startswith("b'") and key_string.endswith("'"):
-        cleaned_key_string = key_string[2:-1]
-    else:
-        cleaned_key_string = key_string  # Fallback if the format is unexpected
-    # Now decode the base64 string into bytes
-    key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-    key_bytes = cleaned_key_string.encode('utf-8')
-    # You can now use the key with Fernet
-    cipher_suite = Fernet(key_bytes)
-    
-    cache_key = f"user:{username}:api_credentials"
-    # Fetch the encrypted credentials from Redis
-    encrypted_data = r.get(cache_key)   
-    
-    if encrypted_data:
-    # Decrypt the credentials
-        decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-        api_creds_dict = json.loads(decrypted_data)
-        
-    try:
-        # delete order and create again 
 
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        # Get the order data from the request
+        # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
+        key_string = data.get('redis_key')
+        if key_string.startswith("b'") and key_string.endswith("'"):
+            cleaned_key_string = key_string[2:-1]
+        else:
+            cleaned_key_string = key_string  # Fallback if the format is unexpected
+        # Now decode the base64 string into bytes
+        key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+        key_bytes = cleaned_key_string.encode('utf-8')
+        # You can now use the key with Fernet
+        cipher_suite = Fernet(key_bytes)
+        
+        cache_key = f"user:{username}:api_credentials"
+        # Fetch the encrypted credentials from Redis
+        encrypted_data = r.get(cache_key)   
+        
+        if encrypted_data:
+        # Decrypt the credentials
+            decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+            api_creds_dict = json.loads(decrypted_data)
+            
         # Data received from the client (assuming JSON body)
         instId = data.get('ccy','')
         instId= instId.replace("-SWAP", "")
@@ -366,7 +374,7 @@ async def ammend_order():
         return revoke_order_data
     
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 
 if __name__ == "__main__":

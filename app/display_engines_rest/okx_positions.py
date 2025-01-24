@@ -24,8 +24,25 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from util import token_required
-from util import get_logger 
-logger = get_logger(os.path.basename(__file__))
+
+# Logger 
+# Define the log directory and the log file name
+from pathlib import Path
+LOG_DIR = Path('/var/www/html/orderbook/logs')
+log_filename = LOG_DIR / (Path(__file__).stem + '.log')
+import os
+os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
+import logging
+file_handler = logging.FileHandler(log_filename)
+# Set up a basic formatter
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(formatter)
+logger = logging.getLogger('okx_positions')
+logger.setLevel(logging.INFO)  # Set log level
+# Add the file handler to the logger
+logger.addHandler(file_handler)
+
 
 redis_host ='localhost'
 redis_port = 6379
