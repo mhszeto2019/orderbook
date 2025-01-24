@@ -658,7 +658,7 @@ class Diaoyu:
             logger.debug(f'closing_size{closing_size}')            
 
 
-            if (direction and htx_direction == direction and closing_size == 0) or (net_pos_size == 0 ):
+            if (direction and htx_direction == direction and closing_size == 0) or (net_pos_size == 0):
                 logger.debug('number1')
                 # same direction so we just add on
                 result = await self.htx_tradeapi.place_order(self.ccy,body = {
@@ -676,9 +676,8 @@ class Diaoyu:
             else: 
 
                 #there is position that we need to close and there is availability to increase in another direction
-                if (closing_size > 0 and availability == 0) :
+                if (closing_size > 0 and availability == 0 ) :
                         logger.debug('number2')
-                        
                         # if there is position that can be closed and there are no more excess positions to carry on
                         logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
                     
@@ -688,13 +687,15 @@ class Diaoyu:
                         "contract_code": self.ccy.replace('-SWAP',''),
                         "price": limit_buy_price,
                         "created_at": str(datetime.datetime.now()),
-                        "volume": str(closing_size),
+                        "volume": str(limit_buy_size),
                         "direction": htx_direction,
                         "offset": "close",
                         "lever_rate": 5,
                         "order_price_type":"limit"
                         }
                         )
+                        
+
                     # else:
                     #     logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
                     #     # when theres pos we need to close but no more availability to increase pos
