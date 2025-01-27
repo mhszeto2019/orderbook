@@ -452,8 +452,7 @@ class Diaoyu:
                     self.last_call_time = current_time
 
                     if self.row['state']:
-                        logger.debug("HTX_DIRECTION")
-                        logger.debug(htx_direction)
+                      
                         if htx_direction == 'sell':
                             
                             asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
@@ -610,11 +609,13 @@ class Diaoyu:
                 }
                 )
             position_data = positions.get('data', [])
+            
             # Check if position_data has at least one item to avoid IndexError 
             # If there is a position, we need to find out these conditions:
                 #1) limit_size left for our new order which is called availability
                 #2) limit size required to close existing opposite direction called closing size
             # If there is position, prioritise on closing first
+
             closing_size = 0
             availability = int(limit_buy_size)
             opposite_direction = "sell" if htx_direction == "buy" else "buy"
@@ -632,25 +633,18 @@ class Diaoyu:
                         availability -= pos_vol
                         closing_size += pos_vol
                         net_pos_size -= pos_vol
-                        direction = opposite_direction
                     else:
                         net_pos_size += pos_vol                        
-                
-                # # Extract availability 
-                # availability = int(position_data[0].get('available', 0))
-                # direction = position_data[0].get('direction', None)
-
-
-                
+          
             else:
                 # If no position data is found, set defaults for availability and direction
                 availability = 0
                 direction = None
 
 
-            logger.debug(f'availability{availability}')
-            logger.debug(f'direction{direction}')        
-            logger.debug(f'closing_size{closing_size}')            
+            # logger.debug(f'availability{availability}')
+            # logger.debug(f'direction{direction}')        
+            # logger.debug(f'closing_size{closing_size}')            
 
             # If we dont need to close, we just open a position
             if closing_size == 0:
@@ -708,50 +702,7 @@ class Diaoyu:
                     "order_price_type":"limit"
                     }
                     )
-                    # else:
-                    #     logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
-                    #     # when theres pos we need to close but no more availability to increase pos
-                    #     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-                    #     "contract_code": self.ccy.replace('-SWAP',''),
-                    #     "price": limit_buy_price,
-                    #     "created_at": str(datetime.datetime.now()),
-                    #     "volume": str(closing_size),
-                    #     "direction": htx_direction,
-                    #     "offset": "close",
-                    #     "lever_rate": 5,
-                    #     "order_price_type":"limit"
-                    #     }
-                    #     )
-                    #     logger.debug(f'CLOSE BEFORE ORDERING:{result}')
-
-                    #     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-                    #     "contract_code": self.ccy.replace('-SWAP',''),
-                    #     "price": limit_buy_price,
-                    #     "created_at": str(datetime.datetime.now()),
-                    #     "volume": str(availability),
-                    #     "direction": htx_direction,
-                    #     "offset": "close",
-                    #     "lever_rate": 5,
-                    #     "order_price_type":"limit"
-                    #     }
-                    #     )
-                    #     logger.debug(f'ORDER after closing:{result}')
-
-
-                        # carry on with the exces positions
-                    # if availability > 0:
-                    #     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-                    #     "contract_code": self.ccy.replace('-SWAP',''),
-                    #     "price":limit_buy_price,
-                    #     "created_at": str(datetime.datetime.now()),
-                    #     "volume": str(limit_buy_size),
-                    #     "direction": htx_direction,
-                    #     "offset": "open",
-                    #     "lever_rate": 5,
-                    #     "order_price_type":  "limit"        
-                    #     }
-                    #     )
-                # when theres nothing to close
+                   
             # if result['code'] == '1':
             #     self.update_db()
 
@@ -785,7 +736,7 @@ class Diaoyu:
                                 # Call the asynchronous place_order function
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
-
+                            
                             
                             else:
                                 # 2 scenarios can be present here:
@@ -805,7 +756,8 @@ class Diaoyu:
                                     result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                     self.row['order_id']  = result['data'][0]['ordId']
                                     # logger.debug(f"Limit order without revoke, User:{self.username} algo_type:{self.algotype} algo_name:{self.algoname} type:htx_place_order result:{result}")
-                        
+                                self.row['order_id']  = None
+
                         else:
                         
                             logger.debug('self_row_id NOT present')
