@@ -245,7 +245,7 @@ async def place_limit_order():
 
         print('data sz', data['sz'])
 
-        if direction and side == direction :
+        if direction and side == direction or availability == 0:
             # same direction so we just add on
             # print('same direction')
             result = await tradeApi.place_order(instId,body = {

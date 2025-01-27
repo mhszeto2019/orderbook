@@ -93,7 +93,9 @@ class HuobiCoinFutureRestTradeAPI:
         # if 'SWAP' not in body['contract_code']:
         #     body['contract_code'] = f"{body['contract_code']}-SWAP"
         json_dict = await self.request("POST", uri, body=body, auth=True)
+
         json_response2 = self.format_message(json_dict)
+        print('json_response2',json_response2)
         # print("open_orders,json_dict",json_dict)
         # print('json_response2',json_response2)
         return json_response2
@@ -201,6 +203,7 @@ class HuobiCoinFutureRestTradeAPI:
         # }
         # body = {}
         json_dict = await self.request("POST", uri, body=body, auth=True)
+        # print('json_dict',json_dict)
         return json_dict
 
 
@@ -325,11 +328,12 @@ class HuobiCoinFutureRestTradeAPI:
                 # Send POST request
                 response = requests.post(url, params=params, data=json.dumps(data), headers=headers)
                 status_code = response.status_code
-                # print(status_code,response)
+                # print(status_code,response.headers)
+                rate_limit_remaining = response.headers.get('ratelimit-remaining')
                 json_response = response.json()
                 # print(json_response)
                 json_response['sCode'] = status_code
-
+                json_response['rate_limit_remaining'] = rate_limit_remaining
      
                 # Check if the request was successful (status code 200)
                 if response.status_code == 200:
@@ -343,12 +347,13 @@ class HuobiCoinFutureRestTradeAPI:
             else:
 
                 response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
+                rate_limit_remaining = response.headers.get('ratelimit-remaining')
+
                 status_code = response.status_code
                 # print(status_code,response)
                 json_response = response.json()
-                # print(json_response)
                 json_response['sCode'] = status_code
-
+                json_response['rate_limit_remaining'] = rate_limit_remaining
      
                 # Check if the request was successful (status code 200)
                 if response.status_code == 200:
@@ -399,7 +404,8 @@ class HuobiCoinFutureRestTradeAPI:
             }],
             "inTime": str(int(time.time() * 1000)),
             "msg": "",
-            "outTime": ""
+            "outTime": "",
+            "rate_limit_remaining":""
         }
         # print('input_msg',input_msg, type(input_msg))
         # print(input_msg['data'],input_msg['sCode'])
@@ -419,7 +425,7 @@ class HuobiCoinFutureRestTradeAPI:
             output_msg['data'][0]['sCode'] = input_msg['sCode']
             output_msg['data'][0]['sMsg'] = input_msg['err_msg']
             output_msg['msg'] = 'All operations failed'
-
+        output_msg['rate_limit_remaining'] = input_msg['rate_limit_remaining']
         # Add timestamp fields
         output_msg['data'][0]['ts'] = str(input_msg.get('ts', ''))
         output_msg['outTime'] = str(int(time.time() * 1000))

@@ -466,141 +466,6 @@ class Diaoyu:
             logger.debug(f"OKX publiccallback function error: {e}")
 
 
-    # async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
-        
-    #     try:
-    #         positions = await self.htx_tradeapi.get_positions(self.ccy,body = {
-    #             "symbol": "BTC"
-    #             }
-    #             )
-    #         position_data = positions.get('data', [])
-    #         # Check if position_data has at least one item to avoid IndexError 
-    #         # If there is a position, we need to find out these conditions:
-    #             #1) limit_size left for our new order which is called availability
-    #             #2) limit size required to close existing opposite direction called closing size
-    #         # If there is position, prioritise on closing first
-    #         closing_size = 0
-
-    #         if position_data:
-    #             # logger.debug(f'position_data:{position_data}')
-
-    #             # [{'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'available': 1.0, 'frozen': 0.0, 'cost_open': 103498.3, 'cost_hold': 103498.3, 'profit_unreal': -3.875750745e-07, 'profit_rate': -0.002005668066284695, 'lever_rate': 5, 'position_margin': 0.000193317403979245, 'direction': 'buy', 'profit': -3.875750745e-07, 'liq_px': 411.8986164198024, 'last_price': 103456.8, 'store_time': '2025-01-24 11:28:00', 'open_adl': 0, 'adl_risk_percent': None, 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}, {'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'available': 1.0, 'frozen': 0.0, 'cost_open': 103456.80000000002, 'cost_hold': 103456.80000000002, 'profit_unreal': 0.0, 'profit_rate': 1.125e-15, 'lever_rate': 5, 'position_margin': 0.000193317403979245, 'direction': 'sell', 'profit': 0.0, 'liq_px': 411.8986164198024, 'last_price': 103456.8, 'store_time': '2025-01-24 11:28:03', 'open_adl': 0, 'adl_risk_percent': None, 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}]
-
-    #             # [{'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 2.0, 'available': 2.0, 'frozen': 0.0, 'cost_open': 103561.7111255845, 'cost_hold': 103561.7111255845, 'profit_unreal': 1.1832132488e-06, 'profit_rate': 0.003063389716763025, 'lever_rate': 5, 'position_margin': 0.000386006492629206, 'direction': 'buy', 'profit': 1.1832132488e-06, 'liq_px': 63945.4170372815, 'last_price': 103625.2, 'store_time': '2025-01-24 11:28:00', 'open_adl': 1, 'adl_risk_percent': 2, 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}]
-
-    #             opposite_direction = "sell" if htx_direction == "buy" else "buy"
-    #             availability = int(limit_buy_size)
-                
-
-    #             # finding how many vol to close and how mnay available to increase position
-    #             # if len(position_data) > 1:
-    #             for pos in position_data:
-    #                 pos_vol = int(pos['volume'])
-    #                 # closing size
-    #                 if pos['direction'] == opposite_direction and availability > 0:
-    #                     availability -= pos_vol
-    #                     closing_size += pos_vol
-    #                     direction = opposite_direction
-
-                
-    #             else:
-    #                 # Extract availability 
-    #                 availability = int(position_data[0].get('available', 0))
-    #                 direction = position_data[0].get('direction', None)
-
-
-                
-    #         else:
-    #             # If no position data is found, set defaults for availability and direction
-    #             availability = 0
-    #             direction = None
-
-    #         logger.debug(f'availability{availability}')
-    #         logger.debug(f'direction{direction}')        
-    #         logger.debug(f'closing_size{closing_size}')            
-
-
-    #         if direction and htx_direction == direction and closing_size == 0 :
-    #             # same direction so we just add on
-    #             result = await self.htx_tradeapi.place_order(self.ccy,body = {
-    #             "contract_code": self.ccy.replace('-SWAP',''),
-    #             "price": limit_buy_price,
-    #             "created_at": str(datetime.datetime.now()),
-    #             "volume": str(availability),
-    #             "direction": htx_direction,
-    #             "offset": "open",
-    #             "lever_rate": 5,
-    #             "order_price_type": "limit"       
-    #             }
-    #             )
-
-    #         else: 
-
-    #             #there is position that we need to close and there is availability to increase in another direction
-    #             if closing_size > 0:
-    #                 logger.debug(f"first close the available positions - close the long pos Limit_buy_size:{limit_buy_size} availability:{availability}")
-    #                 if availability > 0:
-    #                     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-    #                     "contract_code": self.ccy.replace('-SWAP',''),
-    #                     "price":limit_buy_price,
-    #                     "created_at": str(datetime.datetime.now()),
-    #                     "volume": str(closing_size) ,
-    #                     "direction": htx_direction,
-    #                     "offset": "close",
-    #                     "lever_rate": 5,
-    #                     "order_price_type": "limit"        
-    #                     }
-    #                     )
-    #                     logger.debug(result)
-    #                     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-    #                     "contract_code": self.ccy.replace('-SWAP',''),
-    #                     "price":limit_buy_price,
-    #                     "created_at": str(datetime.datetime.now()),
-    #                     "volume": str(availability),
-    #                     "direction": htx_direction,
-    #                     "offset": "open",
-    #                     "lever_rate": 5,
-    #                     "order_price_type":  "limit"        
-    #                     }
-    #                     )
-    #                 # when theres pos we need to close but no more availability to increase pos
-    #                 else:
-              
-    #                     logger.debug('close positions')
-    #                     result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-    #                     "contract_code": self.ccy.replace('-SWAP',''),
-    #                     "price": limit_buy_price,
-    #                     "created_at": str(datetime.datetime.now()),
-    #                     "volume": str(closing_size),
-    #                     "direction": htx_direction,
-    #                     "offset": "close",
-    #                     "lever_rate": 5,
-    #                     "order_price_type":"limit"
-    #                     }
-    #                     )
-    #             # when theres nothing to close
-    #             else:
-    #                 logger.debug('opening a new position since there are no positions')
-    #                 result =await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
-    #                 "contract_code": self.ccy.replace('-SWAP',''),
-    #                 "price": limit_buy_price,
-    #                 "created_at": str(datetime.datetime.now()),
-    #                 "volume": str(availability),
-    #                 "direction": htx_direction,
-    #                 "offset": "open",
-    #                 "lever_rate": 5,
-    #                 "order_price_type":"limit"
-    #                 }
-    #                 )
-
-    #         logger.debug(result)
-    #     except Exception as e:
-    #         logger.debug("LIMIT ORDER FUNCTION ERROR:",e)
-    #     return result
-    
-
-
-
     async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
         
         try:
@@ -609,7 +474,6 @@ class Diaoyu:
                 }
                 )
             position_data = positions.get('data', [])
-            
             # Check if position_data has at least one item to avoid IndexError 
             # If there is a position, we need to find out these conditions:
                 #1) limit_size left for our new order which is called availability
@@ -703,10 +567,10 @@ class Diaoyu:
                     }
                     )
                    
-            # if result['code'] == '1':
-            #     self.update_db()
+          
 
-            logger.debug(result)
+            
+
         except Exception as e:
             logger.debug("LIMIT ORDER FUNCTION ERROR:",e)
         return result

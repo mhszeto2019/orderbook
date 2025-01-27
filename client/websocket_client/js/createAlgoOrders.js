@@ -26,7 +26,6 @@ function saveAlgo() {
     const contractType = document.getElementById('new-algo-contract-type').value;
     const status = document.getElementById('new-algo-status').checked ? 'Active' : 'Inactive';
     const status_bool = document.getElementById('new-algo-status').checked 
-    const trade_direction = document.getElementById('new-algo-trade-direction').value
     
     if (!algoName || !spread || !quantity) {
         alert('Please fill in all required fields.');
@@ -56,9 +55,7 @@ function saveAlgo() {
         <td>
             ${instrument} (${contractType})
         </td>
-        <td>
-            ${trade_direction}
-        </td>
+       
         <td>
             <span class="badge bg-warning">New Order</span>
         </td>
@@ -118,14 +115,13 @@ function saveNewAlgoRow(){
     const instrument = document.getElementById('new-algo-instrument').value;
     const contractType = document.getElementById('new-algo-contract-type').value;
     const state = document.getElementById('new-algo-status').checked 
-    const trade_direction = document.getElementById('new-algo-trade-direction').value
     
-    addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state,trade_direction)
+    addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state)
     // fetchAlgoData()
 }
 
 
-function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state,trade_direction){
+function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state){
     const requestBody = {
         username: username,
         algo_type:algoType,
@@ -137,8 +133,7 @@ function addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, 
         ccy: ccy,
         instrument:instrument,
         contract_type:contractType,
-        state:state,
-        trade_direction:trade_direction
+        state:state
     };
     
     fetch(`http://${hostname}:5020/db/add_algo`, {
@@ -292,9 +287,7 @@ function fetchAlgoData() {
 
                     </td>
 
-                    <td>
-                        <input type="text" class="form-control editable-field" id="input-${algoName}-trade-direction" placeholder="Quantity" value="${algo.trade_direction}" disabled>
-                    </td>
+                   
                     <td>
                         <span id="status-algo-${algoName}" class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">
                             ${isRunning ? 'Running' : 'Stopped'}
@@ -374,15 +367,15 @@ function fetchAlgoData() {
             });
 
             // Add a "Save All Changes" button
-            const saveAllButton = document.getElementById('save-all-button');
-            if (!saveAllButton) {
-                const newButton = document.createElement('button');
-                newButton.id = 'save-all-button';
-                newButton.textContent = 'Save All Changes';
-                newButton.className = 'btn btn-primary mt-3';
-                newButton.addEventListener('click', () => saveAllChanges());
-                document.body.appendChild(newButton);
-            }
+            // const saveAllButton = document.getElementById('save-all-button');
+            // if (!saveAllButton) {
+            //     const newButton = document.createElement('button');
+            //     newButton.id = 'save-all-button';
+            //     newButton.textContent = 'Save All Changes';
+            //     newButton.className = 'btn btn-primary mt-3';
+            //     newButton.addEventListener('click', () => saveAllChanges());
+            //     document.body.appendChild(newButton);
+            // }
         })
         .catch(error => {
             console.error('Error fetching algo data:', error);
@@ -392,7 +385,7 @@ function fetchAlgoData() {
 // Call the function to fetch data and populate the table when the page loads
 document.addEventListener('DOMContentLoaded', fetchAlgoData);
 
-function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state,trade_direction){
+function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state){
     
     const requestBody = {
         username: username,
@@ -406,7 +399,6 @@ function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spr
         instrument:instrument,
         contract_type:contractType,
         state: state,
-        trade_direction:trade_direction
     };
    
     fetch(`http://${hostname}:5020/db/modify_algo`, {
@@ -451,9 +443,8 @@ function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
     amended_instrument = document.getElementById(`input-${algo_name}-instrument`).value
     contractType = document.getElementById(`input-${algo_name}-contract-type`).value
     state = checkbox.checked
-    trade_direction = document.getElementById(`input-${algo_name}-trade-direction`).value
    
-    modifyAlgo(username,algo_type, algo_name,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state,trade_direction)
+    modifyAlgo(username,algo_type, algo_name,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state)
 
 
     const statusBadge = document.getElementById(statusId);
