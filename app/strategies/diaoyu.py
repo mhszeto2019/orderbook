@@ -385,7 +385,6 @@ class Diaoyu:
         self.htx_client = ws_client
         ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
 
-      
 
     def start_clients(self):
         """Start both WebSocket clients."""
@@ -521,7 +520,7 @@ class Diaoyu:
                 "order_price_type": "limit"       
                 }]
                 )
-                
+
                 self.row['order_id']  = result['data'][0]['ordId']
 
             # if cancellation is involved
@@ -619,7 +618,7 @@ class Diaoyu:
                                 self.row['order_id']  = None
                                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
 
-                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
+                            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
                             
                         else:
                         

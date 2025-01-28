@@ -135,7 +135,7 @@ class AlgoFactory:
             row_dict['okx_apikey'] = algo_details[13]
             row_dict['okx_secretkey'] = algo_details[14]
             row_dict['okx_passphrase'] = algo_details[15]
-            row_dict[f'{row_dict['username']}_queue'] = self.queue
+            # row_dict[f'{row_dict['username']}_queue'] = self.queue
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
 
             self.shared_states[instance_id] = self.manager.dict(row_dict)
@@ -214,7 +214,7 @@ class AlgoFactory:
             row_dict['okx_apikey'] = row[13]
             row_dict['okx_secretkey'] = row[14]
             row_dict['okx_passphrase'] = row[15]
-            row_dict[f'{row_dict['username']}_queue'] = []
+            # row_dict[f'{row_dict['username']}_queue'] = []
             
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
