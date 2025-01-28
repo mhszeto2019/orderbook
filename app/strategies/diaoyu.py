@@ -607,14 +607,15 @@ class Diaoyu:
                                     self.row['order_id']  = result['data'][0]['ordId']
                                 self.row['order_id']  = None
                                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
-
+                                
+                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
+                            
                         else:
                         
                             result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
 
                             self.row['order_id']  = result['data'][0]['ordId']
                         
-                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
 
             except Exception as e:
                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
@@ -647,6 +648,7 @@ class Diaoyu:
                     else:
                         # Run the async function to completion in the current thread
                         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+
         except Exception as e:
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
 
