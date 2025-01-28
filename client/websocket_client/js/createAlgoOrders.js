@@ -67,7 +67,7 @@ function saveAlgo() {
         
         <td>
             <div class="d-flex justify-content-around">
-                <button class="btn btn-success btn-sm me-1" onclick="saveNewAlgoRow()">
+                <button class="btn btn-success btn-sm me-1" onclick="saveNewAlgoRow(this)">
                     <i class="bi bi-check-lg"></i> Save
                 </button>
                 <button class="btn btn-danger btn-sm" onclick="deleteNewRow(this)">
@@ -100,7 +100,7 @@ function deleteRow(button) {
 
 
 
-function saveNewAlgoRow(){
+function saveNewAlgoRow(button){
     // console.log('newalgodata')
     // const ccyInput = document.querySelector('#new-ccy');
     username= localStorage.getItem('username')
@@ -118,6 +118,9 @@ function saveNewAlgoRow(){
     
     addAlgo(username,algoType, algoName,leadExchange, lagExchange, spread, quantity, ccy,instrument,contractType, state)
     // fetchAlgoData()
+    const row = button.closest('tr');
+    // Remove the row from the table
+    row.remove();
 }
 
 

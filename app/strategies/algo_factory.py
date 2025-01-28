@@ -102,7 +102,7 @@ class AlgoFactory:
             self.shared_states[instance_id]['instrument'] = json_data['instrument']
             self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
             self.shared_states[instance_id]['state'] =  json_data['state']
-            self.shared_states[instance_id]['trade_direction'] = json_data['trade_direction']
+            # self.shared_states[instance_id]['trade_direction'] = json_data['trade_direction']
      
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
@@ -129,12 +129,12 @@ class AlgoFactory:
             row_dict['instrument'] = algo_details[8]
             row_dict['contract_type'] = algo_details[9]
             row_dict['state'] = algo_details[10]    
-            row_dict['trade_direction'] = algo_details[11]
-            row_dict['htx_apikey'] = algo_details[12]
-            row_dict['htx_secretkey'] = algo_details[13]
-            row_dict['okx_apikey'] = algo_details[14]
-            row_dict['okx_secretkey'] = algo_details[15]
-            row_dict['okx_passphrase'] = algo_details[16]
+            # row_dict['trade_direction'] = algo_details[11]
+            row_dict['htx_apikey'] = algo_details[11]
+            row_dict['htx_secretkey'] = algo_details[12]
+            row_dict['okx_apikey'] = algo_details[13]
+            row_dict['okx_secretkey'] = algo_details[14]
+            row_dict['okx_passphrase'] = algo_details[15]
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
 
             self.shared_states[instance_id] = self.manager.dict(row_dict)
@@ -184,12 +184,11 @@ class AlgoFactory:
             ad.instrument,
             ad.contract_type,
             ad.state,
-            ad.trade_direction,
             MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
             MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
             MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
             MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
-            MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase   
+            MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase
             FROM algo_dets ad left join api_credentials ac on ad.username = ac.username  group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
         )
         algo_details = cur.fetchall()
@@ -208,12 +207,12 @@ class AlgoFactory:
             row_dict['instrument'] = row[8]
             row_dict['contract_type'] = row[9]
             row_dict['state'] = row[10]
-            row_dict['trade_direction'] = row[11]
-            row_dict['htx_apikey'] = row[12]
-            row_dict['htx_secretkey'] = row[13]
-            row_dict['okx_apikey'] = row[14]
-            row_dict['okx_secretkey'] = row[15]
-            row_dict['okx_passphrase'] = row[16]
+            # row_dict['trade_direction'] = row[11]
+            row_dict['htx_apikey'] = row[11]
+            row_dict['htx_secretkey'] = row[12]
+            row_dict['okx_apikey'] = row[13]
+            row_dict['okx_secretkey'] = row[14]
+            row_dict['okx_passphrase'] = row[15]
             
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
@@ -315,12 +314,11 @@ class DBListener(threading.Thread):
                         ad.instrument,
                         ad.contract_type,
                         ad.state,
-                        ad.trade_direction,
                         MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
                         MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
                         MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
                         MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
-                        MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase   
+                        MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase 
                         FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
                     )
                     new_algo_detail = cur.fetchone()
