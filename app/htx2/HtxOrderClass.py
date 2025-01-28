@@ -15,6 +15,25 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.append('/var/www/html/orderbook/htx2')
 
+from pathlib import Path
+# Logger 
+# Define the log directory and the log file name
+LOG_DIR = Path('/var/www/html/orderbook/logs')
+log_filename = LOG_DIR / (Path(__file__).stem + '.log')
+os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
+import logging
+file_handler = logging.FileHandler(log_filename)
+# Set up a basic formatter
+
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(formatter)
+logger = logging.getLogger('htxorderclass')
+logger.setLevel(logging.DEBUG)  # Set log level
+# Add the file handler to the logger
+logger.addHandler(file_handler)
+
+
 
 from alpha.utils.request import AsyncHttpRequests
 from alpha.const import USER_AGENT
@@ -76,6 +95,58 @@ class HuobiCoinFutureRestTradeAPI:
         print("JSON DICT",json_dict)
 
         return json_dict
+
+    async def create_swap_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        # body = {"orders_data": [
+        #         {
+        #          "contract_code":"btc-usd",
+        #         "direction":"sell",
+        #         "offset":"open",
+        #         "price":"1299999",
+        #         "lever_rate":5,
+        #         "volume":1,
+        #         "order_price_type":"limit",
+        #         # "tp_trigger_price":27000,
+        #         # "tp_order_price":27000,
+        #         # "tp_order_price_type":"optimal_5",
+        #         # "sl_trigger_price":"130000",
+        #         # "sl_order_price":"130000",
+        #         # "sl_order_price_type":"optimal_5" ,       
+        #         }
+        #       ]}
+         
+        body = {"orders_data":body}
+        
+        logger.debug(body)
+        uri = "/swap-api/v1/swap_batchorder"
+        # success, error = await self.request("POST", uri, body=body, auth=True)
+        json_dict = await self.request("POST", uri, body=body, auth=True)
+        # json_response2 = self.format_message(json_dict)
+        json_response2 = {}
+        json_response2['data'] = [{"ordId":json_dict['data']['success'][0]['order_id'],"sCode":json_dict['sCode'],"ts":json_dict['ts'],"exchange":"htx"}]
+        json_response2['rate_limit_remaining'] = json_dict['rate_limit_remaining']
+
+        logger.debug(json_response2)
+        #  {'status': ['ok', 'no error'], 'data': {'errors': [], 'success': [{'order_id': 1333815668657569792, 'index': 1, 'order_id_str': '1333815668657569792'}], 'sMsg': 'Orders placed'}, 'ts': 1738048036510, 'sCode': 200, 'rate_limit_remaining': '35'}
+
+        # expected return 
+        # output_msg = {
+        #     "code": "",
+        #     "data": [{
+        #         "clOrdId": "",
+        #         "ordId": "",
+        #         "sCode": "",
+        #         "sMsg": "",
+        #         "tag": "",
+        #         "ts": "",
+        #         "exchange":"htx"
+        #     }],
+        #     "inTime": str(int(time.time() * 1000)),
+        #     "msg": "",
+        #     "outTime": "",
+        #     "rate_limit_remaining":""
+        # }
+        return json_response2
 
     async def place_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         """ Get open order information.

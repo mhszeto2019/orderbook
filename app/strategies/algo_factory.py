@@ -80,6 +80,9 @@ class AlgoFactory:
         self.manager = multiprocessing.Manager()
         self.shared_states = {}
         self.processes = []
+        self.queue = multiprocessing.Manager().Queue() 
+
+
         
     def add_or_update_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
@@ -102,12 +105,9 @@ class AlgoFactory:
             self.shared_states[instance_id]['instrument'] = json_data['instrument']
             self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
             self.shared_states[instance_id]['state'] =  json_data['state']
-            # self.shared_states[instance_id]['trade_direction'] = json_data['trade_direction']
      
             strat_and_process = self.algos.get(instance_id)
             strat = strat_and_process[0]
-            # logger.debug('algofactory updating state',self.shared_states[instance_id]['state'] )
-            # logger.debug(f"Updated strategy {instance_id} with new details.")
 
         else:
             # Add a new strategy
@@ -135,6 +135,7 @@ class AlgoFactory:
             row_dict['okx_apikey'] = algo_details[13]
             row_dict['okx_secretkey'] = algo_details[14]
             row_dict['okx_passphrase'] = algo_details[15]
+            row_dict[f'{row_dict['username']}_queue'] = self.queue
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
 
             self.shared_states[instance_id] = self.manager.dict(row_dict)
@@ -213,6 +214,7 @@ class AlgoFactory:
             row_dict['okx_apikey'] = row[13]
             row_dict['okx_secretkey'] = row[14]
             row_dict['okx_passphrase'] = row[15]
+            row_dict[f'{row_dict['username']}_queue'] = []
             
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
@@ -290,7 +292,7 @@ class DBListener(threading.Thread):
             while self.conn.notifies:
                 notify = self.conn.notifies.pop()
                 algo_details = json.loads(notify.payload)
-                logger.debug(algo_details)
+                # logger.debug(algo_details)
                 json_data = algo_details['data']
                 operation = algo_details['operation'] # db operations: update,insert...
 

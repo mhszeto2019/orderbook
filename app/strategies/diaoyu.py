@@ -303,8 +303,8 @@ class Diaoyu:
         self.htx_is_filled = False
 
         # Switch to on and off place order
-        self.okx_place_order_trigger = False
-        self.htx_place_order_trigger = False
+        # self.okx_place_order_trigger = False
+        # self.htx_place_order_trigger = False
 
         # db connection
         self.cursor = cursor
@@ -414,6 +414,7 @@ class Diaoyu:
     
     def okx_publicCallback(self,message):
         try:
+            # logger.debug(self.row[f'{self.row['username']}_queue'])
 
             """Callback function to handle incoming messages."""
             json_data = json.loads(message)
@@ -509,7 +510,7 @@ class Diaoyu:
             # If we dont need to close, we just open a position
             if closing_size == 0:
                 # same direction so we just add on
-                result = await self.htx_tradeapi.place_order(self.ccy,body = {
+                result = await self.htx_tradeapi.create_swap_orders(self.ccy,body = [{
                 "contract_code": self.ccy.replace('-SWAP',''),
                 "price": limit_buy_price,
                 "created_at": str(datetime.datetime.now()),
@@ -518,8 +519,10 @@ class Diaoyu:
                 "offset": "open",
                 "lever_rate": 5,
                 "order_price_type": "limit"       
-                }
+                }]
                 )
+                
+                self.row['order_id']  = result['data'][0]['ordId']
 
             # if cancellation is involved
             else: 
@@ -528,7 +531,7 @@ class Diaoyu:
                 if int(closing_size) >= int(limit_buy_size):
                     # if there is position that can be closed and there are no more excess positions to carry on
                     # when theres pos we need to close but no more availability to increase pos
-                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    result = await self.htx_tradeapi.create_swap_orders(self.ccy.replace('-SWAP',''),body = [{
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
@@ -537,12 +540,15 @@ class Diaoyu:
                     "offset": "close",
                     "lever_rate": 5,
                     "order_price_type":"limit"
-                    }
+                    }]
                     )
+
+                    self.row['order_id']  = result['data'][0]['ordId']
+
                 else:
                     # if there is position that can be closed and there are no more excess positions to carry on
                     # when theres pos we need to close but no more availability to increase pos
-                    result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
+                    result = await self.htx_tradeapi.create_swap_orders(self.ccy.replace('-SWAP',''),body = [{
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
@@ -551,8 +557,12 @@ class Diaoyu:
                     "offset": "close",
                     "lever_rate": 5,
                     "order_price_type":"limit"
-                    }
+                    }]
                     )
+
+                    self.row['order_id']  = result['data'][0]['ordId']
+
+
                    
           
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
@@ -560,6 +570,7 @@ class Diaoyu:
 
         except Exception as e:
             logger.error("LIMIT ORDER FUNCTION ERROR:",e)
+
         return result
 
     async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
@@ -607,7 +618,7 @@ class Diaoyu:
                                     self.row['order_id']  = result['data'][0]['ordId']
                                 self.row['order_id']  = None
                                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
-                                
+
                             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
                             
                         else:
