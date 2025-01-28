@@ -33,20 +33,24 @@ log_filename = os.path.join(LOG_DIR, 'orderbooks_okx_data.log')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 # Set up basic logging configuration
+# Logger 
+from pathlib import Path
+# Define the log directory and the log file name
+LOG_DIR = Path('/var/www/html/orderbook/logs')
+log_filename = LOG_DIR / (Path(__file__).stem + '.log')
+os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
 import logging
-
-log_filename = '/var/www/html/orderbook/logs/orderbooks_okx_data.log'
 file_handler = logging.FileHandler(log_filename)
-
 # Set up a basic formatter
+
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)  # Set log level
-
+logger = logging.getLogger('okxbooks')
+logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
+
 
 class OKXWebSocketClient:
     def __init__(self, url="wss://ws.okx.com:8443/ws/v5/public"):
@@ -129,8 +133,12 @@ class OKXWebSocketClient:
                 "exchange":"okx"
 
             }
-            socketio.emit(currency_pair,redis_data)
-            logger.info(redis_data['timestamp'])
+            try:
+                socketio.emit(currency_pair,redis_data)
+                logger.info(redis_data)
+            except Exception as e:
+                logger.debug(f"ERROR EMITTING TO CLIENT {e}")
+            # logger.info(redis_data['timestamp'])
             # print('sending to client')
             if 'SWAP' in currency_pair:
                 instrument = 'SWAP'

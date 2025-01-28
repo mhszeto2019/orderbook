@@ -11,7 +11,6 @@ import asyncio
 import websockets
 import time
 import sys
-# sys.path.append('/var/www/orderbook/htx2')
 sys.path.append('/var/www/html/orderbook/htx2')
 sys.path.append('/var/www/html/orderbook/htx2/alpha')
 
@@ -21,15 +20,15 @@ from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 from okx import Trade
 import select
 import os
-import psycopg2
+# import psycopg2
 from okx.websocket.WsPublicAsync import WsPublicAsync
 import redis
 import configparser
-import decimal
+# import decimal
 from websockets.exceptions import ConnectionClosedError
-from pathlib import Path
 
 # Logger 
+from pathlib import Path
 # Define the log directory and the log file name
 LOG_DIR = Path('/var/www/html/orderbook/logs')
 log_filename = LOG_DIR / (Path(__file__).stem + '.log')
