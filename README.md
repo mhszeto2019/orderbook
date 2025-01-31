@@ -34,7 +34,7 @@ This project supports running multiple exchanges, each having their own set of *
 
 To isolate dependencies and avoid conflicts between libraries (especially the WebSocket libraries used by different exchanges), create virtual environments for each exchange:
 
-
+```bash
 # Create virtual environment for OKX
 virtualenv /environments/okx/
 source /environments/okx/bin/activate
@@ -43,16 +43,19 @@ source /environments/okx/bin/activate
 virtualenv /environments/venv
 source /environments/okx/bin/activate
 
+
 ### 1b. Install Required Libraries
 
-# Install dependencies for OKX
+#### Install dependencies for OKX
 pip install -r okx/requirements.txt
 
-# Install dependencies for HTX
+#### Install dependencies for HTX
 pip install -r htx/requirements.txt
 
 ### 1c. Enter Project Directory
 cd /var/www/html/orderbook
+
+## **Folder Structure**
 
 ### 2. Folder Structure
 orderbook/
