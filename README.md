@@ -35,8 +35,8 @@ This project supports running multiple exchanges, each having their own set of *
 To isolate dependencies and avoid conflicts between libraries (especially the WebSocket libraries used by different exchanges), create virtual environments for each exchange:
 
 # Create virtual environment for OKX
-virtualenv /environments/okx/
-source /environments/okx/bin/activate
+**virtualenv /environments/okx/**
+**source /environments/okx/bin/activate**
 
 # Create virtual environment for HTX
 virtualenv /environments/venv
@@ -57,6 +57,8 @@ cd /var/www/html/orderbook
 ## **Folder Structure**
 
 ### 2. Folder Structure
+
+```plaintext
 orderbook/
 ├── okx/                    # OKX exchange WebSocket library
 ├── htx/                    # HTX exchange WebSocket library
@@ -77,4 +79,4 @@ orderbook/
 4) redis_channel folder is to test redis client and server
 5) strategies folder is to add strategies
 
-```bash
+
