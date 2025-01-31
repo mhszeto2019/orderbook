@@ -10,8 +10,6 @@ This repository is designed to work with multiple exchanges like **OKX** and **H
 - [Setup & Installation](#setup--installation)
 - [Folder Structure](#folder-structure)
 - [Running the Application](#running-the-application)
-- [How to Add Strategies](#how-to-add-strategies)
-- [Testing Redis](#testing-redis)
 - [License](#license)
 
 ---
@@ -77,7 +75,26 @@ orderbook/
 ├── requirements.txt        # Common dependencies for the project
 └── README.md               # This file
 ```
-##
+## **Running the Application**
+```bash
+bash start_auth_server.sh
+bash start_redis_connector.sh
+bash start_display_engine.sh
+bash start_trading_engine.sh
+bash start_algo_engine.sh
+```
+
+## **License**
+Custom License
+
+Copyright (c) [2025] [Brennan Sze To]
+
+1. This code is licensed for use only by Brennan Sze To.
+2. No part of this code may be copied, modified, distributed, or sold without explicit written permission from [your company].
+3. This code is not to be shared with third parties or made public in any form.
+4. No reverse engineering, decompilation, or disassembly is allowed.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
 
 # <!-- Understanding files -->
