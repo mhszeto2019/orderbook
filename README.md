@@ -97,11 +97,4 @@ Copyright (c) [2025] [Brennan Sze To]
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
 
-# <!-- Understanding files -->
-1) okx folder is for okx library
-2) htx folder is for htx library
-3) okx2 and htx2 folders are customised codes adapted from okx and htx to accomodate specific requirements
-4) redis_channel folder is to test redis client and server
-5) strategies folder is to add strategies
-
 
