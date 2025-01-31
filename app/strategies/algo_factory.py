@@ -116,7 +116,7 @@ class AlgoFactory:
 
             # Create a shared state dictionary
             # ['brennan_st', 'diaoyu', '123abc', 'okx', 'htx', '999', '1', 'na', 'swap', 'thisweek', False, 'e045967e-fbbc0636-e6d030e1-bewr5drtmh', '7d4bac9e-780e3558-de6db8f8-5a0df', 'a0de3940-5679-4939-957a-51c87a8502d9', 'FA44BCAAC3788C2AB4AFC77047930792', 'falconstead@Trading2024']
-            
+            print('json_data',json_data)
             row_dict  = {}
             row_dict['username'] =  algo_details[0]
             row_dict['algo_type'] = algo_details[1]

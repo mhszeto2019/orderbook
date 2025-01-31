@@ -419,12 +419,15 @@ function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spr
         })
         .then(data => {
             console.log("Success:", data);
+            fetchAlgoData()
+
             // Handle successful response here
         })
         .catch(error => {
             
             console.error("Error sending POST request:", error);
         });
+
 }
 
 
