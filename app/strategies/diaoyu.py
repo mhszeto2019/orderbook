@@ -597,6 +597,7 @@ class Diaoyu:
                             
                             
                             else:
+                                self.row['order_id']  = None
                                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
 
                                 # 2 scenarios can be present here:
@@ -614,7 +615,7 @@ class Diaoyu:
                                     # Continue to place limit order since qty has not been filled
                                     result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                     self.row['order_id']  = result['data'][0]['ordId']
-                                self.row['order_id']  = None
+                                # self.row['order_id']  = None
                                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
 
                             # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
@@ -624,7 +625,7 @@ class Diaoyu:
                             result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
 
                             self.row['order_id']  = result['data'][0]['ordId']
-                        
+                        return
 
             except Exception as e:
                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
