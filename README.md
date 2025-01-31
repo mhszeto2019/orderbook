@@ -35,12 +35,16 @@ This project supports running multiple exchanges, each having their own set of *
 To isolate dependencies and avoid conflicts between libraries (especially the WebSocket libraries used by different exchanges), create virtual environments for each exchange:
 
 # Create virtual environment for OKX
-**virtualenv /environments/okx/**
-**source /environments/okx/bin/activate**
+```bash
+virtualenv /environments/okx/
+source /environments/okx/bin/activate
+```
 
 # Create virtual environment for HTX
+```bash
 virtualenv /environments/venv
 source /environments/okx/bin/activate
+```
 
 
 ### 1b. Install Required Libraries
@@ -68,7 +72,7 @@ orderbook/
 ├── strategies/             # Custom trading strategies
 ├── requirements.txt        # Common dependencies for the project
 └── README.md               # This file
-
+```
 
 
 
