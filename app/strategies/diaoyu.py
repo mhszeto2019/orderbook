@@ -281,7 +281,7 @@ class Diaoyu:
         self.best_ask_sz = None
         # from htx
 
-        # user input
+        # from user input
         self.qty = self.row['qty']
         self.ccy = self.row['ccy']
         self.spread = self.row['spread']
@@ -415,8 +415,6 @@ class Diaoyu:
     
     def okx_publicCallback(self,message):
         try:
-            # logger.debug(self.row[f'{self.row['username']}_queue'])
-
             """Callback function to handle incoming messages."""
             json_data = json.loads(message)
             if json_data.get('data'):
