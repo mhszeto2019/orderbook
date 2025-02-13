@@ -3,6 +3,8 @@ import json
 import threading
 from argparse import ArgumentParser
 
+# currently not in use
+
 parser = ArgumentParser()
 parser.add_argument("channel", type=str)
 args = parser.parse_args()

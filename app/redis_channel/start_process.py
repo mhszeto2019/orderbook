@@ -1,5 +1,6 @@
 import subprocess
 
+# currently not in use
 def start_subscriber(channel):
     cmd = ['python', 'app/redis_channel/test_client_subscriber.py', channel]
     process = subprocess.Popen(cmd)

@@ -155,6 +155,7 @@ dbname = config[config_source]['dbname']
 
 import pg8000
 
+# db connecter wrapper for function 
 def with_db_connection(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
