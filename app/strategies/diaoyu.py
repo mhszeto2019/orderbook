@@ -553,7 +553,6 @@ class Diaoyu:
                          
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
             
-
         except Exception as e:
             logger.error("LIMIT ORDER FUNCTION ERROR:",e)
 
@@ -604,15 +603,11 @@ class Diaoyu:
                                 # Continue to place limit order since qty has not been filled
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
-                            # self.row['order_id']  = None
+                          
                             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
-
-                        # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (HTX place limit order)" )
-                        
+                                        
                     else:
-                    
                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-
                         self.row['order_id']  = result['data'][0]['ordId']
                     return
 
@@ -654,12 +649,9 @@ class Diaoyu:
     async def place_market_order_okx(self,filled_volume,match_order_id):
 
         try:
-
             with self.lock:
-
                 # Initialize TradeAPI
                 tradeApi = self.okx_tradeapi
-               
                 result = tradeApi.place_order(
                     instId= 'BTC-USD-SWAP',
                     tdMode= "cross", 
