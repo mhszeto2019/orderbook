@@ -139,14 +139,17 @@ class HtxPositions:
         self.thread = None
         
     def start(self, subs, auth=False, callback=None):
-        """ Start the subscription process in a separate thread. """
-        if self.thread and self.thread.is_alive():
-            print("Already running. Please stop the current thread first.")
-            return
-        self._stop_event = threading.Event()
-        self.is_open = True
-        self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
-        self.thread.start()
+        try:
+            """ Start the subscription process in a separate thread. """
+            if self.thread and self.thread.is_alive():
+                print("Already running. Please stop the current thread first.")
+                return
+            self._stop_event = threading.Event()
+            self.is_open = True
+            self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
+            self.thread.start()
+        except Exception as e:
+            logger.error(f"Exception error {e}")
 
     def stop(self):
         """ Stop the subscription process. """

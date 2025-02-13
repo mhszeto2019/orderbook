@@ -299,17 +299,12 @@
                     localStorage.setItem('key', result.key);
                     localStorage.setItem('username', result.username);
 
-
-                    // localStorage.setItem('secretkey', result.secretkey);
-                    // localStorage.setItem('apikey', result.apikey);
-                    // localStorage.setItem('passphrase', result.passphrase);
-
                     // Clear form fields
                     document.getElementById('login-username').value = '';
                     document.getElementById('login-password').value = '';
                     
                     // Redirect to landing page after login
-                    window.location.href = "oms_.html";  // Redirects to the landing page
+                    window.location.href = "index.html";  // Redirects to the landing page
                 } else {
                     console.error('Error:', result.message);
                     alert(result.message);  // Display the error message returned from the server

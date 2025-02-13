@@ -54,27 +54,29 @@ class WsPublicAsync:
         
     async def consume(self):
         """Continuously consume messages from the WebSocket, handling disconnections."""
-        while True:
-            try:
-                async for message in self.websocket:
-                    print(f"Received: {message}")
-                    if self.callback:
-                        self.callback(message)
+        try:
+            while True:
+                try:
+                    async for message in self.websocket:
+                        print(f"Received: {message}")
+                        if self.callback:
+                            self.callback(message)
 
-            except ConnectionClosedError as e:
-                
-                logger.error(f"WebSocket closed unexpectedly: {e}. Attempting to reconnect...")
-                await self.reconnect()  # Attempt to reconnect
-                break  # Exit the loop to reconnect
-            except ConnectionClosedOK:
-                logger.info("WebSocket connection closed gracefully.")
-                break  # Normal closure
-            except Exception as e:
-                logger.error(f"Unexpected error in consume: {e}")
-                break  # Exit the loop for any other exceptions
-        await self.cleanup()
+                except ConnectionClosedError as e:
+                    
+                    logger.error(f"WebSocket closed unexpectedly: {e}. Attempting to reconnect...")
+                    await self.reconnect()  # Attempt to reconnect
+                    break  # Exit the loop to reconnect
+                except ConnectionClosedOK:
+                    logger.info("WebSocket connection closed gracefully.")
+                    break  # Normal closure
+                except Exception as e:
+                    logger.error(f"Unexpected error in consume: {e}")
+                    break  # Exit the loop for any other exceptions
+            await self.cleanup()
 
-
+        except Exception as e:
+            logger.error(f"Error {e}")
 
     async def subscribe(self, params: list, callback):
         """Subscribe to WebSocket channels."""
