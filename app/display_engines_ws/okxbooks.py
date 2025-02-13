@@ -87,7 +87,6 @@ class OKXWebSocketClient:
         finally:
             await self.close()  # Ensure WebSocket is closed when done
     
-
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
         if self.ws:
@@ -155,7 +154,6 @@ async def main():
     # currency_pairs = ["BTC-USDC", "BTC-USDT","BTC-USD-SWAP"]  # Add more pairs as needed
     currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
     channel = 'books5'
-
     await client.run(channel,currency_pairs, client.publicCallback)
 
 
@@ -181,8 +179,6 @@ def handle_connect(auth):
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_okx_client)
 
-
-
 @socketio.on('client_change')
 def handle_client_change(data):
     global loop
@@ -194,7 +190,6 @@ def handle_client_change(data):
             print("Client WebSocket connection cleaned up.")
         except Exception as e:
             print(f"Error during client change cleanup: {e}")
-
 
 @socketio.on('disconnect')
 def handle_disconnect():

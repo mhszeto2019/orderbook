@@ -248,7 +248,6 @@ class HtxPositions:
         signature = base64.b64encode(digest)
         signature = signature.decode()
         return signature
-
     
 class Diaoyu:
     def __init__(self,row_dict,cursor):
@@ -304,10 +303,6 @@ class Diaoyu:
         self.htx_filled_volume = 0
         self.htx_is_filled = False
 
-        # Switch to on and off place order
-        # self.okx_place_order_trigger = False
-        # self.htx_place_order_trigger = False
-
         # db connection
         self.cursor = cursor
         # throttle
@@ -316,8 +311,6 @@ class Diaoyu:
 
         # lock for race conditions
         self.lock = threading.Lock()
-
-
 
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
@@ -387,7 +380,6 @@ class Diaoyu:
         self.htx_client = ws_client
         ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
 
-
     def start_clients(self):
         """Start both WebSocket clients."""
         # Start Htx match orders with positions in a separate thread
@@ -397,7 +389,6 @@ class Diaoyu:
         # Run OkxBbo in the main asyncio event loop
         asyncio.run(self.run_okx_bbo())
         
-
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
         if self.row['okx_client']:
@@ -501,7 +492,6 @@ class Diaoyu:
             #     availability = 0
             #     direction = None
 
-
             # logger.debug(f'availability{availability}')
             # logger.debug(f'direction{direction}')        
             # logger.debug(f'closing_size{closing_size}')            
@@ -560,10 +550,7 @@ class Diaoyu:
                     )
 
                     self.row['order_id']  = result['data'][0]['ordId']
-
-
-                   
-          
+                         
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
             
 
@@ -673,8 +660,6 @@ class Diaoyu:
                 # Initialize TradeAPI
                 tradeApi = self.okx_tradeapi
                
-
-
                 result = tradeApi.place_order(
                     instId= 'BTC-USD-SWAP',
                     tdMode= "cross", 

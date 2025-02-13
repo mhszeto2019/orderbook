@@ -19,7 +19,6 @@ REDIS_PORT = config[config_source]['port']
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 
-
 class OKXWebSocketClient:
     def __init__(self, url="wss://wspap.okx.com:8443/ws/v5/public"):
         self.url = url
