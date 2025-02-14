@@ -610,7 +610,7 @@ class Diaoyu:
                     return
 
             except Exception as e:
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
+                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
                 
     def htx_publicCallback(self,message):
         try:
@@ -642,7 +642,7 @@ class Diaoyu:
                         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
 
         except Exception as e:
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
+            logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
 
     async def place_market_order_okx(self,filled_volume,match_order_id):
         try:
@@ -685,7 +685,7 @@ class Diaoyu:
 
                 return result
         except Exception as e:
-            print(e)
+            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{e}")
     
     def update_db(self):
         # Input should be unique so it should be username,algo_type and algoname
@@ -701,7 +701,7 @@ class Diaoyu:
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Database Updated")
         
         except Exception as e:
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|DATABASE Error:{e}")
+            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|DATABASE Error:{e}")
         # finally:
         #     self.cursor.close()  # Close the cursor
             # return 
