@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Falconstead</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Suppressing the favicon error -->
+    <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAA..." />
+
 </head>
+
 <script src="./websocket_client/js/htx_okx_spread_order.js"></script>
 <link href="./websocket_client/css/statusbadge.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -303,11 +308,7 @@
                                     <!-- Second Exchange Last Prices -->
                                 <div class="col-md-3">
                                     <div class="orderbook-section">
-                                    <!-- <h2>Last Trades</h2>
-                                    <div id="selected-info">
-                                        <p>Exchange: <span id="selected-exchange-lastprice-2">Not Selected</span></p>
-                                        <p>Currency: <span id="selected-ccy-lastprice-2">Not Selected</span></p>
-                                    </div> -->
+                                    
 
                                     <div class="card shadow-sm ">
                                         <div class="card-body py-0 my-0">
@@ -557,8 +558,6 @@
                                 
                                 <script>
                                     function handleOrderTypeChange() {
-
-                                        console.log('CHANGE')
 
                                         const orderType = document.getElementById('order-type-input').value;
                                         const priceContainer = document.getElementById('price-container');

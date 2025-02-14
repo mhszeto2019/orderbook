@@ -288,7 +288,7 @@
                 if (response.ok) {
                     console.log(result)
                     console.log('Login successful:', result.message);
-                    alert('Login successful!');
+                    // alert(`Login successful! Welcome ${username}`);
                     
                     // Store the JWT token in localStorage
                     localStorage.setItem('jwt_token', result.token);

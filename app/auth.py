@@ -121,7 +121,6 @@ def login(cursor):
     global username,ip_address
     username = request.form.get('username')
     password = request.form.get('password')
-    print("LOGING IN")
     
     # Check if the user exists
     cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
@@ -185,7 +184,6 @@ def login(cursor):
     # Store the encrypted data in Redis using a user-specific key
     cache_key = f"user:{username}:api_credentials"
     r.set(cache_key, encrypted_data)
-    print(username)
 
      # Create JWT token
     payload = {
@@ -197,9 +195,10 @@ def login(cursor):
     # Encode the JWT token using the SECRET_KEY and HS256 algorithm
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     ip_address = request.remote_addr if request else 'Unknown'
+    print("User:{} login successful. - IP:{}".format(username,ip_address))
     logger.info("User:{} login successful. - IP:{}".format(username,ip_address))
     return jsonify({
-        'message': 'Login successful!',
+        'message': 'Login Successful!',
         'token': token,  # Send the token as the response
         'key':str(key),
         'username':username
@@ -211,14 +210,12 @@ def login(cursor):
 # Login route
 @app.route('/logout', methods=['GET'])
 def logout():
-    print('logout')
     global username, ip_address
+    print("User:{} logout successful. - IP:{}".format(username,ip_address))
     # okx_secretkey_apikey_passphrase = r.get('okx_secretkey_apikey_passphrase')
     # Retrieve the encryption key from a secure location (e.g., environment variable, secrets manager)
     # key =  # This key should be securely stored and shared between apps
-    
     cache_key = f"user:{username}:api_credentials"
-    print(cache_key)
     r.delete(cache_key)
     
     logger.info("User:{} logout successful. - IP:{}".format(username,ip_address))

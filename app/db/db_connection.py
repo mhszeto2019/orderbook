@@ -7,6 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 
+
 @app.route('/db/get_algo_list', methods=['GET'])
 @with_db_connection
 def get_algo_list(cursor):
