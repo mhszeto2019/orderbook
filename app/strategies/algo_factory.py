@@ -242,8 +242,9 @@ class AlgoFactory:
         """Remove an Algo instance."""
         with self.lock:
             if algo_id in self.algos:
-                print(f"Removing Algo {algo_id}")
+                logger.debug(f"Removing Algo {algo_id}")
                 del self.algos[algo_id]
+                logger.debug(f"Removed algo {algo_id}")
 
     def get_algo(self, algo_id):
         """Get an Algo instance."""
@@ -376,52 +377,71 @@ class DBListener(threading.Thread):
                 algo_details = json.loads(notify.payload)
                 logger.debug(f"ALGO DETAILS:{algo_details}")
                 # logger.debug(algo_details)
-                json_data = algo_details['data']
                 operation = algo_details['operation'] # db operations: update,insert...
+                # json_data = algo_details['data']
 
-                # Initialize and start new AlgoRunTime instance
-                username = json_data['username']
-                algo_type = json_data['algo_type']
-                algo_name = json_data['algo_name']
-                instance_id = f"{username}_{algo_type}_{algo_name}"
-                if operation == "INSERT":
-                    cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                    # cur.execute("select * from algo_dets")
-                    cur.execute(f"""select
-                        ad.username,
-                        ad.algo_type,
-                        ad.algo_name,
-                        ad.lead_exchange,
-                        ad.lag_exchange ,
-                        ad.spread,
-                        ad.qty,
-                        ad.ccy,
-                        ad.instrument,
-                        ad.contract_type,
-                        ad.state,
-                        MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
-                        MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
-                        MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
-                        MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
-                        MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase 
-                        FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
-                    )
-                    new_algo_detail = cur.fetchone()
-                    self.factory.add_algo(instance_id,new_algo_detail)
+                # # Initialize and start new AlgoRunTime instance
+                # username = json_data['username']
+                # algo_type = json_data['algo_type']
+                # algo_name = json_data['algo_name']
+                # instance_id = f"{username}_{algo_type}_{algo_name}"
+                if operation == "DELETE":
+                    json_data = algo_details['old_data']
 
-                
-                # For updates
-                elif operation == 'UPDATE':
-                    # self.factory.shared_states[instance_id] = algo_details
-                    # logger.debug(self.factory.shared_states)
-                    # logger.debug('UPDATE')
-                    # logger.debug(self.factory.shared_states[instance_id])
-                    # self.factory.shared_states[instance_id]['state'] = True
-                    self.factory.update_algo(instance_id,algo_details)
-                    # logger.debug(self.factory.shared_states[instance_id])
+                    # Initialize and start new AlgoRunTime instance
+                    username = json_data['username']
+                    algo_type = json_data['algo_type']
+                    algo_name = json_data['algo_name']
+                    instance_id = f"{username}_{algo_type}_{algo_name}"
+                    self.factory.remove_algo(instance_id)
 
                 else:
-                    self.factory.remove_algo(instance_id)
+                    json_data = algo_details['data']
+                    # Initialize and start new AlgoRunTime instance
+                    username = json_data['username']
+                    algo_type = json_data['algo_type']
+                    algo_name = json_data['algo_name']
+                    instance_id = f"{username}_{algo_type}_{algo_name}"
+
+                    if operation == "INSERT":
+                        cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                        # cur.execute("select * from algo_dets")
+                        cur.execute(f"""select
+                            ad.username,
+                            ad.algo_type,
+                            ad.algo_name,
+                            ad.lead_exchange,
+                            ad.lag_exchange ,
+                            ad.spread,
+                            ad.qty,
+                            ad.ccy,
+                            ad.instrument,
+                            ad.contract_type,
+                            ad.state,
+                            MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
+                            MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
+                            MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
+                            MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
+                            MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase 
+                            FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
+                        )
+                        new_algo_detail = cur.fetchone()
+                        self.factory.add_algo(instance_id,new_algo_detail)
+
+                    
+                    # For updates
+                    else:
+                        # self.factory.shared_states[instance_id] = algo_details
+                        # logger.debug(self.factory.shared_states)
+                        # logger.debug('UPDATE')
+                        # logger.debug(self.factory.shared_states[instance_id])
+                        # self.factory.shared_states[instance_id]['state'] = True
+                        self.factory.update_algo(instance_id,algo_details)
+                        # logger.debug(self.factory.shared_states[instance_id])
+
+                # else:
+                #     logger.debug("Operation is delete")
+                #     self.factory.remove_algo(instance_id)
      
 
     def stop(self):
