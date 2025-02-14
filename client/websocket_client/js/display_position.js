@@ -232,7 +232,7 @@ function Htx2OkxFormat(originalDataArray) {
         "optVal": "",
         "pendingCloseOrdLiabVal": "",
         "pnl": String(originalData.profit.toFixed(10)),  // Placeholder, may depend on further logic
-        "pos": originalData.direction === "sell" ? String(-Math.abs(originalData.available)): String(originalData.available),  // Placeholder for position status
+        "pos": originalData.direction === "sell" ? String(-Math.abs(originalData.volume)): String(originalData.volume),  // Placeholder for position status
         "posCcy": "",
         "posId": "2019681002234920961",  // Placeholder position ID
         "posSide": String((originalData.direction)),  // Assumed position side

@@ -582,8 +582,7 @@ class Diaoyu:
                             # Call the asynchronous place_order function
                             result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                             self.row['order_id']  = result['data'][0]['ordId']
-                        
-                        
+
                         else:
                             # self.row['order_id']  = None
                             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
@@ -603,7 +602,6 @@ class Diaoyu:
                                 # Continue to place limit order since qty has not been filled
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
-                          
                             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
                                         
                     else:
@@ -647,7 +645,6 @@ class Diaoyu:
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
 
     async def place_market_order_okx(self,filled_volume,match_order_id):
-
         try:
             with self.lock:
                 # Initialize TradeAPI
