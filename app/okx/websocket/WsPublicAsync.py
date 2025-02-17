@@ -58,7 +58,7 @@ class WsPublicAsync:
             while True:
                 try:
                     async for message in self.websocket:
-                        print(f"Received: {message}")
+                        # print(f"Received(OKX): {message}")
                         if self.callback:
                             self.callback(message)
 

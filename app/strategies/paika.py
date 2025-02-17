@@ -144,6 +144,7 @@ class HtxPositions:
             self.is_open = True
             self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
             self.thread.start()
+
         except Exception as e:
             logger.error(f"Exception error {e}")
 
@@ -245,7 +246,7 @@ class HtxPositions:
         signature = signature.decode()
         return signature
     
-class Diaoyu:
+class Paika:
     def __init__(self,row_dict,cursor):
         # shared_state
         self.row = row_dict
@@ -368,7 +369,6 @@ class Diaoyu:
             }
         ]
         # swap client
-     
         ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
         self.htx_client = ws_client
         ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
@@ -458,7 +458,6 @@ class Diaoyu:
                 #1) limit_size left for our new order which is called availability
                 #2) limit size required to close existing opposite direction called closing size
             # If there is position, prioritise on closing first
-
             closing_size = 0
             availability = int(limit_buy_size)
             opposite_direction = "sell" if htx_direction == "buy" else "buy"
@@ -699,12 +698,26 @@ class Diaoyu:
         #     self.cursor.close()  # Close the cursor
             # return 
         
+import psycopg2
+
+DB_CONFIG = {
+    "dbname": dbname,
+    "user": dbusername,
+    "password": dbpassword,
+    "host": "localhost",
+    "port": 5432
+}
 
 if __name__ == '__main__':
     # 1 strat = 1 algo 
     try:
-        print('try start')
-          # strat.start_clients()
+        # print('try start')
+        # CREATING NEW STRAT with - {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '40', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
+        params = {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '40', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
+
+        strat = Paika(params,psycopg2.connect(**DB_CONFIG).cursor())
+        strat.start_clients()
+        
     except KeyboardInterrupt:
         print("Stopping clients...")
         # strat.stop_clients()

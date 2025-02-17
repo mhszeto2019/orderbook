@@ -197,8 +197,8 @@ def close_positions():
 def get_all_okx_open_orders():
     try:
         data = request.get_json()
-        print(data)
-        print("HELLLOOOOOOOOOOO")
+        # print(data)
+        # print("HELLLOOOOOOOOOOO")
         # side = data['side']
         username = data.get('username')
         key_string = data.get('redis_key')

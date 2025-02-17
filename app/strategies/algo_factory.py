@@ -162,6 +162,7 @@ class AlgoFactory:
 
     #     for p in self.processes:
     #         p.join
+
     def update_algo(self, instance_id, algo_details):
         # logger.debug(algo_details)
         # Update existing strategy
@@ -220,7 +221,8 @@ class AlgoFactory:
         self.shared_states[instance_id] = self.manager.dict(row_dict)
         # logger.debug(self.shared_states)
         # Create the new strategy instance (Diaoyu)
-        logger.debug("CREATING NEW STRAT")
+    
+        logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
         strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
         # strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
         logger.debug("CREATED NEW STRAT")
@@ -308,6 +310,8 @@ class AlgoFactory:
             # Since Diaoyu is trading SWAP, we will keep contract type as None
             self.shared_states[instance_id] = self.manager.dict(row_dict)
             # each multiprocess should have its own connection to db
+            logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
+        
             strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
             p = multiprocessing.Process(target=strat.start_clients)
             self.algos[instance_id] = (strat, p)  # Update with the new process

@@ -380,7 +380,7 @@ class HuobiCoinFutureRestTradeAPI:
 
             try:
                 response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
-                print('python response',response_dict)
+                # print('python response',response_dict)
                 response_dict['data'] = response_dict.get('data',[])
                 response_dict['data']['sMsg'] = 'Orders placed'
                 response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]

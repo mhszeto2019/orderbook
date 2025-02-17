@@ -54,10 +54,10 @@ class Ws:
         plain = gzip.decompress(message).decode()
         jdata = json.loads(plain)
         if 'ping' in jdata:
-            print("ping: " + plain)
+            # print("ping: " + plain)
             sdata = plain.replace('ping', 'pong')
             self._ws.send(sdata)
-            print("pong: " + sdata)
+            # print("pong: " + sdata)
             return
         elif 'op' in jdata:
             opdata = jdata['op']
