@@ -73,7 +73,7 @@ class HuobiCoinFutureRestTradeAPI:
         uri = "/swap-api/v1/swap_position_info"
 
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        print("JSON DICT",json_dict)
+        # print("JSON DICT",json_dict)
 
         return json_dict
     

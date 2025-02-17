@@ -87,14 +87,14 @@ class OkxBbo:
 
         while self.is_running:
             try:
-                print("Connecting to WebSocket...")
+                # print("Connecting to WebSocket...")
                 await self.start()
 
                 # Subscribe to all specified currency pairs
                 for pair in currency_pairs:
                     await self.subscribe(channel, pair, callback)
 
-                print("Subscribed to channels. Listening for messages...")
+                # print("Subscribed to channels. Listening for messages...")
                 # Keep the connection alive
                 while self.is_running:
                     await asyncio.sleep(1)
@@ -448,6 +448,7 @@ class Diaoyu:
     async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
         
         try:
+            result = None
             positions = await self.htx_tradeapi.get_positions(self.ccy,body = {
                 "symbol": "BTC"
                 }
@@ -484,9 +485,9 @@ class Diaoyu:
             #     availability = 0
             #     direction = None
 
-            # logger.debug(f'availability{availability}')
-            # logger.debug(f'direction{direction}')        
-            # logger.debug(f'closing_size{closing_size}')            
+            logger.debug(f'availability{availability}')
+            logger.debug(f'direction{pos['direction']}')        
+            logger.debug(f'closing_size{closing_size}')            
 
             # If we dont need to close, we just open a position
             if closing_size == 0:
@@ -502,8 +503,10 @@ class Diaoyu:
                 "order_price_type": "limit"       
                 }]
                 )
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function1)")
 
                 self.row['order_id']  = result['data'][0]['ordId']
+
 
             # if cancellation is involved
             else: 
@@ -546,7 +549,7 @@ class Diaoyu:
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
             
         except Exception as e:
-            logger.error("LIMIT ORDER FUNCTION ERROR:",e)
+            logger.error(f"LIMIT ORDER FUNCTION ERROR:{e}")
 
         return result
 
@@ -603,7 +606,7 @@ class Diaoyu:
                     # return
 
             except Exception as e:
-                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
+                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:{e}")
                 
     def htx_publicCallback(self,message):
         try:
@@ -635,7 +638,7 @@ class Diaoyu:
                         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
 
         except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
+            logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:{e}")
 
     async def place_market_order_okx(self,filled_volume,match_order_id):
         try:

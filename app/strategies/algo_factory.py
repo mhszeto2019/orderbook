@@ -185,6 +185,8 @@ class AlgoFactory:
 
         strat_and_process = self.algos.get(instance_id)
         strat = strat_and_process[0]
+        logger.debug(f"ALGO DETAILS that just got updated:{algo_details}")
+
         # for p in self.processes:
         #     p.join
 
@@ -379,7 +381,7 @@ class DBListener(threading.Thread):
             while self.conn.notifies:
                 notify = self.conn.notifies.pop()
                 algo_details = json.loads(notify.payload)
-                logger.debug(f"ALGO DETAILS:{algo_details}")
+                # logger.debug(f"ALGO DETAILS:{algo_details}")
                 # logger.debug(algo_details)
                 operation = algo_details['operation'] # db operations: update,insert...
                 # json_data = algo_details['data']

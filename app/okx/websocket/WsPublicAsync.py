@@ -41,7 +41,7 @@ class WsPublicAsync:
             try:
                 self.websocket = await self.factory.connect()
                 self.reconnect_attempts = 0  # Reset on successful connection
-                logger.info("Connected to WebSocket.")
+                # logger.info("Connected to WebSocket.")
                 break
             except Exception as e:
                 self.reconnect_attempts += 1
@@ -86,7 +86,7 @@ class WsPublicAsync:
             "args": params
         })
         await self.websocket.send(payload)
-        logger.info(f"Subscribed with payload: {payload}")
+        # logger.info(f"Subscribed with payload: {payload}")
 
     async def unsubscribe(self, params: list, callback):
         """Unsubscribe from WebSocket channels."""
@@ -119,7 +119,7 @@ class WsPublicAsync:
 
     async def start(self):
         """Start the WebSocket connection and begin consuming messages."""
-        logger.info("Starting WebSocket connection...")
+        # logger.info("Starting WebSocket connection...")
         await self.connect()
         self.loop.create_task(self.consume())
 
