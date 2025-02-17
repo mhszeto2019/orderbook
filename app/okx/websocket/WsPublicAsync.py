@@ -129,7 +129,8 @@ class WsPublicAsync:
     
     async def cleanup(self):
         """Clean up by unsubscribing and closing WebSocket."""
-        await self.unsubscribe()
+        logger.debug("CLEANING UP")
+        # await self.unsubscribe()
         await self.factory.close()
 
     async def handle_disconnection(self):

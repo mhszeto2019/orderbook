@@ -79,7 +79,6 @@ class OkxBbo:
         arg = {"channel": channel, "instId": inst_id}
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
-
    
     async def run(self, channel, currency_pairs, callback):
         """Run the WebSocket client, subscribing to the given currency pairs."""
@@ -111,7 +110,6 @@ class OkxBbo:
             finally:
                 await self.close()
 
-
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
         if self.ws:
@@ -123,8 +121,6 @@ class OkxBbo:
         if self.ws:
             await self.ws.factory.close()
             print("WebSocket connection closed.")
-
-  
    
 class HtxPositions:
     def __init__(self, url, endpoint, access_key, secret_key):
@@ -264,7 +260,6 @@ class Diaoyu:
         self.okx_secret_key = self.row['okx_secretkey']
         self.okx_passphrase = self.row['okx_passphrase']
         self.okx_tradeapi = Trade.TradeAPI(self.okx_api_key, self.okx_secret_key,self.okx_passphrase, False, '0')
-
         # db
         self.dbsubscriber = None
         self.db_thread = None
@@ -315,7 +310,6 @@ class Diaoyu:
     async def revoke_order_by_id(self):
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
         try:
-
             with self.lock:
                 try:
                     tradeApi = self.htx_tradeapi
@@ -344,7 +338,6 @@ class Diaoyu:
         currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
         channel = "bbo-tbt"
         await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
-
 
     # connection with htx positions and orders
     def run_htx_positions(self):
@@ -452,7 +445,6 @@ class Diaoyu:
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
-
     async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
         
         try:
@@ -518,8 +510,8 @@ class Diaoyu:
 
                 #If there is a position that we need to close and there is availability to increase in another direction
                 if int(closing_size) >= int(limit_buy_size):
-                    # if there is position that can be closed and there are no more excess positions to carry on
-                    # when theres pos we need to close but no more availability to increase pos
+                    # If there is position that can be closed and there are no more excess positions to carry on
+                    # When there is a position  we need to close but no more availability to increase pos
                     result = await self.htx_tradeapi.create_swap_orders(self.ccy.replace('-SWAP',''),body = [{
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
