@@ -121,8 +121,11 @@ class OkxBbo:
         if self.ws:
             await self.ws.factory.close()
             print("WebSocket connection closed.")
-   
-class HtxPositions:
+
+import websocket
+
+
+class Htxbbo:
     def __init__(self, url, endpoint, access_key, secret_key):
         self.url = url+endpoint
         self.endpoint = endpoint
@@ -275,7 +278,10 @@ class Paika:
         self.best_ask = None
         self.best_ask_sz = None
         # from htx
-
+        self.htx_best_bid = None
+        self.htx_best_bid_sz = None
+        self.htx_best_ask = None
+        self.htx_best_ask_sz = None
         # from user input
         self.qty = self.row['qty']
         self.ccy = self.row['ccy']
@@ -341,7 +347,7 @@ class Paika:
         await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
 
     # connection with htx positions and orders
-    def run_htx_positions(self):
+    def run_htx_bbo(self):
         """Run the HtxPositions WebSocket client."""
         # access_key = 
         # secret_key = 
@@ -349,34 +355,42 @@ class Paika:
         secret_key = self.htx_secretkey
         # for swaps
         notification_url = 'wss://api.hbdm.com'
-        notification_endpoint = '/swap-notification'
+        notification_endpoint = '/swap-ws'
         # for future
         notification_futures_url = 'wss://api.hbdm.com'
         notification_futures_endpoint = '/notification'
         
         notification_subs = [
             {
-                "op": "sub",
-                "cid": str(uuid.uuid1()),
-                "topic": "matchOrders.BTC-USD"
+                "id": str(uuid.uuid1()),
+                "sub": "market.BTC-USD.bbo"
             }
         ]
-        notification_futures_subs = [
-            {
-                "op": "sub",
-                "cid": str(uuid.uuid1()),
-                "topic": "matchOrders.*"
-            }
-        ]
+       
         # swap client
-        ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
+        #    host = 'api.huobi.pro'
+        # path = '/ws'
+        # swap_host = "api.hbdm.com"
+        # swap_path='/swap-ws'
+        # self.htx_client = Htxbbo(swap_host,swap_path)
+        # self.htx_client.open()
+        # print(self.ccy)
+        # sub_params2 = {'sub': 'market.BTC-USD.bbo'}
+        # print(self.ccy)
+        # self.htx_client.sub(sub_params2)
+        notification_url = 'wss://api.hbdm.com'
+        notification_endpoint = '/swap-ws'
+        ws_client = Htxbbo(notification_url, notification_endpoint, access_key, secret_key)
         self.htx_client = ws_client
-        ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
+        self.htx_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
+     
+
+        # ws_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
 
     def start_clients(self):
         """Start both WebSocket clients."""
         # Start Htx match orders with positions in a separate thread
-        self.htx_thread = threading.Thread(target=self.run_htx_positions, daemon=True)
+        self.htx_thread = threading.Thread(target=self.run_htx_bbo, daemon=True)
         self.htx_thread.daemon = True
         self.htx_thread.start()
         # Run OkxBbo in the main asyncio event loop
@@ -416,6 +430,18 @@ class Paika:
                 limit_buy_price = float(self.best_bid) - float(self.spread)
                 limit_ask_price = float(self.best_ask) - float(self.spread)
                 limit_qty = self.qty
+                
+                print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
+                print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+                print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+                # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
+                # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
+                print(self.spread)
+                if (float(self.htx_best_bid) - float(self.best_ask) )>= float(self.spread):
+                    print("BUY OKX SELL HTX ")
+                elif (float(self.best_bid) - float(self.htx_best_ask))>= float(self.spread):
+                    print("BUY HTX SELL OKX")
+
                 
                 if int(self.spread) < 0:
                     htx_direction = 'sell'
@@ -607,6 +633,14 @@ class Paika:
     def htx_publicCallback(self,message):
         try:
             with self.lock:
+                # print(message)
+                if message.get('tick'):
+                    self.htx_best_bid = message['tick']['bid'][0]
+                    self.htx_best_bid_sz = message['tick']['bid'][1]
+                    self.htx_best_ask = message['tick']['ask'][0]
+                    self.htx_best_ask_sz = message['tick']['ask'][1]
+                  
+
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
             
@@ -713,7 +747,7 @@ if __name__ == '__main__':
     try:
         # print('try start')
         # CREATING NEW STRAT with - {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '40', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
-        params = {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '40', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
+        params = {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
 
         strat = Paika(params,psycopg2.connect(**DB_CONFIG).cursor())
         strat.start_clients()
