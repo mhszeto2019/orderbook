@@ -80,35 +80,67 @@ class OkxBbo:
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
    
+    # async def run(self, channel, currency_pairs, callback):
+    #     """Run the WebSocket client, subscribing to the given currency pairs."""
+    #     self.is_running = True
+    #     retry_attempts = 0
+
+    #     while self.is_running:
+    #         try:
+    #             # print("Connecting to WebSocket...")
+    #             await self.start()
+
+    #             # Subscribe to all specified currency pairs
+    #             for pair in currency_pairs:
+    #                 await self.subscribe(channel, pair, callback)
+
+    #             # print("Subscribed to channels. Listening for messages...")
+    #             # Keep the connection alive
+    #             while self.is_running:
+    #                 await asyncio.sleep(1)
+
+    #         except ConnectionClosedError as e:
+    #             print(f"Connection closed unexpectedly: {e}. Retrying...")
+    #             retry_attempts += 1
+    #             await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))  # Exponential backoff
+    #         except Exception as e:
+    #             print(f"Unexpected error: {e}. Retrying...")
+    #             retry_attempts += 1
+    #             await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))
+    #         finally:
+    #             await self.close()
+
     async def run(self, channel, currency_pairs, callback):
-        """Run the WebSocket client, subscribing to the given currency pairs."""
+        """Run the WebSocket client with automatic reconnection."""
         self.is_running = True
         retry_attempts = 0
-
+        
         while self.is_running:
             try:
-                # print("Connecting to WebSocket...")
+                print("🔌 Connecting to WebSocket...")
                 await self.start()
 
-                # Subscribe to all specified currency pairs
                 for pair in currency_pairs:
                     await self.subscribe(channel, pair, callback)
 
-                # print("Subscribed to channels. Listening for messages...")
-                # Keep the connection alive
-                while self.is_running:
-                    await asyncio.sleep(1)
+                print("✅ Subscribed! Listening for messages...")
 
-            except ConnectionClosedError as e:
-                print(f"Connection closed unexpectedly: {e}. Retrying...")
+                while self.is_running:
+                    await asyncio.sleep(1)  # Keep the loop alive
+
+            except (ConnectionClosedError, asyncio.CancelledError) as e:
+                print(f"⚠️ WebSocket disconnected: {e}. Retrying...")
                 retry_attempts += 1
-                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))  # Exponential backoff
+
             except Exception as e:
-                print(f"Unexpected error: {e}. Retrying...")
+                print(f"❌ Unexpected error: {e}. Retrying...")
                 retry_attempts += 1
-                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))
+
             finally:
                 await self.close()
+                sleep_time = min(2 ** retry_attempts, 60)  # Exponential backoff
+                print(f"🔄 Reconnecting in {sleep_time} seconds...")
+                await asyncio.sleep(sleep_time)
 
     async def unsubscribe(self):
         """Unsubscribe from all channels."""
@@ -485,9 +517,9 @@ class Diaoyu:
             #     availability = 0
             #     direction = None
 
-            logger.debug(f'availability{availability}')
-            logger.debug(f'direction{pos['direction']}')        
-            logger.debug(f'closing_size{closing_size}')            
+            # logger.debug(f'availability{availability}')
+            # logger.debug(f'direction{pos['direction']}')        
+            # logger.debug(f'closing_size{closing_size}')            
 
             # If we dont need to close, we just open a position
             if closing_size == 0:
@@ -503,8 +535,7 @@ class Diaoyu:
                 "order_price_type": "limit"       
                 }]
                 )
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function1)")
-
+                logger.debug(f"Result{result}")
                 self.row['order_id']  = result['data'][0]['ordId']
 
 
@@ -526,6 +557,7 @@ class Diaoyu:
                     "order_price_type":"limit"
                     }]
                     )
+                    logger.debug(f"Result{result}")
 
                     self.row['order_id']  = result['data'][0]['ordId']
 
@@ -543,10 +575,11 @@ class Diaoyu:
                     "order_price_type":"limit"
                     }]
                     )
+                    logger.debug(f"Result{result}")
 
                     self.row['order_id']  = result['data'][0]['ordId']
                          
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
+            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
             
         except Exception as e:
             logger.error(f"LIMIT ORDER FUNCTION ERROR:{e}")
@@ -562,6 +595,7 @@ class Diaoyu:
                     self.row['okx_direction'] = okx_direction
                     # Check if theres is an order_id. if dont have, it will be a new order
                     if self.row['order_id']:
+                        # If there is an order id present , we revoke it 
                         revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
                             body = {
                             "order_id":self.row['order_id'] ,
@@ -572,7 +606,7 @@ class Diaoyu:
                         self.row['order_id']  = None
 
                         logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
-
+                        # Upon successful revoking, we place an order
                         if len(revoke_order_data['errors']) == 0:
                             # Call the asynchronous place_order function
                             result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
@@ -580,11 +614,10 @@ class Diaoyu:
 
                         else:
                             # self.row['order_id']  = None
-                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
-
+                            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
+                            # If revoke order has an error, there will be 
                             # 2 scenarios can be present here:
                             # 1) when qty_filled matches the desired amount set by trader
-                            # 2) when qty_filled doesnt match the desired amount
                             if self.htx_is_filled or self.limit_qty == self.htx_filled_volume:
                                 self.row['state'] = False
                                 # Reset values after fill
@@ -592,6 +625,7 @@ class Diaoyu:
                                 self.htx_filled_volume = 0 
                                 self.update_db()
                                 self.row['order_id']  = None
+                            # 2) when qty_filled doesnt match the desired amount
                             else:
                                 self.row['order_id']  = None
                                 # Continue to place limit order since qty has not been filled
