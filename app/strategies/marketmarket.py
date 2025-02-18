@@ -249,7 +249,7 @@ class Htxbbo:
         signature = signature.decode()
         return signature
     
-class Paika:
+class Mktmkt:
     def __init__(self,row_dict,cursor):
         # shared_state
         self.row = row_dict
@@ -749,7 +749,7 @@ if __name__ == '__main__':
         # CREATING NEW STRAT with - {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '40', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
         params = {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
 
-        strat = Paika(params,psycopg2.connect(**DB_CONFIG).cursor())
+        strat = Mktmkt(params,psycopg2.connect(**DB_CONFIG).cursor())
         strat.start_clients()
         
     except KeyboardInterrupt:
