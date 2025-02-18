@@ -36,6 +36,27 @@ import asyncio
 import base64
 from cryptography.fernet import Fernet
 
+# Constants for order configurations
+ORDER_PRICE_TYPE = "optimal_20"
+LEVER_RATE = 5
+OFFSET_OPEN = "open"
+OFFSET_CLOSE = "close"
+
+# Helper function to handle placing orders
+async def place_order(tradeApi, instId, volume, direction, offset):
+    return await tradeApi.place_order(
+        instId,
+        body={
+            "contract_code": instId,
+            "created_at": datetime.datetime.now().isoformat(),
+            "volume": str(volume),
+            "direction": direction,
+            "offset": offset,
+            "lever_rate": LEVER_RATE,
+            "order_price_type": ORDER_PRICE_TYPE
+        }
+    )
+
 @token_required
 @app.route('/htx/swap/place_market_order', methods=['POST'])
 async def place_market_order():
@@ -64,8 +85,6 @@ async def place_market_order():
     # Decrypt the credentials
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
-        print(f"API credentials for {username}", api_creds_dict)
-    print("DATA",data)
        
     try:
         # Data received from the client (assuming JSON body)
@@ -82,7 +101,7 @@ async def place_market_order():
         if data['ordType'] == 'market':
             ordType = 'optimal_20'
         data["ordType"]=  'optimal_20'
-        print(instId)
+        # print(instId)
        
         # Initialize TradeAPI
         # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
@@ -93,79 +112,38 @@ async def place_market_order():
             }
             )
         
-        # print("POSITIONSSSS",positions)
         position_data = positions.get('data', [])
+
+    
+
 
         # Check if position_data has at least one item to avoid IndexError
         if position_data:
+
+            print(f"Position data:{position_data}")
             # Extract availability and direction with default values
-            availability = int(position_data[0].get('available', 0))
+            availability = int(position_data[0].get('volume', 0))
             direction = position_data[0].get('direction', None)
         else:
             # If no position data is found, set defaults for availability and direction
             availability = 0
             direction = None
-        print('direction',direction)
         
-        if direction and side == direction :
-            # same direction so we just add on
-            # print('same direction')
-            result = await tradeApi.place_order(instId,body = {
-            "contract_code": instId,
-            "created_at": str(datetime.datetime.now()),
-            "volume": str(data["sz"]),
-            "direction": side,
-            "offset": "open",
-            "lever_rate": 5,
-            "order_price_type": "optimal_20"         }
-            )
-        
-        else: 
-            if direction != None and sz_int > availability:
-                # print('first close the available positions - close the long pos')
-                result = await tradeApi.place_order(instId,body = {
-                "contract_code": instId,
-                "created_at": str(datetime.datetime.now()),
-                "volume": str(availability) ,
-                "direction": side,
-                "offset": "close",
-                "lever_rate": 5,
-                "order_price_type": "optimal_20"         }
-                )
-                result = await tradeApi.place_order(instId,body = {
-                "contract_code": instId,
-                "created_at": str(datetime.datetime.now()),
-                "volume": str(sz_int - availability),
-                "direction": side,
-                "offset": "open",
-                "lever_rate": 5,
-                "order_price_type": "optimal_20"         }
-                )
-                # print('second carry on with the trade with sz = sz - availability - buy short')
-            elif direction != None and sz_int <= availability:
-                # print('close positions')
-                result = await tradeApi.place_order(instId,body = {
-                "contract_code": instId,
-                "created_at": str(datetime.datetime.now()),
-                "volume": str(sz_int) ,
-                "direction": side,
-                "offset": "close",
-                "lever_rate": 5,
-                "order_price_type": "optimal_20"         }
-                )
-            else:
-                print('opening a new position, ',instId)
-                result = await tradeApi.place_order(instId,body = {
-                "contract_code": instId,
-                "created_at": str(datetime.datetime.now()),
-                "volume": str(sz_int) ,
-                "direction": side,
-                "offset": "open",
-                "lever_rate": 5,
-                "order_price_type": "optimal_20"        }
-                )
-        print("HTX MARKET ORDER: ",result)
-        logger.info("Order request response {}".format(result))
+    #  # Determine the order logic
+        if direction and side == direction:
+            result = await place_order(tradeApi, instId, sz_int, side, OFFSET_OPEN)
+        elif direction and sz_int > availability:
+            # Close the available positions first
+            await place_order(tradeApi, instId, availability, side, OFFSET_CLOSE)
+            result = await place_order(tradeApi, instId, sz_int - availability, side, OFFSET_OPEN)
+        elif direction and sz_int <= availability:
+            # Close the positions directly
+            result = await place_order(tradeApi, instId, sz_int, side, OFFSET_CLOSE)
+        else:
+            # Opening a new position
+            result = await place_order(tradeApi, instId, sz_int, side, OFFSET_OPEN)
+
+        logger.info("HTX MARKET Order request response {}".format(result))
 
         if result['status'] == 'error':
             return jsonify({"error": "Bad Requestss"}), 400  # Th

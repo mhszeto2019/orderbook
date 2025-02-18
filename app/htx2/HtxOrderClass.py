@@ -92,7 +92,7 @@ class HuobiCoinFutureRestTradeAPI:
         uri = "/swap-api/v1/swap_cross_position_info"
 
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        print("JSON DICT",json_dict)
+        # print("JSON DICT",json_dict)
 
         return json_dict
 
@@ -186,7 +186,7 @@ class HuobiCoinFutureRestTradeAPI:
         uri = "/api/v1/contract_position_info"
 
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        print("JSON DICT",json_dict)
+        # print("JSON DICT",json_dict)
 
         return json_dict
 
@@ -204,9 +204,9 @@ class HuobiCoinFutureRestTradeAPI:
             error: Error information, otherwise it's None.
         """
         uri = "/api/v1/contract_order"
-        print('body',body)
+        # print('body',body)
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        print(json_dict)
+        # print(json_dict)
         json_response2 = self.format_message(json_dict)
         # print("open_orders,json_dict",json_dict)
         # print('json_response2',json_response2)
@@ -229,7 +229,7 @@ class HuobiCoinFutureRestTradeAPI:
             
 
             json_dict = await self.request("POST", uri, body=body, auth=True)
-            print("JSON DICT",json_dict)
+            # print("JSON DICT",json_dict)
 
             return json_dict
 
@@ -254,7 +254,7 @@ class HuobiCoinFutureRestTradeAPI:
             #     body["client_order_id"] = client_order_id
 
             json_dict = await self.request("POST", uri, body=body, auth=True)
-            print("JSON DICT",json_dict)
+            # print("JSON DICT",json_dict)
             return json_dict
 
     async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):

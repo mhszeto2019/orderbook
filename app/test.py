@@ -13,25 +13,27 @@ class OkxBbo:
         self.spread = 100
         self.qty = 1
         self.is_running = False
-        self.reconnect_delay = 2  # Start with 2 seconds, increase on failures
+        self.reconnect_delay = 2  # Start with 2s, increase if failures occur
 
     async def start(self):
         """Start the WebSocket connection."""
-        if not self.ws:
+        print("🔌 Initializing WebSocket connection...")
+        if self.ws is None:  # Ensure we create a fresh connection
             self.ws = WsPublicAsync(url=self.url)
         await self.ws.start()
 
     async def subscribe(self, channel, inst_id, callback):
         """Subscribe to a specific channel and instrument ID."""
         arg = {"channel": channel, "instId": inst_id}
-        self.subscribed_pairs.append(inst_id)
+        if inst_id not in self.subscribed_pairs:
+            self.subscribed_pairs.append(inst_id)
         await self.ws.subscribe([arg], callback)
 
     async def run(self, channel, currency_pairs, callback):
         """Run the WebSocket client with automatic reconnection."""
         self.is_running = True
         retry_attempts = 0
-        
+
         while self.is_running:
             try:
                 print("🔌 Connecting to WebSocket...")
@@ -46,7 +48,7 @@ class OkxBbo:
                 asyncio.create_task(self.force_disconnect())
 
                 while self.is_running:
-                    await asyncio.sleep(1)  # Keep the loop alive
+                    await asyncio.sleep(1)  # Keep the connection alive
 
             except (ConnectionClosedError, asyncio.CancelledError) as e:
                 print(f"⚠️ WebSocket disconnected: {e}. Retrying...")
@@ -62,12 +64,10 @@ class OkxBbo:
                 print(f"🔄 Reconnecting in {sleep_time} seconds...")
                 await asyncio.sleep(sleep_time)
 
-    async def unsubscribe(self):
-        """Unsubscribe from all channels."""
-        if self.ws:
-            print("📤 Unsubscribing from all channels...")
-            await self.ws.unsubscribe(self.subscribed_pairs)
-
+                # 💥 Ensure we restart the connection
+                self.ws = None  # Force a fresh connection
+                print("♻️ Restarting WebSocket connection...")
+                
     async def close(self):
         """Close the WebSocket connection properly."""
         if self.ws:
@@ -77,7 +77,7 @@ class OkxBbo:
             except Exception as e:
                 print(f"⚠️ Error closing WebSocket: {e}")
             finally:
-                self.ws = None  # Ensure ws is reset for the next connection
+                self.ws = None  # Ensure we fully reset
 
     def okx_publicCallback(self, message):
         """Callback function to handle incoming messages."""
@@ -92,16 +92,17 @@ class OkxBbo:
         wait_time = random.randint(10, 15)  # Simulate at a random time
         await asyncio.sleep(wait_time)
         print("🔌 Simulating WebSocket disconnection...")
-        await self.close()
+        
+        # if self.ws:
+        #     await self.ws.factory.close()  # Simulate real disconnection
+        #     self.ws = None  # Ensure ws is reset
+        print("HELLO FOROCE CONNECTION")
+        raise ConnectionClosedError(1000, "Simulated disconnection")  # 💥 Force reconnection
 
 
 async def main():
     okx_client = OkxBbo()
-    try:
-        await okx_client.run("bbo-tbt", ["BTC-USD-SWAP"], okx_client.okx_publicCallback)
-    except Exception as e:
-        print(e)
-        await okx_client.run("bbo-tbt", ["BTC-USD-SWAP"], okx_client.okx_publicCallback)
+    await okx_client.run("bbo-tbt", ["BTC-USD-SWAP"], okx_client.okx_publicCallback)
 
 
 if __name__ == '__main__':
