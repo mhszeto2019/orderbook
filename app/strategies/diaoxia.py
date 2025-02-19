@@ -40,7 +40,7 @@ file_handler = logging.FileHandler(log_filename)
 
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
-logger = logging.getLogger('Diaoyu')
+logger = logging.getLogger('Diaoxia')
 logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
@@ -249,7 +249,7 @@ class Htxbbo:
         signature = signature.decode()
         return signature
     
-class Mktmkt:
+class Diaoxia:
     def __init__(self,row_dict,cursor):
         # shared_state
         self.row = row_dict
@@ -431,44 +431,46 @@ class Mktmkt:
                 limit_ask_price = float(self.best_ask) - float(self.spread)
                 limit_qty = self.qty
                 
-                # print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
-                # print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
-                # print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+                
 
                 # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
                 # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
-                print(self.spread)
+            
                 if (float(self.htx_best_bid) - float(self.best_ask) )>= float(self.spread):
                     print("BUY OKX SELL HTX ")
                 elif (float(self.best_bid) - float(self.htx_best_ask))>= float(self.spread):
                     print("BUY HTX SELL OKX")
+                if self.row['state']:
+                    print(self.spread)
+                    print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
+                    print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+                    print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
 
+                # if int(self.spread) < 0:
+                #     htx_direction = 'sell'
+                #     okx_direction = 'buy'
+                # else:
+                #     htx_direction = 'buy'
+                #     okx_direction = 'sell'
                 
-                if int(self.spread) < 0:
-                    htx_direction = 'sell'
-                    okx_direction = 'buy'
-                else:
-                    htx_direction = 'buy'
-                    okx_direction = 'sell'
-                
-                best_bid = json_data["data"][0]["bids"][0][0]
-                best_ask = json_data['data'][0]['asks'][0][0]
-                # Throttle: Ensure minimum interval between API calls
-                current_time = time.time()
-                if current_time - self.last_call_time >= self.call_interval:
-                    self.last_call_time = current_time
+                # best_bid = json_data["data"][0]["bids"][0][0]
+                # best_ask = json_data['data'][0]['asks'][0][0]
+                # # Throttle: Ensure minimum interval between API calls
+                # current_time = time.time()
+                # if current_time - self.last_call_time >= self.call_interval:
+                #     self.last_call_time = current_time
 
-                    if self.row['state']:
+                #     if self.row['state']:
                       
-                        if htx_direction == 'sell':
+                #         if htx_direction == 'sell':
                             
-                            asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
-                        elif htx_direction == 'buy':
-                            asyncio.create_task(self.place_limit_order_htx(self.algoname, best_ask,limit_ask_price, limit_qty,htx_direction,okx_direction))
-                    else:
-                        if self.row['order_id'] :
-                            asyncio.create_task(self.revoke_order_by_id())
-                        # self.row['order_id']  = None
+                #             asyncio.create_task(self.place_limit_order_htx(self.algoname, best_bid,limit_buy_price, limit_qty,htx_direction,okx_direction))
+                #         elif htx_direction == 'buy':
+                #             asyncio.create_task(self.place_limit_order_htx(self.algoname, best_ask,limit_ask_price, limit_qty,htx_direction,okx_direction))
+                #     else:
+                #         if self.row['order_id'] :
+                #             asyncio.create_task(self.revoke_order_by_id())
+                #         # self.row['order_id']  = None
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
@@ -642,31 +644,31 @@ class Mktmkt:
                     self.htx_best_ask_sz = message['tick']['ask'][1]
                   
 
-                trade = message.get('trade',[])
-                match_order_id = message.get('order_id','no order id yet')
+                # trade = message.get('trade',[])
+                # match_order_id = message.get('order_id','no order id yet')
             
-                if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
+                # if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
 
-                    # volume that is filled in this trade
-                    self.row['filled_volume'] = message['trade'][0]['trade_volume']
-                    # we need to add volume of this trade into total volume filled for htx
-                    self.htx_filled_volume += self.row['filled_volume']
+                #     # volume that is filled in this trade
+                #     self.row['filled_volume'] = message['trade'][0]['trade_volume']
+                #     # we need to add volume of this trade into total volume filled for htx
+                #     self.htx_filled_volume += self.row['filled_volume']
 
-                    # the quantity that we want to buy or sell
-                    total_limit_buy_size = self.limit_buy_size
-                    total_limit_buy_size_int = int(total_limit_buy_size)
+                #     # the quantity that we want to buy or sell
+                #     total_limit_buy_size = self.limit_buy_size
+                #     total_limit_buy_size_int = int(total_limit_buy_size)
 
-                    self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
-                    # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-                    # Place market order on okx with filled volume
-                    loop = asyncio.get_event_loop()
+                #     self.htx_is_filled = self.htx_filled_volume == total_limit_buy_size_int
+                #     # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
+                #     # Place market order on okx with filled volume
+                #     loop = asyncio.get_event_loop()
 
-                    if loop.is_running():
-                        # If the loop is already running, create a new task
-                        asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
-                    else:
-                        # Run the async function to completion in the current thread
-                        loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+                #     if loop.is_running():
+                #         # If the loop is already running, create a new task
+                #         asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+                #     else:
+                #         # Run the async function to completion in the current thread
+                #         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
 
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
@@ -748,9 +750,9 @@ if __name__ == '__main__':
     try:
         # print('try start')
         # CREATING NEW STRAT with - {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '40', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
-        params = {'username': 'brennan', 'algo_type': 'diaoyu', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
+        params = {'username': 'brennan', 'algo_type': 'diaoxia', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
 
-        strat = Mktmkt(params,psycopg2.connect(**DB_CONFIG).cursor())
+        strat = Diaoxia(params,psycopg2.connect(**DB_CONFIG).cursor())
         strat.start_clients()
         
     except KeyboardInterrupt:

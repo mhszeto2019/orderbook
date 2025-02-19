@@ -18,7 +18,7 @@ file_handler = logging.FileHandler(log_filename)
 
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
-logger = logging.getLogger('Diaoyu')
+logger = logging.getLogger('Algo_factory')
 logger.setLevel(logging.INFO)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
@@ -48,6 +48,7 @@ DB_CONFIG = {
 
 
 from app.strategies.diaoyu import Diaoyu
+from app.strategies.diaoxia import Diaoxia
 import time
 import json
 import select
@@ -85,41 +86,36 @@ class AlgoFactory:
     def initialise_strat(self,algo_type,instance_id,db_cursor):
         if algo_type == 'diaoyu':
             strat = Diaoyu(self.shared_states[instance_id],db_cursor)
-            logger.debug("CREATED NEW STRAT")
             # Create a new process for the strategy
-            process = multiprocessing.Process(target=strat.start_clients)
-            # Store the strategy and process in the `algos` dictionary
-            self.algos[instance_id] = (strat, process)
-            # Store the shared state for the instance
-            # Start the process
-            # print(f"PROCESSS,{process._name}")
-            self.shared_states[instance_id]['pname'] = process._name
-            process.start()
-            self.processes.append(process)
-            # logger.debug(f"Added new strategy {instance_id} and started process.")
-
-       
-
+            # process = multiprocessing.Process(target=strat.start_clients)
+            # # Store the strategy and process in the `algos` dictionary
+            # self.algos[instance_id] = (strat, process)
+            # # Store the shared state for the instance
+            # self.shared_states[instance_id]['pname'] = process._name
+            # # Start the process
+            # process.start()
+            # self.processes.append(process)
 
         elif algo_type == 'diaoxia':
-            strat = Diaoyu(self.shared_states[instance_id], db_cursor)
-            logger.debug("CREATED NEW STRAT")
+            strat = Diaoxia(self.shared_states[instance_id], db_cursor)
+
             # Create a new process for the strategy
-            process = multiprocessing.Process(target=strat.start_clients)
-            # Store the strategy and process in the `algos` dictionary
-            self.algos[instance_id] = (strat, process)
-            # Store the shared state for the instance
-            # Start the process
-            process.start()
-            self.processes.append(process)
-            logger.debug(f"Added new strategy {instance_id} and started process.")
+        process = multiprocessing.Process(target=strat.start_clients)
+        # Store the strategy and process in the `algos` dictionary
+        self.algos[instance_id] = (strat, process)
+        # Store the shared state for the instance
+        self.shared_states[instance_id]['pname'] = process._name
+        
+        # Start the process
+        process.start()
+        self.processes.append(process)
 
     def update_algo(self, instance_id, algo_details):
         # logger.debug(algo_details)
         # Update existing strategy
         
         shared_state = self.shared_states[instance_id]
-
+        print(shared_state)
         logger.debug('UPDATING NEW STRAT')
 
         json_data = algo_details.get('data','')
@@ -135,6 +131,7 @@ class AlgoFactory:
         self.shared_states[instance_id]['state'] =  json_data['state']
 
         strat_and_process = self.algos.get(instance_id)
+        # print(strat_and_process)
         strat = strat_and_process[0]
         logger.debug(f"ALGO DETAILS that just got updated:{algo_details}")
 
@@ -232,7 +229,7 @@ class AlgoFactory:
 
         for row in algo_details:
             row_dict = {}
-            
+            print(row)
             row_dict['username'] =  row[0]
             row_dict['algo_type'] = row[1]
             row_dict['algo_name'] = row[2]
