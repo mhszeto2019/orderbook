@@ -178,21 +178,9 @@ class AlgoFactory:
         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
         self.initialise_strat(row_dict['algo_type'],instance_id,self.conn.cursor())
 
-        # strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
-        # logger.debug("CREATED NEW STRAT")
-        # # Create a new process for the strategy
-        # process = multiprocessing.Process(target=strat.start_clients)
-        # # Store the strategy and process in the `algos` dictionary
-        # self.algos[instance_id] = (strat, process)
-        # # Store the shared state for the instance
-        # # Start the process
-        # process.start()
-        # self.processes.append(process)
-        # logger.debug(f"Added new strategy {instance_id} and started process.")
-
         for p in self.processes:
             p.join
-        print(self.processes)
+        # print(self.processes)
 
     # algo id here is instance id from main class
     def remove_algo(self, algo_id):
@@ -204,7 +192,7 @@ class AlgoFactory:
                 logger.debug(f"Removed algo {algo_id}")
             for p in self.processes:
                 if p._name == self.shared_states[algo_id]['pname']:
-                    print(f"🛑 Terminating process with PID {p._name}...")
+                    # print(f"🛑 Terminating process with PID {p._name}...")
                     p.terminate()
                     p.join()  # Ensure the process is properly cleaned up
                     self.processes.remove(p)  # Remove from the list if needed
@@ -346,10 +334,7 @@ class DBListener(threading.Thread):
                 # json_data = algo_details['data']
 
                 # # Initialize and start new AlgoRunTime instance
-                # username = json_data['username']
-                # algo_type = json_data['algo_type']
-                # algo_name = json_data['algo_name']
-                # instance_id = f"{username}_{algo_type}_{algo_name}"
+              
                 if operation == "DELETE":
                     json_data = algo_details['old_data']
 
@@ -359,7 +344,7 @@ class DBListener(threading.Thread):
                     algo_name = json_data['algo_name']
                     instance_id = f"{username}_{algo_type}_{algo_name}"
                     self.factory.remove_algo(instance_id)
-                    print(self.factory.processes)
+                    # print(self.factory.processes)
 
                 else:
                     json_data = algo_details['data']
@@ -397,17 +382,9 @@ class DBListener(threading.Thread):
                     
                     # For updates
                     else:
-                        # self.factory.shared_states[instance_id] = algo_details
-                        # logger.debug(self.factory.shared_states)
-                        # logger.debug('UPDATE')
-                        # logger.debug(self.factory.shared_states[instance_id])
-                        # self.factory.shared_states[instance_id]['state'] = True
                         self.factory.update_algo(instance_id,algo_details)
-                        # logger.debug(self.factory.shared_states[instance_id])
 
-                # else:
-                #     logger.debug("Operation is delete")
-                #     self.factory.remove_algo(instance_id)
+        
      
 
     def stop(self):
