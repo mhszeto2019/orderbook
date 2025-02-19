@@ -22,7 +22,7 @@ logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
 
-
+import random
 
 class WsPublicAsync:
     def __init__(self, url):
@@ -34,6 +34,8 @@ class WsPublicAsync:
         self.reconnect_attempts = 0
         self.max_reconnect_attempts = 10  # Limit reconnect attempts
         self.reconnect_delay = 1  # Initial delay in seconds
+
+ 
 
     async def connect(self):
         """Establish a WebSocket connection with retries."""
@@ -65,7 +67,8 @@ class WsPublicAsync:
                 except ConnectionClosedError as e:
                     
                     logger.error(f"WebSocket closed unexpectedly: {e}. Attempting to reconnect...")
-                    await self.reconnect()  # Attempt to reconnect
+                    await self.cleanup()
+                    await self.handle_disconnection()  # Attempt to reconnect
                     break  # Exit the loop to reconnect
                 except ConnectionClosedOK:
                     logger.info("WebSocket connection closed gracefully.")
@@ -132,6 +135,7 @@ class WsPublicAsync:
         logger.debug("CLEANING UP")
         # await self.unsubscribe()
         await self.factory.close()
+        logger.debug("AFTER CLEAN UP")
 
     async def handle_disconnection(self):
         """Handle WebSocket disconnection."""
