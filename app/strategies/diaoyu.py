@@ -80,35 +80,6 @@ class OkxBbo:
         self.subscribed_pairs.append(inst_id)  # Track the subscription
         await self.ws.subscribe([arg], callback)  # Subscribe using the args list
    
-    # async def run(self, channel, currency_pairs, callback):
-    #     """Run the WebSocket client, subscribing to the given currency pairs."""
-    #     self.is_running = True
-    #     retry_attempts = 0
-
-    #     while self.is_running:
-    #         try:
-    #             # print("Connecting to WebSocket...")
-    #             await self.start()
-
-    #             # Subscribe to all specified currency pairs
-    #             for pair in currency_pairs:
-    #                 await self.subscribe(channel, pair, callback)
-
-    #             # print("Subscribed to channels. Listening for messages...")
-    #             # Keep the connection alive
-    #             while self.is_running:
-    #                 await asyncio.sleep(1)
-
-    #         except ConnectionClosedError as e:
-    #             print(f"Connection closed unexpectedly: {e}. Retrying...")
-    #             retry_attempts += 1
-    #             await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))  # Exponential backoff
-    #         except Exception as e:
-    #             print(f"Unexpected error: {e}. Retrying...")
-    #             retry_attempts += 1
-    #             await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))
-    #         finally:
-    #             await self.close()
 
     async def run(self, channel, currency_pairs, callback):
         """Run the WebSocket client with automatic reconnection."""
@@ -116,12 +87,19 @@ class OkxBbo:
         retry_attempts = 0
         
         while self.is_running:
+
             try:
                 print("🔌 Connecting to WebSocket...")
                 await self.start()
 
                 for pair in currency_pairs:
-                    await self.subscribe(channel, pair, callback)
+                    try:
+                        await self.subscribe(channel, pair, callback)
+                    except Exception as e:
+                        print('subscribe fail')
+                        await self.unsubscribe()
+                        await self.subscribe(channel,pair,callback)
+
 
                 print("✅ Subscribed! Listening for messages...")
 

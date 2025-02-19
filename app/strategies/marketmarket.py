@@ -431,9 +431,10 @@ class Mktmkt:
                 limit_ask_price = float(self.best_ask) - float(self.spread)
                 limit_qty = self.qty
                 
-                print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
-                print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
-                print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+                # print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
+                # print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+                # print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+
                 # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
                 # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
                 print(self.spread)

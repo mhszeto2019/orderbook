@@ -82,86 +82,37 @@ class AlgoFactory:
         self.processes = []
         self.queue = multiprocessing.Manager().Queue() 
 
+    def initialise_strat(self,algo_type,instance_id,db_cursor):
+        if algo_type == 'diaoyu':
+            strat = Diaoyu(self.shared_states[instance_id],db_cursor)
+            logger.debug("CREATED NEW STRAT")
+            # Create a new process for the strategy
+            process = multiprocessing.Process(target=strat.start_clients)
+            # Store the strategy and process in the `algos` dictionary
+            self.algos[instance_id] = (strat, process)
+            # Store the shared state for the instance
+            # Start the process
+            # print(f"PROCESSS,{process._name}")
+            self.shared_states[instance_id]['pname'] = process._name
+            process.start()
+            self.processes.append(process)
+            # logger.debug(f"Added new strategy {instance_id} and started process.")
 
-        
-    # def add_or_update_algo(self, instance_id, algo_details):
-    #     """Add a new strategy or update an existing one."""
-    #     if instance_id in self.algos:
-    #         # logger.debug(algo_details)
-    #         # Update existing strategy
-            
-    #         shared_state = self.shared_states[instance_id]
+       
 
-    #         logger.debug('UPDATING NEW STRAT')
 
-    #         json_data = algo_details.get('data','')
-
-    #         # Update state in multiprocess
-    #         self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
-    #         self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
-    #         self.shared_states[instance_id]['spread'] = json_data['lead_exchange']
-    #         self.shared_states[instance_id]['qty'] = json_data['qty']
-    #         self.shared_states[instance_id]['ccy'] = json_data['ccy']
-    #         self.shared_states[instance_id]['instrument'] = json_data['instrument']
-    #         self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
-    #         self.shared_states[instance_id]['state'] =  json_data['state']
-     
-    #         strat_and_process = self.algos.get(instance_id)
-    #         strat = strat_and_process[0]
-
-    #     else:
-    #         # Add a new strategy
-    #         logger.debug(f"Adding new strategy {instance_id}...")
-    #         logger.debug(algo_details)
-
-    #         # Create a shared state dictionary
-    #         row_dict  = {}
-    #         row_dict['username'] =  algo_details[0]
-    #         row_dict['algo_type'] = algo_details[1]
-    #         row_dict['algo_name'] = algo_details[2]
-    #         row_dict['lead_exchange'] = algo_details[3]
-    #         row_dict['lag_exchange'] = algo_details[4]
-    #         row_dict['spread']= algo_details[5]
-    #         row_dict['qty'] = algo_details[6]
-    #         row_dict['ccy'] = algo_details[7]
-    #         row_dict['instrument'] = algo_details[8]
-    #         row_dict['contract_type'] = algo_details[9]
-    #         row_dict['state'] = algo_details[10]    
-    #         # row_dict['trade_direction'] = algo_details[11]
-    #         row_dict['htx_apikey'] = algo_details[11]
-    #         row_dict['htx_secretkey'] = algo_details[12]
-    #         row_dict['okx_apikey'] = algo_details[13]
-    #         row_dict['okx_secretkey'] = algo_details[14]
-    #         row_dict['okx_passphrase'] = algo_details[15]
-    #         # row_dict[f'{row_dict['username']}_queue'] = self.queue
-    #         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
-
-    #         self.shared_states[instance_id] = self.manager.dict(row_dict)
-    #         # logger.debug(self.shared_states)
-    #         # Create the new strategy instance (Diaoyu)
-    #         logger.debug("CREATING NEW STRAT")
-    #         strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
-    #         # strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
-    #         logger.debug("CREATED NEW STRAT")
-
-    #         # Create a new process for the strategy
-    #         process = multiprocessing.Process(target=strat.start_clients)
-    #         # Store the strategy and process in the `algos` dictionary
-    #         self.algos[instance_id] = (strat, process)
-    #         # Store the shared state for the instance
-    #         # Start the process
-    #         process.start()
-    #         self.processes.append(process)
-
-    #         logger.debug(f"Added new strategy {instance_id} and started process.")
-
-    #         # p = multiprocessing.Process(target=strat.start_clients)
-    #         # self.algos[instance_id] = (strat, p)  # Update with the new process
-    #         # p.start()
-    #         # self.processes.append(p)
-
-    #     for p in self.processes:
-    #         p.join
+        elif algo_type == 'diaoxia':
+            strat = Diaoyu(self.shared_states[instance_id], db_cursor)
+            logger.debug("CREATED NEW STRAT")
+            # Create a new process for the strategy
+            process = multiprocessing.Process(target=strat.start_clients)
+            # Store the strategy and process in the `algos` dictionary
+            self.algos[instance_id] = (strat, process)
+            # Store the shared state for the instance
+            # Start the process
+            process.start()
+            self.processes.append(process)
+            logger.debug(f"Added new strategy {instance_id} and started process.")
 
     def update_algo(self, instance_id, algo_details):
         # logger.debug(algo_details)
@@ -225,23 +176,25 @@ class AlgoFactory:
         # Create the new strategy instance (Diaoyu)
     
         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
-        strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
-        # strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
-        logger.debug("CREATED NEW STRAT")
+        self.initialise_strat(row_dict['algo_type'],instance_id,self.conn.cursor())
 
-        # Create a new process for the strategy
-        process = multiprocessing.Process(target=strat.start_clients)
-        # Store the strategy and process in the `algos` dictionary
-        self.algos[instance_id] = (strat, process)
-        # Store the shared state for the instance
-        # Start the process
-        process.start()
-        self.processes.append(process)
-        logger.debug(f"Added new strategy {instance_id} and started process.")
+        # strat = Diaoyu(self.shared_states[instance_id], self.conn.cursor())
+        # logger.debug("CREATED NEW STRAT")
+        # # Create a new process for the strategy
+        # process = multiprocessing.Process(target=strat.start_clients)
+        # # Store the strategy and process in the `algos` dictionary
+        # self.algos[instance_id] = (strat, process)
+        # # Store the shared state for the instance
+        # # Start the process
+        # process.start()
+        # self.processes.append(process)
+        # logger.debug(f"Added new strategy {instance_id} and started process.")
 
         for p in self.processes:
             p.join
+        print(self.processes)
 
+    # algo id here is instance id from main class
     def remove_algo(self, algo_id):
         """Remove an Algo instance."""
         with self.lock:
@@ -249,6 +202,14 @@ class AlgoFactory:
                 logger.debug(f"Removing Algo {algo_id}")
                 del self.algos[algo_id]
                 logger.debug(f"Removed algo {algo_id}")
+            for p in self.processes:
+                if p._name == self.shared_states[algo_id]['pname']:
+                    print(f"🛑 Terminating process with PID {p._name}...")
+                    p.terminate()
+                    p.join()  # Ensure the process is properly cleaned up
+                    self.processes.remove(p)  # Remove from the list if needed
+                    break  # Exit after finding and terminating the target process
+
 
     def get_algo(self, algo_id):
         """Get an Algo instance."""
@@ -314,11 +275,12 @@ class AlgoFactory:
             # each multiprocess should have its own connection to db
             logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
         
-            strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
-            p = multiprocessing.Process(target=strat.start_clients)
-            self.algos[instance_id] = (strat, p)  # Update with the new process
-            p.start()
-            self.processes.append(p)
+            # strat = Diaoyu(self.shared_states[instance_id],psycopg2.connect(**DB_CONFIG).cursor())
+            # p = multiprocessing.Process(target=strat.start_clients)
+            # self.algos[instance_id] = (strat, p)  # Update with the new process
+            # p.start()
+            # self.processes.append(p)
+            self.initialise_strat(row_dict['algo_type'],instance_id,psycopg2.connect(**DB_CONFIG).cursor())
 
         for p in self.processes:
             p.join()
@@ -357,8 +319,6 @@ class AlgoFactory:
         # self.algos.clear()  # Clear the algos dictionary
         # print("All strategies and processes stopped.")
 
-    
-
 class DBListener(threading.Thread):
     """Simulates a database listener."""
     def __init__(self, factory):
@@ -367,7 +327,6 @@ class DBListener(threading.Thread):
         self.factory = factory
         self.conn = psycopg2.connect(**DB_CONFIG)
         
-
     def run(self):
         self.conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         cur = self.conn.cursor()
@@ -400,6 +359,7 @@ class DBListener(threading.Thread):
                     algo_name = json_data['algo_name']
                     instance_id = f"{username}_{algo_type}_{algo_name}"
                     self.factory.remove_algo(instance_id)
+                    print(self.factory.processes)
 
                 else:
                     json_data = algo_details['data']
@@ -453,7 +413,6 @@ class DBListener(threading.Thread):
     def stop(self):
         """Stop the listener."""
         self.running = False
-
 
 if __name__ == "__main__":
     # Instantiate AlgoFactory
