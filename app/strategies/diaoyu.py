@@ -1,16 +1,16 @@
 import datetime
 import uuid
-import urllib.parse
 import json
+import threading
+import asyncio
+import time
+import sys
+import urllib.parse
 import hmac
 import base64
 import hashlib
 import gzip
-import threading
-import asyncio
 import websockets
-import time
-import sys
 sys.path.append('/var/www/html/orderbook/htx2')
 sys.path.append('/var/www/html/orderbook/htx2/alpha')
 
@@ -61,199 +61,10 @@ dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 
+from app.strategies.connection_helper import OkxBbo,HtxPositions
+
 # for DiaoYu, positive spread means buying on HTX and selling on OKX while negative spread means selling on HTX and buying on OKX. The concept of a lead and lag exchange doesnt apply here because diaoyu's mechanism is fixed to making a limit order on htx and a market order on okx 
 
-class OkxBbo:
-    def __init__(self, url="wss://ws.okx.com:8443/ws/v5/public"):
-        self.url = url
-        self.ws = None
-        self.subscribed_pairs = []  # To keep track of subscribed pairs
-
-    async def start(self):
-        """Start the WebSocket connection."""
-        self.ws = WsPublicAsync(url=self.url)
-        await self.ws.start()
-
-    async def subscribe(self, channel, inst_id, callback):
-        """Subscribe to a specific channel and instrument ID."""
-        arg = {"channel": channel, "instId": inst_id}
-        self.subscribed_pairs.append(inst_id)  # Track the subscription
-        await self.ws.subscribe([arg], callback)  # Subscribe using the args list
-   
-
-    async def run(self, channel, currency_pairs, callback):
-        """Run the WebSocket client with automatic reconnection."""
-        self.is_running = True
-        retry_attempts = 0
-        
-        while self.is_running:
-
-            try:
-                print("🔌 Connecting to WebSocket...")
-                await self.start()
-
-                for pair in currency_pairs:
-                    try:
-                        await self.subscribe(channel, pair, callback)
-                    except Exception as e:
-                        print('subscribe fail')
-                        await self.unsubscribe()
-                        await self.subscribe(channel,pair,callback)
-
-
-                print("✅ Subscribed! Listening for messages...")
-
-                while self.is_running:
-                    await asyncio.sleep(1)  # Keep the loop alive
-
-            except (ConnectionClosedError, asyncio.CancelledError) as e:
-                print(f"⚠️ WebSocket disconnected: {e}. Retrying...")
-                retry_attempts += 1
-
-            except Exception as e:
-                print(f"❌ Unexpected error: {e}. Retrying...")
-                retry_attempts += 1
-
-            finally:
-                await self.close()
-                sleep_time = min(2 ** retry_attempts, 60)  # Exponential backoff
-                print(f"🔄 Reconnecting in {sleep_time} seconds...")
-                await asyncio.sleep(sleep_time)
-
-    async def unsubscribe(self):
-        """Unsubscribe from all channels."""
-        if self.ws:
-            print("Unsubscribing from all channels...")
-            await self.ws.unsubscribe(self.subscribed_pairs)
-
-    async def close(self):
-        """Close the WebSocket connection."""
-        if self.ws:
-            await self.ws.factory.close()
-            print("WebSocket connection closed.")
-   
-class HtxPositions:
-    def __init__(self, url, endpoint, access_key, secret_key):
-        self.url = url+endpoint
-        self.endpoint = endpoint
-        self.accesskey = access_key
-        self.secretkey = secret_key
-        self.is_open = False
-        self.ws = None
-        self._stop_event = threading.Event()
-        self.loop = None
-        self.thread = None
-        
-    def start(self, subs, auth=False, callback=None):
-        try:
-            """ Start the subscription process in a separate thread. """
-            if self.thread and self.thread.is_alive():
-                print("Already running. Please stop the current thread first.")
-                return
-            self._stop_event = threading.Event()
-            self.is_open = True
-            self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
-            self.thread.start()
-        except Exception as e:
-            logger.error(f"Exception error {e}")
-
-    def stop(self):
-        """ Stop the subscription process. """
-        self.is_open = False
-        self._stop_event.set()
-        print(self.loop)
-        # if self.ws:
-        #     self._close()
-        self.thread.join(timeout=5)  # Allow the thread to exit gracefully
-
-    def _run(self, subs, auth=False, callback=None):
-        """ Run the WebSocket subscription in a new event loop. """
-        self.loop =  asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-        try:
-            self.loop.run_until_complete(self._subscribe(subs, auth, callback))
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        finally:
-            self.loop.close()
-
-    async def _subscribe(self, subs, auth=False, callback=None):
-        try:
-            async with websockets.connect(self.url) as websocket:
-                self.ws = websocket
-                if auth:
-                    await self.authenticate(websocket)
-
-                # Send all subscriptions
-                for sub in subs:
-                    sub_str = json.dumps(sub)
-                    await websocket.send(sub_str)
-                    # print(f"send: {sub_str}")
-
-                while self.is_open and not self._stop_event.is_set():
-                    try:
-                        rsp = await websocket.recv()
-                        data = json.loads(gzip.decompress(rsp).decode())
-                        if "op" in data and data.get("op") == "ping":
-                            pong_msg = {"op": "pong", "ts": data.get("ts")}
-                            await websocket.send(json.dumps(pong_msg))
-                            # print(f"send: {pong_msg}")
-                        if "ping" in data:
-                            pong_msg = {"pong": data.get("ping")}
-                            await websocket.send(json.dumps(pong_msg))
-                            # print(f"send: {pong_msg}")
-                        if callback:
-                            callback(data)
-                    except websockets.ConnectionClosed:
-                        print(" HTX WebSocket connection closed.")
-                        self.is_open = False
-                        break  # Break out of the loop when connection is closed
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            self.is_open = False
-
-    async def authenticate(self, websocket):
-        """ Perform authentication on the WebSocket.
-
-        Args:
-            websocket: The WebSocket object.
-        """
-        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-        data = {
-            "AccessKeyId": self.accesskey,
-            "SignatureMethod": "HmacSHA256",
-            "SignatureVersion": "2",
-            "Timestamp": timestamp
-        }
-        sign = self.generate_signature(self.url, "GET", data, self.endpoint, self.secretkey)
-        data["op"] = "auth"
-        data["type"] = "api"
-        data["Signature"] = sign
-        msg_str = json.dumps(data)
-        await websocket.send(msg_str)
-        # print(f"send: {msg_str}")
-
-    def _close(self):
-        if self.ws:
-            self.ws.close()
-            print("WebSocket connection closed.")
-            self.ws = None
-
-    @classmethod
-    def generate_signature(cls, host, method, params, request_path, secret_key):
-        host_url = urllib.parse.urlparse(host).hostname.lower()
-        sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
-        encode_params = urllib.parse.urlencode(sorted_params)
-        payload = [method, host_url, request_path, encode_params]
-        payload = "\n".join(payload)
-        payload = payload.encode(encoding="UTF8")
-        secret_key = secret_key.encode(encoding="utf8")
-        digest = hmac.new(secret_key, payload, digestmod=hashlib.sha256).digest()
-        signature = base64.b64encode(digest)
-        signature = signature.decode()
-        return signature
     
 class Diaoyu:
     def __init__(self,row_dict,cursor):
@@ -331,7 +142,7 @@ class Diaoyu:
                                             }
                                         )
                     
-                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|revoke_order:{revoke_orders.get('data',[])}")
+                    # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|revoke_order:{revoke_orders.get('data',[])}")
 
                     self.row['order_id']  = None
 
@@ -513,7 +324,7 @@ class Diaoyu:
                 "order_price_type": "limit"       
                 }]
                 )
-                logger.debug(f"Result{result}")
+                # logger.debug(f"Result{result}")
                 self.row['order_id']  = result['data'][0]['ordId']
 
 
@@ -535,7 +346,7 @@ class Diaoyu:
                     "order_price_type":"limit"
                     }]
                     )
-                    logger.debug(f"Result{result}")
+                    # logger.debug(f"Result{result}")
 
                     self.row['order_id']  = result['data'][0]['ordId']
 
@@ -553,7 +364,7 @@ class Diaoyu:
                     "order_price_type":"limit"
                     }]
                     )
-                    logger.debug(f"Result{result}")
+                    # logger.debug(f"Result{result}")
 
                     self.row['order_id']  = result['data'][0]['ordId']
                          
@@ -583,7 +394,7 @@ class Diaoyu:
                         revoke_order_data = revoke_orders.get('data', [])
                         self.row['order_id']  = None
 
-                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
+                        # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
                         # Upon successful revoking, we place an order
                         if len(revoke_order_data['errors']) == 0:
                             # Call the asynchronous place_order function
@@ -609,7 +420,7 @@ class Diaoyu:
                                 # Continue to place limit order since qty has not been filled
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
-                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
+                            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
                                         
                     else:
                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)

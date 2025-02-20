@@ -1,16 +1,20 @@
-import datetime
-import uuid
+
 import urllib.parse
-import json
 import hmac
 import base64
 import hashlib
 import gzip
-import threading
-import asyncio
 import websockets
 import time
+import select
+import datetime
+import json
+import uuid
+import threading
+import asyncio
+import psycopg2
 import sys
+import redis
 sys.path.append('/var/www/html/orderbook/htx2')
 sys.path.append('/var/www/html/orderbook/htx2/alpha')
 
@@ -18,16 +22,11 @@ sys.path.append('/var/www/html/orderbook/htx2/alpha')
 # from app.trading_engines.htxTradeFuturesApp import place_limit_contract_order
 from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 from okx import Trade
-import select
-import os
-# import psycopg2
 from okx.websocket.WsPublicAsync import WsPublicAsync
-import redis
-import configparser
-# import decimal
 from websockets.exceptions import ConnectionClosedError
 
 # Logger 
+import os
 from pathlib import Path
 # Define the log directory and the log file name
 LOG_DIR = Path('/var/www/html/orderbook/logs')
@@ -37,7 +36,6 @@ os.makedirs(LOG_DIR, exist_ok=True)
 import logging
 file_handler = logging.FileHandler(log_filename)
 # Set up a basic formatter
-
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
 logger = logging.getLogger('Diaoxia')
@@ -47,6 +45,7 @@ logger.addHandler(file_handler)
 
 
 # CONFIG
+import configparser
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
 config.read(config_file_path)
@@ -61,193 +60,10 @@ dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 
-# for DiaoYu, positive spread means buying on HTX and selling on OKX while negative spread means selling on HTX and buying on OKX. The concept of a lead and lag exchange doesnt apply here because diaoyu's mechanism is fixed to making a limit order on htx and a market order on okx 
+from app.strategies.connection_helper import OkxBbo,HtxBbo
 
-class OkxBbo:
-    def __init__(self, url="wss://ws.okx.com:8443/ws/v5/public"):
-        self.url = url
-        self.ws = None
-        self.subscribed_pairs = []  # To keep track of subscribed pairs
+# for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
 
-    async def start(self):
-        """Start the WebSocket connection."""
-        self.ws = WsPublicAsync(url=self.url)
-        await self.ws.start()
-
-    async def subscribe(self, channel, inst_id, callback):
-        """Subscribe to a specific channel and instrument ID."""
-        arg = {"channel": channel, "instId": inst_id}
-        self.subscribed_pairs.append(inst_id)  # Track the subscription
-        await self.ws.subscribe([arg], callback)  # Subscribe using the args list
-   
-    async def run(self, channel, currency_pairs, callback):
-        """Run the WebSocket client, subscribing to the given currency pairs."""
-        self.is_running = True
-        retry_attempts = 0
-
-        while self.is_running:
-            try:
-                print("Connecting to WebSocket...")
-                await self.start()
-
-                # Subscribe to all specified currency pairs
-                for pair in currency_pairs:
-                    await self.subscribe(channel, pair, callback)
-
-                print("Subscribed to channels. Listening for messages...")
-                # Keep the connection alive
-                while self.is_running:
-                    await asyncio.sleep(1)
-
-            except ConnectionClosedError as e:
-                print(f"Connection closed unexpectedly: {e}. Retrying...")
-                retry_attempts += 1
-                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))  # Exponential backoff
-            except Exception as e:
-                print(f"Unexpected error: {e}. Retrying...")
-                retry_attempts += 1
-                await asyncio.sleep(min(self.reconnect_delay * (2 ** retry_attempts), 60))
-            finally:
-                await self.close()
-
-    async def unsubscribe(self):
-        """Unsubscribe from all channels."""
-        if self.ws:
-            print("Unsubscribing from all channels...")
-            await self.ws.unsubscribe(self.subscribed_pairs)
-
-    async def close(self):
-        """Close the WebSocket connection."""
-        if self.ws:
-            await self.ws.factory.close()
-            print("WebSocket connection closed.")
-
-
-class Htxbbo:
-    def __init__(self, url, endpoint, access_key, secret_key):
-        self.url = url+endpoint
-        self.endpoint = endpoint
-        self.accesskey = access_key
-        self.secretkey = secret_key
-        self.is_open = False
-        self.ws = None
-        self._stop_event = threading.Event()
-        self.loop = None
-        self.thread = None
-        
-    def start(self, subs, auth=False, callback=None):
-        try:
-            """ Start the subscription process in a separate thread. """
-            if self.thread and self.thread.is_alive():
-                print("Already running. Please stop the current thread first.")
-                return
-            self._stop_event = threading.Event()
-            self.is_open = True
-            self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
-            self.thread.start()
-
-        except Exception as e:
-            logger.error(f"Exception error {e}")
-
-    def stop(self):
-        """ Stop the subscription process. """
-        self.is_open = False
-        self._stop_event.set()
-        print(self.loop)
-        # if self.ws:
-        #     self._close()
-        self.thread.join(timeout=5)  # Allow the thread to exit gracefully
-
-    def _run(self, subs, auth=False, callback=None):
-        """ Run the WebSocket subscription in a new event loop. """
-        self.loop =  asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-        try:
-            self.loop.run_until_complete(self._subscribe(subs, auth, callback))
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        finally:
-            self.loop.close()
-
-    async def _subscribe(self, subs, auth=False, callback=None):
-        try:
-            async with websockets.connect(self.url) as websocket:
-                self.ws = websocket
-                if auth:
-                    await self.authenticate(websocket)
-
-                # Send all subscriptions
-                for sub in subs:
-                    sub_str = json.dumps(sub)
-                    await websocket.send(sub_str)
-                    # print(f"send: {sub_str}")
-
-                while self.is_open and not self._stop_event.is_set():
-                    try:
-                        rsp = await websocket.recv()
-                        data = json.loads(gzip.decompress(rsp).decode())
-                        if "op" in data and data.get("op") == "ping":
-                            pong_msg = {"op": "pong", "ts": data.get("ts")}
-                            await websocket.send(json.dumps(pong_msg))
-                            # print(f"send: {pong_msg}")
-                        if "ping" in data:
-                            pong_msg = {"pong": data.get("ping")}
-                            await websocket.send(json.dumps(pong_msg))
-                            # print(f"send: {pong_msg}")
-                        if callback:
-                            callback(data)
-                    except websockets.ConnectionClosed:
-                        print(" HTX WebSocket connection closed.")
-                        self.is_open = False
-                        break  # Break out of the loop when connection is closed
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            self.is_open = False
-
-    async def authenticate(self, websocket):
-        """ Perform authentication on the WebSocket.
-
-        Args:
-            websocket: The WebSocket object.
-        """
-        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-        data = {
-            "AccessKeyId": self.accesskey,
-            "SignatureMethod": "HmacSHA256",
-            "SignatureVersion": "2",
-            "Timestamp": timestamp
-        }
-        sign = self.generate_signature(self.url, "GET", data, self.endpoint, self.secretkey)
-        data["op"] = "auth"
-        data["type"] = "api"
-        data["Signature"] = sign
-        msg_str = json.dumps(data)
-        await websocket.send(msg_str)
-        # print(f"send: {msg_str}")
-
-    def _close(self):
-        if self.ws:
-            self.ws.close()
-            print("WebSocket connection closed.")
-            self.ws = None
-
-    @classmethod
-    def generate_signature(cls, host, method, params, request_path, secret_key):
-        host_url = urllib.parse.urlparse(host).hostname.lower()
-        sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
-        encode_params = urllib.parse.urlencode(sorted_params)
-        payload = [method, host_url, request_path, encode_params]
-        payload = "\n".join(payload)
-        payload = payload.encode(encoding="UTF8")
-        secret_key = secret_key.encode(encoding="utf8")
-        digest = hmac.new(secret_key, payload, digestmod=hashlib.sha256).digest()
-        signature = base64.b64encode(digest)
-        signature = signature.decode()
-        return signature
-    
-    
 class Diaoxia:
     def __init__(self,row_dict,cursor):
         # shared_state
@@ -301,8 +117,8 @@ class Diaoxia:
         self.received_data = None  # Variable to store received data
 
         # status
-        self.htx_filled_volume = 0
-        self.htx_is_filled = False
+        self.lead_filled_vol = 0
+        self.lead_is_filled = False
 
         # db connection
         self.cursor = cursor
@@ -337,7 +153,8 @@ class Diaoxia:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|REVOKE ORDER ERROR:{e}")
 
     # connection with okx bbo
-    async def run_lead_bbo(self):
+    async def run_okx_bbo(self):
+        
         """Run the OkxBbo WebSocket client."""
         self.row['okx_client'] = OkxBbo()
         currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
@@ -345,7 +162,7 @@ class Diaoxia:
         await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
 
     # connection with htx positions and orders
-    def run_lag_bbo(self):
+    def run_htx_bbo(self):
         """Run the HtxPositions WebSocket client."""
         # access_key = 
         # secret_key = 
@@ -354,10 +171,7 @@ class Diaoxia:
         # for swaps
         notification_url = 'wss://api.hbdm.com'
         notification_endpoint = '/swap-ws'
-        # for future
-        notification_futures_url = 'wss://api.hbdm.com'
-        notification_futures_endpoint = '/notification'
-        
+
         notification_subs = [
             {
                 "id": str(uuid.uuid1()),
@@ -365,20 +179,9 @@ class Diaoxia:
             }
         ]
        
-        # swap client
-        #    host = 'api.huobi.pro'
-        # path = '/ws'
-        # swap_host = "api.hbdm.com"
-        # swap_path='/swap-ws'
-        # self.htx_client = Htxbbo(swap_host,swap_path)
-        # self.htx_client.open()
-        # print(self.ccy)
-        # sub_params2 = {'sub': 'market.BTC-USD.bbo'}
-        # print(self.ccy)
-        # self.htx_client.sub(sub_params2)
         notification_url = 'wss://api.hbdm.com'
         notification_endpoint = '/swap-ws'
-        ws_client = Htxbbo(notification_url, notification_endpoint, access_key, secret_key)
+        ws_client = HtxBbo(notification_url, notification_endpoint, access_key, secret_key)
         self.htx_client = ws_client
         self.htx_client.start(notification_subs, auth=True, callback=self.htx_publicCallback)
      
@@ -388,11 +191,16 @@ class Diaoxia:
     def start_clients(self):
         """Start both WebSocket clients."""
         # Start Htx match orders with positions in a separate thread
-        self.htx_thread = threading.Thread(target=self.run_lag_bbo, daemon=True)
-        self.htx_thread.daemon = True
-        self.htx_thread.start()
+        if self.lead_exchange == 'htx' or self.lag_exchange == 'htx':
+            self.htx_thread = threading.Thread(target=self.run_htx_bbo, daemon=True)
+            self.htx_thread.daemon = True
+            self.htx_thread.start()
+        
+        if self.lead_exchange == 'okx' or self.lag_exchange == 'okx':
         # Run OkxBbo in the main asyncio event loop
-        asyncio.run(self.run_lead_bbo())
+            asyncio.run(self.run_okx_bbo())
+     
+        
         
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
@@ -409,7 +217,6 @@ class Diaoxia:
         self.revoke_order_by_id()
         self.update_db()
     
-
     def okx_publicCallback(self,message):
         try:
             """Callback function to handle incoming messages."""
@@ -426,40 +233,40 @@ class Diaoxia:
                 # Order will be placed to buy on htx side
                 self.limit_buy_price = float(self.best_bid) - float(self.spread)
                 self.limit_buy_size = self.qty
-                limit_buy_price = float(self.best_bid) - float(self.spread)
-                limit_ask_price = float(self.best_ask) - float(self.spread)
-                limit_qty = self.qty
-                
-                
+                spread = float(self.spread)
 
                 # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
                 # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
-            
-                if (float(self.htx_best_bid) - float(self.best_ask) )>= float(self.spread):
-                    print("BUY OKX SELL HTX ")
-                elif (float(self.best_bid) - float(self.htx_best_ask))>= float(self.spread):
-                    print("BUY HTX SELL OKX")
+         
+
                 if self.row['state']:
+                    # if filled vol hasnt reached qty desired
+                    if self.lead_filled_vol < float(self.qty):
                     # print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
                     # print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
                     # print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
 
                     # positive spread means buy on lead and sell on lag - lead_exchange ask, lag_exchange bid - market buy lead markte sell lag
                     # negative spread means sell on lead buy on lag - lead_exchange bid, lag_exchange ask - market sell lead market buy lag
-                    print(self.lead_exchange,self.lag_exchange,self.spread)
-                    
-                    # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
-                    if self.spread >0:
-                        # place market buy order on lead excahnge 
-                        # place market sell order on lag exchange
-                        # place_market_order(lead_exchange,lag_exchange,spread)
-                        print('hellp')
+                        print(self.lead_exchange,self.lag_exchange,spread)
+                        
+                        # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
+                        if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
+                            # place market buy order on lead excahnge 
+                            # place market sell order on lag exchange
+                            # place_market_order(lead_exchange,lag_exchange,spread)
+                            
+                            print('buy okx sell htx')
+                            self.lead_filled_vol += 1
+                            self.update_db()
 
-                    # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
-                    else:
-                        # place market sell order on lead excahnge 
-                        # place market buy order on lag exchange
-                        print('hello')
+                        # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
+                        elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask))>= abs(spread):
+                            # place market sell order on lead excahnge 
+                            # place market buy order on lag exchange
+                            print(float(self.best_bid) - float(self.htx_best_ask))
+                            print('sell okx buy htx')
+                            self.update_db()
                     
                    
 
@@ -587,60 +394,60 @@ class Diaoxia:
 
         return result
 
-    async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-        # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
-        if self.row['state']:
-            try:
-                with self.lock:
-                    # async with asyncio.Lock():
-                    self.row['okx_direction'] = okx_direction
-                    # Check if theres is an order_id. if dont have, it will be a new order
-                    if self.row['order_id']:
-                        revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
-                            body = {
-                            "order_id":self.row['order_id'] ,
-                            "contract_code": self.ccy.replace('-SWAP','')
-                            }
-                        )
-                        revoke_order_data = revoke_orders.get('data', [])
-                        self.row['order_id']  = None
+    # async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
+    #     # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
+    #     if self.row['state']:
+    #         try:
+    #             with self.lock:
+    #                 # async with asyncio.Lock():
+    #                 self.row['okx_direction'] = okx_direction
+    #                 # Check if theres is an order_id. if dont have, it will be a new order
+    #                 if self.row['order_id']:
+    #                     revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
+    #                         body = {
+    #                         "order_id":self.row['order_id'] ,
+    #                         "contract_code": self.ccy.replace('-SWAP','')
+    #                         }
+    #                     )
+    #                     revoke_order_data = revoke_orders.get('data', [])
+    #                     self.row['order_id']  = None
 
-                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
+    #                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
 
-                        if len(revoke_order_data['errors']) == 0:
-                            # Call the asynchronous place_order function
-                            result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-                            self.row['order_id']  = result['data'][0]['ordId']
+    #                     if len(revoke_order_data['errors']) == 0:
+    #                         # Call the asynchronous place_order function
+    #                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+    #                         self.row['order_id']  = result['data'][0]['ordId']
 
-                        else:
-                            # self.row['order_id']  = None
-                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
+    #                     else:
+    #                         # self.row['order_id']  = None
+    #                         logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
 
-                            # 2 scenarios can be present here:
-                            # 1) when qty_filled matches the desired amount set by trader
-                            # 2) when qty_filled doesnt match the desired amount
-                            if self.htx_is_filled or self.limit_qty == self.htx_filled_volume:
-                                self.row['state'] = False
-                                # Reset values after fill
-                                self.htx_is_filled = False
-                                self.htx_filled_volume = 0 
-                                self.update_db()
-                                self.row['order_id']  = None
-                            else:
-                                self.row['order_id']  = None
-                                # Continue to place limit order since qty has not been filled
-                                result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-                                self.row['order_id']  = result['data'][0]['ordId']
-                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
+    #                         # 2 scenarios can be present here:
+    #                         # 1) when qty_filled matches the desired amount set by trader
+    #                         # 2) when qty_filled doesnt match the desired amount
+    #                         if self.htx_is_filled or self.limit_qty == self.htx_filled_volume:
+    #                             self.row['state'] = False
+    #                             # Reset values after fill
+    #                             self.htx_is_filled = False
+    #                             self.htx_filled_volume = 0 
+    #                             self.update_db()
+    #                             self.row['order_id']  = None
+    #                         else:
+    #                             self.row['order_id']  = None
+    #                             # Continue to place limit order since qty has not been filled
+    #                             result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+    #                             self.row['order_id']  = result['data'][0]['ordId']
+    #                         logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
                                         
-                    else:
-                        result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-                        self.row['order_id']  = result['data'][0]['ordId']
+    #                 else:
+    #                     result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+    #                     self.row['order_id']  = result['data'][0]['ordId']
 
-                    # return
+    #                 # return
 
-            except Exception as e:
-                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
+    #         except Exception as e:
+    #             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:",e)
                 
     def htx_publicCallback(self,message):
         try:
@@ -682,48 +489,48 @@ class Diaoxia:
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
 
-    async def place_market_order_okx(self,filled_volume,match_order_id):
-        try:
-            with self.lock:
-                # Initialize TradeAPI
-                tradeApi = self.okx_tradeapi
-                result = tradeApi.place_order(
-                    instId= 'BTC-USD-SWAP',
-                    tdMode= "cross", 
-                    side= self.row['okx_direction'], 
-                    posSide= '', 
-                    ordType= 'market',
-                    sz= filled_volume
-                )
-                result['data'][0]['exchange']='okx'
+    # async def place_market_order_okx(self,filled_volume,match_order_id):
+    #     try:
+    #         with self.lock:
+    #             # Initialize TradeAPI
+    #             tradeApi = self.okx_tradeapi
+    #             result = tradeApi.place_order(
+    #                 instId= 'BTC-USD-SWAP',
+    #                 tdMode= "cross", 
+    #                 side= self.row['okx_direction'], 
+    #                 posSide= '', 
+    #                 ordType= 'market',
+    #                 sz= filled_volume
+    #             )
+    #             result['data'][0]['exchange']='okx'
                 
-                if result["code"] == "0":
-                # OKX MARKET ORDER IS SUCCESSFUL
-                    result['data'][0]['sCode'] = 200
+    #             if result["code"] == "0":
+    #             # OKX MARKET ORDER IS SUCCESSFUL
+    #                 result['data'][0]['sCode'] = 200
 
-                    if self.htx_is_filled:
-                        self.row['state'] = False
-                        # Reset values after fill
-                        self.htx_is_filled = False
-                        self.htx_filled_volume = 0 
-                        logger.debug('update db b4')
-                        self.update_db()
-                        logger.debug('update db after')
+    #                 if self.htx_is_filled:
+    #                     self.row['state'] = False
+    #                     # Reset values after fill
+    #                     self.htx_is_filled = False
+    #                     self.htx_filled_volume = 0 
+    #                     logger.debug('update db b4')
+    #                     self.update_db()
+    #                     logger.debug('update db after')
                     
-                    else:
-                        self.row['order_id']  = match_order_id
+    #                 else:
+    #                     self.row['order_id']  = match_order_id
 
-                    self.row['order_id']  = None
+    #                 self.row['order_id']  = None
 
-                else:
-                    result['data'][0]['sCode'] = 400
-                    logger.debug('OKX MARKET TRADE FAILED')
+    #             else:
+    #                 result['data'][0]['sCode'] = 400
+    #                 logger.debug('OKX MARKET TRADE FAILED')
 
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
+    #             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
 
-                return result
-        except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{e}")
+    #             return result
+    #     except Exception as e:
+    #         logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{e}")
     
     def update_db(self):
         # Input should be unique so it should be username,algo_type and algoname
@@ -744,7 +551,7 @@ class Diaoxia:
         #     self.cursor.close()  # Close the cursor
             # return 
         
-import psycopg2
+
 
 DB_CONFIG = {
     "dbname": dbname,

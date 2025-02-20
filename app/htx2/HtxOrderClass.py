@@ -116,7 +116,7 @@ class HuobiCoinFutureRestTradeAPI:
          
         body = {"orders_data":body}
         
-        logger.debug(body)
+        # logger.debug(body)
         uri = "/swap-api/v1/swap_batchorder"
         # success, error = await self.request("POST", uri, body=body, auth=True)
         json_dict = await self.request("POST", uri, body=body, auth=True)
@@ -125,7 +125,7 @@ class HuobiCoinFutureRestTradeAPI:
         json_response2['data'] = [{"ordId":json_dict['data']['success'][0]['order_id'],"sCode":json_dict['sCode'],"ts":json_dict['ts'],"exchange":"htx"}]
         json_response2['rate_limit_remaining'] = json_dict['rate_limit_remaining']
 
-        logger.debug(json_response2)
+        # logger.debug(json_response2)
         #  {'status': ['ok', 'no error'], 'data': {'errors': [], 'success': [{'order_id': 1333815668657569792, 'index': 1, 'order_id_str': '1333815668657569792'}], 'sMsg': 'Orders placed'}, 'ts': 1738048036510, 'sCode': 200, 'rate_limit_remaining': '35'}
 
         # expected return 

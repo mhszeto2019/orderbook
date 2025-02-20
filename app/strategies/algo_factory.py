@@ -61,16 +61,16 @@ import time
 import random
 
 
-class Algo:
-    """Represents an algorithm instance."""
-    def __init__(self, algo_id, config):
-        self.algo_id = algo_id
-        self.config = config
+# class Algo:
+#     """Represents an algorithm instance."""
+#     def __init__(self, algo_id, config):
+#         self.algo_id = algo_id
+#         self.config = config
 
-    def execute(self):
-        """Execute the algorithm logic."""
-        print(f"Executing Algo {self.algo_id} with config: {self.config}")
-        time.sleep(random.uniform(0.5, 2))  # Simulate work
+#     def execute(self):
+#         """Execute the algorithm logic."""
+#         print(f"Executing Algo {self.algo_id} with config: {self.config}")
+#         time.sleep(random.uniform(0.5, 2))  # Simulate work
 
 class AlgoFactory:
     """Manages Algo instances and listens for updates."""
