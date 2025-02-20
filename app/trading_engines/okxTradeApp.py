@@ -68,7 +68,7 @@ def place_market_order():
             
         # Initialize TradeAPI
         tradeApi = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
-        print("username:",username)
+        # print("username:",username)
 
         result = tradeApi.place_order(
             instId= data["instId"],
@@ -79,7 +79,7 @@ def place_market_order():
             sz= str(data["sz"]) 
         )
         result['data'][0]['exchange']='okx'
-        print(result)
+        # print(result)
         if result["code"] == "0":
             result['data'][0]['sCode'] = 200
 

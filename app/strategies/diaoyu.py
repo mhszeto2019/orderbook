@@ -291,8 +291,7 @@ class Diaoyu:
                 # if len(position_data) > 1:
                 for pos in position_data:
                     pos_vol = int(pos['volume'])
-
-                    pos_vol = int(pos['available'])
+                    # pos_vol = int(pos['available'])
                     # closing size
                     if pos['direction'] != htx_direction:
                         availability -= pos_vol
