@@ -240,6 +240,7 @@ class Diaoxia:
     #     # Wait for lag exchange order if it was added
     #     if tasks:
     #         await asyncio.gather(*tasks)
+    
         self.locks = {}  # Store locks per trade type
         self.last_trade_details = {}  # Track last executed trade
         self.execution_window = 0.5  # Time window to prevent duplicate trades (adjust as needed)
@@ -316,13 +317,6 @@ class Diaoxia:
                             print('buy okx sell htx')
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             # asyncio.create_task(self.execute_orders(min_avail_amt,self.lag_direction))
-
-
-
-
-
-
-
 
                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
