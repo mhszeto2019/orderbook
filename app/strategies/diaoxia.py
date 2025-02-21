@@ -60,7 +60,7 @@ dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 
-from app.strategies.connection_helper import OkxBbo,HtxBbo,update_status
+from app.strategies.connection_helper import OkxBbo,HtxBbo
 
 
 # for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
@@ -200,23 +200,24 @@ class Diaoxia:
             await self.place_market_order_okx(size,direction)
         update_status(exchange,size,direction)
 
+    # async def execute_orders(self, min_avail_amt):
+    #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
+    #     async with self.order_lock:  # Correct usage for asyncio.Lock
+    #         # Execute the lead exchange order and wait for it to complete
+    #         await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+    #         await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
+            
     async def execute_orders(self, min_avail_amt):
         """Run orders concurrently for different exchanges but sequentially for the same exchange."""
         async with self.order_lock:  # Correct usage for asyncio.Lock
-            tasks = []  # Store async tasks for different 
-
             # Execute the lead exchange order and wait for it to complete
-            await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
-            await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
-            # # If the lag exchange is different, run it concurrently
-            # if self.lag_exchange != self.lead_exchange:
-            #     task = asyncio.create_task(self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction))
-            #     tasks.append(task)
+            task1 = self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+            # Execute the lag exchange order concurrently after placing lead exchange order
+            task2 = self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
 
-            # # Wait for lag exchange order if it was added
-            # if tasks:
-            #     await asyncio.gather(*tasks)
-
+        # Wait for both orders to complete
+        await task1
+        await task2
 
 
     def okx_publicCallback(self,message):
@@ -261,9 +262,7 @@ class Diaoxia:
                             # place market buy order on lead excahnge 
                             # place market sell order on lag exchange
                             # place_market_order(lead_exchange,lag_exchange,spread)
-                            
                             print('buy okx sell htx')
-                            
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt
@@ -273,7 +272,6 @@ class Diaoxia:
                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
                             min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
-                            
                             # place market sell order on lead excahnge 
                             # place market buy order on lag exchange
                             print('sell okx buy htx')
