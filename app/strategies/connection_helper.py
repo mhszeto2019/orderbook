@@ -86,11 +86,11 @@ class OkxBbo:
                 print(f"🔄 Reconnecting in {sleep_time} seconds...")
                 await asyncio.sleep(sleep_time)
 
-    async def unsubscribe(self):
+    async def unsubscribe(self,callback):
         """Unsubscribe from all channels."""
         if self.ws:
             print("Unsubscribing from all channels...")
-            await self.ws.unsubscribe(self.subscribed_pairs)
+            await self.ws.unsubscribe(self.subscribed_pairs,callback)
 
     async def close(self):
         """Close the WebSocket connection."""
@@ -127,7 +127,7 @@ class HtxPositions:
         """ Stop the subscription process. """
         self.is_open = False
         self._stop_event.set()
-        print(self.loop)
+        # print(self.loop)
         # if self.ws:
         #     self._close()
         self.thread.join(timeout=5)  # Allow the thread to exit gracefully
@@ -156,6 +156,7 @@ class HtxPositions:
                     sub_str = json.dumps(sub)
                     await websocket.send(sub_str)
                     # print(f"send: {sub_str}")
+                    logger.debug(sub_str)
 
                 while self.is_open and not self._stop_event.is_set():
                     try:
@@ -300,7 +301,9 @@ class HtxBbo:
                     except websockets.ConnectionClosed:
                         print(" HTX WebSocket connection closed.")
                         self.is_open = False
-                        break  # Break out of the loop when connection is closed
+                        continue
+                        # raise Exception
+                        # break  # Break out of the loop when connection is closed
 
         except Exception as e:
             print(f"An error occurred: {e}")

@@ -165,7 +165,7 @@ class HuobiCoinFutureRestTradeAPI:
         json_dict = await self.request("POST", uri, body=body, auth=True)
 
         json_response2 = self.format_message(json_dict)
-        print('json_response2',json_response2)
+        # print('json_response2',json_response2)
         # print("open_orders,json_dict",json_dict)
         # print('json_response2',json_response2)
         return json_response2

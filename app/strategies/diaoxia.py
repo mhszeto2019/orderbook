@@ -198,27 +198,25 @@ class Diaoxia:
             await self.place_market_order_htx(size,direction)
         elif exchange == 'okx':
             await self.place_market_order_okx(size,direction)
-        
-        # update_status(exchange,size,direction)
 
-    # async def execute_orders(self, min_avail_amt):
-    #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
-    #     async with self.order_lock:  # Correct usage for asyncio.Lock
-    #         # Execute the lead exchange order and wait for it to complete
-    #         await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
-    #         await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
-            
     async def execute_orders(self, min_avail_amt):
         """Run orders concurrently for different exchanges but sequentially for the same exchange."""
         async with self.order_lock:  # Correct usage for asyncio.Lock
             # Execute the lead exchange order and wait for it to complete
-            task1 = self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
-            # Execute the lag exchange order concurrently after placing lead exchange order
-            task2 = self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
+            await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+            await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
+            
+    # async def execute_orders(self, min_avail_amt):
+    #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
+    #     async with self.order_lock:  # Correct usage for asyncio.Lock
+    #         # Execute the lead exchange order and wait for it to complete
+    #         task1 = self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+    #         # Execute the lag exchange order concurrently after placing lead exchange order
+    #         task2 = self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
 
-        # Wait for both orders to complete
-        await task1
-        await task2
+    #     # Wait for both orders to complete
+    #     await task1
+    #     await task2
 
 
     def okx_publicCallback(self,message):
@@ -259,47 +257,33 @@ class Diaoxia:
                         # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
                         # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
                         if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
-                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty,1)
+                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
                             # place market buy order on lead excahnge 
                             # place market sell order on lag exchange
                             # place_market_order(lead_exchange,lag_exchange,spread)
+                            
                             print('buy okx sell htx')
+                            
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt
-
-                            # asyncio.create_task(self.execute_orders(min_avail_amt,self.lag_direction))
 
                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
-                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty,1)
+                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
+                            
                             # place market sell order on lead excahnge 
                             # place market buy order on lag exchange
                             print('sell okx buy htx')
-
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt
 
-                            # asyncio.create_task(self.execute_orders(min_avail_amt))
                     else:
                         self.update_db()
                 else:
                     # reset after close
                     self.lead_filled_vol = 0
-                   
-
-                # # # Throttle: Ensure minimum interval between API calls
-                # current_time = time.time()
-                # if current_time - self.last_call_time >= self.call_interval:
-                #     self.last_call_time = current_time
-
-                #     if self.row['state']:
-                #         asyncio.create_task(self.place_market_order(self.lead_exchange,self.lead_direction,self.qty))
-                #         asyncio.create_task(self.place_market_order(self.lag_exchange,self.lag_direction,self.qty))
-
-                       
-      
 
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
@@ -384,39 +368,13 @@ class Diaoxia:
                 
     def htx_publicCallback(self,message):
         try:
-            # print(message)
+            logger.debug(message)
             if message.get('tick'):
                 self.htx_best_bid = message['tick']['bid'][0]
                 self.htx_best_bid_sz = message['tick']['bid'][1]
                 self.htx_best_ask = message['tick']['ask'][0]
                 self.htx_best_ask_sz = message['tick']['ask'][1]
                 
-
-                # trade = message.get('trade',[])
-                # match_order_id = message.get('order_id','no order id yet')
-            
-                # if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
-
-                #     # volume that is filled in this trade
-                #     self.row['filled_volume'] = message['trade'][0]['trade_volume']
-                #     # we need to add volume of this trade into total volume filled for htx
-                #     self.htx_filled_volume += self.row['filled_volume']
-
-                #     # the quantity that we want to buy or sell
-                #     total_limit_buy_size = self.limit_buy_size
-                #     total_limit_buy_size_int = int(total_limit_buy_size)
-
-                #     self.lead_is_filled = self.htx_filled_volume == total_limit_buy_size_int
-                #     # When order_id that was placed matches with htx position matched order, we fire market order on leading side e.g okx
-                #     # Place market order on okx with filled volume
-                #     loop = asyncio.get_event_loop()
-
-                #     if loop.is_running():
-                #         # If the loop is already running, create a new task
-                #         asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
-                #     else:
-                #         # Run the async function to completion in the current thread
-                #         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
 
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)

@@ -435,7 +435,7 @@ class Diaoyu:
             with self.lock:
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
-            
+                logger.debug(message)
                 if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
 
                     # volume that is filled in this trade
