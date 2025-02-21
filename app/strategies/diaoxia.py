@@ -60,7 +60,8 @@ dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 
-from app.strategies.connection_helper import OkxBbo,HtxBbo
+from app.strategies.connection_helper import OkxBbo,HtxBbo,update_status
+
 
 # for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
 # Diaoxia conditions
@@ -68,6 +69,7 @@ from app.strategies.connection_helper import OkxBbo,HtxBbo
 # - qty matches
 #   - if qty doesnt match in 1 trade, it will be carry on until the total filled matches the qty
 # - lead and lag exchanges specified
+
 
 class Diaoxia:
     def __init__(self,row_dict,cursor):
@@ -132,31 +134,7 @@ class Diaoxia:
         self.call_interval = 1
 
         # lock for race conditions
-        self.lock = threading.Lock()
-        self.locks = {}
-
-    async def revoke_order_by_id(self):
-        try:
-            with self.lock:
-                try:
-                    tradeApi = self.htx_tradeapi
-
-                    revoke_orders = await tradeApi.revoke_order(self.ccy,
-                                            body = {
-                                            "order_id":self.row['order_id'] ,
-                                            "contract_code": self.ccy.replace('-SWAP','')
-                                            }
-                                        )
-                    
-                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|revoke_order:{revoke_orders.get('data',[])}")
-
-                    self.row['order_id']  = None
-
-                except Exception as e:
-                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{revoke_orders}")
-
-        except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|REVOKE ORDER ERROR:{e}")
+        self.order_lock = asyncio.Lock() 
 
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -211,66 +189,34 @@ class Diaoxia:
             self.row['okx_client'].close()
             self.row['okx_client'].unsubscribe()
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
-        # if self.htx_thread and self.htx_thread.is_alive():
-        # Implement stopping mechanism for HtxPositions if necessary
-        # print("HTX thread will automatically close because Daemon is set to True ")
-        # logger.debug('close HTX')
-        self.revoke_order_by_id()
+      
         self.update_db()
 
     async def place_market_order(self,exchange,size,direction):
+        
         if exchange == 'htx':
             await self.place_market_order_htx(size,direction)
         elif exchange == 'okx':
             await self.place_market_order_okx(size,direction)
+        update_status(exchange,size,direction)
 
-    # async def execute_orders(self,min_avail_amt):
-    #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
-        
-    #     tasks = []  # Store async tasks for different exchanges
+    async def execute_orders(self, min_avail_amt):
+        """Run orders concurrently for different exchanges but sequentially for the same exchange."""
+        async with self.order_lock:  # Correct usage for asyncio.Lock
+            tasks = []  # Store async tasks for different 
 
-    #     # Execute the lead exchange order and wait for it to complete
-    #     await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+            # Execute the lead exchange order and wait for it to complete
+            await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+            await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
+            # # If the lag exchange is different, run it concurrently
+            # if self.lag_exchange != self.lead_exchange:
+            #     task = asyncio.create_task(self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction))
+            #     tasks.append(task)
 
-    #     # If the lag exchange is different, run it concurrently
-    #     if self.lag_exchange != self.lead_exchange:
-    #         task = asyncio.create_task(self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction))
-    #         tasks.append(task)
+            # # Wait for lag exchange order if it was added
+            # if tasks:
+            #     await asyncio.gather(*tasks)
 
-    #     # Wait for lag exchange order if it was added
-    #     if tasks:
-    #         await asyncio.gather(*tasks)
-    
-        self.locks = {}  # Store locks per trade type
-        self.last_trade_details = {}  # Track last executed trade
-        self.execution_window = 0.5  # Time window to prevent duplicate trades (adjust as needed)
-
-    def get_lock(self, trade_key):
-        """Retrieve or create a lock for the given trade type."""
-        if trade_key not in self.locks:
-            self.locks[trade_key] = asyncio.Lock()
-        return self.locks[trade_key]
-
-    def can_execute_trade(self, trade_key):
-        """Check if enough time has passed since the last execution of the same trade type."""
-        current_time = time.time()
-        last_execution_time = self.last_trade_details.get(trade_key, 0)
-
-        if current_time - last_execution_time >= self.execution_window:
-            self.last_trade_details[trade_key] = current_time  # Update last trade timestamp
-            return True
-        return False
-
-    async def execute_orders(self, exchange, amount, direction):
-        """Ensure only one order per exchange runs at a time."""
-        trade_key = f"{exchange}-{direction}"
-
-        async with self.get_lock(trade_key):  # Prevent overlapping executions
-            if self.can_execute_trade(trade_key):  # Prevent over-firing
-                print(f"Executing {direction.upper()} order on {exchange} for {amount}")
-                await self.place_market_order(exchange, amount, direction)
-            else:
-                print(f"Skipped duplicate trade: {trade_key}")
 
 
     def okx_publicCallback(self,message):
@@ -297,8 +243,10 @@ class Diaoxia:
                 
 
                 if self.row['state']:
+                    # app_status['last_trade_action'] = "market market"
+                    # app_status['last_log_entry'] = f"Trade executed at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+
                     # if filled vol hasnt reached qty desired
-                    print(self.lead_filled_vol , self.qty)
                     if int(self.lead_filled_vol) < int(self.qty):
                         revised_qty = int(self.qty) - int(self.lead_filled_vol)
                     # print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
@@ -309,24 +257,31 @@ class Diaoxia:
                         # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
                         # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
                         if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
-                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty,1)
+                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
                             # place market buy order on lead excahnge 
                             # place market sell order on lag exchange
                             # place_market_order(lead_exchange,lag_exchange,spread)
                             
                             print('buy okx sell htx')
+                            
                             asyncio.create_task(self.execute_orders(min_avail_amt))
+                            logger.debug(self.lead_filled_vol)
+                            self.lead_filled_vol += min_avail_amt
+
                             # asyncio.create_task(self.execute_orders(min_avail_amt,self.lag_direction))
 
                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
-                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty,1)
+                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
                             
                             # place market sell order on lead excahnge 
                             # place market buy order on lag exchange
-                            # print(float(self.best_bid) - float(self.htx_best_ask))
                             print('sell okx buy htx')
+
                             asyncio.create_task(self.execute_orders(min_avail_amt))
+                            logger.debug(self.lead_filled_vol)
+                            self.lead_filled_vol += min_avail_amt
+
                             # asyncio.create_task(self.execute_orders(min_avail_amt))
                     else:
                         self.update_db()
@@ -369,7 +324,6 @@ class Diaoxia:
     async def place_market_order_htx(self,size,direction):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
-                
                 # Initialize TradeAPI
                 # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
                 tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.htx_apikey,self.htx_secretkey)
@@ -431,14 +385,13 @@ class Diaoxia:
                 
     def htx_publicCallback(self,message):
         try:
-            with self.lock:
-                # print(message)
-                if message.get('tick'):
-                    self.htx_best_bid = message['tick']['bid'][0]
-                    self.htx_best_bid_sz = message['tick']['bid'][1]
-                    self.htx_best_ask = message['tick']['ask'][0]
-                    self.htx_best_ask_sz = message['tick']['ask'][1]
-                  
+            # print(message)
+            if message.get('tick'):
+                self.htx_best_bid = message['tick']['bid'][0]
+                self.htx_best_bid_sz = message['tick']['bid'][1]
+                self.htx_best_ask = message['tick']['ask'][0]
+                self.htx_best_ask_sz = message['tick']['ask'][1]
+                
 
                 # trade = message.get('trade',[])
                 # match_order_id = message.get('order_id','no order id yet')
@@ -471,42 +424,32 @@ class Diaoxia:
 
     async def place_market_order_okx(self,size,direction):
         try:
-            with self.lock:
-                # Initialize TradeAPI
-                tradeApi = self.okx_tradeapi
-                result = tradeApi.place_order(
-                    instId= 'BTC-USD-SWAP',
-                    tdMode= "cross", 
-                    side= direction, 
-                    posSide= '', 
-                    ordType= 'market',
-                    sz= size
-                )
-                result['data'][0]['exchange']='okx'
-                
-                # OKX MARKET ORDER IS SUCCESSFUL
-                if result["code"] == "0":
-                    self.lead_filled_vol += size
-                    result['data'][0]['sCode'] = 200
+            # Initialize TradeAPI
+            tradeApi = self.okx_tradeapi
+            result = tradeApi.place_order(
+                instId= 'BTC-USD-SWAP',
+                tdMode= "cross", 
+                side= direction, 
+                posSide= '', 
+                ordType= 'market',
+                sz= size
+            )
+            result['data'][0]['exchange']='okx'
+            
+            # OKX MARKET ORDER IS SUCCESSFUL
+            if result["code"] == "0":
+                result['data'][0]['sCode'] = 200
 
-                    # if self.lead_is_filled:
-                    #     self.row['state'] = False
-                    #     # Reset values after fill
-                    #     self.lead_is_filled = False
-                    #     self.htx_filled_volume = 0 
-                    #     logger.debug('update db b4')
-                    #     logger.debug('update db after')
-                    
-               
-                    self.row['order_id']  = None
+                                    
+                self.row['order_id']  = None
 
-                else:
-                    result['data'][0]['sCode'] = 400
-                    logger.debug('OKX MARKET TRADE FAILED')
+            else:
+                result['data'][0]['sCode'] = 400
+                logger.debug('OKX MARKET TRADE FAILED')
 
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
+            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
 
-                return result
+            return result
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{e}")
     

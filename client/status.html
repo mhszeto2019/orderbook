@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .status-box { padding: 20px; border: 1px solid #ccc; margin: 10px 0; }
+        .status-box span { font-weight: bold; }
+        .status-box.running { background-color: #e0f7e0; }
+        .status-box.error { background-color: #f7e0e0; }
+        .status-box span { color: #333; }
+        .trade-list { margin-top: 20px; }
+        .trade-item { padding: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Application Status</h1>
+    
+    <!-- Status Box with Dynamic Content -->
+    <div class="status-box {{ 'running' if app_status['status'] == 'Running' else 'error' }}">
+        <p><span>Status:</span> {{ app_status['status'] }}</p>
+        <p><span>Uptime:</span> {{ app_status['uptime'] }} seconds</p>
+    </div>
+
+    <div class="status-box">
+        <h3>Trade Status</h3>
+        <p>Last trade action: <span id="trade-action">{{ app_status['last_trade_action'] }}</span></p>
+    </div>
+
+    <div class="status-box">
+        <h3>System Logs</h3>
+        <p>Last log entry: <span id="log-entry">{{ app_status['last_log_entry'] }}</span></p>
+    </div>
+
+    <!-- Trade List -->
+    <div class="status-box">
+        <h3>Trade History</h3>
+        <div id="trade-list" class="trade-list">
+            <!-- Trade actions will be appended here -->
+        </div>
+    </div>
+
+    <script>
+        let tradeHistory = [];  // Array to hold the trade actions
+
+        function updateStatus() {
+            fetch(`http://localhost:9000/status`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the status on the page
+                    document.querySelector(".status-box span").innerText = data.status;
+                    document.querySelector("#trade-action").innerText = data.last_trade_action;
+                    document.querySelector("#log-entry").innerText = data.last_log_entry;
+                    document.querySelector(".status-box span").innerText = data.uptime + " seconds";
+
+                    // Append new trade action to the history list
+                    if (data.last_trade_action) {
+                        tradeHistory.push(data.last_trade_action);
+
+                        // Keep only the last 10 trades
+                        if (tradeHistory.length > 10) {
+                            tradeHistory.shift();  // Remove the oldest trade
+                        }
+
+                        // Update the trade history UI
+                        updateTradeList();
+                    }
+                });
+        }
+
+        function updateTradeList() {
+            const tradeListElement = document.querySelector("#trade-list");
+
+            // Clear the current trade list
+            tradeListElement.innerHTML = '';
+
+            // Append each trade action in the tradeHistory array
+            tradeHistory.forEach((trade, index) => {
+                const tradeItem = document.createElement('div');
+                tradeItem.className = 'trade-item';
+                tradeItem.innerText = `Trade ${index + 1}: ${trade}`;
+                tradeListElement.appendChild(tradeItem);
+            });
+        }
+
+        // Update every 5 seconds
+        setInterval(updateStatus, 5000);  // Adjust the interval as needed
+    </script>
+</body>
+</html>

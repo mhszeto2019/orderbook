@@ -347,3 +347,10 @@ class HtxBbo:
         signature = signature.decode()
         return signature
     
+from app.status.status import update_status2
+import time
+
+def update_status(exchange,size,direction):
+    # app_status['last_trade_action'] = f"{exchange}|{size}|{direction}"
+    # app_status['last_log_entry'] = f"Trade executed at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+    update_status2(f"{exchange}|{size}|{direction}")
