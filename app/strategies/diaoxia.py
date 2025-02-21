@@ -198,7 +198,8 @@ class Diaoxia:
             await self.place_market_order_htx(size,direction)
         elif exchange == 'okx':
             await self.place_market_order_okx(size,direction)
-        update_status(exchange,size,direction)
+        
+        # update_status(exchange,size,direction)
 
     # async def execute_orders(self, min_avail_amt):
     #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
@@ -258,7 +259,7 @@ class Diaoxia:
                         # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
                         # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
                         if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
-                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
+                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty,1)
                             # place market buy order on lead excahnge 
                             # place market sell order on lag exchange
                             # place_market_order(lead_exchange,lag_exchange,spread)
@@ -271,7 +272,7 @@ class Diaoxia:
 
                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
-                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
+                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty,1)
                             # place market sell order on lead excahnge 
                             # place market buy order on lag exchange
                             print('sell okx buy htx')
