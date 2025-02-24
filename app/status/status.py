@@ -12,29 +12,18 @@ app_status = {
     "last_trade_action": "None", # Last trade action (e.g., 'buy okx sell htx')
     "last_log_entry": "None"     # Last log entry (optional)
 }
-
-# This will keep track of when the app started
-
-# Simulating a long-running process that will update the status
-def update_status2(msg):
-    # Here, you can update the app_status dictionary with live data (e.g., after a trade)
-    # For example, update the last trade action:
-    print(msg)
-    app_status['last_trade_action'] = msg
-    app_status['last_log_entry'] = "Trade executed at {}".format(time.strftime('%Y-%m-%d %H:%M:%S'))
-    app_status['uptime'] = int(time.time() - app_status['start_time'])  # Update uptime
-    app_status['start_time'] = time.time()
-
-
-@app.route('/')
-def home():
-    return render_template('status.html', app_status=app_status)
-
-@app.route('/status')
-def status():
-    # update_status()  # Update the status
-    print(app_status)
-    return jsonify(app_status)  # Return status as JSON to the frontend for AJAX updates
+class Status:
+    def __init__(self):
+        self.exchange = None,
+        self.direction = None,
+        self.status = None,
+        self.uptime = None
+    
+    def update_status(self,exchange,direction,status):
+        self.exchange = exchange,
+        self.direction = direction,
+        self.status = status
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000)

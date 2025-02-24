@@ -115,7 +115,7 @@ class AlgoFactory:
         # Update existing strategy
         
         shared_state = self.shared_states[instance_id]
-        print(shared_state)
+        # print(shared_state)
         logger.debug('UPDATING NEW STRAT')
 
         json_data = algo_details.get('data','')
@@ -375,14 +375,10 @@ class DBListener(threading.Thread):
                         )
                         new_algo_detail = cur.fetchone()
                         self.factory.add_algo(instance_id,new_algo_detail)
-
                     
                     # For updates
                     else:
                         self.factory.update_algo(instance_id,algo_details)
-
-        
-     
 
     def stop(self):
         """Stop the listener."""

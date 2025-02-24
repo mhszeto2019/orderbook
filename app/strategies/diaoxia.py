@@ -61,7 +61,8 @@ dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 
 from app.strategies.connection_helper import OkxBbo,HtxBbo
-
+from app.status.status import app_status
+import time
 
 # for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
 # Diaoxia conditions
@@ -69,6 +70,8 @@ from app.strategies.connection_helper import OkxBbo,HtxBbo
 # - qty matches
 #   - if qty doesnt match in 1 trade, it will be carry on until the total filled matches the qty
 # - lead and lag exchanges specified
+
+
 
 
 class Diaoxia:
@@ -193,7 +196,6 @@ class Diaoxia:
         self.update_db()
 
     async def place_market_order(self,exchange,size,direction):
-        
         if exchange == 'htx':
             await self.place_market_order_htx(size,direction)
         elif exchange == 'okx':
@@ -288,8 +290,6 @@ class Diaoxia:
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
-
-    
     async def place_order(self,tradeApi, instId, volume, direction, offset):
         return await tradeApi.place_order(
             instId,
@@ -375,7 +375,6 @@ class Diaoxia:
                 self.htx_best_ask = message['tick']['ask'][0]
                 self.htx_best_ask_sz = message['tick']['ask'][1]
                 
-
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
 
@@ -396,10 +395,7 @@ class Diaoxia:
             # OKX MARKET ORDER IS SUCCESSFUL
             if result["code"] == "0":
                 result['data'][0]['sCode'] = 200
-
-                                    
                 self.row['order_id']  = None
-
             else:
                 result['data'][0]['sCode'] = 400
                 logger.debug('OKX MARKET TRADE FAILED')
@@ -428,8 +424,6 @@ class Diaoxia:
         # finally:
         #     self.cursor.close()  # Close the cursor
             # return 
-        
-
 
 DB_CONFIG = {
     "dbname": dbname,
