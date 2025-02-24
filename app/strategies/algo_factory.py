@@ -111,11 +111,9 @@ class AlgoFactory:
         self.processes.append(process)
 
     def update_algo(self, instance_id, algo_details):
-        # logger.debug(algo_details)
         # Update existing strategy
         
         shared_state = self.shared_states[instance_id]
-        # print(shared_state)
         logger.debug('UPDATING NEW STRAT')
 
         json_data = algo_details.get('data','')
@@ -169,7 +167,6 @@ class AlgoFactory:
         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
 
         self.shared_states[instance_id] = self.manager.dict(row_dict)
-        # logger.debug(self.shared_states)
         # Create the new strategy instance (Diaoyu)
     
         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
@@ -177,7 +174,6 @@ class AlgoFactory:
 
         for p in self.processes:
             p.join
-        # print(self.processes)
 
     # algo id here is instance id from main class
     def remove_algo(self, algo_id):
@@ -195,12 +191,10 @@ class AlgoFactory:
                     self.processes.remove(p)  # Remove from the list if needed
                     break  # Exit after finding and terminating the target process
 
-
     def get_algo(self, algo_id):
         """Get an Algo instance."""
         with self.lock:
             return self.algos.get(algo_id)
-
     
     def execute_all(self):
         """Execute all algorithms in parallel using multiprocessing."""
@@ -226,7 +220,6 @@ class AlgoFactory:
             FROM algo_dets ad left join api_credentials ac on ad.username = ac.username  group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
         )
         algo_details = cur.fetchall()
-
         for row in algo_details:
             row_dict = {}
             print(row)
@@ -341,7 +334,6 @@ class DBListener(threading.Thread):
                     algo_name = json_data['algo_name']
                     instance_id = f"{username}_{algo_type}_{algo_name}"
                     self.factory.remove_algo(instance_id)
-                    # print(self.factory.processes)
 
                 else:
                     json_data = algo_details['data']
@@ -375,7 +367,6 @@ class DBListener(threading.Thread):
                         )
                         new_algo_detail = cur.fetchone()
                         self.factory.add_algo(instance_id,new_algo_detail)
-                    
                     # For updates
                     else:
                         self.factory.update_algo(instance_id,algo_details)
@@ -391,7 +382,6 @@ if __name__ == "__main__":
     # Start the DB listener in a separate thread
     db_listener = DBListener(factory)
     db_listener.start()
-
     try:
         # while True:
         #     # Periodically execute all algorithms

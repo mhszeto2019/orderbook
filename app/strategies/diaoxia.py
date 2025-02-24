@@ -242,7 +242,7 @@ class Diaoxia:
                             # place market buy order on lead excahnge 
                             # place market sell order on lag exchange
                             # place_market_order(lead_exchange,lag_exchange,spread)
-                            # print('buy okx sell htx')
+                            print('buy okx sell htx')
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt
@@ -252,7 +252,7 @@ class Diaoxia:
                             min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
                             # place market sell order on lead excahnge 
                             # place market buy order on lag exchange
-                            # print('sell okx buy htx')
+                            print('sell okx buy htx')
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt

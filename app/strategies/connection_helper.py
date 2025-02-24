@@ -26,7 +26,7 @@ file_handler = logging.FileHandler(log_filename)
 
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
-logger = logging.getLogger('Diaoyu')
+logger = logging.getLogger('ConnectionHelper')
 logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
