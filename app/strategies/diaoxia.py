@@ -1,12 +1,12 @@
 
-import urllib.parse
-import hmac
-import base64
-import hashlib
-import gzip
-import websockets
-import time
-import select
+# import urllib.parse
+# import hmac
+# import base64
+# import hashlib
+# import gzip
+# import websockets
+# import time
+# import select
 import datetime
 import json
 import uuid
@@ -22,8 +22,8 @@ sys.path.append('/var/www/html/orderbook/htx2/alpha')
 # from app.trading_engines.htxTradeFuturesApp import place_limit_contract_order
 from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 from okx import Trade
-from okx.websocket.WsPublicAsync import WsPublicAsync
-from websockets.exceptions import ConnectionClosedError
+# from okx.websocket.WsPublicAsync import WsPublicAsync
+# from websockets.exceptions import ConnectionClosedError
 
 # Logger 
 import os
@@ -62,17 +62,12 @@ dbname = config[config_source]['dbname']
 
 from app.strategies.connection_helper import OkxBbo,HtxBbo
 
-from app.status.status import app_status
-import time
-
 # for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
 # Diaoxia conditions
 # - spread matches
 # - qty matches
 #   - if qty doesnt match in 1 trade, it will be carry on until the total filled matches the qty
 # - lead and lag exchanges specified
-
-
 
 
 class Diaoxia:
@@ -152,8 +147,6 @@ class Diaoxia:
     # connection with htx positions and orders
     def run_htx_bbo(self):
         """Run the HtxPositions WebSocket client."""
-        # access_key = 
-        # secret_key = 
         access_key = self.htx_apikey
         secret_key = self.htx_secretkey
         # for swaps
@@ -188,8 +181,7 @@ class Diaoxia:
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
         if self.row['okx_client']:
-            # self.okx_client.unsubscribe()  # Assuming the OkxBbo class has a stop method
-            # self.okx_client.close()  # Assuming the OkxBbo class has a stop method
+
             self.row['okx_client'].close()
             self.row['okx_client'].unsubscribe()
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
@@ -208,19 +200,6 @@ class Diaoxia:
             # Execute the lead exchange order and wait for it to complete
             await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
             await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
-            
-    # async def execute_orders(self, min_avail_amt):
-    #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
-    #     async with self.order_lock:  # Correct usage for asyncio.Lock
-    #         # Execute the lead exchange order and wait for it to complete
-    #         task1 = self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
-    #         # Execute the lag exchange order concurrently after placing lead exchange order
-    #         task2 = self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
-
-    #     # Wait for both orders to complete
-    #     await task1
-    #     await task2
-
 
     def okx_publicCallback(self,message):
         try:
@@ -246,8 +225,7 @@ class Diaoxia:
                 
 
                 if self.row['state']:
-                    # app_status['last_trade_action'] = "market market"
-                    # app_status['last_log_entry'] = f"Trade executed at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+                  
 
                     # if filled vol hasnt reached qty desired
                     if int(self.lead_filled_vol) < int(self.qty):
@@ -264,9 +242,7 @@ class Diaoxia:
                             # place market buy order on lead excahnge 
                             # place market sell order on lag exchange
                             # place_market_order(lead_exchange,lag_exchange,spread)
-                            
-                            print('buy okx sell htx')
-                            
+                            # print('buy okx sell htx')
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt
@@ -274,10 +250,9 @@ class Diaoxia:
                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
                             min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
-                            
                             # place market sell order on lead excahnge 
                             # place market buy order on lag exchange
-                            print('sell okx buy htx')
+                            # print('sell okx buy htx')
                             asyncio.create_task(self.execute_orders(min_avail_amt))
                             logger.debug(self.lead_filled_vol)
                             self.lead_filled_vol += min_avail_amt
@@ -399,7 +374,7 @@ class Diaoxia:
                 self.row['order_id']  = None
             else:
                 result['data'][0]['sCode'] = 400
-                logger.debug('OKX MARKET TRADE FAILED')
+                logger.error('OKX MARKET TRADE FAILED')
 
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
 
@@ -434,14 +409,14 @@ DB_CONFIG = {
     "port": 5432
 }
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # 1 strat = 1 algo 
-    try:
+    # try:
         
-        params = {'username': 'brennan', 'algo_type': 'diaoxia', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
-        strat = Diaoxia(params,psycopg2.connect(**DB_CONFIG).cursor())
-        strat.start_clients()
+        # params = {'username': 'brennan', 'algo_type': 'diaoxia', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
+        # strat = Diaoxia(params,psycopg2.connect(**DB_CONFIG).cursor())
+        # strat.start_clients()
         
-    except KeyboardInterrupt:
-        print("Stopping clients...")
+    # except KeyboardInterrupt:
+    #     print("Stopping clients...")
         # strat.stop_clients()
