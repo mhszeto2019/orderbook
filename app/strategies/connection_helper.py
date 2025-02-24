@@ -43,11 +43,14 @@ class OkxBbo:
         await self.ws.start()
 
     async def subscribe(self, channel, inst_id, callback):
-        """Subscribe to a specific channel and instrument ID."""
-        arg = {"channel": channel, "instId": inst_id}
-        self.subscribed_pairs.append(inst_id)  # Track the subscription
-        await self.ws.subscribe([arg], callback)  # Subscribe using the args list
-   
+        try:
+            """Subscribe to a specific channel and instrument ID."""
+            arg = {"channel": channel, "instId": inst_id}
+            self.subscribed_pairs.append(inst_id)  # Track the subscription
+            await self.ws.subscribe([arg], callback)  # Subscribe using the args list
+        except Exception as e:
+            logger.error("SUBSCRIBE EXCEPTION RAISED!")
+            raise Exception
 
     async def run(self, channel, currency_pairs, callback):
         """Run the WebSocket client with automatic reconnection."""

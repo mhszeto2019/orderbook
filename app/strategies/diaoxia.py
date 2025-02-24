@@ -303,7 +303,7 @@ class Diaoxia:
                 "order_price_type": "optimal_20"
             }
         )
-
+    
     async def place_market_order_htx(self,size,direction):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
