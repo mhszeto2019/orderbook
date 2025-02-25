@@ -203,7 +203,7 @@ function fetchAlgoData() {
         .then(data => {
             const algoList = document.getElementById('algo-list');
             algoList.innerHTML = ''; // Clear existing rows
-
+            
             data.forEach((algo_arr, index) => {
                 const algo = algo_arr[0];
                 
@@ -213,12 +213,19 @@ function fetchAlgoData() {
                 const algoType = algo.algo_type
                 var contractType = algo.contract_type
                 var instrument = algo.instrument
+                var color = null
+                if (algoType == 'diaoyu')
+                {   
+                    badgeColor = 'bg-danger'
+                }
+                else if (algoType == 'diaoxia'){
+                    badgeColor = 'bg-primary'
+                }
                 
-
                 newRow.innerHTML = `
 
                     <td >
-                        <div class="badge bg-primary">
+                        <div class="badge ${badgeColor}">
                             ${algoType}
                         </div>
                         <div class="text-muted">
@@ -387,6 +394,8 @@ function fetchAlgoData() {
 
 // Call the function to fetch data and populate the table when the page loads
 document.addEventListener('DOMContentLoaded', fetchAlgoData);
+
+
 
 function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state){
     

@@ -207,7 +207,7 @@ class Diaoxia:
             # print(callback)
             # use this callback variable to debug
             if self.row['state']:
-    #                   htxside 92388.2 60 92429.2 60                                                                                     
+#                   htxside 92388.2 60 92429.2 60                                                                                     
                 # okxside 92439.9 173 92440 49                                                                                      
                 # arb -51.80000000000291 10.69999999999709                                                                          
                 # sell okx buy htx     

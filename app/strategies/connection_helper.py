@@ -73,8 +73,8 @@ class OkxBbo:
 
                 print("✅ Subscribed! Listening for messages...")
 
-                while self.is_running:
-                    await asyncio.sleep(1)  # Keep the loop alive
+                # while self.is_running:
+                await asyncio.sleep(100)  # Keep the loop alive
 
             except (ConnectionClosedError, asyncio.CancelledError) as e:
                 print(f"⚠️ WebSocket disconnected: {e}. Retrying...")
@@ -176,12 +176,12 @@ class HtxPositions:
                     except websockets.ConnectionClosed:
                         # print(" HTX WebSocket connection closed.")
                         logger.error("HTX Websocket in HTXposition connection closed")
-                        await self._close()
-                        logger.debug("CLOSED")
-                        logger.debug('REOPENING')
-                        continue
+                        # await self._close()
+                        # logger.debug("CLOSED")
+                        # logger.debug('REOPENING')
+                        # continue
                         # self.is_open = False
-                        # break  # Break out of the loop when connection is closed
+                        break  # Break out of the loop when connection is closed
 
         except Exception as e:
             # print(f"An error occurred: {e}")
@@ -243,6 +243,7 @@ class HtxBbo:
         self.loop = None
         self.thread = None
         self.subs = None
+        
     def start(self, subs, auth=False, callback=None):
         try:
             """ Start the subscription process in a separate thread. """
