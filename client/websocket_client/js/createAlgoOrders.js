@@ -216,10 +216,10 @@ function fetchAlgoData() {
                 var color = null
                 if (algoType == 'diaoyu')
                 {   
-                    badgeColor = 'bg-danger'
+                    badgeColor = 'bg-primary'
                 }
                 else if (algoType == 'diaoxia'){
-                    badgeColor = 'bg-primary'
+                    badgeColor = 'bg-danger'
                 }
                 
                 newRow.innerHTML = `
