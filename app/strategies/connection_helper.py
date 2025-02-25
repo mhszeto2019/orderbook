@@ -4,6 +4,7 @@ from okx.websocket.WsPublicAsync import WsPublicAsync
 import json
 import asyncio
 from websockets.exceptions import ConnectionClosedError
+from websockets.exceptions import ConnectionClosed
 import hmac
 import base64
 import hashlib
@@ -241,7 +242,7 @@ class HtxBbo:
         self._stop_event = threading.Event()
         self.loop = None
         self.thread = None
-        
+        self.subs = None
     def start(self, subs, auth=False, callback=None):
         try:
             """ Start the subscription process in a separate thread. """
@@ -280,17 +281,22 @@ class HtxBbo:
     async def _subscribe(self, subs, auth=False, callback=None):
         try:
             async for websocket in websockets.connect(self.url):
-                self.ws = websocket
-                if auth:
-                    await self.authenticate(websocket)
+                try:
+                    self.ws = websocket
+                    if auth:
+                        await self.authenticate(websocket)
+                    self.subs = subs
+                    # Send all subscriptions
+                    for sub in subs:
+                        sub_str = json.dumps(sub)
+                        await websocket.send(sub_str)
 
-                # Send all subscriptions
-                for sub in subs:
-                    sub_str = json.dumps(sub)
-                    await websocket.send(sub_str)
+                        # print(f"send: {sub_str}")
+                except ConnectionClosed:
+                    print("HTXBBO WebSocket connection closed.1")
 
-                    print(f"send: {sub_str}")
-
+                    # await self._close()
+                    continue
 
 
                 while self.is_open and not self._stop_event.is_set():
@@ -310,11 +316,12 @@ class HtxBbo:
                             callback(data)
                     except websockets.ConnectionClosed:
                         print("HTXBBO WebSocket connection closed.")
-                        self.is_open = False
-                        await self._close()
-                        continue
                         # raise Exception
-                        # break  # Break out of the loop when connection is closed
+                        # self.is_open = False
+                        # await self._close()
+                        # await self._subscribe(self.subs)
+
+                        break  # Break out of the loop when connection is closed
 
         except Exception as e:
             print(f"An error occurred: {e}")

@@ -133,7 +133,8 @@ class Diaoxia:
         self.call_interval = 1
 
         # lock for race conditions
-        self.order_lock = asyncio.Lock() 
+        self.order_lock = threading.Lock() 
+        self.excecution_lock = asyncio.Lock()
 
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -196,80 +197,131 @@ class Diaoxia:
 
     async def execute_orders(self, min_avail_amt):
         """Run orders concurrently for different exchanges but sequentially for the same exchange."""
-        async with self.order_lock:  # Correct usage for asyncio.Lock
+        async with self.excecution_lock:  # Correct usage for asyncio.Lock
             # Execute the lead exchange order and wait for it to complete
             await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
             await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
 
-    def okx_publicCallback(self,message):
+    def check_condition(self,spread,callback):
         try:
-            """Callback function to handle incoming messages."""
-            json_data = json.loads(message)
-            if json_data.get('data'):
-                currency_pair = json_data["arg"]["instId"]
-            
-                self.best_bid = json_data["data"][0]["bids"][0][0]
-                self.best_bid_sz = json_data["data"][0]["bids"][0][1]
-                self.best_ask = json_data["data"][0]["asks"][0][0]
-                self.best_ask_sz = json_data["data"][0]["asks"][0][1]
-                # Place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
-                # When place order, we need to keep track of id. 
-                # Order will be placed to buy on htx side
-                self.limit_buy_price = float(self.best_bid) - float(self.spread)
-                self.limit_buy_size = self.qty
-                spread = float(self.spread)
-                # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
-                # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
-                self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
-                
+            # print(callback)
+            # use this callback variable to debug
+            if self.row['state']:
+    #                   htxside 92388.2 60 92429.2 60                                                                                     
+                # okxside 92439.9 173 92440 49                                                                                      
+                # arb -51.80000000000291 10.69999999999709                                                                          
+                # sell okx buy htx     
 
-                if self.row['state']:
-                  
-#                   htxside 92388.2 60 92429.2 60                                                                                     
-                    # okxside 92439.9 173 92440 49                                                                                      
-                    # arb -51.80000000000291 10.69999999999709                                                                          
-                    # sell okx buy htx     
+                # if filled vol hasnt reached qty desired
+                if int(self.lead_filled_vol) < int(self.qty):
+                    revised_qty = int(self.qty) - int(self.lead_filled_vol)
+                    print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
+                    print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+                    print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+                # positive spread means buy on lead and sell on lag - lead_exchange ask, lag_exchange bid - market buy lead markte sell lag
+                # negative spread means sell on lead buy on lag - lead_exchange bid, lag_exchange ask - market sell lead market buy lag
+                    # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
+                    # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
+                    if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
+                        min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
+                        # place market buy order on lead excahnge 
+                        # place market sell order on lag exchange
+                        # place_market_order(lead_exchange,lag_exchange,spread)
+                        print('buy okx sell htx')
+                        asyncio.create_task(self.execute_orders(min_avail_amt))
+                        logger.debug(self.lead_filled_vol)
+                        self.lead_filled_vol += min_avail_amt
 
-                    # if filled vol hasnt reached qty desired
-                    if int(self.lead_filled_vol) < int(self.qty):
-                        revised_qty = int(self.qty) - int(self.lead_filled_vol)
-                        print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
-                        print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
-                        print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
-                    # positive spread means buy on lead and sell on lag - lead_exchange ask, lag_exchange bid - market buy lead markte sell lag
-                    # negative spread means sell on lead buy on lag - lead_exchange bid, lag_exchange ask - market sell lead market buy lag
-                        # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
-                        # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
-                        if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
-                            min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
-                            # place market buy order on lead excahnge 
-                            # place market sell order on lag exchange
-                            # place_market_order(lead_exchange,lag_exchange,spread)
-                            print('buy okx sell htx')
-                            asyncio.create_task(self.execute_orders(min_avail_amt))
-                            logger.debug(self.lead_filled_vol)
-                            self.lead_filled_vol += min_avail_amt
+                    # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
+                    elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
+                        min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
+                        # place market sell order on lead excahnge 
+                        # place market buy order on lag exchange
+                        print('sell okx buy htx')
+                        asyncio.create_task(self.execute_orders(min_avail_amt))
+                        logger.debug(self.lead_filled_vol)
+                        self.lead_filled_vol += min_avail_amt
 
-                        # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
-                        elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
-                            min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
-                            # place market sell order on lead excahnge 
-                            # place market buy order on lag exchange
-                            print('sell okx buy htx')
-                            asyncio.create_task(self.execute_orders(min_avail_amt))
-                            logger.debug(self.lead_filled_vol)
-                            self.lead_filled_vol += min_avail_amt
-
-                    else:
-                        self.update_db()
                 else:
-                    # reset after close
-                    self.lead_filled_vol = 0
-
+                    self.update_db()
+            else:
+                # reset after close
+                self.lead_filled_vol = 0
         except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
+            print(e)
+            raise e
 
-    async def place_order(self,tradeApi, instId, volume, direction, offset):
+    def okx_publicCallback(self,message):
+        with self.order_lock:
+            try:
+                """Callback function to handle incoming messages."""
+                json_data = json.loads(message)
+                if json_data.get('data'):
+                    currency_pair = json_data["arg"]["instId"]
+                
+                    self.best_bid = json_data["data"][0]["bids"][0][0]
+                    self.best_bid_sz = json_data["data"][0]["bids"][0][1]
+                    self.best_ask = json_data["data"][0]["asks"][0][0]
+                    self.best_ask_sz = json_data["data"][0]["asks"][0][1]
+                    # Place limit order on lagging party e.g htx - htx requires cancel and place new order for amend
+                    # When place order, we need to keep track of id. 
+                    # Order will be placed to buy on htx side
+                    spread = float(self.spread)
+                    self.limit_buy_price = float(self.best_bid) - spread
+                    self.limit_buy_size = self.qty
+                    # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
+                    # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
+                    self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
+                    self.check_condition(spread,'okx_callback')
+                    
+
+    #                 if self.row['state']:
+                    
+    # #                   htxside 92388.2 60 92429.2 60                                                                                     
+    #                     # okxside 92439.9 173 92440 49                                                                                      
+    #                     # arb -51.80000000000291 10.69999999999709                                                                          
+    #                     # sell okx buy htx     
+
+    #                     # if filled vol hasnt reached qty desired
+    #                     if int(self.lead_filled_vol) < int(self.qty):
+    #                         revised_qty = int(self.qty) - int(self.lead_filled_vol)
+    #                         print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
+    #                         print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+    #                         print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+    #                     # positive spread means buy on lead and sell on lag - lead_exchange ask, lag_exchange bid - market buy lead markte sell lag
+    #                     # negative spread means sell on lead buy on lag - lead_exchange bid, lag_exchange ask - market sell lead market buy lag
+    #                         # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
+    #                         # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
+    #                         if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
+    #                             min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
+    #                             # place market buy order on lead excahnge 
+    #                             # place market sell order on lag exchange
+    #                             # place_market_order(lead_exchange,lag_exchange,spread)
+    #                             print('buy okx sell htx')
+    #                             asyncio.create_task(self.execute_orders(min_avail_amt))
+    #                             logger.debug(self.lead_filled_vol)
+    #                             self.lead_filled_vol += min_avail_amt
+
+    #                         # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
+    #                         elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
+    #                             min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
+    #                             # place market sell order on lead excahnge 
+    #                             # place market buy order on lag exchange
+    #                             print('sell okx buy htx')
+    #                             asyncio.create_task(self.execute_orders(min_avail_amt))
+    #                             logger.debug(self.lead_filled_vol)
+    #                             self.lead_filled_vol += min_avail_amt
+
+    #                     else:
+    #                         self.update_db()
+    #                 else:
+    #                     # reset after close
+    #                     self.lead_filled_vol = 0
+
+            except Exception as e:
+                logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
+
+    async def place_order_htx_helper(self,tradeApi, instId, volume, direction, offset):
         return await tradeApi.place_order(
             instId,
             body={
@@ -323,7 +375,7 @@ class Diaoxia:
                 # If we dont need to close, we just open a position     
                 if closing_size == 0:
                     # same direction so we just add on
-                    result = await self.place_order(tradeApi, self.ccy.replace('-SWAP',''), str(availability), direction,"open")
+                    result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(availability), direction,"open")
                     self.row['order_id']  = result['data'][0]['ordId']
 
                 # if cancellation is involved
@@ -333,30 +385,33 @@ class Diaoxia:
                     if int(closing_size) >= int(size):
                         # If there is position that can be closed and there are no more excess positions to carry on
                         # When there is a position  we need to close but no more availability to increase pos
-                        result = await self.place_order(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
+                        result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
                         self.row['order_id']  = result['data'][0]['ordId']
 
                     else:
                         # if there is position that can be closed and there are no more excess positions to carry on
                         # when theres pos we need to close but no more availability to increase pos
-                        result = await self.place_order(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
+                        result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
                         self.row['order_id']  = result['data'][0]['ordId']
 
             except Exception as e:
                 print(e)
                 
     def htx_publicCallback(self,message):
-        try:
-            
-            # logger.debug(message)
-            if message.get('tick'):
-                self.htx_best_bid = message['tick']['bid'][0]
-                self.htx_best_bid_sz = message['tick']['bid'][1]
-                self.htx_best_ask = message['tick']['ask'][0]
-                self.htx_best_ask_sz = message['tick']['ask'][1]
+        with self.order_lock:
+        
+            try:
                 
-        except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
+                if message.get('tick'):
+                    self.htx_best_bid = message['tick']['bid'][0]
+                    self.htx_best_bid_sz = message['tick']['bid'][1]
+                    self.htx_best_ask = message['tick']['ask'][0]
+                    self.htx_best_ask_sz = message['tick']['ask'][1]
+                    self.check_condition(float(self.spread),'htx_callback')
+
+                    
+            except Exception as e:
+                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
 
     async def place_market_order_okx(self,size,direction):
         try:
