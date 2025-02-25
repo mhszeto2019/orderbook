@@ -218,7 +218,6 @@ class Diaoxia:
                 self.limit_buy_price = float(self.best_bid) - float(self.spread)
                 self.limit_buy_size = self.qty
                 spread = float(self.spread)
-
                 # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
                 # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
                 self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
@@ -226,13 +225,17 @@ class Diaoxia:
 
                 if self.row['state']:
                   
+#                   htxside 92388.2 60 92429.2 60                                                                                     
+                    # okxside 92439.9 173 92440 49                                                                                      
+                    # arb -51.80000000000291 10.69999999999709                                                                          
+                    # sell okx buy htx     
 
                     # if filled vol hasnt reached qty desired
                     if int(self.lead_filled_vol) < int(self.qty):
                         revised_qty = int(self.qty) - int(self.lead_filled_vol)
-                    # print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
-                    # print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
-                    # print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
+                        print("htxside",self.htx_best_bid,self.htx_best_bid_sz,self.htx_best_ask,self.htx_best_ask_sz)
+                        print("okxside",self.best_bid,self.best_bid_sz,self.best_ask,self.best_ask_sz)
+                        print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
                     # positive spread means buy on lead and sell on lag - lead_exchange ask, lag_exchange bid - market buy lead markte sell lag
                     # negative spread means sell on lead buy on lag - lead_exchange bid, lag_exchange ask - market sell lead market buy lag
                         # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
@@ -344,7 +347,8 @@ class Diaoxia:
                 
     def htx_publicCallback(self,message):
         try:
-            logger.debug(message)
+            
+            # logger.debug(message)
             if message.get('tick'):
                 self.htx_best_bid = message['tick']['bid'][0]
                 self.htx_best_bid_sz = message['tick']['bid'][1]

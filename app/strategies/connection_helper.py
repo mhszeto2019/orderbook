@@ -147,7 +147,7 @@ class HtxPositions:
 
     async def _subscribe(self, subs, auth=False, callback=None):
         try:
-            async with websockets.connect(self.url) as websocket:
+            async for websocket in websockets.connect(self.url):
                 self.ws = websocket
                 if auth:
                     await self.authenticate(websocket)
@@ -175,8 +175,12 @@ class HtxPositions:
                     except websockets.ConnectionClosed:
                         # print(" HTX WebSocket connection closed.")
                         logger.error("HTX Websocket in HTXposition connection closed")
-                        self.is_open = False
-                        break  # Break out of the loop when connection is closed
+                        await self._close()
+                        logger.debug("CLOSED")
+                        logger.debug('REOPENING')
+                        continue
+                        # self.is_open = False
+                        # break  # Break out of the loop when connection is closed
 
         except Exception as e:
             # print(f"An error occurred: {e}")
@@ -204,9 +208,9 @@ class HtxPositions:
         await websocket.send(msg_str)
         # print(f"send: {msg_str}")
 
-    def _close(self):
+    async def _close(self):
         if self.ws:
-            self.ws.close()
+            await self.ws.close()
             print("WebSocket connection closed.")
             self.ws = None
 
@@ -275,7 +279,7 @@ class HtxBbo:
 
     async def _subscribe(self, subs, auth=False, callback=None):
         try:
-            async with websockets.connect(self.url) as websocket:
+            async for websocket in websockets.connect(self.url):
                 self.ws = websocket
                 if auth:
                     await self.authenticate(websocket)
@@ -284,11 +288,15 @@ class HtxBbo:
                 for sub in subs:
                     sub_str = json.dumps(sub)
                     await websocket.send(sub_str)
-                    # print(f"send: {sub_str}")
+
+                    print(f"send: {sub_str}")
+
+
 
                 while self.is_open and not self._stop_event.is_set():
                     try:
                         rsp = await websocket.recv()
+                        
                         data = json.loads(gzip.decompress(rsp).decode())
                         if "op" in data and data.get("op") == "ping":
                             pong_msg = {"op": "pong", "ts": data.get("ts")}
@@ -301,8 +309,9 @@ class HtxBbo:
                         if callback:
                             callback(data)
                     except websockets.ConnectionClosed:
-                        print(" HTX WebSocket connection closed.")
+                        print("HTXBBO WebSocket connection closed.")
                         self.is_open = False
+                        await self._close()
                         continue
                         # raise Exception
                         # break  # Break out of the loop when connection is closed
@@ -333,9 +342,9 @@ class HtxBbo:
         await websocket.send(msg_str)
         # print(f"send: {msg_str}")
 
-    def _close(self):
+    async def _close(self):
         if self.ws:
-            self.ws.close()
+            await self.ws.close()
             print("WebSocket connection closed.")
             self.ws = None
 
