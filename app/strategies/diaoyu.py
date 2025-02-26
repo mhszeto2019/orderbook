@@ -364,7 +364,6 @@ class Diaoyu:
                     }]
                     )
                     # logger.debug(f"Result{result}")
-
                     self.row['order_id']  = result['data'][0]['ordId']
                          
             # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
@@ -419,13 +418,14 @@ class Diaoyu:
                                 # Continue to place limit order since qty has not been filled
                                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                                 self.row['order_id']  = result['data'][0]['ordId']
-                            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
+                            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
                                         
                     else:
                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
                         self.row['order_id']  = result['data'][0]['ordId']
-
                     # return
+                    if result:
+                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result}()")
 
             except Exception as e:
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:{e}")
@@ -435,6 +435,7 @@ class Diaoyu:
             with self.lock:
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
+            
                 # logger.debug(message)
                 if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
 
@@ -458,6 +459,7 @@ class Diaoyu:
                     else:
                         # Run the async function to completion in the current thread
                         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
+                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx position result:{trade}")
 
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:{e}")

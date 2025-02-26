@@ -59,6 +59,7 @@ config_source = config['dbchoice']['db']
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
+import time
 
 from app.strategies.connection_helper import OkxBbo,HtxBbo
 
@@ -138,7 +139,7 @@ class Diaoxia:
 
     # connection with okx bbo
     async def run_okx_bbo(self):
-        
+        logger.debug("OKXBBO")
         """Run the OkxBbo WebSocket client."""
         self.row['okx_client'] = OkxBbo()
         currency_pairs = ["BTC-USD-SWAP"]  # Add more pairs as needed
@@ -188,19 +189,22 @@ class Diaoxia:
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
       
         self.update_db()
-
+        
     async def place_market_order(self,exchange,size,direction):
+        start = time.time()
         if exchange == 'htx':
             await self.place_market_order_htx(size,direction)
         elif exchange == 'okx':
             await self.place_market_order_okx(size,direction)
+        end = time.time()
+        logger.debug(end-start)
 
     async def execute_orders(self, min_avail_amt):
         """Run orders concurrently for different exchanges but sequentially for the same exchange."""
-        async with self.excecution_lock:  # Correct usage for asyncio.Lock
+        # async with self.excecution_lock:  # Correct usage for asyncio.Lock
             # Execute the lead exchange order and wait for it to complete
-            await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
-            await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
+        await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
+        await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
 
     def check_condition(self,spread,callback):
         try:
@@ -227,7 +231,7 @@ class Diaoxia:
                         # place market buy order on lead excahnge 
                         # place market sell order on lag exchange
                         # place_market_order(lead_exchange,lag_exchange,spread)
-                        print('buy okx sell htx')
+                        # print('buy okx sell htx')
                         asyncio.create_task(self.execute_orders(min_avail_amt))
                         logger.debug(self.lead_filled_vol)
                         self.lead_filled_vol += min_avail_amt
@@ -237,7 +241,7 @@ class Diaoxia:
                         min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
                         # place market sell order on lead excahnge 
                         # place market buy order on lag exchange
-                        print('sell okx buy htx')
+                        # print('sell okx buy htx')
                         asyncio.create_task(self.execute_orders(min_avail_amt))
                         logger.debug(self.lead_filled_vol)
                         self.lead_filled_vol += min_avail_amt
@@ -247,6 +251,9 @@ class Diaoxia:
             else:
                 # reset after close
                 self.lead_filled_vol = 0
+
+          
+
         except Exception as e:
             print(e)
             raise e
@@ -322,6 +329,7 @@ class Diaoxia:
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
     async def place_order_htx_helper(self,tradeApi, instId, volume, direction, offset):
+        
         return await tradeApi.place_order(
             instId,
             body={
@@ -335,6 +343,35 @@ class Diaoxia:
             }
         )
     
+# async def process_order(self, tradeApi, positions, size, direction):
+#     position_data = positions.get("data", [])
+    
+#     closing_size = 0
+#     availability = int(size)
+#     net_pos_size = 0
+
+#     # Process existing positions
+#     for pos in position_data:
+#         pos_vol = int(pos["available"])
+#         if pos["direction"] != direction:
+#             availability -= pos_vol
+#             closing_size += pos_vol
+#             net_pos_size -= pos_vol
+#         else:
+#             net_pos_size += pos_vol  
+
+#     # Determine order type
+#     order_type = "close" if closing_size else "open"
+#     order_size = str(size if closing_size >= size else availability)
+
+#     # Place order
+#     result = await self.place_order_htx_helper(tradeApi, self.ccy.replace("-SWAP", ""), order_size, direction, order_type)
+#     self.row["order_id"] = result["data"][0]["ordId"]
+
+#     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx_place_market_order result:{result}")
+
+
+
     async def place_market_order_htx(self,size,direction):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
@@ -372,27 +409,32 @@ class Diaoxia:
                         else:
                             net_pos_size += pos_vol      
                 
-                # If we dont need to close, we just open a position     
-                if closing_size == 0:
-                    # same direction so we just add on
-                    result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(availability), direction,"open")
-                    self.row['order_id']  = result['data'][0]['ordId']
+                order_type = "close" if closing_size else "open"
+                order_size = str(size if closing_size >= size else availability)
+                result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), order_size, direction,order_type)
 
-                # if cancellation is involved
-                else: 
+                # # If we dont need to close, we just open a position     
+                # if closing_size == 0:
+                #     # same direction so we just add on
+                #     result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(availability), direction,"open")
+                #     self.row['order_id']  = result['data'][0]['ordId']
 
-                    #If there is a position that we need to close and there is availability to increase in another direction
-                    if int(closing_size) >= int(size):
-                        # If there is position that can be closed and there are no more excess positions to carry on
-                        # When there is a position  we need to close but no more availability to increase pos
-                        result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
-                        self.row['order_id']  = result['data'][0]['ordId']
+                # # if cancellation is involved
+                # else: 
 
-                    else:
-                        # if there is position that can be closed and there are no more excess positions to carry on
-                        # when theres pos we need to close but no more availability to increase pos
-                        result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
-                        self.row['order_id']  = result['data'][0]['ordId']
+                #     #If there is a position that we need to close and there is availability to increase in another direction
+                #     if closing_size >= size:
+                #         # If there is position that can be closed and there are no more excess positions to carry on
+                #         # When there is a position  we need to close but no more availability to increase pos
+                #         result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
+                #         self.row['order_id']  = result['data'][0]['ordId']
+
+                #     else:
+                #         # if there is position that can be closed and there are no more excess positions to carry on
+                #         # when theres pos we need to close but no more availability to increase pos
+                #         result = await self.place_order_htx_helper(tradeApi, self.ccy.replace('-SWAP',''), str(size), direction,"close")
+                #         self.row['order_id']  = result['data'][0]['ordId']
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx_place_market_order result:{result}")
 
             except Exception as e:
                 print(e)
@@ -439,7 +481,7 @@ class Diaoxia:
 
             return result
         except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{e}")
+            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_market_order ERROR:{e}")
     
     def update_db(self):
         # Input should be unique so it should be username,algo_type and algoname

@@ -396,7 +396,6 @@ function fetchAlgoData() {
 document.addEventListener('DOMContentLoaded', fetchAlgoData);
 
 
-
 function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spread, quantity, ccy,instrument,contractType, state){
     
     const requestBody = {
@@ -436,9 +435,7 @@ function modifyAlgo(username,algoType, algoName,lead_exchange, lag_exchange, spr
             
             console.error("Error sending POST request:", error);
         });
-
 }
-
 
 // Handle the toggle change
 function handleAlgoToggle(checkbox, algo_name,algo_type,statusId) {
