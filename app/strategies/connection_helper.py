@@ -49,6 +49,7 @@ class OkxBbo:
             arg = {"channel": channel, "instId": inst_id}
             self.subscribed_pairs.append(inst_id)  # Track the subscription
             await self.ws.subscribe([arg], callback)  # Subscribe using the args list
+
         except Exception as e:
             logger.error("SUBSCRIBE EXCEPTION RAISED!")
             raise Exception
@@ -173,6 +174,8 @@ class HtxPositions:
                             # print(f"send: {pong_msg}")
                         if callback:
                             callback(data)
+                            # print("CALLBACK DATA",data)
+                            
                     except websockets.ConnectionClosed:
                         # print(" HTX WebSocket connection closed.")
                         logger.error("HTX Websocket in HTXposition connection closed")
@@ -303,7 +306,6 @@ class HtxBbo:
                 while self.is_open and not self._stop_event.is_set():
                     try:
                         rsp = await websocket.recv()
-                        
                         data = json.loads(gzip.decompress(rsp).decode())
                         if "op" in data and data.get("op") == "ping":
                             pong_msg = {"op": "pong", "ts": data.get("ts")}
@@ -315,6 +317,8 @@ class HtxBbo:
                             # print(f"send: {pong_msg}")
                         if callback:
                             callback(data)
+                            
+
                     except websockets.ConnectionClosed:
                         print("HTXBBO WebSocket connection closed.")
                         # raise Exception

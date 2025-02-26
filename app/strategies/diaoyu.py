@@ -263,6 +263,8 @@ class Diaoyu:
                         if self.row['order_id'] :
                             asyncio.create_task(self.revoke_order_by_id())
                         # self.row['order_id']  = None
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|OKX BBO:{json_data}")
+                
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
@@ -460,7 +462,7 @@ class Diaoyu:
                         # Run the async function to completion in the current thread
                         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx position result:{trade}")
-
+                    
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:{e}")
 

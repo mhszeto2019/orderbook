@@ -189,7 +189,7 @@ class Diaoxia:
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
       
         self.update_db()
-        
+
     async def place_market_order(self,exchange,size,direction):
         start = time.time()
         if exchange == 'htx':
@@ -280,7 +280,8 @@ class Diaoxia:
                     # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
                     self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
                     self.check_condition(spread,'okx_callback')
-                    
+                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|OKX BBO:{json_data}")
+                
 
     #                 if self.row['state']:
                     
@@ -450,7 +451,7 @@ class Diaoxia:
                     self.htx_best_ask = message['tick']['ask'][0]
                     self.htx_best_ask_sz = message['tick']['ask'][1]
                     self.check_condition(float(self.spread),'htx_callback')
-
+                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|HTX BBO:{message}")
                     
             except Exception as e:
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
