@@ -119,17 +119,7 @@ class AlgoFactory:
     def update_user_algo_type_count(self, username: str, algotype: str, side: str, qty: int):
         """Updates buy/sell counts for a user's algorithm type."""  
         logger.debug(username)
-        
-        # if side not in {"buy", "sell"}:
-        #     raise ValueError("side must be either 'buy' or 'sell'")
-
-        # # Ensure username exists
-        # if username not in self.user_algo_type_count:
-        #     self.user_algo_type_count[username] = {"diaoyu":{},"diaoxia":{}}
-
-        # # Ensure algotype exists
-        # if side not in self.user_algo_type_count[username][algotype]:
-        #     self.user_algo_type_count[username][algotype] = {"buy": 0, "sell": 0}  # Initialize buy/sell keys
+            
 
         # Safely update buy/sell count
         self.user_algo_type_count[username][algotype][side] += qty

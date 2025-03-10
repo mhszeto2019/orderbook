@@ -429,59 +429,58 @@ class Diaoxia:
     
     def htx_position_publicCallback(self,message):
         # logger.debug(message)
-        try:
-            if message.get('op') == "notify":
-                # logger.debug(message)
-                if message.get('data'):
-                    # logger.debug(f"HTX POSITION PUBLIC CALLBACK {message}")
-                    # logger.debug(self.row)
+        with self.order_lock:
 
-                #     # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
-                    net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
-                    # logger.debug(self.row['user_algo_type_count'])
-                    user_algo_type_count = self.row['user_algo_type_count'][self.username]
+            try:
+                if message.get('op') == "notify":
+                    # logger.debug(message)
+                    if message.get('data'):
+                        # logger.debug(f"HTX POSITION PUBLIC CALLBACK {message}")
+                        # logger.debug(self.row)
 
-                    #
-                    # when theres no position
-                    if net_volume == 0:
-                        # logger.debug('diaoxia as per normal')
-                        # logger.debug(self.qty)
-                        # logger.debug(self.diaoxia_availability)
-                        self.diaoxia_availability = int(self.qty)
-                        # logger.debug(self.diaoxia_offset)
+                    #     # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
+                        net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
+                        # logger.debug(self.row['user_algo_type_count'])
+                        user_algo_type_count = self.row['user_algo_type_count'][self.username]
 
+                        #
+                        # when theres no position
+                        if net_volume == 0:
+                            # logger.debug('diaoxia as per normal')
+                            # logger.debug(self.qty)
+                            # logger.debug(self.diaoxia_availability)
+                            self.diaoxia_availability = int(self.qty)
 
-                    # if (net_volume == -user_algo_type_count['diaoyu']['buy'] or net_volume == -user_algo_type_count['diaoyu']['sell']) and net_volume != 0 :
-                    #     self.diaoxia_availability = 0
+                        # if (net_volume == -user_algo_type_count['diaoyu']['buy'] or net_volume == -user_algo_type_count['diaoyu']['sell']) and net_volume != 0 :
+                        #     self.diaoxia_availability = 0
 
-                    elif net_volume < 0:
-                        # check for diaoyu buy because diaoyu buy will cause availability to decrease when netvolume is 0
-                        if (net_volume == -user_algo_type_count['diaoyu']['buy']):
-                            self.diaoxia_availability = 0
-                        elif user_algo_type_count['diaoyu']['buy'] > 0:
-                            self.diaoxia_availability = net_volume  + user_algo_type_count['diaoyu']['buy']
-                        elif user_algo_type_count['diaoyu']['buy'] <= 0:
-                            # if diaoxia same direction as pos
-                            # if user_algo_type_count['diaoxia']['buy'] <=0:
-                            #     logger.debug(user_algo_type_count)
-                            #     logger.debug(user_algo_type_count['diaoxia']['sell'])
-                            #     logger.debug(self.diaoxia_availability)
-                            #     # self.diaoxia_availability += user_algo_type_count['diaoxia']['sell']
-                            # else:
-                            self.diaoxia_availability = net_volume 
+                        elif net_volume < 0:
+                            # check for diaoyu buy because diaoyu buy will cause availability to decrease when netvolume is 0
+                            if (net_volume == -user_algo_type_count['diaoyu']['buy']):
+                                self.diaoxia_availability = 0
+                            elif user_algo_type_count['diaoyu']['buy'] > 0:
+                                self.diaoxia_availability = net_volume  + user_algo_type_count['diaoyu']['buy']
+                            elif user_algo_type_count['diaoyu']['buy'] <= 0:
+                                # if diaoxia same direction as pos
+                                self.diaoxia_availability = net_volume 
+                                print("DIAOYU EMPTY")
+                                if user_algo_type_count['diaoxia']['buy'] <=0:
+                                    self.diaoxia_availability = net_volume 
+                                else:
+                                    self.diaoxia_availability = net_volume + user_algo_type_count['diaoxia']['buy']
 
-                    elif net_volume > 0:
-                        if (net_volume == -user_algo_type_count['diaoyu']['sell']):
-                            self.diaoxia_availability = 0
-                        elif user_algo_type_count['diaoyu']['sell'] > 0:
-                            self.diaoxia_availability = net_volume  - user_algo_type_count['diaoyu']['sell'] 
-                        elif user_algo_type_count['diaoyu']['sell'] <= 0:
-                            self.diaoxia_availability = net_volume
+                        elif net_volume > 0:
+                            if (net_volume == -user_algo_type_count['diaoyu']['sell']):
+                                self.diaoxia_availability = 0
+                            elif user_algo_type_count['diaoyu']['sell'] > 0:
+                                self.diaoxia_availability = net_volume  - user_algo_type_count['diaoyu']['sell'] 
+                            elif user_algo_type_count['diaoyu']['sell'] <= 0:
+                                self.diaoxia_availability = net_volume
 
-                
-                # logger.debug(f'DIAO XIA AVIALBILITY{self.diaoxia_availability}')
-        except Exception as e:
-            logger.error(f"Error{traceback.format_exc()}")
+                    
+                    # logger.debug(f'DIAO XIA AVIALBILITY{self.diaoxia_availability}')
+            except Exception as e:
+                logger.error(f"Error{traceback.format_exc()}")
 
 
 
