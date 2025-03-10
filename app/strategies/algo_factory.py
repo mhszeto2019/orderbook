@@ -116,10 +116,14 @@ class AlgoFactory:
         self.processes.append(process)
 
 
-    def update_user_algo_type_count(self, username: str, algotype: str, side: str, qty: int):
+    def update_user_algo_type_count(self, username: str, algotype: str, spread: int, qty: int):
         """Updates buy/sell counts for a user's algorithm type."""  
+        print(spread,type(spread))
         logger.debug(username)
-            
+        if algotype == 'diaoyu':
+            side = 'buy' if spread > 0 else 'sell'
+        elif algotype == 'diaoxia':
+            side = 'sell' if spread > 0 else 'buy'
 
         # Safely update buy/sell count
         self.user_algo_type_count[username][algotype][side] += qty
@@ -134,7 +138,7 @@ class AlgoFactory:
         # Update state in multiprocess
         self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
         self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
-        self.shared_states[instance_id]['spread'] = json_data['lead_exchange']
+        self.shared_states[instance_id]['spread'] = json_data['spread']
         self.shared_states[instance_id]['qty'] = json_data['qty']
         self.shared_states[instance_id]['ccy'] = json_data['ccy']
         self.shared_states[instance_id]['instrument'] = json_data['instrument']
@@ -154,11 +158,11 @@ class AlgoFactory:
             side = 'sell' if int(json_data['spread']) > 0 else 'buy'
 
         qty = int(json_data['qty'])
-        logger.debug(username,algo_type,side,qty)
+        logger.debug(username,algo_type,json_data['spread'],qty)
         if  json_data['state']:
-            self.update_user_algo_type_count(username,algo_type,side,qty)
+            self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
         else:
-            self.update_user_algo_type_count(username,algo_type,side,-qty)
+            self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),-qty)
 
         for instance_id in self.shared_states:
             if username in instance_id:
