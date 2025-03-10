@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Register</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            border-radius: 15px;
+        }
+
+        .card-header {
+            background-color: #008CBA;
+            color: white;
+            text-align: center;
+            padding: 30px;
+            font-size: 24px;
+        }
+
+        .card-body {
+            background: #132f44; /* Slightly warmer dark blue */
+            padding: 40px;
+            border-radius: 15px;
+        }
+
+        .form-control {
+            background-color: #2c3e50; /* Darker shade of blue-gray for better contrast */
+            border: 1px solid #34495e; /* Subtle contrast for input borders */
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .form-control:focus {
+            background-color: #48717b; /* Soft teal for a fresh focus effect */
+            border-color: #2980b9; /* Keep your blue border for consistency */
+        }
+
+
+        .btn-primary {
+            background-color: #008CBA;
+            border-color: #008CBA;
+            padding: 12px;
+            width: 100%;
+            font-size: 18px;
+        }
+
+        .btn-primary:hover {
+            background-color: #007B8F;
+            border-color: #007B8F;
+        }
+
+        .toggle-button {
+            background-color: #16a085;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .toggle-button:hover {
+            background-color: #1abc9c;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: #bdc3c7;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .crypto-logo {
+            width: 50px;
+            margin-bottom: 20px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+    
+</head>
+
+<body>
+
+        
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <!-- Card for Login and Register -->
+                <div class="card">
+                   
+                    <div class="card-body">
+                        <div class="logo-container">
+                            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Crypto Logo" class="crypto-logo">
+                        </div>
+
+                        <!-- Login Form -->
+                        <div id="login-form">
+                            <h5 class="text-center text-light">Login</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="login-username" class="form-label">Username</label>
+                                    <input type="username" class="form-control" id="login-username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="login-password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="login-password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Log In</button>
+                            </form>
+                            <div class="footer-text">
+                                <p class="text-light">Don't have an account? 
+                                    <span onclick="toggleForm('register')" style="color: #008CBA; cursor: pointer;">Sign Up</span>
+                                </p>
+                            </div>
+                            
+                        </div>
+
+                        <!-- Register Form -->
+                        <div id="register-form" style="display:none;">
+                            <h5 class="text-center text-light">Sign Up</h5>
+                            <!-- <form id="signup-form" onsubmit="return validatePasswords()"> -->
+                            <form id="signup-form" >
+                                <div class="container mt-4">
+                                    <h5 class="form-label text-primary mb-3">User Details</h5>
+
+                                    <div class="mb-3">
+                                        <label for="reg-username" class="form-label">Full Name</label>
+                                        <input type="text" class="form-control" id="reg-username" required>
+                                    </div>
+                                
+                                    <div class="mb-3">
+                                        <label for="reg-password" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="reg-password" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="reenter-password" class="form-label">Re-enter Password</label>
+                                        <input type="password" class="form-control" id="reenter-password" required>
+                                        <small id="password-error" class="text-danger" style="display: none;">Passwords do not match</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Sign Up</button>
+
+                                </div>
+
+                                 <!-- Grouped Section for API Credentials -->
+                                 
+                                
+                            </form>
+                            <div class="footer-text">
+                                <p class="text-light">Don't have an account? 
+                                    <span onclick="toggleForm('login')" style="color: #008CBA; cursor: pointer;">Login</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Button -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle (Includes Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const hostname = window.location.hostname;
+        // console.log(hostname)
+        
+        // Function to validate passwords
+        function validatePasswords(password, reenterPassword) {
+            const errorMessage = document.getElementById('password-error');
+    
+            if (password !== reenterPassword) {
+                errorMessage.style.display = 'block';  // Show error if passwords don't match
+                alert("Passwords do not match! Try again")
+                return false; // Prevent form submission
+            } else {
+                errorMessage.style.display = 'none';  // Hide error if passwords match
+                return true; // Allow form submission
+            }
+        }
+    
+        // Function to toggle between login and register forms
+        function toggleForm(formType) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+    
+            if (formType === 'register') {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            } else {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            }
+        }
+    
+        // Event listener for the registration form submission
+        document.getElementById('register-form').onsubmit = async (event) => {
+            event.preventDefault();  // Prevent form submission to avoid page reload
+            const password = document.getElementById('reg-password').value;
+            const reenterPassword = document.getElementById('reenter-password').value;
+            const username = document.getElementById('reg-username').value;
+
+            // const secretkey = document.getElementById('reg-secretkey').value;
+            // const apikey = document.getElementById('reg-apikey').value;
+            // const passphrase = document.getElementById('reg-passphrase').value;
+    
+            if (validatePasswords(password, reenterPassword)) {
+                console.log("send to backend to register")
+    
+                try {
+                    const response = await fetch(`http://${hostname}:5000/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',  // Send the data as URL-encoded form data
+                        },
+                        body: new URLSearchParams({
+                            'username': username,
+                            'password': password,
+                            // 'secretkey':secretkey,
+                            // 'apikey':apikey,
+                            // 'passphrase':passphrase
+                        })
+                    });
+    
+                    const result = await response.json();  // Parse JSON response from the server
+                    if (response.ok) {
+                        console.log('Registration successful:', result.message);
+                        alert('Registration successful!');
+                        // After successful registration, switch to the login form
+                        toggleForm('login');
+                        // Optionally, you can clear the form fields:
+                        document.getElementById('reg-username').value = '';
+                        document.getElementById('reg-password').value = '';
+                        document.getElementById('reenter-password').value = '';
+                    } else {
+                        console.error('Error:', result.message);
+                        alert(result.message);  // Display the error message returned from the server
+                    }
+                } catch (error) {
+                    console.error('Error during fetch:', error);
+                    alert('Something went wrong!');
+                }
+            }
+        }
+    
+        document.getElementById('login-form').onsubmit = async (event) => {
+            event.preventDefault();  // Prevent form submission to avoid page reload
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+
+            console.log("Sending login request to backend");
+
+            try {
+                const response = await fetch(`http://${hostname}:5000/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',  // Send the data as URL-encoded form data
+                    },
+                    body: new URLSearchParams({
+                        'username': username,
+                        'password': password
+                    })
+                });
+
+                const result = await response.json();  // Parse JSON response from the server
+                if (response.ok) {
+                    console.log(result)
+                    console.log('Login successful:', result.message);
+                    // alert(`Login successful! Welcome ${username}`);
+                    
+                    // Store the JWT token in localStorage
+                    localStorage.setItem('jwt_token', result.token);
+                    localStorage.setItem('key', result.key);
+                    localStorage.setItem('username', result.username);
+
+                    // Clear form fields
+                    document.getElementById('login-username').value = '';
+                    document.getElementById('login-password').value = '';
+                    
+                    // Redirect to landing page after login
+                    window.location.href = "index.html";  // Redirects to the landing page
+                } else {
+                    console.error('Error:', result.message);
+                    alert(result.message);  // Display the error message returned from the server
+                }
+            } catch (error) {
+                console.error('Error during fetch:', error);
+                alert('Something went wrong!');
+            }
+        };
+
+        
+        // Event listeners to clear the password mismatch error message while typing
+        document.getElementById('reg-password').addEventListener('input', function() {
+            const errorMessage = document.getElementById('password-error');
+            errorMessage.style.display = 'none';  // Hide error when the user starts typing
+        });
+    
+        document.getElementById('reenter-password').addEventListener('input', function() {
+            const errorMessage = document.getElementById('password-error');
+            errorMessage.style.display = 'none';  // Hide error when the user starts typing
+        });
+    
+        
+    </script>
+
+</body>
+
+</html>

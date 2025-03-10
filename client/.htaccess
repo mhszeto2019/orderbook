@@ -1,0 +1,14 @@
+# Disable directory listing
+Options -Indexes
+
+# Allow access to only specific static file types
+<FilesMatch "\.(html|htm|css|js|jpg|jpeg|png|gif|svg|ico)$">
+    Require all granted
+</FilesMatch>
+
+# Deny access to sensitive files like Python scripts, configs, and logs from public access
+<FilesMatch "\.(py|ini|conf|json|sql|env|log)$">
+    Require all denied
+</FilesMatch>
+
+# Allow local server processes to access .log files for writing
