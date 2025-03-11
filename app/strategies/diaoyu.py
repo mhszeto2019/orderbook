@@ -295,9 +295,10 @@ class Diaoyu:
                     elif htx_direction == 'buy':
                         # buy on htx sell on okx - we set the spread away from okx best_bid because we want to sell on okx 
                         asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_ask,self.limit_ask_price, self.qty,htx_direction,okx_direction))
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} ")
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxlimits:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} ")
+
         except Exception as e:
-            logger.debug("SWITCH OFF ALL ALGOS!")
+            logger.error("SWITCH OFF ALL ALGOS!")
             self.update_db()
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
@@ -311,6 +312,7 @@ class Diaoyu:
                     "symbol": "BTC"
                     }
                     )
+                logger.debug(positions)
                 position_data = positions.get('data', []) if positions else []
                 # Check if position_data has at least one item to avoid IndexError 
                 # If there is a position, we need to find out these conditions:
@@ -391,87 +393,146 @@ class Diaoyu:
                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
                 
             except Exception as e:
-                logger.error(positions)
-                self.update_db()
+                logger.error(position_data)
                 logger.error(f"LIMIT ORDER FUNCTION ERROR:{traceback.format_exc()}")
+                # self.update_db()
+                # raise Exception
+
 
             return result
 
     
 
-    async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-        # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
-        # if not self.row['state']:
-        #     return 
-        # if self.row['state']:
+    # async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
+    #     # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
+    #     # if not self.row['state']:
+    #     #     return 
+    #     # if self.row['state']:
+    #     with self.lock:
+    #         result = None
+    #         try:
+    #             # async with asyncio.Lock():
+    #             self.row['okx_direction'] = okx_direction
+    #             # Check if theres is an order_id. if dont have, it will be a new order
+    #             if self.row['order_id']:
+    #                 # If there is an order id present , we revoke it 
+    #                 revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
+    #                     body = {
+    #                     "order_id":self.row['order_id'] ,
+    #                     "contract_code": self.ccy.replace('-SWAP','')
+    #                     }
+    #                 )
+    #                 revoke_order_data = revoke_orders.get('data', [])
+    #                 self.row['order_id']  = None
+
+    #                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
+    #                 # Upon successful revoking, we place an order
+    #                 if len(revoke_order_data['errors']) == 0:
+    #                     # Call the asynchronous place_order function
+    #                     result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+    #                     # print("RESULT",result)
+    #                     self.row['order_id']  = result['data'][0]['ordId'] if result else None
+    #                     # self.row['order_id']  = result['data'][0]['ordId']
+
+    #                 else:
+    #                     # self.row['order_id']  = None
+    #                     # If revoke order has an error, there will be 
+    #                     # 2 scenarios can be present here:
+    #                     # 1) when qty_filled matches the desired amount set by trader
+    #                     if self.htx_is_filled or self.qty == self.htx_filled_volume:
+    #                         self.row['state'] = False
+    #                         # Reset values after fill
+    #                         self.htx_is_filled = False
+    #                         self.htx_filled_volume = 0 
+    #                         self.update_db()
+    #                         self.row['order_id']  = None
+    #                     # 2) when qty_filled doesnt match the desired amount
+    #                     else:
+    #                         self.row['order_id']  = None
+    #                         # Continue to place limit order since qty has not been filled
+    #                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+
+    #                         self.row['order_id']  = result['data'][0]['ordId'] if not self.row['order_id'] else None
+    #                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
+                                    
+    #             else:
+    #                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+    #                 # print(result)
+
+    #                 self.row['order_id']  = result['data'][0]['ordId'] if result else None
+
+    #                 # self.row['order_id']  = result['data'][0]['ordId'] 
+    #             if result:
+    #                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result}()")
+
+    #             return
+
+    #         except Exception as e:
+    #             logger.debug("SWITCH OFF ALL ALGOS!")
+    #             logger.debug(limit_buy_price)
+    #             logger.debug(limit_buy_size)
+    #             logger.debug(htx_direction)
+    #             self.update_db()
+            
+    #             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:{traceback.format_exc()}")
+
+
+    async def place_limit_order_htx(self, algoname, best_bid, limit_buy_price, limit_buy_size, htx_direction, okx_direction):
         with self.lock:
             result = None
             try:
-                # async with asyncio.Lock():
                 self.row['okx_direction'] = okx_direction
-                # Check if theres is an order_id. if dont have, it will be a new order
+
+                # If there is an existing order, try to revoke it
                 if self.row['order_id']:
-                    # If there is an order id present , we revoke it 
-                    revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
-                        body = {
-                        "order_id":self.row['order_id'] ,
-                        "contract_code": self.ccy.replace('-SWAP','')
-                        }
-                    )
-                    revoke_order_data = revoke_orders.get('data', [])
-                    self.row['order_id']  = None
+                    try:
+                        revoke_orders = await self.htx_tradeapi.revoke_order(
+                            self.ccy,
+                            body={
+                                "order_id": self.row['order_id'],
+                                "contract_code": self.ccy.replace('-SWAP', '')
+                            }
+                        )
+                        revoke_order_data = revoke_orders.get('data', [])
+                        self.row['order_id'] = None  # Reset order_id
 
-                    # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
-                    # Upon successful revoking, we place an order
-                    if len(revoke_order_data['errors']) == 0:
-                        # Call the asynchronous place_order function
-                        result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-                        # print("RESULT",result)
-                        self.row['order_id']  = result['data'][0]['ordId'] if result else None
-                        # self.row['order_id']  = result['data'][0]['ordId']
-
-                    else:
-                        # self.row['order_id']  = None
-                        # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True ERROR)")
-                        # If revoke order has an error, there will be 
-                        # 2 scenarios can be present here:
-                        # 1) when qty_filled matches the desired amount set by trader
-                        if self.htx_is_filled or self.qty == self.htx_filled_volume:
-                            self.row['state'] = False
-                            # Reset values after fill
-                            self.htx_is_filled = False
-                            self.htx_filled_volume = 0 
-                            self.update_db()
-                            self.row['order_id']  = None
-                        # 2) when qty_filled doesnt match the desired amount
+                        if not revoke_order_data['errors']:
+                            # Place a new order after successful revocation
+                            result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
+                            self.row['order_id'] = result['data'][0]['ordId'] if result else None
                         else:
-                            self.row['order_id']  = None
-                            # Continue to place limit order since qty has not been filled
-                            result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
+                            # Handle revoke order errors
+                            if self.htx_is_filled or self.qty == self.htx_filled_volume:
+                                self.row['state'] = False
+                                self.htx_is_filled = False
+                                self.htx_filled_volume = 0
+                                self.update_db()
+                            else:
+                                # Continue placing limit order if qty is not fully filled
+                                result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
+                                self.row['order_id'] = result['data'][0]['ordId'] if not self.row['order_id'] else None
 
-                            self.row['order_id']  = result['data'][0]['ordId'] if not self.row['order_id'] else None
-                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
-                                    
+                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| Order updated: {self.row['order_id']}")
+                    
+                    except Exception as e:
+                        logger.error(f"{self.username}|{self.algotype}|{self.algoname}| Error revoking order: {traceback.format_exc()}")
+
                 else:
-                    result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-                    # print(result)
+                    # No existing order, place a new one
+                    try:
+                        result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
+                        self.row['order_id'] = result['data'][0]['ordId'] if result else None
+                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| New order placed: {self.row['order_id']}")
 
-                    self.row['order_id']  = result['data'][0]['ordId'] if result else None
+                    except Exception as e:
+                        logger.error(f"{self.username}|{self.algotype}|{self.algoname}| Error placing new order: {traceback.format_exc()}")
 
-                    # self.row['order_id']  = result['data'][0]['ordId'] 
-                if result:
-                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result}()")
-
-                return
+                return result
 
             except Exception as e:
-                logger.debug("SWITCH OFF ALL ALGOS!")
-                logger.debug(limit_buy_price)
-                logger.debug(limit_buy_size)
-                logger.debug(htx_direction)
+                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| Unexpected error: {traceback.format_exc()}")
                 self.update_db()
-            
-                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:{traceback.format_exc()}")
+                return None
                 
     def htx_publicCallback(self,message):
         if not self.row['state']:
@@ -553,11 +614,11 @@ class Diaoyu:
                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
 
-                return result
+                # return result
             
             except Exception as e:
                 self.update_db()
-                logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{e}")
+                logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{traceback.format_exc()}")
     
 
 

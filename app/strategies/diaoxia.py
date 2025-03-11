@@ -335,8 +335,6 @@ class Diaoxia:
                 self.lead_filled_vol = 0  # Reset when the algo is inactive
                 return
             # Check if we need to update DB (based on quantity availability)
-                        
-            print(self.net_volume)
             #  if theres no diaoyu , diaoxia will compete with each other 
             if sum(self.row['user_algo_type_count'][self.username]['diaoyu'].values()) > 0 :
                 if (int(self.qty) > abs(self.diaoxia_availability)) :
