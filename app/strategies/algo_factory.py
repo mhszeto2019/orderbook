@@ -118,16 +118,18 @@ class AlgoFactory:
 
     def update_user_algo_type_count(self, username: str, algotype: str, spread: int, qty: int):
         """Updates buy/sell counts for a user's algorithm type."""  
-        print(spread,type(spread))
+        print(spread,type(spread),qty)
         logger.debug(username)
         if algotype == 'diaoyu':
             side = 'buy' if spread > 0 else 'sell'
         elif algotype == 'diaoxia':
+            # if spread is negative, it sells on okx buy on htx
             side = 'sell' if spread > 0 else 'buy'
-
         # Safely update buy/sell count
-        self.user_algo_type_count[username][algotype][side] += qty
+        
+        self.user_algo_type_count[username][algotype][side] += qty 
 
+        print(self.user_algo_type_count)
 
 
     def update_algo(self, instance_id, algo_details):
@@ -148,14 +150,10 @@ class AlgoFactory:
         strat_and_process = self.algos.get(instance_id)
         # print(strat_and_process)
         strat = strat_and_process[0]
-        logger.debug(f"ALGO DETAILS that just got updated:{algo_details}")
+        print(f"ALGO DETAILS that just got updated:{algo_details}")
          
         username,algo_type,algo_name = instance_id.split('_')
-        # this is meant for htx 
-        if algo_type == 'diaoyu':
-            side = 'buy' if int(json_data['spread']) > 0 else 'sell'
-        elif algo_type == 'diaoxia':
-            side = 'sell' if int(json_data['spread']) > 0 else 'buy'
+      
 
         qty = int(json_data['qty'])
         logger.debug(username,algo_type,json_data['spread'],qty)

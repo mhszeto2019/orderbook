@@ -395,7 +395,7 @@ class Diaoyu:
             except Exception as e:
                 logger.error(position_data)
                 logger.error(f"LIMIT ORDER FUNCTION ERROR:{traceback.format_exc()}")
-                # self.update_db()
+                self.update_db()
                 # raise Exception
 
 

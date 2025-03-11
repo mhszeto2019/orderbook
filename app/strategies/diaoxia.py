@@ -334,18 +334,31 @@ class Diaoxia:
             if not self.row['state']:
                 self.lead_filled_vol = 0  # Reset when the algo is inactive
                 return
+            print(self.total_sell,self.total_buy,self.net_volume)
+            self.diaoxia_offset = 'open'
+
+            # if net_vol is positive and order is sell, we can only sell total pos
+            if self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume):
+                self.diaoxia_offset = 'close'
+                self.update_db()
+            # if net_vol is negative and order is buy, we allow order to go through
+            if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
+                self.diaoxia_offset = 'close'
+                self.update_db()
+            
+            
+                
             # Check if we need to update DB (based on quantity availability)
             #  if theres no diaoyu , diaoxia will compete with each other 
-            if sum(self.row['user_algo_type_count'][self.username]['diaoyu'].values()) > 0 :
-                if (int(self.qty) > abs(self.diaoxia_availability)) :
-                    logger.debug(self.diaoxia_availability)
-                    self.update_db()
-            else:
-                if (sum(self.row['user_algo_type_count'][self.username]['diaoxia'].values()) > abs(self.net_volume)):
-                    self.update_db()
+            # if sum(self.row['user_algo_type_count'][self.username]['diaoyu'].values()) > 0 :
+            #     if (int(self.qty) > abs(self.diaoxia_availability)) :
+            #         logger.debug(self.diaoxia_availability)
+            #         self.update_db()
+            # else:
+            #     if (sum(self.row['user_algo_type_count'][self.username]['diaoxia'].values()) > abs(self.net_volume)):
+            #         self.update_db()
 
-            # Determine diaoxia_offset in a concise way
-            self.diaoxia_offset = 'close' if self.lag_direction == 'buy' and self.diaoxia_availability < 0 else 'open'
+            # # Determine diaoxia_offset in a concise way
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
@@ -431,6 +444,7 @@ class Diaoxia:
             }
         )
     
+
     def htx_position_publicCallback(self,message):
         # logger.debug(message)
         with self.order_lock:
@@ -446,32 +460,38 @@ class Diaoxia:
                         self.net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
                         # logger.debug(self.row['user_algo_type_count'])
                         user_algo_type_count = self.row['user_algo_type_count'][self.username]
+                        # print(user_algo_type_count)
+                        # print(self.net_volume)
+                        self.total_sell = -(self.row['user_algo_type_count'][self.username]['diaoyu']['sell'] + self.row['user_algo_type_count'][self.username]['diaoxia']['sell'])
+                        self.total_buy = self.row['user_algo_type_count'][self.username]['diaoyu']['buy'] + self.row['user_algo_type_count'][self.username]['diaoxia']['buy']
+                        # print(self.total_sell,self.total_buy)
+                       
+                        # # when theres no position
+                        # if self.net_volume == 0:
+                        #     # logger.debug('diaoxia as per normal')
+                        #     self.diaoxia_availability = int(self.qty)
 
-                        # when theres no position
-                        if self.net_volume == 0:
-                            # logger.debug('diaoxia as per normal')
-                            self.diaoxia_availability = int(self.qty)
+                        # elif self.net_volume < 0:
+                        #     # check for diaoyu buy because diaoyu buy will cause availability to decrease when netvolume is 0
+                        #     if (self.net_volume == -user_algo_type_count['diaoyu']['buy']):
+                        #         self.diaoxia_availability = 0
+                        #     elif user_algo_type_count['diaoyu']['buy'] > 0:
+                        #         self.diaoxia_availability = self.net_volume  + user_algo_type_count['diaoyu']['buy']
+                        #     elif user_algo_type_count['diaoyu']['buy'] <= 0:
+                        #         # if diaoxia same direction as pos
+                        #         if user_algo_type_count['diaoxia']['buy'] > 0:
+                        #             self.diaoxia_availability = self.net_volume  + user_algo_type_count['diaoxia']['buy']
+                                    
+                        #         else:
+                        #             self.diaoxia_availability = self.net_volume 
 
-                        elif self.net_volume < 0:
-                            # check for diaoyu buy because diaoyu buy will cause availability to decrease when netvolume is 0
-                            if (self.net_volume == -user_algo_type_count['diaoyu']['buy']):
-                                self.diaoxia_availability = 0
-                            elif user_algo_type_count['diaoyu']['buy'] > 0:
-                                self.diaoxia_availability = self.net_volume  + user_algo_type_count['diaoyu']['buy']
-                            elif user_algo_type_count['diaoyu']['buy'] <= 0:
-                                # if diaoxia same direction as pos
-                                if user_algo_type_count['diaoxia']['buy'] > 0:
-                                    self.diaoxia_availability = self.net_volume  + user_algo_type_count['diaoxia']['buy']
-                                else:
-                                    self.diaoxia_availability = self.net_volume 
-
-                        elif self.net_volume > 0:
-                            if (self.net_volume == -user_algo_type_count['diaoyu']['sell']):
-                                self.diaoxia_availability = 0
-                            elif user_algo_type_count['diaoyu']['sell'] > 0:
-                                self.diaoxia_availability = self.net_volume  - user_algo_type_count['diaoyu']['sell'] 
-                            elif user_algo_type_count['diaoyu']['sell'] <= 0:
-                                self.diaoxia_availability = self.net_volume
+                        # elif self.net_volume > 0:
+                        #     if (self.net_volume == -user_algo_type_count['diaoyu']['sell']):
+                        #         self.diaoxia_availability = 0
+                        #     elif user_algo_type_count['diaoyu']['sell'] > 0:
+                        #         self.diaoxia_availability = self.net_volume  - user_algo_type_count['diaoyu']['sell'] 
+                        #     elif user_algo_type_count['diaoyu']['sell'] <= 0:
+                        #         self.diaoxia_availability = self.net_volume
 
                     
                     # logger.debug(f'DIAO XIA AVIALBILITY{self.diaoxia_availability}')
@@ -552,9 +572,11 @@ class Diaoxia:
         # Input should be unique so it should be username,algo_type and algoname
         # Update based on parameters. by updating here it will trigger the algo listener
         try:
-        
-
-            self.connect_db()
+            # side = 'buy' if int(self.spread) < 0 else 'sell'
+            # print(self.row['user_algo_type_count'][self.username]['diaoxia'][side])
+            # print(self.qty)
+            # self.row['user_algo_type_count'][self.username]['diaoxia'][side] =  self.row['user_algo_type_count'][self.username]['diaoxia'][side] - int(self.qty)
+            # self.connect_db()
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             # self.cursor.connection.commit()
             with self.cursor.connection.cursor() as cursor:
