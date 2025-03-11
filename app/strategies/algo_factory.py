@@ -127,6 +127,8 @@ class AlgoFactory:
             side = 'sell' if spread > 0 else 'buy'
         # Safely update buy/sell count
         
+        if self.user_algo_type_count[username][algotype][side]  < 0:
+            self.user_algo_type_count[username][algotype][side] = 0 
         self.user_algo_type_count[username][algotype][side] += qty 
 
         print(self.user_algo_type_count)
@@ -167,9 +169,6 @@ class AlgoFactory:
                 self.shared_states[instance_id]['user_algo_type_count'] = self.user_algo_type_count
         
         # self.shared_states[instance_id]['user_algo_type_count'] =  self.user_algo_type_count[username]
-        
-
-    
 
     def add_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
