@@ -205,14 +205,6 @@ class AlgoFactory:
 
         row_dict['user_algo_type_count'] = self.user_algo_type_count
         
-        # if row_dict['username'] not in self.user_algo_type_count:
-        #     self.user_algo_type_count[row_dict['username']] = {}  # Ensure row[0] exists as a dictionary
-
-        # if row_dict['algo_type'] not in self.user_algo_type_count[row_dict['username']]:
-        #     self.user_algo_type_count[row_dict['username']][row_dict['algo_type']] = 0  # Initialize if not exists
-
-        # self.user_algo_type_count[row_dict['username']][row_dict['algo_type']] += int(row_dict['qty'])  # Increment value
-        # print(self.user_algo_type_count)
 
         self.shared_states[instance_id] = self.manager.dict(row_dict)
         # Create the new strategy instance (Diaoyu)
@@ -242,7 +234,6 @@ class AlgoFactory:
                 logger.debug(f"Removed algo {algo_id}")
             for p in self.processes:
                 if p._name == self.shared_states[algo_id]['pname']:
-                    # print(f"🛑 Terminating process with PID {p._name}...")
                     p.terminate()
                     p.join()  # Ensure the process is properly cleaned up
                     self.processes.remove(p)  # Remove from the list if needed

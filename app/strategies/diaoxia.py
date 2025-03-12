@@ -576,7 +576,7 @@ class Diaoxia:
             # print(self.row['user_algo_type_count'][self.username]['diaoxia'][side])
             # print(self.qty)
             # self.row['user_algo_type_count'][self.username]['diaoxia'][side] =  self.row['user_algo_type_count'][self.username]['diaoxia'][side] - int(self.qty)
-            # self.connect_db()
+            self.connect_db()
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             # self.cursor.connection.commit()
             with self.cursor.connection.cursor() as cursor:

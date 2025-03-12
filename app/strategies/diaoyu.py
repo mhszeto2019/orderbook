@@ -131,7 +131,7 @@ class Diaoyu:
         self.limit_buy_price = None
         self.limit_buy_size = None
         self.limit_ask_price = None
-        self.row['order_id'] = None
+        self.order_id = None
         self.htx_direction = None
         self.okx_direction = None
         self.received_data = None  # Variable to store received data
@@ -188,18 +188,18 @@ class Diaoyu:
 
                     revoke_orders = await tradeApi.revoke_order(self.ccy,
                                             body = {
-                                            "order_id":self.row['order_id'] ,
+                                            "order_id":self.order_id ,
                                             "contract_code": self.ccy.replace('-SWAP','')
                                             }
                                         )
-                    self.remove_order(self.row['order_id'])
+                    self.remove_order(self.order_id)
                     
                     # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|revoke_order:{revoke_orders.get('data',[])}")
-                    self.row['order_id']  = None
+                    self.order_id  = None
 
                 except Exception as e:
-                    self.remove_order(self.row['order_id'])
-                    self.row['order_id']  = None
+                    self.remove_order(self.order_id)
+                    self.order_id  = None
 
                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{revoke_orders}")
 
@@ -275,7 +275,7 @@ class Diaoyu:
     
     def okx_publicCallback(self,message):
         if not self.row['state']:
-            if self.row['order_id'] :
+            if self.order_id :
                 asyncio.create_task(self.revoke_order_by_id())
             return 
         try:
@@ -360,6 +360,9 @@ class Diaoyu:
                     # if len(position_data) > 1:
                     for pos in position_data:
                         pos_vol = int(pos['volume'])
+                        # we need to check the amount of availability
+                        # pos_vol = int(pos['available'])
+
                         # closing size
                         if pos['direction'] != htx_direction:
                             availability -= pos_vol
@@ -382,7 +385,7 @@ class Diaoyu:
                     "order_price_type": "limit"       
                     }]
                     )
-                    self.row['order_id']  = result['data'][0]['ordId']
+                    self.order_id  = result['data'][0]['ordId']
                     self.place_order(result['data'][0]['ordId'],result)
 
                 # if cancellation is involved
@@ -403,7 +406,7 @@ class Diaoyu:
                         "order_price_type":"limit"
                         }]
                         )
-                        self.row['order_id']  = result['data'][0]['ordId'] if result else None
+                        self.order_id  = result['data'][0]['ordId'] if result else None
                         self.place_order(result['data'][0]['ordId'],result)
                     else:
                         # if there is position that can be closed and there are no more excess positions to carry on
@@ -420,10 +423,10 @@ class Diaoyu:
                         }]
                         )
                         # logger.debug(f"Result{result}")
-                        self.row['order_id']  = result['data'][0]['ordId']
+                        self.order_id  = result['data'][0]['ordId']
                         self.place_order(result['data'][0]['ordId'],result)
                 
-                # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
                 
             except Exception as e:
                 logger.error(position_data)
@@ -447,16 +450,16 @@ class Diaoyu:
     #             # async with asyncio.Lock():
     #             self.row['okx_direction'] = okx_direction
     #             # Check if theres is an order_id. if dont have, it will be a new order
-    #             if self.row['order_id']:
+    #             if self.order_id:
     #                 # If there is an order id present , we revoke it 
     #                 revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
     #                     body = {
-    #                     "order_id":self.row['order_id'] ,
+    #                     "order_id":self.order_id ,
     #                     "contract_code": self.ccy.replace('-SWAP','')
     #                     }
     #                 )
     #                 revoke_order_data = revoke_orders.get('data', [])
-    #                 self.row['order_id']  = None
+    #                 self.order_id  = None
 
     #                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
     #                 # Upon successful revoking, we place an order
@@ -464,11 +467,11 @@ class Diaoyu:
     #                     # Call the asynchronous place_order function
     #                     result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
     #                     # print("RESULT",result)
-    #                     self.row['order_id']  = result['data'][0]['ordId'] if result else None
-    #                     # self.row['order_id']  = result['data'][0]['ordId']
+    #                     self.order_id  = result['data'][0]['ordId'] if result else None
+    #                     # self.order_id  = result['data'][0]['ordId']
 
     #                 else:
-    #                     # self.row['order_id']  = None
+    #                     # self.order_id  = None
     #                     # If revoke order has an error, there will be 
     #                     # 2 scenarios can be present here:
     #                     # 1) when qty_filled matches the desired amount set by trader
@@ -478,23 +481,23 @@ class Diaoyu:
     #                         self.htx_is_filled = False
     #                         self.htx_filled_volume = 0 
     #                         self.update_db()
-    #                         self.row['order_id']  = None
+    #                         self.order_id  = None
     #                     # 2) when qty_filled doesnt match the desired amount
     #                     else:
-    #                         self.row['order_id']  = None
+    #                         self.order_id  = None
     #                         # Continue to place limit order since qty has not been filled
     #                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
 
-    #                         self.row['order_id']  = result['data'][0]['ordId'] if not self.row['order_id'] else None
-    #                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.row['order_id']}(Revoke order data selforderid presented)")
+    #                         self.order_id  = result['data'][0]['ordId'] if not self.order_id else None
+    #                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.order_id}(Revoke order data selforderid presented)")
                                     
     #             else:
     #                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
     #                 # print(result)
 
-    #                 self.row['order_id']  = result['data'][0]['ordId'] if result else None
+    #                 self.order_id  = result['data'][0]['ordId'] if result else None
 
-    #                 # self.row['order_id']  = result['data'][0]['ordId'] 
+    #                 # self.order_id  = result['data'][0]['ordId'] 
     #             if result:
     #                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result}()")
 
@@ -517,24 +520,24 @@ class Diaoyu:
                 self.row['okx_direction'] = okx_direction
 
                 # If there is an existing order, try to revoke it
-                if self.row['order_id']:
+                if self.order_id:
                     try:
                         revoke_orders = await self.htx_tradeapi.revoke_order(
                             self.ccy,
                             body={
-                                "order_id": self.row['order_id'],
+                                "order_id": self.order_id,
                                 "contract_code": self.ccy.replace('-SWAP', '')
                             }
                         )
                         revoke_order_data = revoke_orders.get('data', [])
-                        self.remove_order(self.row['order_id'])
+                        self.remove_order(self.order_id)
 
-                        self.row['order_id'] = None  # Reset order_id
+                        self.order_id = None  # Reset order_id
 
                         if not revoke_order_data['errors']:
                             # Place a new order after successful revocation
                             result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
-                            self.row['order_id'] = result['data'][0]['ordId'] if result else None
+                            self.order_id = result['data'][0]['ordId'] if result else None
                         else:
                             # Handle revoke order errors
                             if self.htx_is_filled or self.qty == self.htx_filled_volume:
@@ -545,11 +548,11 @@ class Diaoyu:
                             else:
                                 # Continue placing limit order if qty is not fully filled
                                 result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
-                                self.row['order_id'] = result['data'][0]['ordId'] if not self.row['order_id'] else None
+                                self.order_id = result['data'][0]['ordId'] if not self.order_id else None
                                 self.place_order(result['data'][0]['ordId'],result)
 
 
-                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| Order updated: {self.row['order_id']}")
+                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| Order updated: {self.order_id} Place limit order {result}")
                     
                     except Exception as e:
                         logger.error(f"{self.username}|{self.algotype}|{self.algoname}| Error revoking order: {traceback.format_exc()}")
@@ -558,10 +561,10 @@ class Diaoyu:
                     # No existing order, place a new one
                     try:
                         result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
-                        self.row['order_id'] = result['data'][0]['ordId'] if result else None
+                        self.order_id = result['data'][0]['ordId'] if result else None
                         self.place_order(result['data'][0]['ordId'],result)
 
-                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| New order placed: {self.row['order_id']}")
+                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| New order placed: {self.order_id}")
 
                     except Exception as e:
                         self.remove_order(result['data'][0]['ordId'])
@@ -582,15 +585,15 @@ class Diaoyu:
             try:
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
-                print(self.row['order_id'])
-                print(match_order_id)
-                print(self.active_orders)
-                print(self.recently_removed_orders)
-                print(self.row['order_id'] in self.active_orders or self.row['order_id'] in self.recently_removed_orders)
+                logger.debug(f"order ids : self.order id : {self.order_id} match order id : {match_order_id}")
+                # print(match_order_id)
+                # print(self.active_orders)
+                # print(self.recently_removed_orders)
+                # print(self.order_id in self.active_orders or self.order_id in self.recently_removed_orders)
 
                 # Check if there is matched orders but since all algos are listening to the same match order, we need something to differentiate or something to uniquely identify the match order with the order 
-                # if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
-                if trade and message['status'] in [4,5,6] and (self.row['order_id'] in self.active_orders or self.row['order_id'] in self.recently_removed_orders):
+                if trade and message['status'] in [4,5,6] and self.order_id  == message['order_id']:
+                # if trade and message['status'] in [4,5,6] and (self.order_id in self.active_orders or self.order_id in self.recently_removed_orders):
                     
                     # volume that is filled in this trade
                     self.row['filled_volume'] = message['trade'][0]['trade_volume']
@@ -652,15 +655,17 @@ class Diaoyu:
                         logger.debug('update db after')
                     
                     else:
-                        self.row['order_id']  = match_order_id
+                        self.order_id  = match_order_id
                         self.place_order(match_order_id,result)
 
 
-                    self.row['order_id']  = None
+                    self.order_id  = None
 
                 else:
                     result['data'][0]['sCode'] = 400
                     logger.debug('OKX MARKET TRADE FAILED')
+                    self.update_db()
+
                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
 
@@ -698,7 +703,7 @@ class Diaoyu:
 
 
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
-            self.cursor.connection.commit()
+            # self.cursor.connection.commit()
             with self.cursor.connection.cursor() as cursor:
                 cursor.execute(query, (self.username, self.algotype, self.algoname))
                 self.cursor.connection.commit()

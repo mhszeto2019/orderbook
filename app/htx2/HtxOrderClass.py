@@ -149,6 +149,9 @@ class HuobiCoinFutureRestTradeAPI:
             #     "rate_limit_remaining":""
             # }
         except Exception as e:
+            logger.error(e)
+            logger.error(f"Json dict {json_dict}")
+
             logger.error(f"Exception{traceback.format_exc()}")
             raise Exception
         return json_response2
