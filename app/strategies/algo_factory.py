@@ -131,7 +131,7 @@ class AlgoFactory:
             self.user_algo_type_count[username][algotype][side] = 0 
         self.user_algo_type_count[username][algotype][side] += qty 
 
-        print(self.user_algo_type_count)
+        # print(self.user_algo_type_count)
 
 
     def update_algo(self, instance_id, algo_details):
@@ -152,7 +152,7 @@ class AlgoFactory:
         strat_and_process = self.algos.get(instance_id)
         # print(strat_and_process)
         strat = strat_and_process[0]
-        print(f"ALGO DETAILS that just got updated:{algo_details}")
+        # print(f"ALGO DETAILS that just got updated:{algo_details}")
          
         username,algo_type,algo_name = instance_id.split('_')
       
@@ -175,7 +175,7 @@ class AlgoFactory:
     
         # Add a new strategy
         logger.debug(f"Updating strategy {instance_id}...")
-        logger.debug(algo_details)
+        # logger.debug(algo_details)
 
         # Create a shared state dictionary
         # print('json_data',json_data)

@@ -84,7 +84,7 @@ DB_CONFIG = {
 from app.strategies.connection_helper import OkxBbo,HtxPositions
 
 # for DiaoYu, positive spread means buying on HTX and selling on OKX while negative spread means selling on HTX and buying on OKX. The concept of a lead and lag exchange doesnt apply here because diaoyu's mechanism is fixed to making a limit order on htx and a market order on okx 
-
+from collections import deque
     
 class Diaoyu:
     def __init__(self,row_dict,cursor):
@@ -150,6 +150,33 @@ class Diaoyu:
         # lock for race conditions
         self.lock = threading.RLock()
         self.connect_db()
+        self.active_orders = {}
+        self.recently_removed_orders = deque()
+
+        # Time to keep an order in the recently_removed_orders deque (in seconds)
+        self.GRACE_PERIOD = 10
+
+    def place_order(self,order_id, order_data):
+        """Store an order when it's placed."""
+        self.active_orders[order_id] = order_data
+        print(f"Order placed: {order_id}")
+
+
+    def remove_order(self,order_id):
+        """Move an order to the recently removed queue instead of deleting immediately."""
+        if order_id in self.active_orders:
+            order_data = self.active_orders.pop(order_id)
+            self.recently_removed_orders.append((order_id, time.time()))  # Store timestamp
+            print(f"Order removed: {order_id} (kept in deque for {self.GRACE_PERIOD}s)")
+
+
+    def cleanup_old_orders(self):
+        """Remove orders from deque after GRACE_PERIOD has passed."""
+        current_time = time.time()
+        while self.recently_removed_orders and (current_time - self.recently_removed_orders[0][1] > self.GRACE_PERIOD):
+            removed_order = self.recently_removed_orders.popleft()  # Remove oldest entry
+            print(f"Order {removed_order[0]} permanently deleted")
+
 
 
     async def revoke_order_by_id(self):
@@ -165,12 +192,15 @@ class Diaoyu:
                                             "contract_code": self.ccy.replace('-SWAP','')
                                             }
                                         )
+                    self.remove_order(self.row['order_id'])
                     
                     # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|revoke_order:{revoke_orders.get('data',[])}")
-
                     self.row['order_id']  = None
 
                 except Exception as e:
+                    self.remove_order(self.row['order_id'])
+                    self.row['order_id']  = None
+
                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{revoke_orders}")
 
         except Exception as e:
@@ -353,6 +383,7 @@ class Diaoyu:
                     }]
                     )
                     self.row['order_id']  = result['data'][0]['ordId']
+                    self.place_order(result['data'][0]['ordId'],result)
 
                 # if cancellation is involved
                 else: 
@@ -373,6 +404,7 @@ class Diaoyu:
                         }]
                         )
                         self.row['order_id']  = result['data'][0]['ordId'] if result else None
+                        self.place_order(result['data'][0]['ordId'],result)
                     else:
                         # if there is position that can be closed and there are no more excess positions to carry on
                         # when theres pos we need to close but no more availability to increase pos
@@ -389,6 +421,7 @@ class Diaoyu:
                         )
                         # logger.debug(f"Result{result}")
                         self.row['order_id']  = result['data'][0]['ordId']
+                        self.place_order(result['data'][0]['ordId'],result)
                 
                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result} (Limit Order function)")
                 
@@ -494,6 +527,8 @@ class Diaoyu:
                             }
                         )
                         revoke_order_data = revoke_orders.get('data', [])
+                        self.remove_order(self.row['order_id'])
+
                         self.row['order_id'] = None  # Reset order_id
 
                         if not revoke_order_data['errors']:
@@ -511,6 +546,8 @@ class Diaoyu:
                                 # Continue placing limit order if qty is not fully filled
                                 result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
                                 self.row['order_id'] = result['data'][0]['ordId'] if not self.row['order_id'] else None
+                                self.place_order(result['data'][0]['ordId'],result)
+
 
                         logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| Order updated: {self.row['order_id']}")
                     
@@ -522,14 +559,18 @@ class Diaoyu:
                     try:
                         result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
                         self.row['order_id'] = result['data'][0]['ordId'] if result else None
+                        self.place_order(result['data'][0]['ordId'],result)
+
                         logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| New order placed: {self.row['order_id']}")
 
                     except Exception as e:
+                        self.remove_order(result['data'][0]['ordId'])
                         logger.error(f"{self.username}|{self.algotype}|{self.algoname}| Error placing new order: {traceback.format_exc()}")
 
                 return result
 
             except Exception as e:
+                self.remove_order(result['data'][0]['ordId'])   
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}| Unexpected error: {traceback.format_exc()}")
                 self.update_db()
                 return None
@@ -541,8 +582,15 @@ class Diaoyu:
             try:
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
-                # logger.debug(message)
-                if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
+                print(self.row['order_id'])
+                print(match_order_id)
+                print(self.active_orders)
+                print(self.recently_removed_orders)
+                print(self.row['order_id'] in self.active_orders or self.row['order_id'] in self.recently_removed_orders)
+
+                # Check if there is matched orders but since all algos are listening to the same match order, we need something to differentiate or something to uniquely identify the match order with the order 
+                # if trade and message['status'] in [4,5,6] and self.row['order_id']  == message['order_id']:
+                if trade and message['status'] in [4,5,6] and (self.row['order_id'] in self.active_orders or self.row['order_id'] in self.recently_removed_orders):
                     
                     # volume that is filled in this trade
                     self.row['filled_volume'] = message['trade'][0]['trade_volume']
@@ -568,7 +616,7 @@ class Diaoyu:
                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx order result:{message}")
                     
 
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx position result:{trade}")
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx position result Matched:{trade}")
 
             except Exception as e:
                 logger.debug("SWITCH OFF ALL ALGOS!")
@@ -605,6 +653,8 @@ class Diaoyu:
                     
                     else:
                         self.row['order_id']  = match_order_id
+                        self.place_order(match_order_id,result)
+
 
                     self.row['order_id']  = None
 
