@@ -1,12 +1,3 @@
-
-# import urllib.parse
-# import hmac
-# import base64
-# import hashlib
-# import gzip
-# import websockets
-# import time
-# import select
 import datetime
 import json
 import uuid
@@ -18,7 +9,7 @@ import redis
 sys.path.append('/var/www/html/orderbook/htx2')
 sys.path.append('/var/www/html/orderbook/htx2/alpha')
 import traceback
-
+import gc
 # from app.trading_engines.htxTradeFuturesApp import place_limit_contract_order
 from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 from okx import Trade
@@ -279,16 +270,16 @@ class Diaoxia:
             if spread > 0 and bid_ask_spread_1 >= spread:
                 logger.debug(f"buy okx sell htx: {self.lead_filled_vol}")
                 asyncio.gather(
-                    self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
                     self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
+                    self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
                 )
                 self.lead_filled_vol += min_avail_amt_buy
 
             elif spread < 0 and bid_ask_spread_2 >= abs(spread):
                 logger.debug(f"sell okx buy htx: {self.lead_filled_vol}")
                 asyncio.gather(
-                    self.place_market_order_okx(min_avail_amt_sell,self.lead_direction),
                     self.place_market_order_htx(min_avail_amt_sell,self.lag_direction),
+                    self.place_market_order_okx(min_avail_amt_sell,self.lead_direction),
                 )
                 self.lead_filled_vol += min_avail_amt_sell
 
@@ -367,9 +358,8 @@ class Diaoxia:
     async def place_market_order_htx(self,size,direction):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
-               
                 result = await self.place_order_htx_helper(self.htx_tradeapi, self.ccy.replace('-SWAP',''), size, direction,self.diaoxia_offset)
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx_place_market_order result:{result}")
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset}  htx_place_market_order result:{result}")
 
             except Exception as e:
                 self.update_db()
@@ -413,7 +403,7 @@ class Diaoxia:
                 result['data'][0]['sCode'] = 400
                 logger.error('OKX MARKET TRADE FAILED')
 
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
+            logger.debug(f"{self.username}|{self.algotype}|{self.algoname} htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset} |okx_place_order result:{result}")
 
             return result
         except Exception as e:

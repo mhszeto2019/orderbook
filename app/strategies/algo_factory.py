@@ -5,7 +5,7 @@ import psycopg2.extras
 import sys
 from pathlib import Path
 from collections import defaultdict
-
+import psutil
 # Logger 
 # Define the log directory and the log file name
 LOG_DIR = Path('/var/www/html/orderbook/logs')
@@ -266,6 +266,11 @@ class AlgoFactory:
         )
         algo_details = cur.fetchall()
         for row in algo_details:
+            # print(psutil.pids())
+            # print(psutil.cpu_percent(percpu=True))
+            # print(psutil.Process().cpu_affinity())
+            # print(len(psutil.Process().cpu_affinity()))
+            # print(psutil.virtual_memory())
             row_dict = {}
             row_dict['username'] =  row[0]
             row_dict['algo_type'] = row[1]

@@ -80,7 +80,6 @@ DB_CONFIG = {
 }
 
 
-
 from app.strategies.connection_helper import OkxBbo,HtxPositions
 
 # for DiaoYu, positive spread means buying on HTX and selling on OKX while negative spread means selling on HTX and buying on OKX. The concept of a lead and lag exchange doesnt apply here because diaoyu's mechanism is fixed to making a limit order on htx and a market order on okx 
@@ -185,7 +184,6 @@ class Diaoyu:
             with self.lock:
                 try:
                     tradeApi = self.htx_tradeapi
-
                     revoke_orders = await tradeApi.revoke_order(self.ccy,
                                             body = {
                                             "order_id":self.order_id ,
@@ -194,13 +192,11 @@ class Diaoyu:
                                         )
                     self.remove_order(self.order_id)
                     
-                    # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|revoke_order:{revoke_orders.get('data',[])}")
                     self.order_id  = None
 
                 except Exception as e:
                     self.remove_order(self.order_id)
                     self.order_id  = None
-
                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{revoke_orders}")
 
         except Exception as e:
@@ -226,9 +222,9 @@ class Diaoyu:
         # for swaps
         notification_url = 'wss://api.hbdm.com'
         notification_endpoint = '/swap-notification'
-        # for future
-        notification_futures_url = 'wss://api.hbdm.com'
-        notification_futures_endpoint = '/notification'
+        # for futures
+        # notification_futures_url = 'wss://api.hbdm.com'
+        # notification_futures_endpoint = '/notification'
         
         notification_subs = [
             {
@@ -237,13 +233,13 @@ class Diaoyu:
                 "topic": "matchOrders.BTC-USD"
             }
         ]
-        notification_futures_subs = [
-            {
-                "op": "sub",
-                "cid": str(uuid.uuid1()),
-                "topic": "matchOrders.*"
-            }
-        ]
+        # notification_futures_subs = [
+        #     {
+        #         "op": "sub",
+        #         "cid": str(uuid.uuid1()),
+        #         "topic": "matchOrders.*"
+        #     }
+        # ]
         # swap client
      
         ws_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
@@ -302,30 +298,58 @@ class Diaoyu:
                 self.limit_buy_price = self.best_ask - float(self.spread)
                 self.limit_buy_size = self.qty
                 self.limit_ask_price = self.best_bid - float(self.spread)
-
-
-
-                if int(self.spread) < 0:
-                    htx_direction = 'sell'
-                    okx_direction = 'buy'
-                else:
-                    htx_direction = 'buy'
-                    okx_direction = 'sell'
                 
-                # best_bid = json_data["data"][0]["bids"][0][0]
-                # best_ask = json_data['data'][0]['asks'][0][0]
-                # Throttle: Ensure minimum interval between API calls
+                
+                # if int(self.spread) < 0:
+                #     htx_direction = 'sell'
+                #     okx_direction = 'buy'
+                # else:
+                #     htx_direction = 'buy'
+                #     okx_direction = 'sell'
+                
+       
+                # # Throttle: Ensure minimum interval between API calls
+                # current_time = time.time()
+                # # 1s
+                # if current_time - self.last_call_time >= self.call_interval:
+                #     self.last_call_time = current_time
+                #     if htx_direction == 'sell':
+                #         # sell on htx buy on okx - we set the spread away from okx best_ask because we want to buy on okx 
+                #         asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_bid,self.limit_buy_price, self.qty,htx_direction,okx_direction))
+                #     elif htx_direction == 'buy':
+                #         # buy on htx sell on okx - we set the spread away from okx best_bid because we want to sell on okx 
+                #         asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_ask,self.limit_ask_price, self.qty,htx_direction,okx_direction))
+                # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxlimits:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} ")
+
+
+                # Set up a dictionary for direction mapping and prices
+                direction_mapping = {
+                    'sell': ('buy', self.limit_buy_price, self.best_bid),
+                    'buy': ('sell', self.limit_ask_price, self.best_ask)
+                }
+
+                # Throttle check
                 current_time = time.time()
                 if current_time - self.last_call_time >= self.call_interval:
                     self.last_call_time = current_time
-                      
-                    if htx_direction == 'sell':
-                        # sell on htx buy on okx - we set the spread away from okx best_ask because we want to buy on okx 
-                        asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_bid,self.limit_buy_price, self.qty,htx_direction,okx_direction))
-                    elif htx_direction == 'buy':
-                        # buy on htx sell on okx - we set the spread away from okx best_bid because we want to sell on okx 
-                        asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_ask,self.limit_ask_price, self.qty,htx_direction,okx_direction))
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxlimits:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} ")
+
+                    # Determine htx_direction based on spread and fetch corresponding values
+                    htx_direction = 'sell' if int(self.spread) < 0 else 'buy'
+                    okx_direction, limit_price, reference_price = direction_mapping[htx_direction]
+
+                    # Create task for placing limit order on HTX
+                    asyncio.create_task(self.place_limit_order_htx(
+                        self.algoname,
+                        reference_price,
+                        limit_price,
+                        self.qty,
+                        htx_direction,
+                        okx_direction
+                    ))
+
+                # Log information in a clean format
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxlimits: {self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size} okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
+
 
         except Exception as e:
             logger.error("SWITCH OFF ALL ALGOS!")
@@ -352,7 +376,6 @@ class Diaoyu:
 
                 closing_size = 0
                 availability = int(limit_buy_size)
-                opposite_direction = "sell" if htx_direction == "buy" else "buy"
                 net_pos_size = 0
 
                 if position_data:
@@ -378,7 +401,7 @@ class Diaoyu:
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
                     "created_at": str(datetime.datetime.now()),
-                    "volume": str(limit_buy_size),
+                    "volume": limit_buy_size,
                     "direction": htx_direction,
                     "offset": "open",
                     "lever_rate": 5,
@@ -436,83 +459,6 @@ class Diaoyu:
             finally:
                 return result
 
-
-
-
-    
-
-    # async def place_limit_order_htx(self,algoname, best_bid,limit_buy_price, limit_buy_size,htx_direction,okx_direction):
-    #     # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
-    #     # if not self.row['state']:
-    #     #     return 
-    #     # if self.row['state']:
-    #     with self.lock:
-    #         result = None
-    #         try:
-    #             # async with asyncio.Lock():
-    #             self.row['okx_direction'] = okx_direction
-    #             # Check if theres is an order_id. if dont have, it will be a new order
-    #             if self.order_id:
-    #                 # If there is an order id present , we revoke it 
-    #                 revoke_orders = await self.htx_tradeapi.revoke_order(self.ccy,
-    #                     body = {
-    #                     "order_id":self.order_id ,
-    #                     "contract_code": self.ccy.replace('-SWAP','')
-    #                     }
-    #                 )
-    #                 revoke_order_data = revoke_orders.get('data', [])
-    #                 self.order_id  = None
-
-    #                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{revoke_order_data}(Revoke order data with order_id and True)")
-    #                 # Upon successful revoking, we place an order
-    #                 if len(revoke_order_data['errors']) == 0:
-    #                     # Call the asynchronous place_order function
-    #                     result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-    #                     # print("RESULT",result)
-    #                     self.order_id  = result['data'][0]['ordId'] if result else None
-    #                     # self.order_id  = result['data'][0]['ordId']
-
-    #                 else:
-    #                     # self.order_id  = None
-    #                     # If revoke order has an error, there will be 
-    #                     # 2 scenarios can be present here:
-    #                     # 1) when qty_filled matches the desired amount set by trader
-    #                     if self.htx_is_filled or self.qty == self.htx_filled_volume:
-    #                         self.row['state'] = False
-    #                         # Reset values after fill
-    #                         self.htx_is_filled = False
-    #                         self.htx_filled_volume = 0 
-    #                         self.update_db()
-    #                         self.order_id  = None
-    #                     # 2) when qty_filled doesnt match the desired amount
-    #                     else:
-    #                         self.order_id  = None
-    #                         # Continue to place limit order since qty has not been filled
-    #                         result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-
-    #                         self.order_id  = result['data'][0]['ordId'] if not self.order_id else None
-    #                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{self.order_id}(Revoke order data selforderid presented)")
-                                    
-    #             else:
-    #                 result = await self.limit_order_function(limit_buy_price,limit_buy_size,htx_direction)
-    #                 # print(result)
-
-    #                 self.order_id  = result['data'][0]['ordId'] if result else None
-
-    #                 # self.order_id  = result['data'][0]['ordId'] 
-    #             if result:
-    #                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|{result}()")
-
-    #             return
-
-    #         except Exception as e:
-    #             logger.debug("SWITCH OFF ALL ALGOS!")
-    #             logger.debug(limit_buy_price)
-    #             logger.debug(limit_buy_size)
-    #             logger.debug(htx_direction)
-    #             self.update_db()
-            
-    #             logger.error(f"{self.username}|{self.algotype}|{self.algoname}| PLACE LIMIT ORDER ERROR:{traceback.format_exc()}")
 
 
     async def place_limit_order_htx(self, algoname, best_bid, limit_buy_price, limit_buy_size, htx_direction, okx_direction):
@@ -686,7 +632,6 @@ class Diaoyu:
         try:
             # logger.debug(self.cursor)
             self.connect_db()
-            # # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
 
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             # self.cursor.connection.commit()
@@ -694,7 +639,6 @@ class Diaoyu:
                 cursor.execute(query, (self.username, self.algotype, self.algoname))
                 self.cursor.connection.commit()
             self.cursor.connection.close()
-            # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Database Updated")
 
         except Exception as e:

@@ -43,7 +43,6 @@ os.makedirs(LOG_DIR, exist_ok=True)
 import logging
 file_handler = logging.FileHandler(log_filename)
 # Set up a basic formatter
-
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
 logger = logging.getLogger('okxbooks')
@@ -111,7 +110,6 @@ class OKXWebSocketClient:
         """Callback function to handle incoming messages."""
         json_data = json.loads(message)
         if json_data.get('data'):
-            
             channel = json_data["arg"]["channel"]
             currency_pair = json_data["arg"]["instId"]
             instrument = 'SPOT'
