@@ -342,7 +342,7 @@ class Diaoyu:
                     "symbol": "BTC"
                     }
                     )
-                logger.debug(positions)
+                # logger.debug(positions)
                 position_data = positions.get('data', []) if positions else []
                 # Check if position_data has at least one item to avoid IndexError 
                 # If there is a position, we need to find out these conditions:
@@ -433,9 +433,11 @@ class Diaoyu:
                 logger.error(f"LIMIT ORDER FUNCTION ERROR:{traceback.format_exc()}")
                 self.update_db()
                 # raise Exception
+            finally:
+                return result
 
 
-            return result
+
 
     
 
@@ -585,12 +587,8 @@ class Diaoyu:
             try:
                 trade = message.get('trade',[])
                 match_order_id = message.get('order_id','no order id yet')
-                logger.debug(f"order ids : self.order id : {self.order_id} match order id : {match_order_id}")
-                # print(match_order_id)
-                # print(self.active_orders)
-                # print(self.recently_removed_orders)
-                # print(self.order_id in self.active_orders or self.order_id in self.recently_removed_orders)
-
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| self.order id:{self.order_id} | match order id:{match_order_id}")
+   
                 # Check if there is matched orders but since all algos are listening to the same match order, we need something to differentiate or something to uniquely identify the match order with the order 
                 if trade and message['status'] in [4,5,6] and self.order_id  == message['order_id']:
                 # if trade and message['status'] in [4,5,6] and (self.order_id in self.active_orders or self.order_id in self.recently_removed_orders):
@@ -610,19 +608,18 @@ class Diaoyu:
                     loop = asyncio.get_event_loop()
 
                     if loop.is_running():
+                        logger.debug("FIRING OKX WITH LOOP")
                         # If the loop is already running, create a new task
                         asyncio.create_task(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
                     else:
+                        logger.debug("FIRING OKX WITHOUT LOOP")
                         # Run the async function to completion in the current thread
                         loop.run_until_complete(self.place_market_order_okx(self.row['filled_volume'],match_order_id))
-                    # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
-                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx order result:{message}")
-                    
 
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx position result Matched:{trade}")
+                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|htx order result:{message}|htx position result Matched:{trade}")
 
             except Exception as e:
-                logger.debug("SWITCH OFF ALL ALGOS!")
+                # logger.debug("SWITCH OFF ALL ALGOS!")
                 self.update_db()
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:{e}")
 
@@ -667,13 +664,13 @@ class Diaoyu:
                     self.update_db()
 
                 # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order result:{result}")
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname} | htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}| okx_place_order result:{result}")
 
                 # return result
             
             except Exception as e:
-                self.update_db()
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{traceback.format_exc()}")
+                self.update_db()
     
 
 
@@ -689,18 +686,7 @@ class Diaoyu:
         try:
             # logger.debug(self.cursor)
             self.connect_db()
-
-            # conn = self.get_connection()
-            # logger.debug(conn)
-
-            # query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
-            # with conn.cursor() as cursor:
-            #     cursor.execute(query, (self.username, self.algotype, self.algoname))
-            #     conn.commit()
-            # # self.cursor.connection.close()
             # # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
-            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Database Updated")
-
 
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             # self.cursor.connection.commit()

@@ -118,11 +118,13 @@ class HuobiCoinFutureRestTradeAPI:
 
         try: 
             body = {"orders_data":body}
-            
+            logger.debug(body)
             # logger.debug(body)
             uri = "/swap-api/v1/swap_batchorder"
             # success, error = await self.request("POST", uri, body=body, auth=True)
             json_dict = await self.request("POST", uri, body=body, auth=True)
+            logger.debug(json_dict)
+
             # json_response2 = self.format_message(json_dict)
             json_response2['data'] = [{"ordId":json_dict['data']['success'][0]['order_id'],"sCode":json_dict['sCode'],"ts":json_dict['ts'],"exchange":"htx"}]
             json_response2['rate_limit_remaining'] = json_dict['rate_limit_remaining']
@@ -151,7 +153,6 @@ class HuobiCoinFutureRestTradeAPI:
         except Exception as e:
             logger.error(e)
             logger.error(f"Json dict {json_dict}")
-
             logger.error(f"Exception{traceback.format_exc()}")
             raise Exception
         return json_response2

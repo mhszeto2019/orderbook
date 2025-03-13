@@ -131,8 +131,6 @@ class AlgoFactory:
             self.user_algo_type_count[username][algotype][side] = 0 
         self.user_algo_type_count[username][algotype][side] += qty 
 
-        # print(self.user_algo_type_count)
-
 
     def update_algo(self, instance_id, algo_details):
         # Update existing strategy
@@ -211,7 +209,6 @@ class AlgoFactory:
     
         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
         self.initialise_strat(row_dict['algo_type'],instance_id,self.conn.cursor())
-        
 
         for p in self.processes:
             p.join

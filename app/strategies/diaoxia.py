@@ -178,7 +178,6 @@ class Diaoxia:
             ]
             
             # swap client
-        
             htx_pos_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
             self.htx_pos_client = htx_pos_client
             self.htx_pos_client.start(notification_subs, auth=True, callback=self.htx_position_publicCallback)
@@ -225,8 +224,6 @@ class Diaoxia:
             self.htx_thread = threading.Thread(target=self.run_htx_bbo, daemon=True)
             self.htx_thread.daemon = True
             self.htx_thread.start()
-        
-
 
         if self.lead_exchange == 'okx' or self.lag_exchange == 'okx':
         # Run OkxBbo in the main asyncio event loop
@@ -242,123 +239,23 @@ class Diaoxia:
       
         self.update_db()
 
-    async def place_market_order(self,exchange,size,direction):
-        start = time.time()
-        if exchange == 'htx':
-            await self.place_market_order_htx(size,direction)
-        elif exchange == 'okx':
-            await self.place_market_order_okx(size,direction)
-        end = time.time()
-        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Time taken to place {exchange} market order: {end-start}")
-
-    # async def execute_orders(self, min_avail_amt):
-    #     """Run orders concurrently for different exchanges but sequentially for the same exchange."""
-    #     # async with self.excecution_lock:  # Correct usage for asyncio.Lock
-    #     # Execute the lead exchange order and wait for it to complete
-    #     await self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction)
-    #     await self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction)
-    #     logger.debug(f"{self.diaoxia_offset}|{self.lag_direction}|{self.diaoxia_availability}")
-
-    # async def execute_orders(self, min_avail_amt):
-    #     """Run orders concurrently for different exchanges."""
-    #     await asyncio.gather(
-    #         self.place_market_order(self.lead_exchange, min_avail_amt, self.lead_direction),
-    #         self.place_market_order(self.lag_exchange, min_avail_amt, self.lag_direction),
-    #     )
-
-
-    async def execute_orders(self, min_avail_amt):
-        """Run orders concurrently for different exchanges."""
-        await asyncio.gather(
-            self.place_market_order_okx(min_avail_amt,self.lead_direction),
-            self.place_market_order_htx(min_avail_amt,self.lag_direction),
-        )
-
-    #     logger.debug(f"{self.diaoxia_offset}|{self.lag_direction}|{self.diaoxia_availability}")
-
-
-    # def check_condition(self,spread,callback):
-    #     try:
-            
-
-    #         if self.row['state']:
-    #             if int(self.qty) > abs(self.diaoxia_availability) or self.diaoxia_availability == 0:
-    #                 self.update_db()
-
-    #             self.diaoxia_offset = 'close' if self.lag_direction == 'buy' and self.diaoxia_availability < 0 else 'open'
-
-    #             # if filled vol hasnt reached qty desired
-    #             if int(self.lead_filled_vol) < int(self.qty):
-    #                 revised_qty = int(self.qty) - int(self.lead_filled_vol)
-               
-    #                 # print("arb",float(self.htx_best_bid) - float(self.best_ask), float(self.best_bid) - float(self.htx_best_ask))
-    #                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
-    #             # positive spread means buy on lead and sell on lag - lead_exchange ask, lag_exchange bid - market buy lead markte sell lag
-    #             # negative spread means sell on lead buy on lag - lead_exchange bid, lag_exchange ask - market sell lead market buy lag
-    #                 # print(revised_qty, self.lead_exchange,self.lag_exchange,spread)
-    #                 # # spread is +ve and lead_exchange_ask - lag_exchange_bid > spread
-    #                 if spread > 0 and (float(self.htx_best_bid) - float(self.best_ask)) >= spread :
-    #                     min_avail_amt = min(int(self.htx_best_bid_sz),int(self.best_ask_sz),100,revised_qty)
-    #                     # place market buy order on lead excahnge 
-    #                     # place market sell order on lag exchange
-    #                     # place_market_order(lead_exchange,lag_exchange,spread)
-    #                     # print('buy okx sell htx')
-    #                     asyncio.create_task(self.execute_orders(min_avail_amt))
-    #                     logger.debug(f'buy okx sell htx: {self.lead_filled_vol}')
-    #                     self.lead_filled_vol += min_avail_amt
-
-    #                 # # spread is +ve and lead_exchange_bid - lag_exchange_ask > spread
-    #                 # abs to make spread positive
-    #                 elif spread < 0 and (float(self.best_bid) - float(self.htx_best_ask)) >= abs(spread):
-    #                     min_avail_amt = min(int(self.best_bid_sz),int(self.htx_best_ask_sz),100,revised_qty)
-    #                     # place market sell order on lead excahnge 
-    #                     # place market buy order on lag exchange
-    #                     # print('sell okx buy htx')
-    #                     asyncio.create_task(self.execute_orders(min_avail_amt))
-    #                     logger.debug(f'sell okx buy htx: {self.lead_filled_vol}')
-    #                     self.lead_filled_vol += min_avail_amt
-
-    #             else:
-    #                 self.update_db()
-    #         else:
-    #             # reset after close
-    #             self.lead_filled_vol = 0
-    #     except Exception as e:
-    #         logger.debug(f"Error occured at check_condition,{e}")
-    #         raise e
-
-   
 
     def check_condition(self, spread :int, callback):
         try:
             if not self.row['state']:
                 self.lead_filled_vol = 0  # Reset when the algo is inactive
                 return
-            print(self.total_sell,self.total_buy,self.net_volume)
+            # print(self.total_sell,self.total_buy,self.net_volume)
             self.diaoxia_offset = 'open'
 
             # if net_vol is positive and order is sell, we can only sell total pos
-            if self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume):
+            if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
                 self.diaoxia_offset = 'close'
                 self.update_db()
             # if net_vol is negative and order is buy, we allow order to go through
-            if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
-                self.diaoxia_offset = 'close'
-                self.update_db()
-            
-            
-                
-            # Check if we need to update DB (based on quantity availability)
-            #  if theres no diaoyu , diaoxia will compete with each other 
-            # if sum(self.row['user_algo_type_count'][self.username]['diaoyu'].values()) > 0 :
-            #     if (int(self.qty) > abs(self.diaoxia_availability)) :
-            #         logger.debug(self.diaoxia_availability)
-            #         self.update_db()
-            # else:
-            #     if (sum(self.row['user_algo_type_count'][self.username]['diaoxia'].values()) > abs(self.net_volume)):
-            #         self.update_db()
-
-            # # Determine diaoxia_offset in a concise way
+            # if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
+            #     self.diaoxia_offset = 'close'
+            #     self.update_db()
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
@@ -385,13 +282,14 @@ class Diaoxia:
                     self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
                     self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
                 )
-                # asyncio.create_task(self.execute_orders(min_avail_amt_buy))
-                # logger.debug(f"buy okx sell htx: {self.lead_filled_vol}")
                 self.lead_filled_vol += min_avail_amt_buy
 
             elif spread < 0 and bid_ask_spread_2 >= abs(spread):
-                # asyncio.create_task(self.execute_orders(min_avail_amt_sell))
-                # logger.debug(f"sell okx buy htx: {self.lead_filled_vol}")
+                logger.debug(f"sell okx buy htx: {self.lead_filled_vol}")
+                asyncio.gather(
+                    self.place_market_order_okx(min_avail_amt_sell,self.lead_direction),
+                    self.place_market_order_htx(min_avail_amt_sell,self.lag_direction),
+                )
                 self.lead_filled_vol += min_avail_amt_sell
 
         except Exception as e:
@@ -418,13 +316,9 @@ class Diaoxia:
                     spread = float(self.spread)
                     self.limit_buy_price = float(self.best_bid) - spread
                     self.limit_buy_size = self.qty
-                    # buy okx sell htx - float(self.htx_best_bid) - float(self.best_ask)
-                    # buy htx sell okx - float(self.best_bid) - float(self.htx_best_ask)
+                   
                     self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
-                    # logger.debug(self.row)
-                    
                     self.check_condition(spread,'okx_callback')
-                    # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|OKX BBO:{json_data}")
                 
             except Exception as e:
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
@@ -453,8 +347,7 @@ class Diaoxia:
                 if message.get('op') == "notify":
                     # logger.debug(message)
                     if message.get('data'):
-                        # logger.debug(f"HTX POSITION PUBLIC CALLBACK {message}")
-                        # logger.debug(self.row)
+                
 
                     #     # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
                         self.net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
@@ -464,37 +357,7 @@ class Diaoxia:
                         # print(self.net_volume)
                         self.total_sell = -(self.row['user_algo_type_count'][self.username]['diaoyu']['sell'] + self.row['user_algo_type_count'][self.username]['diaoxia']['sell'])
                         self.total_buy = self.row['user_algo_type_count'][self.username]['diaoyu']['buy'] + self.row['user_algo_type_count'][self.username]['diaoxia']['buy']
-                        # print(self.total_sell,self.total_buy)
-                       
-                        # # when theres no position
-                        # if self.net_volume == 0:
-                        #     # logger.debug('diaoxia as per normal')
-                        #     self.diaoxia_availability = int(self.qty)
-
-                        # elif self.net_volume < 0:
-                        #     # check for diaoyu buy because diaoyu buy will cause availability to decrease when netvolume is 0
-                        #     if (self.net_volume == -user_algo_type_count['diaoyu']['buy']):
-                        #         self.diaoxia_availability = 0
-                        #     elif user_algo_type_count['diaoyu']['buy'] > 0:
-                        #         self.diaoxia_availability = self.net_volume  + user_algo_type_count['diaoyu']['buy']
-                        #     elif user_algo_type_count['diaoyu']['buy'] <= 0:
-                        #         # if diaoxia same direction as pos
-                        #         if user_algo_type_count['diaoxia']['buy'] > 0:
-                        #             self.diaoxia_availability = self.net_volume  + user_algo_type_count['diaoxia']['buy']
-                                    
-                        #         else:
-                        #             self.diaoxia_availability = self.net_volume 
-
-                        # elif self.net_volume > 0:
-                        #     if (self.net_volume == -user_algo_type_count['diaoyu']['sell']):
-                        #         self.diaoxia_availability = 0
-                        #     elif user_algo_type_count['diaoyu']['sell'] > 0:
-                        #         self.diaoxia_availability = self.net_volume  - user_algo_type_count['diaoyu']['sell'] 
-                        #     elif user_algo_type_count['diaoyu']['sell'] <= 0:
-                        #         self.diaoxia_availability = self.net_volume
-
-                    
-                    # logger.debug(f'DIAO XIA AVIALBILITY{self.diaoxia_availability}')
+                      
             except Exception as e:
                 logger.error(f"Error{traceback.format_exc()}")
 
@@ -504,13 +367,7 @@ class Diaoxia:
     async def place_market_order_htx(self,size,direction):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
-                # print(self.diaoxia_availability,size,direction)
-                # if self.diaoxia_availability < 0 and direction == 'buy' and size < self.diaoxia_availability :
-                #     print('buy!')
-                # elif self.diaoxia_availability > 0 and direction == 'sell' and size < self.diaoxia_availability:
-                #     print('sell')
-                # order_type = "close" if closing_size else "open"
-                # order_size = str(size if closing_size >= size else availability)
+               
                 result = await self.place_order_htx_helper(self.htx_tradeapi, self.ccy.replace('-SWAP',''), size, direction,self.diaoxia_offset)
                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|htx_place_market_order result:{result}")
 
@@ -572,10 +429,7 @@ class Diaoxia:
         # Input should be unique so it should be username,algo_type and algoname
         # Update based on parameters. by updating here it will trigger the algo listener
         try:
-            # side = 'buy' if int(self.spread) < 0 else 'sell'
-            # print(self.row['user_algo_type_count'][self.username]['diaoxia'][side])
-            # print(self.qty)
-            # self.row['user_algo_type_count'][self.username]['diaoxia'][side] =  self.row['user_algo_type_count'][self.username]['diaoxia'][side] - int(self.qty)
+       
             self.connect_db()
             query = "update algo_dets set state = false where username = %s and algo_type=%s and  algo_name=%s"
             # self.cursor.connection.commit()
