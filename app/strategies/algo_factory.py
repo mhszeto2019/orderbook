@@ -400,7 +400,7 @@ class DBListener(threading.Thread):
                     algo_type = json_data['algo_type']
                     algo_name = json_data['algo_name']
                     instance_id = f"{username}_{algo_type}_{algo_name}"
-                    logger.debug("ALGO UPDATED!!!!!!!!!!!!!!")
+                    # logger.debug("ALGO UPDATED!!!!!!!!!!!!!!")
                     if operation == "INSERT":
                         cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
                         # cur.execute("select * from algo_dets")

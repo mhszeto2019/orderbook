@@ -247,6 +247,10 @@ class Diaoxia:
             # if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
             #     self.diaoxia_offset = 'close'
             #     self.update_db()
+            
+            # if net volume is negative and buy is positive, 
+            if self.net_volume < 0 and self.total_buy > 0:
+                self.diaoxia_offset = 'close'
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
@@ -268,7 +272,6 @@ class Diaoxia:
 
             # Check spread conditions for order execution
             if spread > 0 and bid_ask_spread_1 >= spread:
-                logger.debug(f"buy okx sell htx: {self.lead_filled_vol}")
                 asyncio.gather(
                     self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
                     self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
@@ -276,12 +279,12 @@ class Diaoxia:
                 self.lead_filled_vol += min_avail_amt_buy
 
             elif spread < 0 and bid_ask_spread_2 >= abs(spread):
-                logger.debug(f"sell okx buy htx: {self.lead_filled_vol}")
                 asyncio.gather(
                     self.place_market_order_htx(min_avail_amt_sell,self.lag_direction),
                     self.place_market_order_okx(min_avail_amt_sell,self.lead_direction),
                 )
                 self.lead_filled_vol += min_avail_amt_sell
+                
 
         except Exception as e:
             self.update_db()
@@ -307,7 +310,7 @@ class Diaoxia:
                     spread = float(self.spread)
                     self.limit_buy_price = float(self.best_bid) - spread
                     self.limit_buy_size = self.qty
-                   
+                
                     self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
                     self.check_condition(spread,'okx_callback')
                 
@@ -338,12 +341,10 @@ class Diaoxia:
                 if message.get('op') == "notify":
                     # logger.debug(message)
                     if message.get('data'):
-                
-
-                    #     # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
+                        # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
                         self.net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
                         # logger.debug(self.row['user_algo_type_count'])
-                        user_algo_type_count = self.row['user_algo_type_count'][self.username]
+                        # user_algo_type_count = self.row['user_algo_type_count'][self.username]
                         # print(user_algo_type_count)
                         # print(self.net_volume)
                         self.total_sell = -(self.row['user_algo_type_count'][self.username]['diaoyu']['sell'] + self.row['user_algo_type_count'][self.username]['diaoxia']['sell'])

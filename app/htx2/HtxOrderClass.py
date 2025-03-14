@@ -329,7 +329,10 @@ class HuobiCoinFutureRestTradeAPI:
         json_dict = await self.request("GET", uri, body,  auth=True)
         return json_dict
     
-    
+
+
+
+
 
 
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
@@ -354,8 +357,10 @@ class HuobiCoinFutureRestTradeAPI:
             url = self._host + uri
         if auth:
             timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+            
             # Encode the timestamp with URI encoding in uppercase
-            encoded_timestamp = urllib.parse.quote(timestamp, safe='')
+            # encoded_timestamp = urllib.parse.quote(timestamp, safe='')
+            logger.debug(f"UTC TIMESTAMP:{timestamp}")
 
             # print(timestamp,encoded_timestamp)
             params = params if params else {}
@@ -403,55 +408,79 @@ class HuobiCoinFutureRestTradeAPI:
 
         return response_dict
         
-    def python_request(self,method, url, params, data, headers):
+
+    # def request_with_retry(url, params, data, headers, max_retries=5):
+    #     for i in range(max_retries):
+    #         try:
+    #             response = requests.post(url, params=params, json=data, headers=headers, timeout=5)
+    #             response.raise_for_status()
+    #             return response.json()
+    #         except requests.exceptions.SSLError as e:
+    #             print(f"SSL Error: {e}, retrying in {2**i} seconds...")
+    #             time.sleep(2**i)  # Exponential backoff
+    #         except requests.exceptions.RequestException as e:
+    #             print(f"Request Error: {e}, retrying in {2**i} seconds...")
+    #             time.sleep(2**i)
+    #     print("Max retries reached, request failed.")
+    #     return None
+
+    def python_request(self,method, url, params, data, headers, max_retries = 3):
         import requests
-
-        try:
-            if method.lower() == "post":
-                # Send POST request
-                response = requests.post(url, params=params, data=json.dumps(data), headers=headers)
-                status_code = response.status_code
-                # print(status_code,response.headers)
-                rate_limit_remaining = response.headers.get('ratelimit-remaining')
-                json_response = response.json()
-                # print(json_response)
-                json_response['sCode'] = status_code
-                json_response['rate_limit_remaining'] = rate_limit_remaining
-     
-                # Check if the request was successful (status code 200)
-                if response.status_code == 200:
-                    # If successful, return the JSON response
+        for i in range(max_retries):
+            try:
+                
+                if method.lower() == "post":
+                    # Send POST request
+                    response = requests.post(url, params=params, data=json.dumps(data), headers=headers,timeout=30)
+                    status_code = response.status_code
+                    # print(status_code,response.headers)
+                    rate_limit_remaining = response.headers.get('ratelimit-remaining')
+                    json_response = response.json()
                     # print(json_response)
-                    return json_response  # Parse the JSON response from the server
-                else:
-                    # If not successful, log the status and response content
-                    # print(f"Request failed with status code {response.status_code}")
+                    json_response['sCode'] = status_code
+                    json_response['rate_limit_remaining'] = rate_limit_remaining
+        
+                    # # Check if the request was successful (status code 200)
+                    # if response.status_code == 200:
+                    #     # If successful, return the JSON response
+                    #     # print(json_response)
+                    #     return json_response  # Parse the JSON response from the server
+                    # else:
+                    #     # If not successful, log the status and response content
+                    #     # print(f"Request failed with status code {response.status_code}")
+                    #     return json_response
                     return json_response
-            else:
-
-                response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
-                rate_limit_remaining = response.headers.get('ratelimit-remaining')
-
-                status_code = response.status_code
-                # print(status_code,response)
-                json_response = response.json()
-                json_response['sCode'] = status_code
-                json_response['rate_limit_remaining'] = rate_limit_remaining
-     
-                # Check if the request was successful (status code 200)
-                if response.status_code == 200:
-                    # If successful, return the JSON response
-                    # print(json_response)
-                    return json_response  # Parse the JSON response from the server
                 else:
-                    # If not successful, log the status and response content
-                    # print(f"Request failed with status code {response.status_code}")
-                    return json_response
-            
-        except requests.exceptions.RequestException as e:
-            # If there is any exception with the request
-            # print(f"An error occurred: {e}")
-            return json_response
+
+                    response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
+                    rate_limit_remaining = response.headers.get('ratelimit-remaining')
+
+                    status_code = response.status_code
+                    # print(status_code,response)
+                    json_response = response.json()
+                    json_response['sCode'] = status_code
+                    json_response['rate_limit_remaining'] = rate_limit_remaining
+        
+                    # Check if the request was successful (status code 200)
+                    if response.status_code == 200:
+                        # If successful, return the JSON response
+                        # print(json_response)
+                        return json_response  # Parse the JSON response from the server
+                    else:
+                        # If not successful, log the status and response content
+                        # print(f"Request failed with status code {response.status_code}")
+                        return json_response
+            except requests.exceptions.SSLError as ssle:
+                logger.debug(f"SSLERROR:{ssle}")
+                time.sleep(2**i)  # Exponential backoff
+                
+            except requests.exceptions.RequestException as e:
+                # If there is any exception with the request
+                # print(f"An error occurred: {e}")
+                logger.debug(f"error:{e}")
+                return {}
+        logger.debug("Max retires exceeded")
+        return {}
     
     def generate_signature(self, method, params, request_path):
         if request_path.startswith("http://") or request_path.startswith("https://"):
