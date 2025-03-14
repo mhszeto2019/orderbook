@@ -236,21 +236,24 @@ class Diaoxia:
             if not self.row['state']:
                 self.lead_filled_vol = 0  # Reset when the algo is inactive
                 return
-            # print(self.total_sell,self.total_buy,self.net_volume)
+            logger.debug(f"{self.total_sell},{self.total_buy},{self.net_volume}")
             self.diaoxia_offset = 'open'
+            
+            # {'diaoyu': {'buy': 1, 'sell': 2}, 'diaoxia': {'buy': 0, 'sell': 1}}
 
-            # if net_vol is positive and order is sell, we can only sell total pos
+            # if net_vol is positive and order is sell, we can only sell total pos because of availability
             if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
                 self.diaoxia_offset = 'close'
                 self.update_db()
+                
             # if net_vol is negative and order is buy, we allow order to go through
             # if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
             #     self.diaoxia_offset = 'close'
             #     self.update_db()
             
             # if net volume is negative and buy is positive, 
-            if self.net_volume < 0 and self.total_buy > 0:
-                self.diaoxia_offset = 'close'
+            # if self.net_volume < 0 and self.total_buy > 0:
+            #     self.diaoxia_offset = 'close'
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
