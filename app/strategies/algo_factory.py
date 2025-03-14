@@ -131,8 +131,6 @@ def status():
     return jsonify({"running": task_thread.is_alive() if task_thread else False}), 200
 
 
-
-
 class AlgoFactory:
     """Manages Algo instances and listens for updates."""
     def __init__(self):
@@ -144,8 +142,6 @@ class AlgoFactory:
         self.processes = []
         self.queue = multiprocessing.Manager().Queue()
         self.user_algo_type_count = {}
-
-
 
 
     def initialise_strat(self,algo_type,instance_id,db_cursor):

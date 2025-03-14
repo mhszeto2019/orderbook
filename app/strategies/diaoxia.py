@@ -416,7 +416,7 @@ class Diaoxia:
     def connect_db(self):
         """Ensures the database connection is open and initializes the cursor."""
         if self.cursor.connection.closed:
-                self.cursor = psycopg2.connect(**DB_CONFIG).cursor()  # Reconnect if closed
+            self.cursor = psycopg2.connect(**DB_CONFIG).cursor()  # Reconnect if closed
    
 
     def update_db(self):
