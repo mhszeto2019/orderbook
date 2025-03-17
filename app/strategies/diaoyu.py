@@ -193,11 +193,12 @@ class Diaoyu:
                     self.remove_order(self.order_id)
                     
                     self.order_id  = None
+                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
 
                 except Exception as e:
-                    self.remove_order(self.order_id)
+                    # self.remove_order(self.order_id)
                     self.order_id  = None
-                    logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{revoke_orders}")
+                    logger.error(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{traceback.format_exc()}")
 
         except Exception as e:
             logger.debug("SWITCH OFF ALL ALGOS!")
@@ -478,8 +479,9 @@ class Diaoyu:
                             }
                         )
                         revoke_order_data = revoke_orders.get('data', [])
-                        self.remove_order(self.order_id)
-
+                        # self.remove_order(self.order_id)
+                        logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
+                        
                         self.order_id = None  # Reset order_id
 
                         if not revoke_order_data['errors']:

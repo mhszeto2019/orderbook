@@ -230,43 +230,83 @@ class Diaoxia:
       
         self.update_db()
 
+    
+    def determine_trade_type(self,pos, algotypes):
+        """
+        Determines available trade actions based on position and strategy activity.
+        :param pos: Current position (positive = long, negative = short)
+        :param algotypes: Dictionary of trade strategies {'strategy_name': {'buy': x, 'sell': y}}
+        :return: Dict of trade types allowed for diaoxia {'buy': 'open/close/None', 'sell': 'open'}
+        """
+        diaoyu = algotypes.get("diaoyu", {"buy": 0, "sell": 0})
+        diaoxia = algotypes.get("diaoxia", {"buy": 0, "sell": 0})
+
+        # Base availability logic
+        remaining_pos = pos + diaoyu["buy"] - diaoyu["sell"]  # Adjust for diaoyu activity
+
+        # Determine diaoxia trade permissions
+        trade_type = {"buy": None, "sell": "open"}  # Default diaoxia can always sell (continue shorting)
+
+        if pos < 0:  # Short position
+            if diaoxia["buy"] > 0:
+                trade_type["buy"] = "close" if abs(remaining_pos) >= diaoxia["buy"] else None  # Can only cover short
+        elif pos > 0:  # Long position
+            if diaoxia["sell"] > 0:
+                trade_type["sell"] = "close" if remaining_pos >= diaoxia["sell"] else None  # Can only close long
+        else:  # No position
+            trade_type["buy"] = "open"
+            trade_type["sell"] = "open"
+        
+    
+
+        return trade_type
+
+
 
     def check_condition(self, spread :int, callback):
         try:
             if not self.row['state']:
                 self.lead_filled_vol = 0  # Reset when the algo is inactive
                 return
-            logger.debug(f"{self.total_sell},{self.total_buy},{self.net_volume}")
-            self.diaoxia_offset = 'open'
             
-            # {'diaoyu': {'buy': 1, 'sell': 2}, 'diaoxia': {'buy': 0, 'sell': 1}}
-
-            # if net_vol is positive and order is sell, we can only sell total pos because of availability
+            # logger.debug(f"{self.total_sell},{self.total_buy},{self.net_volume}, {self.row['user_algo_type_count'][self.username]}")
             if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
                 logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
-                self.diaoxia_offset = 'close'
+                # self.diaoxia_offset = 'close'
                 self.update_db()
-                
-            # if net_vol is negative and order is buy, we allow order to go through
-            # if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
+            # self.diaoxia_offset = 'open'
+
+            # # if net_vol is positive and order is sell, we can only sell total pos because of availability
+            # if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
+            #     logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
             #     self.diaoxia_offset = 'close'
             #     self.update_db()
+                
+            # # if net_vol is negative and order is buy, we allow order to go through
+            # # if self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume):
+            # #     self.diaoxia_offset = 'close'
+            # #     self.update_db()
             
-            # if net volume is negative and buy is positive, 
-            if self.net_volume < 0 and self.total_buy > 0 :
-                logger.debug("net volume < 0 and total buy > 0 ")
-                self.diaoxia_offset = 'close'
+            # # if net volume is negative and buy is positive, 
+            # if self.net_volume < 0 and self.total_buy > 0 :
+            #     logger.debug("net volume < 0 and total buy > 0 ")
+            #     self.diaoxia_offset = 'close'
             
+
+            self.diaoxia_offset = self.determine_trade_type(self.net_volume,self.row['user_algo_type_count'][self.username])
+
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
                 self.update_db()
                 return
 
+
+
             revised_qty = int(self.qty) - self.lead_filled_vol
             logger.debug(f"{self.net_volume}, {self.total_buy}, {self.diaoxia_availability},{self.diaoxia_offset}")
             # Log order book data
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset}")
+            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}| {self.diaoxia_offset}")
 
             # Precompute spread conditions
             bid_ask_spread_1 = float(self.htx_best_bid) - float(self.best_ask)
@@ -365,8 +405,8 @@ class Diaoxia:
     async def place_market_order_htx(self,size,direction):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
-                result = await self.place_order_htx_helper(self.htx_tradeapi, self.ccy.replace('-SWAP',''), size, direction,self.diaoxia_offset)
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset}  htx_place_market_order result:{result}")
+                result = await self.place_order_htx_helper(self.htx_tradeapi, self.ccy.replace('-SWAP',''), size, direction,self.diaoxia_offset[direction])
+                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset[direction]}  htx_place_market_order result:{result}")
 
             except Exception as e:
                 self.update_db()

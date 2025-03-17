@@ -383,7 +383,6 @@ class HuobiCoinFutureRestTradeAPI:
             headers["Accept"] = "application/json"
             headers["Content-type"] = "application/json"
             headers["User-Agent"] = USER_AGENT
-
             # body['contract_code'] =  body['contract_code'].split('-SWAP')[0]
 
             try:
