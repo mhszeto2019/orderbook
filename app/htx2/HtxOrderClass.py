@@ -330,11 +330,6 @@ class HuobiCoinFutureRestTradeAPI:
         return json_dict
     
 
-
-
-
-
-
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.
 
@@ -392,17 +387,21 @@ class HuobiCoinFutureRestTradeAPI:
             # body['contract_code'] =  body['contract_code'].split('-SWAP')[0]
 
             try:
+
                 response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
+                # logger.debug(params)
                 # print('python response',response_dict)
                 # response_dict['data'] = response_dict.get('data',[])
                 # print(response_dict['data'],type(response_dict['data']))
                 # response_dict['data']['sMsg'] = 'Orders placed'
+                logger.debug(response_dict)
                 response_dict['sMsg'] = "Orders placed"
                 response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]
 
             except Exception as e:
                 # print('exception printed',e)
-                logger.debug(f"EXCEPTION IN REQUEST {traceback.format_exc()}")
+                logger.error(response_dict)
+                logger.error(f"EXCEPTION IN REQUEST {traceback.format_exc()}")
                 
                 response_dict = None
 
@@ -431,6 +430,7 @@ class HuobiCoinFutureRestTradeAPI:
                 
                 if method.lower() == "post":
                     # Send POST request
+                    logger.debug(f"SENDING {url} , params:{params},data:{data}, headers:{headers}")
                     response = requests.post(url, params=params, data=json.dumps(data), headers=headers,timeout=30)
                     status_code = response.status_code
                     # print(status_code,response.headers)
@@ -471,13 +471,13 @@ class HuobiCoinFutureRestTradeAPI:
                         # print(f"Request failed with status code {response.status_code}")
                         return json_response
             except requests.exceptions.SSLError as ssle:
-                logger.debug(f"SSLERROR:{ssle}")
+                logger.error(f"SSLERROR:{ssle}")
                 time.sleep(2**i)  # Exponential backoff
                 
             except requests.exceptions.RequestException as e:
                 # If there is any exception with the request
                 # print(f"An error occurred: {e}")
-                logger.debug(f"error:{e}")
+                logger.error(f"error:{e}")
                 return {}
         logger.debug("Max retires exceeded")
         return {}
