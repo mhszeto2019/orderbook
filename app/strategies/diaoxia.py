@@ -243,6 +243,7 @@ class Diaoxia:
 
             # if net_vol is positive and order is sell, we can only sell total pos because of availability
             if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
+                logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
                 self.diaoxia_offset = 'close'
                 self.update_db()
                 
@@ -252,8 +253,10 @@ class Diaoxia:
             #     self.update_db()
             
             # if net volume is negative and buy is positive, 
-            # if self.net_volume < 0 and self.total_buy > 0:
-            #     self.diaoxia_offset = 'close'
+            if self.net_volume < 0 and self.total_buy > 0 :
+                logger.debug("net volume < 0 and total buy > 0 ")
+                self.diaoxia_offset = 'close'
+            
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
@@ -261,7 +264,7 @@ class Diaoxia:
                 return
 
             revised_qty = int(self.qty) - self.lead_filled_vol
-
+            logger.debug(f"{self.net_volume}, {self.total_buy}, {self.diaoxia_availability},{self.diaoxia_offset}")
             # Log order book data
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset}")
 

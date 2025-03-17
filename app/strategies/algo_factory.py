@@ -63,72 +63,72 @@ import time
 import random
 
 
-from flask import Flask, request, jsonify
-import threading
-import time
-import os
-import signal
+# from flask import Flask, request, jsonify
+# import threading
+# import time
+# import os
+# import signal
 
-app = Flask(__name__)
+# app = Flask(__name__)
 
-# Global variable to track if the task is running
-task_thread = None
-shutdown_flag = False
+# # Global variable to track if the task is running
+# task_thread = None
+# shutdown_flag = False
 
-# Background function
-def background_task():
-    # Instantiate AlgoFactory
-    factory = AlgoFactory()
+# # Background function
+# def background_task():
+#     # Instantiate AlgoFactory
+#     factory = AlgoFactory()
 
-    # Start the DB listener in a separate thread
-    db_listener = DBListener(factory)
-    db_listener.start()
-    try:
-        # while True:
-        #     # Periodically execute all algorithms
-        # print("Executing all algorithms...")
-        factory.execute_all()
-            # time.sleep(5)
-    except KeyboardInterrupt:
-        logger.error("KeyboardInterrupt detected. Shutting down gracefully...")
-        # print("KeyboardInterrupt detected. Shutting down gracefully...")
-    except Exception as e:
-        logger.error(f"Error detected: {e}")
-        # print(f"An unexpected error occurred: {e}")
-    finally:
-        # Ensure cleanup happens no matter what
-        # print("Cleaning up...")
-        factory.stop_all()
-        db_listener.stop()
-        factory.handle_termination_signal(None,None)
-        db_listener.join()
+#     # Start the DB listener in a separate thread
+#     db_listener = DBListener(factory)
+#     db_listener.start()
+#     try:
+#         # while True:
+#         #     # Periodically execute all algorithms
+#         # print("Executing all algorithms...")
+#         factory.execute_all()
+#             # time.sleep(5)
+#     except KeyboardInterrupt:
+#         logger.error("KeyboardInterrupt detected. Shutting down gracefully...")
+#         # print("KeyboardInterrupt detected. Shutting down gracefully...")
+#     except Exception as e:
+#         logger.error(f"Error detected: {e}")
+#         # print(f"An unexpected error occurred: {e}")
+#     finally:
+#         # Ensure cleanup happens no matter what
+#         # print("Cleaning up...")
+#         factory.stop_all()
+#         db_listener.stop()
+#         factory.handle_termination_signal(None,None)
+#         db_listener.join()
 
-# Start the task
-@app.route('/start', methods=['POST'])
-def start():
-    global task_thread, shutdown_flag
-    if task_thread and task_thread.is_alive():
-        return jsonify({"message": "Task is already running"}), 400
+# # Start the task
+# @app.route('/start', methods=['POST'])
+# def start():
+#     global task_thread, shutdown_flag
+#     if task_thread and task_thread.is_alive():
+#         return jsonify({"message": "Task is already running"}), 400
 
-    shutdown_flag = False
-    task_thread = threading.Thread(target=background_task)
-    task_thread.start()
+#     shutdown_flag = False
+#     task_thread = threading.Thread(target=background_task)
+#     task_thread.start()
 
-    return jsonify({"message": "Task started"}), 200
+#     return jsonify({"message": "Task started"}), 200
 
-# Stop the task and Flask server
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    global shutdown_flag
-    shutdown_flag = True
-    os.kill(os.getpid(), signal.SIGINT)  # Kill the process
-    return jsonify({"message": "Shutting down server"}), 200
+# # Stop the task and Flask server
+# @app.route('/shutdown', methods=['POST'])
+# def shutdown():
+#     global shutdown_flag
+#     shutdown_flag = True
+#     os.kill(os.getpid(), signal.SIGINT)  # Kill the process
+#     return jsonify({"message": "Shutting down server"}), 200
 
-# Check if task is running
-@app.route('/status', methods=['GET'])
-def status():
-    global task_thread
-    return jsonify({"running": task_thread.is_alive() if task_thread else False}), 200
+# # Check if task is running
+# @app.route('/status', methods=['GET'])
+# def status():
+#     global task_thread
+#     return jsonify({"running": task_thread.is_alive() if task_thread else False}), 200
 
 
 class AlgoFactory:
@@ -481,33 +481,33 @@ class DBListener(threading.Thread):
         """Stop the listener."""
         self.running = False
 
-# if __name__ == "__main__":
-
-    # # Instantiate AlgoFactory
-    # factory = AlgoFactory()
-
-    # # Start the DB listener in a separate thread
-    # db_listener = DBListener(factory)
-    # db_listener.start()
-    # try:
-    #     # while True:
-    #     #     # Periodically execute all algorithms
-    #     # print("Executing all algorithms...")
-    #     factory.execute_all()
-    #         # time.sleep(5)
-    # except KeyboardInterrupt:
-    #     logger.error("KeyboardInterrupt detected. Shutting down gracefully...")
-    #     # print("KeyboardInterrupt detected. Shutting down gracefully...")
-    # except Exception as e:
-    #     logger.error(f"Error detected: {e}")
-    #     # print(f"An unexpected error occurred: {e}")
-    # finally:
-    #     # Ensure cleanup happens no matter what
-    #     # print("Cleaning up...")
-    #     factory.stop_all()
-    #     db_listener.stop()
-    #     factory.handle_termination_signal(None,None)
-    #     db_listener.join()
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5099)
+
+    # Instantiate AlgoFactory
+    factory = AlgoFactory()
+
+    # Start the DB listener in a separate thread
+    db_listener = DBListener(factory)
+    db_listener.start()
+    try:
+        # while True:
+        #     # Periodically execute all algorithms
+        # print("Executing all algorithms...")
+        factory.execute_all()
+            # time.sleep(5)
+    except KeyboardInterrupt:
+        logger.error("KeyboardInterrupt detected. Shutting down gracefully...")
+        # print("KeyboardInterrupt detected. Shutting down gracefully...")
+    except Exception as e:
+        logger.error(f"Error detected: {e}")
+        # print(f"An unexpected error occurred: {e}")
+    finally:
+        # Ensure cleanup happens no matter what
+        # print("Cleaning up...")
+        factory.stop_all()
+        db_listener.stop()
+        factory.handle_termination_signal(None,None)
+        db_listener.join()
+
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=5099)
