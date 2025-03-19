@@ -72,7 +72,6 @@ DB_CONFIG = {
 #   - if qty doesnt match in 1 trade, it will be carry on until the total filled matches the qty
 # - lead and lag exchanges specified
 
-
 class Diaoxia:
     def __init__(self,row_dict,cursor):
         # shared_state
@@ -159,7 +158,6 @@ class Diaoxia:
             notification_url = 'wss://api.hbdm.com'
             notification_endpoint = '/swap-notification'
           
-            
             notification_subs = [
                 {
                     "op": "sub",
@@ -167,12 +165,10 @@ class Diaoxia:
                     "topic": "positions.BTC-USD"
                 }
             ]
-            
             # swap client
             htx_pos_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key)
             self.htx_pos_client = htx_pos_client
             self.htx_pos_client.start(notification_subs, auth=True, callback=self.htx_position_publicCallback)
-
 
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -197,7 +193,7 @@ class Diaoxia:
                 "sub": "market.BTC-USD.bbo"
             }
         ]
-       
+    
         notification_url = 'wss://api.hbdm.com'
         notification_endpoint = '/swap-ws'
         ws_client = HtxBbo(notification_url, notification_endpoint, access_key, secret_key)
@@ -223,27 +219,27 @@ class Diaoxia:
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
         if self.row['okx_client']:
-
             self.row['okx_client'].close()
             self.row['okx_client'].unsubscribe()
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
-      
         self.update_db()
 
     
     def determine_trade_type(self,pos, algotypes):
+
         """
         Determines available trade actions based on position and strategy activity.
         :param pos: Current position (positive = long, negative = short)
         :param algotypes: Dictionary of trade strategies {'strategy_name': {'buy': x, 'sell': y}}
         :return: Dict of trade types allowed for diaoxia {'buy': 'open/close/None', 'sell': 'open'}
         """
+
         diaoyu = algotypes.get("diaoyu", {"buy": 0, "sell": 0})
         diaoxia = algotypes.get("diaoxia", {"buy": 0, "sell": 0})
 
         # Base availability logic
         remaining_pos = pos + diaoyu["buy"] - diaoyu["sell"]  # Adjust for diaoyu activity
-
+        
         # Determine diaoxia trade permissions
         trade_type = {"buy": None, "sell": "open"}  # Default diaoxia can always sell (continue shorting)
 
@@ -256,8 +252,6 @@ class Diaoxia:
         else:  # No position
             trade_type["buy"] = "open"
             trade_type["sell"] = "open"
-        
-    
 
         return trade_type
 
@@ -271,7 +265,7 @@ class Diaoxia:
             
             # logger.debug(f"{self.total_sell},{self.total_buy},{self.net_volume}, {self.row['user_algo_type_count'][self.username]}")
             if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
-                logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
+                # logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
                 # self.diaoxia_offset = 'close'
                 self.update_db()
             # self.diaoxia_offset = 'open'
@@ -292,9 +286,7 @@ class Diaoxia:
             #     logger.debug("net volume < 0 and total buy > 0 ")
             #     self.diaoxia_offset = 'close'
             
-
             self.diaoxia_offset = self.determine_trade_type(self.net_volume,self.row['user_algo_type_count'][self.username])
-
 
             # Exit early if filled volume already meets the required quantity
             if self.lead_filled_vol >= int(self.qty):
@@ -304,7 +296,7 @@ class Diaoxia:
 
 
             revised_qty = int(self.qty) - self.lead_filled_vol
-            logger.debug(f"{self.net_volume}, {self.total_buy}, {self.diaoxia_availability},{self.diaoxia_offset}")
+            # logger.debug(f"{self.net_volume}, {self.total_buy}, {self.diaoxia_availability},{self.diaoxia_offset}")
             # Log order book data
             logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}| {self.diaoxia_offset}")
 
@@ -380,7 +372,6 @@ class Diaoxia:
     
 
     def htx_position_publicCallback(self,message):
-        # logger.debug(message)
         with self.order_lock:
 
             try:
@@ -416,7 +407,6 @@ class Diaoxia:
     def htx_publicCallback(self,message):
         with self.order_lock:
             try:
-                
                 if message.get('tick'):
                     self.htx_best_bid = message['tick']['bid'][0]
                     self.htx_best_bid_sz = message['tick']['bid'][1]
@@ -493,11 +483,9 @@ DB_CONFIG = {
 # if __name__ == '__main__':
     # 1 strat = 1 algo 
     # try:
-        
         # params = {'username': 'brennan', 'algo_type': 'diaoxia', 'algo_name': 'test9', 'lead_exchange': 'okx', 'lag_exchange': 'htx', 'spread': '10', 'qty': '1', 'ccy': 'BTC-USD-SWAP', 'instrument': 'swap', 'contract_type': 'thisweek', 'state': False, 'htx_apikey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746', 'htx_secretkey': 'c5a5a686-b39d1d16-79864b22-f3e72', 'okx_apikey': 'a0de3940-5679-4939-957a-51c87a8502d9', 'okx_secretkey': 'FA44BCAAC3788C2AB4AFC77047930792', 'okx_passphrase': 'falconstead@Trading2024'}
         # strat = Diaoxia(params,psycopg2.connect(**DB_CONFIG).cursor())
         # strat.start_clients()
-        
     # except KeyboardInterrupt:
     #     print("Stopping clients...")
         # strat.stop_clients()

@@ -476,7 +476,7 @@ class HuobiCoinFutureRestTradeAPI:
             except requests.exceptions.RequestException as e:
                 # If there is any exception with the request
                 # print(f"An error occurred: {e}")
-                logger.error(f"error:{e}")
+                logger.error(f"error:{traceback.format_exc()}")
                 return {}
         logger.debug("Max retires exceeded")
         return {}

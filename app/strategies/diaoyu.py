@@ -196,7 +196,7 @@ class Diaoyu:
                     logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
 
                 except Exception as e:
-                    # self.remove_order(self.order_id)
+                    self.remove_order(self.order_id)
                     self.order_id  = None
                     logger.error(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{traceback.format_exc()}")
 
@@ -300,28 +300,6 @@ class Diaoyu:
                 self.limit_buy_size = self.qty
                 self.limit_ask_price = self.best_bid - float(self.spread)
                 
-                
-                # if int(self.spread) < 0:
-                #     htx_direction = 'sell'
-                #     okx_direction = 'buy'
-                # else:
-                #     htx_direction = 'buy'
-                #     okx_direction = 'sell'
-                
-       
-                # # Throttle: Ensure minimum interval between API calls
-                # current_time = time.time()
-                # # 1s
-                # if current_time - self.last_call_time >= self.call_interval:
-                #     self.last_call_time = current_time
-                #     if htx_direction == 'sell':
-                #         # sell on htx buy on okx - we set the spread away from okx best_ask because we want to buy on okx 
-                #         asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_bid,self.limit_buy_price, self.qty,htx_direction,okx_direction))
-                #     elif htx_direction == 'buy':
-                #         # buy on htx sell on okx - we set the spread away from okx best_bid because we want to sell on okx 
-                #         asyncio.create_task(self.place_limit_order_htx(self.algoname, self.best_ask,self.limit_ask_price, self.qty,htx_direction,okx_direction))
-                # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxlimits:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} ")
-
 
                 # Set up a dictionary for direction mapping and prices
                 direction_mapping = {
@@ -367,13 +345,14 @@ class Diaoyu:
                     "symbol": "BTC"
                     }
                     )
-                # logger.debug(positions)
+                
                 position_data = positions.get('data', []) if positions else []
                 # Check if position_data has at least one item to avoid IndexError 
                 # If there is a position, we need to find out these conditions:
                     #1) limit_size left for our new order which is called availability
                     #2) limit size required to close existing opposite direction called closing size
                 # If there is position, prioritise on closing first
+
 
                 closing_size = 0
                 availability = int(limit_buy_size)
@@ -479,7 +458,7 @@ class Diaoyu:
                             }
                         )
                         revoke_order_data = revoke_orders.get('data', [])
-                        # self.remove_order(self.order_id)
+                        self.remove_order(self.order_id)
                         logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
                         
                         self.order_id = None  # Reset order_id
