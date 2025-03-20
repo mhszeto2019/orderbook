@@ -4,7 +4,6 @@ import ssl
 
 import certifi
 import websockets
-from websockets.asyncio.client import connect
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WebSocketFactory")
@@ -22,17 +21,11 @@ class WebSocketFactory:
         ssl_context.load_verify_locations(certifi.where())
         try:
             self.websocket = await websockets.connect(self.url, ssl=ssl_context)
-            logger.info("WebSocket connection established.")
+            # logger.info("WebSocket connection established.")
             return self.websocket
- 
-        except ConnectionError:
-            return None            
-
-        
         except Exception as e:
             logger.error(f"Error connecting to WebSocket: {e}")
             return None
-
 
     async def close(self):
         if self.websocket:

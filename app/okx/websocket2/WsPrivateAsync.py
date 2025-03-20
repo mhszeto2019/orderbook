@@ -8,7 +8,6 @@ from okx.websocket.WebSocketFactory import WebSocketFactory
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WsPrivate")
 
-
 class WsPrivateAsync:
     def __init__(self, apiKey, passphrase, secretKey, url, useServerTime):
         self.url = url
@@ -34,8 +33,9 @@ class WsPrivateAsync:
         self.callback = callback
 
         logRes = await self.login()
-        await asyncio.sleep(5)
+        # await asyncio.sleep(5)
         if logRes:
+            print(params)
             payload = json.dumps({
                 "op": "subscribe",
                 "args": params

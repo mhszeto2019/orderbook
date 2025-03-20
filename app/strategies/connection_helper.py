@@ -12,7 +12,7 @@ import gzip
 import threading
 import urllib.parse
 import datetime
-
+import traceback
 import os
 # Logger 
 from pathlib import Path
@@ -61,7 +61,7 @@ class OkxBbo:
         while self.is_running:
 
             try:
-                print("🔌 Connecting to WebSocket...")
+                # print("🔌 Connecting to WebSocket...")
                 await self.start()
 
                 for pair in currency_pairs:
@@ -72,17 +72,17 @@ class OkxBbo:
                         await self.unsubscribe()
                         await self.subscribe(channel,pair,callback)
 
-                print("✅ Subscribed! Listening for messages...")
+                # print("✅ Subscribed! Listening for messages...")
 
                 # while self.is_running:
                 await asyncio.sleep(100)  # Keep the loop alive
 
             except (ConnectionClosedError, asyncio.CancelledError) as e:
-                print(f"⚠️ WebSocket disconnected: {e}. Retrying...")
+                print(f"⚠️ WebSocket disconnected: {traceback.format_exc()}. Retrying...")
                 retry_attempts += 1
 
             except Exception as e:
-                print(f"❌ Unexpected error: {e}. Retrying...")
+                print(f"❌ Unexpected error: {traceback.format_exc()}. Retrying...")
                 retry_attempts += 1
 
             finally:
@@ -126,7 +126,7 @@ class HtxPositions:
             self.thread = threading.Thread(target=self._run, args=(subs, auth, callback))
             self.thread.start()
         except Exception as e:
-            logger.error(f"Exception error {e}")
+            logger.error(f"Exception error {traceback.format_exc()}")
 
     def stop(self):
         """ Stop the subscription process. """
@@ -143,7 +143,7 @@ class HtxPositions:
         try:
             self.loop.run_until_complete(self._subscribe(subs, auth, callback))
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An error occurred: {traceback.format_exc()}")
         finally:
             self.loop.close()
 
@@ -187,8 +187,8 @@ class HtxPositions:
                         break  # Break out of the loop when connection is closed
 
         except Exception as e:
-            # print(f"An error occurred: {e}")
-            logger.error(f"Exception:,{e}")
+            # print(f"An error occurred: {traceback.format_exc()}")
+            logger.error(f"Exception:,{traceback.format_exc()}")
             self.is_open = False
 
     async def authenticate(self, websocket):
@@ -259,7 +259,7 @@ class HtxBbo:
             self.thread.start()
 
         except Exception as e:
-            logger.error(f"Exception error {e}")
+            logger.error(f"Exception error {traceback.format_exc()}")
 
     def stop(self):
         """ Stop the subscription process. """
@@ -278,7 +278,7 @@ class HtxBbo:
         try:
             self.loop.run_until_complete(self._subscribe(subs, auth, callback))
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An error occurred: {traceback.format_exc()}")
         finally:
             self.loop.close()
 
@@ -321,16 +321,11 @@ class HtxBbo:
 
                     except websockets.ConnectionClosed:
                         print("HTXBBO WebSocket connection closed.")
-                        # raise Exception
-                        # self.is_open = False
-                        # await self._close()
-                        # await self._subscribe(self.subs)
-
                         break  # Break out of the loop when connection is closed
 
         except Exception as e:
-            print(f"An error occurred: {e}")
-            logger.error(f"Exception error {e}")
+            print(f"An error occurred: {traceback.format_exc()}")
+            logger.error(f"Exception error {traceback.format_exc()}")
             self.is_open = False
 
     async def authenticate(self, websocket):

@@ -2,10 +2,10 @@ from app.util import with_db_connection
 from pg8000.dbapi import ProgrammingError, DatabaseError
 from flask import Flask, jsonify, request
 from flask_cors import CORS  # Import CORS
+import traceback
 
 app = Flask(__name__)
 CORS(app)
-
 
 
 @app.route('/db/get_algo_list', methods=['GET'])
@@ -19,7 +19,7 @@ def get_algo_list(cursor):
         result = cursor.fetchall()
         return jsonify(result)
     except DatabaseError as e:
-        print(e)
+        print(traceback.format_exc())
     finally:
         cursor.close()  # Close the cursor
 

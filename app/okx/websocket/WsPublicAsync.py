@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 from okx.websocket.WebSocketFactory import WebSocketFactory
-from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
+from websockets.exceptions import ConnectionClosed,ConnectionClosedError
 
 from pathlib import Path
 LOG_DIR = Path('/var/www/html/orderbook/logs')
@@ -21,7 +21,6 @@ logger = logging.getLogger('WsPublicAsync')
 logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
-from websockets.exceptions import ConnectionClosed
 
 import random
 
@@ -32,121 +31,98 @@ class WsPublicAsync:
         self.callback = None
         self.loop = asyncio.get_event_loop()
         self.factory = WebSocketFactory(url)
-        self.reconnect_attempts = 0
-        self.max_reconnect_attempts = 10  # Limit reconnect attempts
-        self.reconnect_delay = 1  # Initial delay in seconds
-
- 
+        self.disconnection = True
 
     async def connect(self):
-        """Establish a WebSocket connection with retries."""
-        while self.reconnect_attempts < self.max_reconnect_attempts:
-            try:
-                self.websocket = await self.factory.connect()
-                self.reconnect_attempts = 0  # Reset on successful connection
-                # logger.info("Connected to WebSocket.")
-                break
-            except Exception as e:
-                self.reconnect_attempts += 1
-                delay = min(self.reconnect_delay * (2 ** (self.reconnect_attempts - 1)), 30)  # Cap delay at 30 seconds
-                logger.error(f"Connection failed (attempt {self.reconnect_attempts}): {e}. Retrying in {delay}s...")
-                await asyncio.sleep(delay)
-        else:
-            logger.error("Max reconnection attempts reached. Could not connect.")
-            raise ConnectionError("Failed to connect to WebSocket after multiple attempts.")
-        
-    async def consume(self):
-        """Continuously consume messages from the WebSocket, handling disconnections."""
-        try:
-            while True:
-                try:
-                    async for message in self.websocket:
-                        # print(f"Received(OKX): {message}")
-                        if self.callback:
-                            self.callback(message)
-                except ConnectionClosed:
-                    print("FACTORY CONNECTION ERROR")
-                    logger.error("FACTORY CONNECTINON ERROR")
-                    continue
-                except ConnectionError:
-                    continue
-            #     except ConnectionClosedError as e:
-                    
-            #         logger.error(f"WebSocket closed unexpectedly: {e}. Attempting to reconnect...")
-            #         await self.cleanup()
-            #         await self.handle_disconnection()  # Attempt to reconnect
-            #         break  # Exit the loop to reconnect
-            #     except ConnectionClosedOK:
-            #         logger.info("WebSocket connection closed gracefully.")
-            #         break  # Normal closure
-            #     except Exception as e:
-            #         logger.error(f"Unexpected error in consume: {e}")
-            #         break  # Exit the loop for any other exceptions
-            # await self.cleanup()
+        self.websocket = await self.factory.connect()
 
-        except Exception as e:
-            logger.error(f"Error {e}")
+    async def reconnect_factory(self):
+        self.factory.close()
+        # new factory connection
+        self.websocket = await self.factory.connect()
+    
+
+    async def consume(self):
+        async for message in self.websocket:
+            # logger.debug("Received message: {%s}", message)
+            try:
+                if self.callback:
+                    self.callback(message)
+            except ConnectionClosed:
+                print("FACTORY CONNECTION ERROR")
+                logger.error("FACTORY CONNECTINON ERROR")
+                continue
+            except ConnectionError:
+                continue
+            except ConnectionClosedError:
+                continue
+            
+
+
+        # except Exception as e:
+        #     print("CONSUME ERROR")
+        #     self.reconnect_factory
+            # async for message in self.websocket:
+            #     # logger.debug("Received message: {%s}", message)
+            #     if self.callback:
+            #         self.callback(message)
+
+    # async def subscribe(self, params: list, callback):
+    #     try:
+    #         self.callback = callback
+    #         payload = json.dumps({
+    #             "op": "subscribe",
+    #             "args": params
+    #         })
+    #         await self.websocket.send(payload)
+    #     # await self.consume()
+    #     except Exception as e:
+    #         raise Exception
 
     async def subscribe(self, params: list, callback):
-        """Subscribe to WebSocket channels."""
         self.callback = callback
         payload = json.dumps({
             "op": "subscribe",
             "args": params
         })
         await self.websocket.send(payload)
-        # logger.info(f"Subscribed with payload: {payload}")
-
+        # await self.consume()
+        
     async def unsubscribe(self, params: list, callback):
-        """Unsubscribe from WebSocket channels."""
-        self.callback = callback
-        payload = json.dumps({
-            "op": "unsubscribe",
-            "args": params
-        })
-        logger.info(f"Unsubscribe payload: {payload}")
-        await self.websocket.send(payload)
+        try:
+            self.callback = callback
+            payload = json.dumps({
+                "op": "unsubscribe",
+                "args": params
+            })
+            logger.info(f"unsubscribe: {payload}")
+            await self.websocket.send(payload)
+        except Exception as e:
+            print(e)
 
     async def stop(self):
-        """Stop the WebSocket connection and event loop."""
-        logger.info("Stopping WebSocket connection...")
         await self.factory.close()
         self.loop.stop()
 
-    async def reconnect(self):
-        """Re-establish the WebSocket connection."""
-        logger.info("Attempting to reconnect...")
-        await self.connect()  # Use the existing connect logic
-        if self.subscriptions:
-            await self.resubscribe()  # Resubscribe to channels
 
-    async def resubscribe(self):
-        """Resubscribe to previous subscriptions after reconnection."""
-        for params in self.subscriptions:
-            await self.subscribe(params, self.callback)
-        logger.info("Resubscribed to all channels after reconnection.")
+    # async def start(self):
+    #     logger.info("Connecting to WebSocket...")
+    #     try:
+    #         await self.connect()
+    #         self.loop.create_task(self.consume())
+    #         # await self.consume()  # Instead of create_task, directly await consume()
+    #     except Exception as e:
+    #         logger.error(f"❌ WebSocket error: {e}. Restarting...")
+    #         await self.reconnect_factory()
+    #         await self.connect()
+    #         self.loop.create_task(self.consume())
 
     async def start(self):
-        """Start the WebSocket connection and begin consuming messages."""
-        # logger.info("Starting WebSocket connection...")
+        logger.info("Connecting to WebSocket...")
         await self.connect()
         self.loop.create_task(self.consume())
 
-    def stop_sync(self):
-        """Stop the WebSocket connection synchronously."""
-        self.loop.run_until_complete(self.stop())
-    
-    async def cleanup(self):
-        """Clean up by unsubscribing and closing WebSocket."""
-        logger.debug("CLEANING UP")
-        # await self.unsubscribe()
-        await self.factory.close()
-        logger.debug("AFTER CLEAN UP")
 
-    async def handle_disconnection(self):
-        """Handle WebSocket disconnection."""
-        try:
-            await self.websocket.close()
-        except Exception as e:
-            logger.warning(f"Error while closing WebSocket during disconnection handling: {e}")
-        await self.reconnect()
+
+    def stop_sync(self):
+        self.loop.run_until_complete(self.stop())

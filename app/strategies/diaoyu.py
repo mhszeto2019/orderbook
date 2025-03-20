@@ -158,7 +158,7 @@ class Diaoyu:
     def place_order(self,order_id, order_data):
         """Store an order when it's placed."""
         self.active_orders[order_id] = order_data
-        print(f"Order placed: {order_id}")
+        # print(f"Order placed: {order_id}")
 
 
     def remove_order(self,order_id):
@@ -166,7 +166,7 @@ class Diaoyu:
         if order_id in self.active_orders:
             order_data = self.active_orders.pop(order_id)
             self.recently_removed_orders.append((order_id, time.time()))  # Store timestamp
-            print(f"Order removed: {order_id} (kept in deque for {self.GRACE_PERIOD}s)")
+            # print(f"Order removed: {order_id} (kept in deque for {self.GRACE_PERIOD}s)")
 
 
     def cleanup_old_orders(self):
