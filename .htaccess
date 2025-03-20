@@ -6,7 +6,9 @@ Options -Indexes
     Require all granted
 </FilesMatch>
 
-# Deny access to sensitive files (e.g., PHP scripts, config files, log files, etc.)
+# Deny access to sensitive files (e.g., PHP scripts, config files, log files, e>
 <FilesMatch "\.(php|ini|conf|json|log|sql|env)$">
     Require all denied
 </FilesMatch>
+
+

@@ -148,14 +148,6 @@ class AlgoFactory:
         if algo_type == 'diaoyu':
             strat = Diaoyu(self.shared_states[instance_id],db_cursor)
             # Create a new process for the strategy
-            # process = multiprocessing.Process(target=strat.start_clients)
-            # # Store the strategy and process in the `algos` dictionary
-            # self.algos[instance_id] = (strat, process)
-            # # Store the shared state for the instance
-            # self.shared_states[instance_id]['pname'] = process._name
-            # # Start the process
-            # process.start()
-            # self.processes.append(process)
 
         elif algo_type == 'diaoxia':
             strat = Diaoxia(self.shared_states[instance_id], db_cursor)
@@ -174,8 +166,6 @@ class AlgoFactory:
 
     def update_user_algo_type_count(self, username: str, algotype: str, spread: int, qty: int):
         """Updates buy/sell counts for a user's algorithm type."""  
-        print(spread,type(spread),qty)
-        logger.debug(username)
         if algotype == 'diaoyu':
             side = 'buy' if spread > 0 else 'sell'
         elif algotype == 'diaoxia':
@@ -212,7 +202,7 @@ class AlgoFactory:
       
 
         qty = int(json_data['qty'])
-        logger.debug(username,algo_type,json_data['spread'],qty)
+        print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
         if  json_data['state']:
             self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
         else:
@@ -221,6 +211,7 @@ class AlgoFactory:
         for instance_id in self.shared_states:
             if username in instance_id:
                 self.shared_states[instance_id]['user_algo_type_count'] = self.user_algo_type_count
+        # print(spread,type(spread),qty)
         
         # self.shared_states[instance_id]['user_algo_type_count'] =  self.user_algo_type_count[username]
 

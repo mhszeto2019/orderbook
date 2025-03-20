@@ -34,7 +34,6 @@ logger.setLevel(logging.DEBUG)  # Set log level
 logger.addHandler(file_handler)
 
 
-
 from alpha.utils.request import AsyncHttpRequests
 from alpha.const import USER_AGENT
 import asyncio

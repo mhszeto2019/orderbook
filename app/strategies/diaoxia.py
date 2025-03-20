@@ -149,6 +149,10 @@ class Diaoxia:
 
         self.connect_db()
 
+        self.last_update_okx = time.time()
+        self.last_update_htx = time.time()
+
+
     def run_htx_positions(self):
             """Run the HtxPositions WebSocket client."""
       
@@ -258,6 +262,12 @@ class Diaoxia:
 
 
     def check_condition(self, spread :int, callback):
+        current_time = time.time()
+        # print(current_time,max(self.last_update_okx, self.last_update_htx) , current_time - max(self.last_update_okx, self.last_update_htx) )
+        if current_time - max(self.last_update_okx, self.last_update_htx) > 1:
+            logger.debug("Warning: Order book data is stale!")
+            return
+        
         try:
             if not self.row['state']:
                 self.lead_filled_vol = 0  # Reset when the algo is inactive
@@ -348,8 +358,9 @@ class Diaoxia:
                     spread = float(self.spread)
                     self.limit_buy_price = float(self.best_bid) - spread
                     self.limit_buy_size = self.qty
-                
+                    
                     self.lead_direction, self.lag_direction = ('buy', 'sell') if spread > 0 else ('sell', 'buy')
+                    self.last_update_okx = time.time()
                     self.check_condition(spread,'okx_callback')
                 
             except Exception as e:
@@ -408,6 +419,8 @@ class Diaoxia:
         with self.order_lock:
             try:
                 if message.get('tick'):
+                    self.last_update_htx = time.time()
+
                     self.htx_best_bid = message['tick']['bid'][0]
                     self.htx_best_bid_sz = message['tick']['bid'][1]
                     self.htx_best_ask = message['tick']['ask'][0]
