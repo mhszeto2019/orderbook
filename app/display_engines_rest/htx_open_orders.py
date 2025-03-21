@@ -18,11 +18,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','ht
 from util import token_required
 
 # Logger 
-# Define the log directory and the log file name
+import os
 from pathlib import Path
+# Define the log directory and the log file name
 LOG_DIR = Path('/var/www/html/orderbook/logs')
 log_filename = LOG_DIR / (Path(__file__).stem + '.log')
-import os
 os.makedirs(LOG_DIR, exist_ok=True)
 # Set up basic logging configuration
 import logging
@@ -31,7 +31,7 @@ file_handler = logging.FileHandler(log_filename)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
 logger = logging.getLogger('htx_open_orders')
-logger.setLevel(logging.INFO)  # Set log level
+logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
 
@@ -194,7 +194,8 @@ async def get_all_htx_open_orders():
             }
         )
         open_order_data = open_orders.get('data', [])
-        print(open_order_data)
+        # print(open_order_data)
+        logger.info(open_order_data)
         return open_order_data
     
     except Exception as e:

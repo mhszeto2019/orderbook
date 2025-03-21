@@ -152,6 +152,7 @@ class Diaoyu:
         self.active_orders = {}
         self.recently_removed_orders = deque()
 
+        self.last_update_okx = time.time()
         # Time to keep an order in the recently_removed_orders deque (in seconds)
         self.GRACE_PERIOD = 10
 
@@ -286,7 +287,6 @@ class Diaoyu:
                 # Convert to float only if valid (not None or empty)
                 self.best_bid = float(best_bid) if best_bid and best_bid.replace('.', '', 1).isdigit() else None
                 self.best_ask = float(best_ask) if best_ask and best_ask.replace('.', '', 1).isdigit() else None
-
                 # Handle missing or invalid values
                 if self.best_bid is None or self.best_ask is None:
                     logger.error(f"Invalid best_bid ({best_bid}) or best_ask ({best_ask}) received.")
@@ -299,6 +299,7 @@ class Diaoyu:
                 self.limit_buy_price = self.best_ask - float(self.spread)
                 self.limit_buy_size = self.qty
                 self.limit_ask_price = self.best_bid - float(self.spread)
+                self.last_update_okx = time.time()
                 
 
                 # Set up a dictionary for direction mapping and prices
@@ -306,9 +307,14 @@ class Diaoyu:
                     'sell': ('buy', self.limit_buy_price, self.best_bid),
                     'buy': ('sell', self.limit_ask_price, self.best_ask)
                 }
+                current_time = time.time()
+
+                if current_time - self.last_update_okx > 1:
+                    print("TIME DELAYED")
+                    logger.debug("Warning: Order book data is stale!")
+                    return 
 
                 # Throttle check
-                current_time = time.time()
                 if current_time - self.last_call_time >= self.call_interval:
                     self.last_call_time = current_time
 
@@ -550,66 +556,107 @@ class Diaoyu:
                 self.update_db()
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:{e}")
 
-    def okx_market_order_helper(self,match_order_id):
+    def okx_market_order_helper(self,vol,match_order_id):
+        result = self.okx_tradeapi.place_order(
+                    instId= 'BTC-USD-SWAP',
+                    tdMode= "cross", 
+                    side= self.row['okx_direction'], 
+                    posSide= '', 
+                    ordType= 'market',
+                    sz= vol
+                )
+        result['data'][0]['exchange']='okx'
         
+        if result["code"] == "0":
+        # OKX MARKET ORDER IS SUCCESSFUL
+            result['data'][0]['sCode'] = 200
+
+            if self.htx_is_filled:
+                self.row['state'] = False
+                # Reset values after fill
+                self.htx_is_filled = False
+                self.htx_filled_volume = 0 
+                logger.debug('update db b4')
+                self.update_db()
+                logger.debug('update db after')
+            
+            else:
+                self.order_id  = match_order_id
+                self.place_order(match_order_id,result)
+
+
+            self.order_id  = None
+
+        else:
+            result['data'][0]['sCode'] = 400
+            logger.debug('OKX MARKET TRADE FAILED')
+            self.update_db()
+
+        # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
+        logger.debug(f"{self.username}|{self.algotype}|{self.algoname} | htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}| okx_place_order result:{result}")
+        return 
 
     async def place_market_order_okx(self,filled_volume,match_order_id):
         with self.lock:
             try:
                 logger.debug(f"filled-volume:{filled_volume}")
                 # filled_volume = 980
-                batch_size = 100
+                batch_size = 1
 
                 for i in range(filled_volume // batch_size):
-                    print(f"Fire {i+1} {batch_size}")
+                    logger.debug(f"Fire {i+1} {batch_size}")
+                    self.okx_market_order_helper(batch_size,match_order_id)
+                    await asyncio.sleep(1)
+
 
                 remainder = filled_volume % batch_size
+                await asyncio.sleep(1)
                 if remainder:
-                    print(f"Fire {filled_volume // batch_size + 1} {remainder}")
-                
+                    logger.debug(f"Fire {filled_volume // batch_size + 1} {remainder}")
+                    self.okx_market_order_helper(remainder,match_order_id)
 
 
                 # Initialize TradeAPI
-                tradeApi = self.okx_tradeapi
-                result = tradeApi.place_order(
-                    instId= 'BTC-USD-SWAP',
-                    tdMode= "cross", 
-                    side= self.row['okx_direction'], 
-                    posSide= '', 
-                    ordType= 'market',
-                    sz= filled_volume
-                )
-                result['data'][0]['exchange']='okx'
+                # tradeApi = self.okx_tradeapi
+                # result = tradeApi.place_order(
+                #     instId= 'BTC-USD-SWAP',
+                #     tdMode= "cross", 
+                #     side= self.row['okx_direction'], 
+                #     posSide= '', 
+                #     ordType= 'market',
+                #     sz= filled_volume
+                # )
+                # result['data'][0]['exchange']='okx'
                 
-                if result["code"] == "0":
-                # OKX MARKET ORDER IS SUCCESSFUL
-                    result['data'][0]['sCode'] = 200
+                # if result["code"] == "0":
+                # # OKX MARKET ORDER IS SUCCESSFUL
+                #     result['data'][0]['sCode'] = 200
 
-                    if self.htx_is_filled:
-                        self.row['state'] = False
-                        # Reset values after fill
-                        self.htx_is_filled = False
-                        self.htx_filled_volume = 0 
-                        logger.debug('update db b4')
-                        self.update_db()
-                        logger.debug('update db after')
+                #     if self.htx_is_filled:
+                #         self.row['state'] = False
+                #         # Reset values after fill
+                #         self.htx_is_filled = False
+                #         self.htx_filled_volume = 0 
+                #         logger.debug('update db b4')
+                #         self.update_db()
+                #         logger.debug('update db after')
                     
-                    else:
-                        self.order_id  = match_order_id
-                        self.place_order(match_order_id,result)
+                #     else:
+                #         self.order_id  = match_order_id
+                #         self.place_order(match_order_id,result)
 
 
-                    self.order_id  = None
+                #     self.order_id  = None
 
-                else:
-                    result['data'][0]['sCode'] = 400
-                    logger.debug('OKX MARKET TRADE FAILED')
-                    self.update_db()
+                # else:
+                #     result['data'][0]['sCode'] = 400
+                #     logger.debug('OKX MARKET TRADE FAILED')
+                #     self.update_db()
 
-                # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname} | htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}| okx_place_order result:{result}")
+                # # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}")
+                # logger.debug(f"{self.username}|{self.algotype}|{self.algoname} | htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}| okx_place_order result:{result}")
 
-                # return result
+                return 
             
             except Exception as e:
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_order ERROR:{traceback.format_exc()}")
