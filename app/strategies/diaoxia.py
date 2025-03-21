@@ -303,8 +303,6 @@ class Diaoxia:
                 self.update_db()
                 return
 
-
-
             revised_qty = int(self.qty) - self.lead_filled_vol
             # logger.debug(f"{self.net_volume}, {self.total_buy}, {self.diaoxia_availability},{self.diaoxia_offset}")
             # Log order book data
@@ -391,10 +389,6 @@ class Diaoxia:
                     if message.get('data'):
                         # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
                         self.net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
-                        # logger.debug(self.row['user_algo_type_count'])
-                        # user_algo_type_count = self.row['user_algo_type_count'][self.username]
-                        # print(user_algo_type_count)
-                        # print(self.net_volume)
                         self.total_sell = -(self.row['user_algo_type_count'][self.username]['diaoyu']['sell'] + self.row['user_algo_type_count'][self.username]['diaoxia']['sell'])
                         self.total_buy = self.row['user_algo_type_count'][self.username]['diaoyu']['buy'] + self.row['user_algo_type_count'][self.username]['diaoxia']['buy']
                       

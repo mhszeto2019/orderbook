@@ -8,3 +8,5 @@
     background: white; /* Ensure it doesn’t overlap with content */
     z-index: 10; /* Keep it above other content */
 }
+
+

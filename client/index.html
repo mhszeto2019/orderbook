@@ -640,6 +640,7 @@
 
                         <!-- Modal for Adding/Editing Algo -->
                         <div class="modal" id="algoModal" tabindex="-1">
+                            
                             <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
 
@@ -739,7 +740,7 @@
                                             </div> -->
                                             
                                             <div class="form-check form-switch mt-3">
-                                                <input class="form-check-input" type="checkbox" id="new-algo-status">
+                                                <input class="form-check-input" type="checkbox" id="new-algo-status" disabled>
                                                 <label class="form-check-label" for="new-algo-status">Active</label>
                                             </div>
                                             
@@ -845,7 +846,6 @@
                                 <button id="positions-clear-htx-btn" class="btn btn-warning btn-sm mx-2" onclick="clearPositions('htx')" disabled>Clear HTX</button>
                                 <button id="lock-clear-btn" class="btn btn-secondary btn-sm mx-2" onclick="toggleLockClear()">🔒 Unlock</button>
                             </div>
-                        
                            
                         </p>
                         
@@ -868,6 +868,7 @@
                                 </thead>
                                 <tbody id="oms-open-orders-body">
                                     <!-- Dynamic rows will be inserted here -->
+
                                 </tbody>
                             </table>
                         </div>
@@ -900,27 +901,19 @@
             </div>
         </div>
 
-
     </div>
-
     <script src="./websocket_client/js/auth.js"></script>
     <script src="websocket_client/js/util.js"></script>
-
     <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
     <script src="websocket_client/js/wsConnections.js"></script>
     <script src="websocket_client/js/display_last_trade.js"></script>
-
     <script src="websocket_client/js/display_orderbook.js"></script>
     <script src="websocket_client/js/display_position.js"></script>
     <script src="websocket_client/js/display_open_orders.js"></script>
     <script src="websocket_client/js/arbButton.js"></script>
     <script src="websocket_client/js/createAlgoOrders.js"></script>
 
-
     <!-- <script src="websocket_client/js/display_trade_history.js"></script> -->
-
-
-
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="websocket_client/js/display_fundingrate.js"></script>
@@ -956,7 +949,6 @@
         // Check if the JWT token is present and display the corresponding content
         function checkJWTAndDisplay() {
             const token = getAuthToken();
-
             // Get the elements by ID
             const securedContent = document.getElementById('securedContent');
             const securedContentOMS = document.getElementById('securedContentOMS');
@@ -1021,9 +1013,7 @@
                     <small class="text-muted">${notification.timestamp}</small>
                 </div>
             </div>
-
                 `;
-
                 toastList.prepend(toastItem);
             });
         }
@@ -1118,7 +1108,6 @@
     .navbar-nav {
         margin-left: auto;
     }
-
 
     /* Make sure the parent container is a flex container */
     .orderbook-container {

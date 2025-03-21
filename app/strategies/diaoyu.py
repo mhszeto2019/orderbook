@@ -550,9 +550,25 @@ class Diaoyu:
                 self.update_db()
                 logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:{e}")
 
+    def okx_market_order_helper(self,match_order_id):
+        
+
     async def place_market_order_okx(self,filled_volume,match_order_id):
         with self.lock:
             try:
+                logger.debug(f"filled-volume:{filled_volume}")
+                # filled_volume = 980
+                batch_size = 100
+
+                for i in range(filled_volume // batch_size):
+                    print(f"Fire {i+1} {batch_size}")
+
+                remainder = filled_volume % batch_size
+                if remainder:
+                    print(f"Fire {filled_volume // batch_size + 1} {remainder}")
+                
+
+
                 # Initialize TradeAPI
                 tradeApi = self.okx_tradeapi
                 result = tradeApi.place_order(

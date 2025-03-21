@@ -91,7 +91,6 @@ class HuobiCoinFutureRestTradeAPI:
         uri = "/swap-api/v1/swap_cross_position_info"
 
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        # print("JSON DICT",json_dict)
 
         return json_dict
 
@@ -128,27 +127,6 @@ class HuobiCoinFutureRestTradeAPI:
             json_response2['data'] = [{"ordId":json_dict['data']['success'][0]['order_id'],"sCode":json_dict['sCode'],"ts":json_dict['ts'],"exchange":"htx"}]
             json_response2['rate_limit_remaining'] = json_dict['rate_limit_remaining']
 
-            
-            # logger.debug(json_response2)
-            #  {'status': ['ok', 'no error'], 'data': {'errors': [], 'success': [{'order_id': 1333815668657569792, 'index': 1, 'order_id_str': '1333815668657569792'}], 'sMsg': 'Orders placed'}, 'ts': 1738048036510, 'sCode': 200, 'rate_limit_remaining': '35'}
-
-            # expected return 
-            # output_msg = {
-            #     "code": "",
-            #     "data": [{
-            #         "clOrdId": "",
-            #         "ordId": "",
-            #         "sCode": "",
-            #         "sMsg": "",
-            #         "tag": "",
-            #         "ts": "",
-            #         "exchange":"htx"
-            #     }],
-            #     "inTime": str(int(time.time() * 1000)),
-            #     "msg": "",
-            #     "outTime": "",
-            #     "rate_limit_remaining":""
-            # }
         except Exception as e:
             logger.error(e)
             logger.error(f"Json dict {json_dict}")
@@ -173,9 +151,7 @@ class HuobiCoinFutureRestTradeAPI:
         json_dict = await self.request("POST", uri, body=body, auth=True)
 
         json_response2 = self.format_message(json_dict)
-        # print('json_response2',json_response2)
-        # print("open_orders,json_dict",json_dict)
-        # print('json_response2',json_response2)
+       
         return json_response2
     
     async def get_contract_positions(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
@@ -211,12 +187,9 @@ class HuobiCoinFutureRestTradeAPI:
             error: Error information, otherwise it's None.
         """
         uri = "/api/v1/contract_order"
-        # print('body',body)
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        # print(json_dict)
         json_response2 = self.format_message(json_dict)
-        # print("open_orders,json_dict",json_dict)
-        # print('json_response2',json_response2)
+       
         return json_response2
 
     async def revoke_order_all(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
@@ -236,8 +209,6 @@ class HuobiCoinFutureRestTradeAPI:
             
 
             json_dict = await self.request("POST", uri, body=body, auth=True)
-            # print("JSON DICT",json_dict)
-
             return json_dict
 
     async def revoke_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
@@ -252,16 +223,8 @@ class HuobiCoinFutureRestTradeAPI:
                 error: Error information, otherwise it's None.
             """
             uri = "/swap-api/v1/swap_cancel"
-            # body = {
-            #     "contract_code": contract_code
-            # }
-            # if order_id:
-            #     body["order_id"] = order_id
-            # if client_order_id:
-            #     body["client_order_id"] = client_order_id
-
+         
             json_dict = await self.request("POST", uri, body=body, auth=True)
-            # print("JSON DICT",json_dict)
             return json_dict
 
     async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
@@ -274,14 +237,8 @@ class HuobiCoinFutureRestTradeAPI:
         #     success: Success results, otherwise it's None.
         #     error: Error information, otherwise it's None.
         uri = "/swap-api/v1/swap_openorders"
-        # body = {
-        #     "contract_code": contract_code,
-        #     "page_index": index,
-        #     "page_size": size
-        # }
-        # body = {}
+       
         json_dict = await self.request("POST", uri, body=body, auth=True)
-        # print('json_dict',json_dict)
         return json_dict
 
 

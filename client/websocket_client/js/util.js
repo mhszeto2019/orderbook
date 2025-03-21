@@ -1,5 +1,6 @@
 
 
+
 function updateCurrencyOptionsGeneral(instrumentInputId, currencyInputId, contractTypeContainerId) {
     const instrumentInput = document.getElementById(instrumentInputId);
     const currencyInput = document.getElementById(currencyInputId);

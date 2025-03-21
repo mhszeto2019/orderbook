@@ -1,5 +1,6 @@
 
 
+
 // Function to open the modal
 function openAlgoModal() {
     const modal = document.getElementById('algoModal');

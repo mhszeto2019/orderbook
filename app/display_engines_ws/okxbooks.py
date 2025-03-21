@@ -49,7 +49,7 @@ logger = logging.getLogger('okxbooks')
 logger.setLevel(logging.DEBUG)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
-
+import traceback
 
 class OKXWebSocketClient:
     def __init__(self, url="wss://ws.okx.com:8443/ws/v5/public"):
@@ -70,11 +70,10 @@ class OKXWebSocketClient:
             self.subscribed_pairs.append(inst_id)  # Track the subscription
             await self.ws.subscribe([arg], callback)  # Subscribe using the args list
         except Exception as e:
-            print(e)
+            logger.error(f"okxbooks subscription error:{traceback.format_exc()}")
 
     async def run(self, channel,currency_pairs, callback):
         try:
-            
             """Run the WebSocket client, subscribing to the given currency pairs."""
             await self.start()
             # Subscribe to all specified currency pairs
@@ -113,7 +112,6 @@ class OKXWebSocketClient:
             channel = json_data["arg"]["channel"]
             currency_pair = json_data["arg"]["instId"]
             instrument = 'SPOT'
-
             # Extract bids and asks
             # ask_list = [{"price": str(price), "size": str(size)} for price, size in asks][::-1]
             bid_list = [{"price": bid[0], "size": bid[1]} for bid in json_data["data"][0]["bids"]]
@@ -134,8 +132,8 @@ class OKXWebSocketClient:
                 "timestamp": datetime.fromtimestamp(float(json_data["data"][0]["ts"]) / 1000).strftime('%Y-%m-%d %H:%M:%S.%f'),
                 "sequence_id": json_data["data"][0]["seqId"],
                 "exchange":"okx"
-
             }
+            
             try:
                 socketio.emit(currency_pair,redis_data)
                 logger.info(redis_data)
