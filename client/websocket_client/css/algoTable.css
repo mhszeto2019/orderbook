@@ -1,0 +1,12 @@
+.small-header {
+    font-size: 0.9em; /* smaller font size for headers */
+}
+
+#algo-list-new {
+    position: sticky;
+    bottom: 0; /* Sticks it at the bottom */
+    background: white; /* Ensure it doesn’t overlap with content */
+    z-index: 10; /* Keep it above other content */
+}
+
+
