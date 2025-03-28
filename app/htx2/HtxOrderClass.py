@@ -349,7 +349,7 @@ class HuobiCoinFutureRestTradeAPI:
                 # print(response_dict['data'],type(response_dict['data']))
                 # response_dict['data']['sMsg'] = 'Orders placed'
                 logger.debug(response_dict)
-                if response_dict['status']:
+                if response_dict and response_dict['status']:
                     response_dict['sMsg'] = "Orders placed" 
                     response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]
                 else:
