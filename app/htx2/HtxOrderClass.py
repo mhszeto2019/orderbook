@@ -312,7 +312,6 @@ class HuobiCoinFutureRestTradeAPI:
             # Encode the timestamp with URI encoding in uppercase
             # encoded_timestamp = urllib.parse.quote(timestamp, safe='')
             logger.debug(f"UTC TIMESTAMP:{timestamp}")
-
             # print(timestamp,encoded_timestamp)
             params = params if params else {}
             params.update({"AccessKeyId": self._access_key,
