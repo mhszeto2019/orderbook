@@ -53,9 +53,7 @@ import base64
 from cryptography.fernet import Fernet
 # Initialize the Trade API client
 # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",secretKey,apiKey)
-
 # get_open_orders means opening an order
-
 
 @token_required
 @app.route('/htx/get_all_positions', methods=['POST'])
@@ -90,16 +88,9 @@ async def get_all_htx_positions():
     try:
         # Data received from the client (assuming JSON body)
         instId = data.get('instId','')
-        
-        # instId= data["instId"].replace("-SWAP", "")
 
         tdMode= "cross"
-       
         # Extract necessary parameters from the request
-        # print(data)
-      
-       
-
         tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_apikey'],api_creds_dict['htx_secretkey'])
 
         positions = await tradeApi.get_positions(instId,body = {
