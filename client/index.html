@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="websocket_client/css/arbButton.css">
 <link rel="stylesheet" href="websocket_client/css/util.css">
 <link rel="stylesheet" href="websocket_client/css/algoTable.css">
-
+<!-- <link rel="stylesheet" href="websocket_client/css/fonts.css"> -->
 
 <!-- sorting table -->
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -258,22 +258,13 @@
 
                                     </div>
                                     
-
-                                    
                                     </div>
                                 </div>
-
 
                                 <!-- lagging Order Book Section -->
                                 <div class="col-md-3" >
                                     <div class="orderbook-section ">
-                                    <!-- <h4>Order Book 2</h4>
-
-                                    <div id="selected-info">
-                                        <p>Exchange: <span id="selected-exchange-orderbook-2">Not Selected</span></p>
-                                        <p>Currency: <span id="selected-ccy-orderbook-2">Not Selected</span></p>
-                                    </div>
-                                    <p id="orderbook-timestamp-2">Timestamp: Not Available</p> -->
+                     
 
                                     <div class="container p-0">
                                         <div class="card shadow-sm ">
@@ -733,21 +724,6 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Trade Direction: Open Long or Close Short -->
-<!--                                        <div class="row mt-3" >
-                                                <div class="col-md-6">
-                                                    <label for="new-algo-instrument" class="form-label">Trade Direction</label>
-                                                    <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Trade Direction: Open Long or Close Short">
-                                                    <i class="bi bi-info-circle"></i>
-                                                    </span>
-                                                    <select class="form-select" id="new-algo-trade-direction">
-                                                        <option value="open">Open</option>
-                                                        <option value="close" selected>Close</option>
-                                                    </select>
-                                                    
-                                                </div>
-                                                
-                                            </div> -->
                                             
                                             <div class="form-check form-switch mt-3">
                                                 <input class="form-check-input" type="checkbox" id="new-algo-status" disabled>
@@ -912,6 +888,7 @@
         </div>
 
     </div>
+
     <script src="./websocket_client/js/twiliocall.js"></script>
     <script src="./websocket_client/js/auth.js"></script>
     <script src="websocket_client/js/util.js"></script>
@@ -930,8 +907,6 @@
     <script src="websocket_client/js/display_fundingrate.js"></script>
 
     <script>
-        console.log(hostname)
-      
         // Clear JWT token from localStorage when no longer needed
         function clearAuthToken() {
             localStorage.removeItem('jwt_token');
@@ -1086,76 +1061,50 @@
             lengthMenu: "Display _MENU_ records per page"
         }
     });
-       
-
 
     </script>
 
-<style>
-    .form-control{
-        font-size:small;
-    }
-    .algo-order-form-control{
-        font-size: small;
-        padding-left:5px;
-        padding-right:5px;
-        width:100%;
-    }
-   
-    /* Custom Navbar Bottom Border */
-    .navbar {
-        border-bottom: 2px solid #ddd; /* Adjust color and thickness of the line */
-    }
+    <style>
+        .form-control{
+            font-size:small;
+        }
+        .algo-order-form-control{
+            font-size: small;
+            padding-left:5px;
+            padding-right:5px;
+            width:100%;
+        }
+    
+        /* Custom Navbar Bottom Border */
+        .navbar {
+            border-bottom: 2px solid #ddd; /* Adjust color and thickness of the line */
+        }
 
-    .navbar-light .navbar-nav .nav-link {
-        color: #007bff;
-    }
+        .navbar-light .navbar-nav .nav-link {
+            color: #007bff;
+        }
 
-    .navbar-light .navbar-nav .nav-link:hover {
-        color: #0056b3;
-    }
+        .navbar-light .navbar-nav .nav-link:hover {
+            color: #0056b3;
+        }
 
-    /* Optional: Custom navbar spacing for better visual */
-    .navbar-nav {
-        margin-left: auto;
-    }
+        /* Optional: Custom navbar spacing for better visual */
+        .navbar-nav {
+            margin-left: auto;
+        }
 
-    /* Make sure the parent container is a flex container */
-    .orderbook-container {
-        width:70%;
-        display: flex;
-        justify-content: space-between;  /* Ensure orderbooks are side by side */
-        gap: 15px; /* Space between each orderbook */
+        /* Make sure the parent container is a flex container */
+        .orderbook-container {
+            width:70%;
+            display: flex;
+            justify-content: space-between;  /* Ensure orderbooks are side by side */
+            gap: 15px; /* Space between each orderbook */
 
-    }
+        }
 
-    /* Set a fixed width for each orderbook container */
-    .scrollable-orderbook {
-        max-height: 300px; /* Set a fixed height for uniformity */
-        overflow-y: auto;  /* Enable vertical scrolling */
-        border: 1px solid #ddd;  /* Optional border styling */
-        /* padding: 10px; */
-        background-color: #f9f9f9; /* Light background for better readability */
-        display: flex;
-        flex-direction: column;
-        gap: 5px;  /* Add gap between asks and bids */
-        box-sizing: border-box; /* Include padding and border in the element's total width */
-        scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
-        scrollbar-width: thin; 
-    }
-    .scrollable-table {
-        max-height: 550px; /* Set a fixed height for uniformity */
-        overflow-y: auto;  /* Enable vertical scrolling */
-        border: 1px solid #ddd;  /* Optional border styling */
-        /* padding: 10px; */
-        background-color: #f9f9f9; /* Light background for better readability */
-        gap: 5px;  /* Add gap between asks and bids */
-        scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
-        scrollbar-width: thin; 
-    }
-
-    .scrollable-lastprice {
-        max-height: 300px; /* Set a fixed height for uniformity */
+        /* Set a fixed width for each orderbook container */
+        .scrollable-orderbook {
+            max-height: 300px; /* Set a fixed height for uniformity */
             overflow-y: auto;  /* Enable vertical scrolling */
             border: 1px solid #ddd;  /* Optional border styling */
             /* padding: 10px; */
@@ -1167,55 +1116,79 @@
             scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
             scrollbar-width: thin; 
         }
+        .scrollable-table {
+            max-height: 550px; /* Set a fixed height for uniformity */
+            overflow-y: auto;  /* Enable vertical scrolling */
+            border: 1px solid #ddd;  /* Optional border styling */
+            /* padding: 10px; */
+            background-color: #f9f9f9; /* Light background for better readability */
+            gap: 5px;  /* Add gap between asks and bids */
+            scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
+            scrollbar-width: thin; 
+        }
+
+        .scrollable-lastprice {
+            max-height: 300px; /* Set a fixed height for uniformity */
+                overflow-y: auto;  /* Enable vertical scrolling */
+                border: 1px solid #ddd;  /* Optional border styling */
+                /* padding: 10px; */
+                background-color: #f9f9f9; /* Light background for better readability */
+                display: flex;
+                flex-direction: column;
+                gap: 5px;  /* Add gap between asks and bids */
+                box-sizing: border-box; /* Include padding and border in the element's total width */
+                scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
+                scrollbar-width: thin; 
+            }
 
 
-    /* Optional: Ensures each ask/bid has a consistent font size and line height */
-    .scrollable-orderbook p,
-    .scrollable-orderbook li {
-        font-size: 15px;
-        /* line-height: 1.6; */
-        margin: 0;
-        /* padding: 2px 0; */
-    }
+        /* Optional: Ensures each ask/bid has a consistent font size and line height */
+        .scrollable-orderbook p,
+        .scrollable-orderbook li {
+            font-size: 15px;
+            /* line-height: 1.6; */
+            margin: 0;
+            /* padding: 2px 0; */
+        }
 
-    .scrollable-orderbook ul  {
-        list-style-type: none;
-        padding-left: 0;
-        margin: 0;
-    }
+        .scrollable-orderbook ul  {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
 
-    .scrollable-orderbook li  {
-        margin-bottom: 5px;
-    }
-    /* Style for Asks (Red) */
-    .scrollable-orderbook .asks ,.sell {
-        color: red;
-    }
+        .scrollable-orderbook li  {
+            margin-bottom: 5px;
+        }
+        /* Style for Asks (Red) */
+        .scrollable-orderbook .asks ,.sell {
+            color: red;
+        }
 
-    /* Style for Bids (Green) */
-    .scrollable-orderbook .bids , .buy {
-        color: green;
-    }
+        /* Style for Bids (Green) */
+        .scrollable-orderbook .bids , .buy {
+            color: green;
+        }
 
-    .run-button {
-            color: #1db954; /* Spotify green */
+        .run-button {
+                color: #1db954; /* Spotify green */
+                cursor: pointer;
+                font-size: 1.5rem;
+                transition: transform 0.2s ease;
+            }
+        .stop-button {
+            color: #df0d0d; /* Spotify green */
             cursor: pointer;
             font-size: 1.5rem;
             transition: transform 0.2s ease;
         }
-    .stop-button {
-        color: #df0d0d; /* Spotify green */
-        cursor: pointer;
-        font-size: 1.5rem;
-        transition: transform 0.2s ease;
-    }
-        
+            
 
-    .table-hover tbody tr:hover {
-        background-color: #f9f9f9; /* Subtle hover effect */
-    }
+        .table-hover tbody tr:hover {
+            background-color: #f9f9f9; /* Subtle hover effect */
+        }
 
-</style>
+    </style>
 
 </body>
 

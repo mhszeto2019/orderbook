@@ -13,7 +13,7 @@ async function populatePositions() {
     const redis_key = localStorage.getItem('key');
 
     if (!token || !username || !redis_key) {
-        alert("You must be logged in to access this.");
+        // alert("You must be logged in to access this.");
         return;
     }
 

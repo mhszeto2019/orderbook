@@ -50,7 +50,7 @@ async function getTradeHistory(){
 
 
     if (!token || !username || !redis_key) {
-        alert("You must be logged in to access this.");
+        // alert("You must be logged in to access this.");
         return;
     }
     ccy = document.getElementById('currency-input').value

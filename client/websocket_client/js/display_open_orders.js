@@ -12,7 +12,7 @@ async function populateOpenOrders() {
     const redis_key = localStorage.getItem('key');
 
     if (!token || !username || !redis_key) {
-        alert("You must be logged in to access this.");
+        // alert("You must be logged in to access this.");
         return;
     }
 
@@ -279,7 +279,7 @@ document.getElementById('modifyPositionForm').addEventListener('submit', async f
     const redis_key = localStorage.getItem('key');
 
     if (!token || !username || !redis_key) {
-        alert("You must be logged in to access this.");
+        // alert("You must be logged in to access this.");
         return;
     }
     const exchange = formData.get('exchange').toLowerCase()
@@ -383,7 +383,7 @@ async function handleDelete(instId, ordId,algoId,exchange) {
     const username = localStorage.getItem('username')
     const redis_key = localStorage.getItem('key')
     if (!token |!username | !redis_key ) {
-        alert("You must be logged in to access this.");
+        // alert("You must be logged in to access this.");
         return;
     }
     request_data = {"username":username,"redis_key":redis_key,'ordId':ordId,'ccy':instId,'exchange':exchange}
@@ -481,7 +481,7 @@ async function clearPositions(exchange) {
         const username = localStorage.getItem('username')
         const redis_key = localStorage.getItem('key')
         if (!token |!username | !redis_key ) {
-            alert("You must be logged in to access this.");
+            // alert("You must be logged in to access this.");
             return;
         }
         request_data = {"username":username,"redis_key":redis_key,'ccy':ccy}
@@ -628,7 +628,7 @@ async function get_tpsl_info_promise(ordId, ccy) {
     const redis_key = localStorage.getItem('key');
 
     if (!token || !username || !redis_key) {
-        alert("You must be logged in to access this.");
+        // alert("You must be logged in to access this.");
         return;
     }
 
