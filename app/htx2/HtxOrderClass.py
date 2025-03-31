@@ -58,41 +58,47 @@ class HuobiCoinFutureRestTradeAPI:
         self._secret_key = secret_key
 
     async def get_positions(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-        """ Get open order information.
+        try:
+            """ Get open order information.
 
-        Args:
-            symbol: Currency name, e.g. BTC.
-            index: Page index, default 1st page.
-            size: Page size, Default 20，no more than 50.
+            Args:
+                symbol: Currency name, e.g. BTC.
+                index: Page index, default 1st page.
+                size: Page size, Default 20，no more than 50.
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/swap-api/v1/swap_position_info"
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/swap-api/v1/swap_position_info"
 
-        json_dict = await self.request("POST", uri, body=body, auth=True)
-        # print("JSON DICT",json_dict)
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            # print("JSON DICT",json_dict)
 
-        return json_dict
+            return json_dict
+        except Exception as e:
+            logger.error(f"Exception in get_positions:{traceback.format_exc()}")
     
     async def get_cross_positions(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-        """ Get open order information.
+        try:
+            """ Get open order information.
 
-        Args:
-            symbol: Currency name, e.g. BTC.
-            index: Page index, default 1st page.
-            size: Page size, Default 20，no more than 50.
+            Args:
+                symbol: Currency name, e.g. BTC.
+                index: Page index, default 1st page.
+                size: Page size, Default 20，no more than 50.
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/swap-api/v1/swap_cross_position_info"
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/swap-api/v1/swap_cross_position_info"
 
-        json_dict = await self.request("POST", uri, body=body, auth=True)
+            json_dict = await self.request("POST", uri, body=body, auth=True)
 
-        return json_dict
+            return json_dict
+        except Exception as e:
+            logger.error(f"Exception in get_cross_positions:{traceback.format_exc()}")
 
     async def create_swap_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
         # body = {"orders_data": [
@@ -128,71 +134,78 @@ class HuobiCoinFutureRestTradeAPI:
             json_response2['rate_limit_remaining'] = json_dict['rate_limit_remaining']
 
         except Exception as e:
-            logger.error(e)
-            logger.error(f"Json dict {json_dict}")
-            logger.error(f"Exception{traceback.format_exc()}")
+            logger.error(f"Error in create_swap_order: {traceback.format_exc()}")
             raise Exception
         return json_response2
     
     async def place_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-        """ Get open order information.
-        Args:
-            symbol: Currency name, e.g. BTC.
-            index: Page index, default 1st page.
-            size: Page size, Default 20，no more than 50.
+        try:
+            """ Get open order information.
+            Args:
+                symbol: Currency name, e.g. BTC.
+                index: Page index, default 1st page.
+                size: Page size, Default 20，no more than 50.
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/swap-api/v1/swap_order"
-        # if 'SWAP' not in body['contract_code']:
-        #     body['contract_code'] = f"{body['contract_code']}-SWAP"
-        json_dict = await self.request("POST", uri, body=body, auth=True)
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/swap-api/v1/swap_order"
+            # if 'SWAP' not in body['contract_code']:
+            #     body['contract_code'] = f"{body['contract_code']}-SWAP"
+            json_dict = await self.request("POST", uri, body=body, auth=True)
 
-        json_response2 = self.format_message(json_dict)
-       
-        return json_response2
+            json_response2 = self.format_message(json_dict)
+        
+            return json_response2
+        except Exception as e:
+            logger.error(f"Exception in place_order:{traceback.format_exc()}")
     
     async def get_contract_positions(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-        """ Get open order information.
+        try:
+            """ Get open order information.
 
-        Args:
-            symbol: Currency name, e.g. BTC.
-            index: Page index, default 1st page.
-            size: Page size, Default 20，no more than 50.
+            Args:
+                symbol: Currency name, e.g. BTC.
+                index: Page index, default 1st page.
+                size: Page size, Default 20，no more than 50.
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/api/v1/contract_position_info"
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/api/v1/contract_position_info"
 
-        json_dict = await self.request("POST", uri, body=body, auth=True)
-        # print("JSON DICT",json_dict)
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            # print("JSON DICT",json_dict)
 
-        return json_dict
+            return json_dict
+        except Exception as e:
+            logger.error(f"Exception in place_contract_position:{traceback.format_exc()}")
 
     async def place_contract_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-        print('placing contract swap cross order')
-        """ Get open order information.
+        try:
+            """ Get open order information.
 
-        Args:
-            symbol: Currency name, e.g. BTC.
-            index: Page index, default 1st page.
-            size: Page size, Default 20，no more than 50.
+            Args:
+                symbol: Currency name, e.g. BTC.
+                index: Page index, default 1st page.
+                size: Page size, Default 20，no more than 50.
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/api/v1/contract_order"
-        json_dict = await self.request("POST", uri, body=body, auth=True)
-        json_response2 = self.format_message(json_dict)
-       
-        return json_response2
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/api/v1/contract_order"
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            json_response2 = self.format_message(json_dict)
+        
+            return json_response2
+        except Exception as e:
+            logger.error(f"Exception in place_contract_order:{traceback.format_exc()}")
 
     async def revoke_order_all(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        try:
             """ Revoke all orders.
 
             Args:
@@ -210,8 +223,13 @@ class HuobiCoinFutureRestTradeAPI:
 
             json_dict = await self.request("POST", uri, body=body, auth=True)
             return json_dict
+            
+        except Exception as e:
+            logger.error(f"Error in ggetet_tpsl_info: {traceback.format_exc()}")
+
 
     async def revoke_order(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        try:
             """ Revoke an order.
 
             Args:
@@ -227,64 +245,78 @@ class HuobiCoinFutureRestTradeAPI:
             json_dict = await self.request("POST", uri, body=body, auth=True)
             return json_dict
 
-    async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-        # Args:
-        #     contract_code: such as "BTC-USD".
-        #     index: Page index, default 1st page.
-        #     size: Page size, Default 20，no more than 50.
+        except Exception as e:
+            logger.error(f"Error in revoke_order: {traceback.format_exc()}")
 
-        # Returns:
-        #     success: Success results, otherwise it's None.
-        #     error: Error information, otherwise it's None.
-        uri = "/swap-api/v1/swap_openorders"
-       
-        json_dict = await self.request("POST", uri, body=body, auth=True)
-        return json_dict
+    async def get_open_orders(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
+        try:
+            # Args:
+            #     contract_code: such as "BTC-USD".
+            #     index: Page index, default 1st page.
+            #     size: Page size, Default 20，no more than 50.
+
+            # Returns:
+            #     success: Success results, otherwise it's None.
+            #     error: Error information, otherwise it's None.
+            uri = "/swap-api/v1/swap_openorders"
+        
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            return json_dict
+        except Exception as e:
+            logger.error(f"Error in get_open_orders: {traceback.format_exc()}")
 
 
     async def get_order_info(self,  symbol,body, order_ids=None, client_order_ids=None):
-        """ Get order information.
+        try:
+            """ Get order information.
 
-        Args:
-            contract_code: such as "BTC-USD".
-            order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
-            client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+            Args:
+                contract_code: such as "BTC-USD".
+                order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+                client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/swap-api/v1/swap_order_info"
-        
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/swap-api/v1/swap_order_info"
+            
 
-        json_dict = await self.request("POST", uri, body=body, auth=True)
-        return json_dict
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            return json_dict
+        except Exception as e:
+            logger.error(f"Error in get_order_info: {traceback.format_exc()}")
 
     async def get_tpsl_info(self,  symbol,body, order_id=None, client_order_id=None):
-        """ Get order information.
+        try:
+            """ Get order information.
 
-        Args:
-            contract_code: such as "BTC-USD".
-            order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
-            client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+            Args:
+                contract_code: such as "BTC-USD".
+                order_ids: Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
+                client_order_ids: Client Order ID list. (different IDs are separated by ",", maximum 20 orders can be requested at one time.)
 
-        Returns:
-            success: Success results, otherwise it's None.
-            error: Error information, otherwise it's None.
-        """
-        uri = "/swap-api/v1/swap_relation_tpsl_order"
-        
+            Returns:
+                success: Success results, otherwise it's None.
+                error: Error information, otherwise it's None.
+            """
+            uri = "/swap-api/v1/swap_relation_tpsl_order"
+            
 
-        json_dict = await self.request("POST", uri, body=body, auth=True)
-        return json_dict
+            json_dict = await self.request("POST", uri, body=body, auth=True)
+            return json_dict
+        except Exception as e:
+            logger.error(f"Error in get_tpsl_info: {traceback.format_exc()}")
+            
     
     async def get_funding_rate(self, symbol,body, index=1, size=50, sort_by='created_at', trade_type=0):
-       
-        uri = "/swap-api/v1/swap_funding_rate"
-       
-        json_dict = await self.request("GET", uri, body,  auth=True)
-        return json_dict
-    
+        try: 
+            uri = "/swap-api/v1/swap_funding_rate"
+        
+            json_dict = await self.request("GET", uri, body,  auth=True)
+            return json_dict
+        except Exception as e:
+            logger.error(f"Error in get_funding_rate: {traceback.format_exc()}")
 
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.
@@ -321,7 +353,6 @@ class HuobiCoinFutureRestTradeAPI:
             # print(uri)
             # print(params)
             params["Signature"] = self.generate_signature(method, params, uri)
-            
 
         if not headers:
             headers = {}
@@ -332,23 +363,15 @@ class HuobiCoinFutureRestTradeAPI:
             try:
                 response_dict = self.python_request("GET", url, params=params, data=body, headers=headers)
             except Exception as e:
-                print(e)
+                logger.error(f"Exception in request GET {traceback.format_exc()}")
         else:
-
             headers["Accept"] = "application/json"
             headers["Content-type"] = "application/json"
             headers["User-Agent"] = USER_AGENT
-            # body['contract_code'] =  body['contract_code'].split('-SWAP')[0]
-
             try:
 
                 response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
-                # logger.debug(params)
-                # print('python response',response_dict)
-                # response_dict['data'] = response_dict.get('data',[])
-                # print(response_dict['data'],type(response_dict['data']))
-                # response_dict['data']['sMsg'] = 'Orders placed'
-                logger.debug(response_dict)
+               
                 if response_dict and response_dict['status']:
                     response_dict['sMsg'] = "Orders placed" 
                     response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]
@@ -356,9 +379,7 @@ class HuobiCoinFutureRestTradeAPI:
                     response_dict = {}
                     
             except Exception as e:
-                # print('exception printed',e)
-                logger.error(response_dict)
-                logger.error(f"EXCEPTION IN REQUEST {traceback.format_exc()}")
+                logger.error(f"EXCEPTION IN request POST {traceback.format_exc()}")
                 
                 response_dict = {}
 
@@ -429,15 +450,13 @@ class HuobiCoinFutureRestTradeAPI:
                         return json_response
 
             except requests.exceptions.SSLError as ssle:
-                logger.error(f"SSLERROR:{ssle}")
+                logger.error(f"Exception in python_request - SSLERROR:{ssle}")
                 time.sleep(2**i)  # Exponential backoff
                 return {}
                 
             except requests.exceptions.RequestException as e:
                 # If there is any exception with the request
-                # print(f"An error occurred: {e}")
-                logger.error(f"Json response:{json_response}")
-                logger.error(f"error:{traceback.format_exc()}")
+                logger.error(f"Exception in python_request {traceback.format_exc()}")
                 return {}
          
 
@@ -446,21 +465,25 @@ class HuobiCoinFutureRestTradeAPI:
         return {}
     
     def generate_signature(self, method, params, request_path):
-        if request_path.startswith("http://") or request_path.startswith("https://"):
-            host_url = urllib.parse.urlparse(request_path).hostname.lower()
-            request_path = '/' + '/'.join(request_path.split('/')[3:])
-        else:
-            host_url = urllib.parse.urlparse(self._host).hostname.lower()
-        sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
-        encode_params = urllib.parse.urlencode(sorted_params)
-        payload = [method, host_url, request_path, encode_params]
-        payload = "\n".join(payload)
-        payload = payload.encode(encoding="UTF8")
-        secret_key = self._secret_key.encode(encoding="utf8")
-        digest = hmac.new(secret_key, payload, digestmod=hashlib.sha256).digest()
-        signature = base64.b64encode(digest)
-        signature = signature.decode()
-        return signature
+        try:
+            if request_path.startswith("http://") or request_path.startswith("https://"):
+                host_url = urllib.parse.urlparse(request_path).hostname.lower()
+                request_path = '/' + '/'.join(request_path.split('/')[3:])
+            else:
+                host_url = urllib.parse.urlparse(self._host).hostname.lower()
+            sorted_params = sorted(params.items(), key=lambda d: d[0], reverse=False)
+            encode_params = urllib.parse.urlencode(sorted_params)
+            payload = [method, host_url, request_path, encode_params]
+            payload = "\n".join(payload)
+            payload = payload.encode(encoding="UTF8")
+            secret_key = self._secret_key.encode(encoding="utf8")
+            digest = hmac.new(secret_key, payload, digestmod=hashlib.sha256).digest()
+            signature = base64.b64encode(digest)
+            signature = signature.decode()
+            return signature
+        except Exception as e:
+            logger.error(f"Exception in generate_signature - SSLERROR:{ssle}")
+
 
 
     def format_message(self,input_msg):
