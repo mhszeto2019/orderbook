@@ -1,4 +1,4 @@
-let twilioCallActive = false;
+let twilioCallActive = true;
 let twilioInterval;
 
 // Function to trigger the warning alert dynamically
@@ -10,30 +10,53 @@ function triggerWarning(message) {
 
 // Simulate condition for triggering warning
 function checkCondition() {
-    let conditionMet = Math.random() < 0.3; // 30% chance to trigger warning (for testing)
-    if (conditionMet) {
-        triggerWarning("Critical Alert! Immediate action required.");
-    }
+
+    const formdata = new FormData();
+    formdata.append("username", localStorage.getItem('username'));
+    const check_alert_status = {
+        method: "POST",
+        body: formdata,
+      };
+    fetch("http://127.0.0.1:9000/change_twilio_call_answered_status", check_alert_status)
+    .then((response) => response.text())
+    .then((result) => console.log(result))
+    .catch((error) => console.error(error));
+
+    console.log(result)
+    twilioCallActive = false;
+    // clearInterval(twilioInterval);
+    document.getElementById('alertBox').style.display = "none";
 }
 
 // Simulate Twilio Call (Replace this with actual Twilio API call)
-function startTwilioCall() {
-    if (twilioCallActive) return;
-    twilioCallActive = true;
-    console.log("📞 Twilio call started...");
-
+function startInterval() {
     // Simulating repeated calls every 20s
     twilioInterval = setInterval(() => {
+        checkCondition()
         console.log("🚨 Twilio is making another call...");
-    }, 20000);
+    }, 2000);
 }
 
 // Stop Twilio Calls
 async function stopTwilioCall() {
-    // twilioCallActive = false;
-    // clearInterval(twilioInterval);
-    // document.getElementById('alertBox').style.display = "none";
-    console.log("⛔ Twilio calls stopped.");
 
+    console.log("⛔ Twilio calls stopped.");
+    const formdata = new FormData();
+    formdata.append("username", localStorage.getItem('username'));
+    formdata.append("status", "True");
+    const requestOptions = {
+        method: "POST",
+        body: formdata,
+      };
+      
+      fetch("http://127.0.0.1:9000/change_twilio_call_answered_status", requestOptions)
+        .then((response) => response.text())
+        .then((result) => console.log(result))
+        .catch((error) => console.error(error));
+
+
+        twilioCallActive = false;
+        // clearInterval(twilioInterval);
+        document.getElementById('alertBox').style.display = "none";
 
 }

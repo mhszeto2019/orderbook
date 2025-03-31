@@ -1,6 +1,8 @@
+import os
+import sys
+sys.path.insert(0, "/home/brenn/environments/test/lib/python3.10/site-packages")
 from twilio.rest import Client
 import time
-import os
 from twilio.twiml.voice_response import VoiceResponse
 import asyncio
 import threading
@@ -15,19 +17,19 @@ import traceback
 import configparser
 from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 from okx import Account
+
+
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '../..','config_folder', 'credentials.ini')
 print("Config file path:", config_file_path)
 # Read the configuration file
 config.read(config_file_path)
-app = Flask(__name__)
-CORS(app)
+
 config_source = config['dbchoice']['db']
 dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
-app = Flask(__name__)
-CORS(app)
+
 # Twilio API Credentials (Replace with yours)
 ACCOUNT_SID = config['twilio']['account_sid']
 AUTH_TOKEN = config['twilio']['auth_token']
@@ -64,22 +66,13 @@ class TraderNotifier:
         self.get_okx_liq_px_status = True
         self.exchanges = {}
 
-        self.htx_liq_alert_threshold = 0.15
-        self.update_liq_px()
-
-    
-
-
- 
-
-    
-   
-
+        self.liq_alert_threshold = 0.10
+        self.update_thread = None
+        self.update_thread_status = False
 
     def get_htx_liq_px(self):
         try:
             if self.get_htx_liq_px_status:
-                print('hello')
                 
                 # Data received from the client (assuming JSON body)
                 instId = "BTC-USD"
@@ -138,8 +131,9 @@ class TraderNotifier:
         except Exception as e:
             print(f"ERROR {traceback.format_exc()}")
 
+   
 
-    def check_liq_px_distance(self,exchanges, symbol="BTC-USD", threshold=0.15):
+    def check_liq_px_distance(self,exchanges,threshold, symbol="BTC-USD"):
         """
         Check if liquidation price (liq_px) is at least 15% away from last price (last_px).
         
@@ -149,50 +143,48 @@ class TraderNotifier:
         :return: Dictionary with distance checks.
         """
         results = {}
-        print(exchanges)
         for exchange, data in exchanges.items():
             if symbol in data and isinstance(data[symbol], dict):
                 try:
                     liq_px = float(data[symbol]['liq_px'])
                     last_px = float(data[symbol]['last_px'])
-                    last_px = 120000
-                    direction = data[symbol]['direction']
+                    direction = data[symbol]['direction'] 
+
                     if direction == 'sell':
                         alert_px = liq_px * (1-threshold)
-                        print(alert_px)
                         if alert_px <= last_px:
-                            print(f"CALLLLLLLLLLL THE TRADER - its the {exchange}")
+                            print(f"CALLLLLLLLLLL THE TRADER - its {exchange} with {alert_px}|{last_px}")
+                            self.running = True 
                     else:
                         alert_px = liq_px * (1+threshold)
-                        print(alert_px)
                         if alert_px >= last_px:
-                            print(f"CALLLLLLLLLLL THE TRADER - its the {exchange}")
-                    
-                    # # Check if it's at least 15% away
-                    # is_far = percent_diff >= threshold
+                            print(f"CALLLLLLLLLLL THE TRADER - its {exchange} with {alert_px}|{last_px}")
+                            self.running = True
 
-                    # results[exchange] = {
-                    #     "liq_px": liq_px,
-                    #     "last_px": last_px,
-                    #     "percent_diff": round(percent_diff * 100, 2),  # Convert to percentage
-                    #     "is_15_percent_away": is_far
-                    # }
+                    if self.running:
+                        self.start_call()            
+                 
                 except (KeyError, TypeError, ValueError) as e:
                     results[exchange] = {"error": f"Invalid data format: {e}"}
-        print(results)
         return results
 
-    def update_liq_px(self):
-        for i in range(10):
+    def update_liq_px(self,update_interval = 10):
+        while self.update_thread_status:
             htx_liq_prices = self.get_htx_liq_px()
             okx_liq_prices = self.get_okx_liq_px()
+            print(htx_liq_prices,okx_liq_prices,self.running, self.answered)
+            result = self.check_liq_px_distance(self.exchanges,self.liq_alert_threshold)
+            
+            time.sleep(update_interval)
 
-            print(self.exchanges)
-            self.check_liq_px_distance(self.exchanges)
+    def start_background_update(self):
+        # Create a new thread to run `update_liq_px` in the background
+        update_thread = threading.Thread(target=self.update_liq_px)
+        self.update_thread_status = True
+        update_thread.daemon = True  # Allows the thread to exit when the main program finishes
+        update_thread.start()
 
-        time.sleep(2)
-        
-
+   
     def make_call(self):
         """Initiates a call to the user's phone."""
         call = self.client.calls.create(
@@ -250,57 +242,64 @@ class TraderNotifierFactory:
 
     def get_trader_notifier(self,username):
         return self.traders_notifier[username]
+        
+# INITIALISE FACTORY AND NOTIFIER
+cursor = con.cursor()
+cursor.execute("""select
+                traders.username,
+                traders.phone_number,
+                MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
+                MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
+                MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
+                MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
+                MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase
+                FROM traders left join api_credentials ac on traders.username = ac.username where traders.username ='brennan12' group by traders.username,traders.phone_number """)
+accounts = cursor.fetchall()
+trader_notifier_factory = TraderNotifierFactory()
 
+
+
+
+for account in accounts:
+    # TraderNotifier(username, ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, YOUR_PHONE,HTX_APIKEY,HTX_SECRETKEY,OKX_APIKEY,OKX_SECRETKEY,OKX_PASSPHRASE)
+    trader_notifier = TraderNotifier(account[0],ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, account[1],account[2],account[3],account[4],account[5],account[6])
+    trader_notifier.start_background_update()
+    trader_notifier_factory.add_trader_and_notifier(account[0],trader_notifier)
+    
 app = Flask(__name__)
+CORS(app)
 @app.route('/change_twilio_alert_running_status', methods=['POST'])
 def change_running_status():
     username = request.form.get('username')
     status = request.form.get('status')
     print(username,status,type(username),type(status))
-    trader_notifier_factory.get_trader_notifier(trader[0]).running = status
-
+    trader_notifier_factory.get_trader_notifier(username).running = status
     if status:
-        
-        trader_notifier_factory.get_trader_notifier(trader[0]).start_call()
+        print(status, trader_notifier_factory.get_trader_notifier(username).running)
+        trader_notifier_factory.get_trader_notifier(username).start_call()
     print(trader_notifier_factory.get_trader_notifier(username).running)
-    return '200'
+    return "Running status changed", 200
 
 @app.route('/change_twilio_call_answered_status', methods=['POST'])
 def change_answered_call_status():
     username = request.form.get('username')
     status = request.form.get('status')
     print(username,status,type(username),type(status))
-    trader_notifier_factory.get_trader_notifier(trader[0]).answered = status
+    trader_notifier_factory.get_trader_notifier(username).answered = status
     print(trader_notifier_factory.get_trader_notifier(username).answered)
-    return '200'
+    return "Alert tatus changed", 200
+
+
+@app.route('/check_alert_status', methods=['POST'])
+def check_alert_status():
+    username = request.form.get('username')
+    # print(username,status,type(username),type(status))
+    incident_status =trader_notifier_factory.get_trader_notifier(username).status 
+    answer_status = trader_notifier_factory.get_trader_notifier(username).answered
+    # print(trader_notifier_factory.get_trader_notifier(username).answered)
+    print(incident_status,answer_status)
+    return "Status is ", 200
 
 if __name__ == "__main__":
-    # Create cursor object to execute queries
 
-    cursor = con.cursor()
-
-    # cursor.execute("SELECT trader_name,phone_number from traders")
-    # traders = cursor.fetchall()
-    # trader_notifier_factory = TraderNotifierFactory()
-    # for trader in traders:
-    #     trader_notifier = TraderNotifier(trader[0],ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, trader[1],htx_apikey,htx_secretkey,okx_apikey,okx_secretkey)
-    #     trader_notifier_factory.add_trader_and_notifier(trader[0],trader_notifier)
-
-    cursor.execute("""select
-                    traders.username,
-                    traders.phone_number,
-                    MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
-                    MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
-                    MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
-                    MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
-                    MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase
-                    FROM traders left join api_credentials ac on traders.username = ac.username where traders.username ='brennan12' group by traders.username,traders.phone_number """)
-    accounts = cursor.fetchall()
-    trader_notifier_factory = TraderNotifierFactory()
-    for account in accounts:
-        # TraderNotifier(username, ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, YOUR_PHONE,HTX_APIKEY,HTX_SECRETKEY,OKX_APIKEY,OKX_SECRETKEY,OKX_PASSPHRASE)
-        trader_notifier = TraderNotifier(account[0],ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, account[1],account[2],account[3],account[4],account[5],account[6])
-        trader_notifier_factory.add_trader_and_notifier(account[0],trader_notifier)
-    print(trader_notifier_factory.get_trader_notifier('brennan12').running)
-
-    app.run(port='9000')
+    app.run(port='9000',host ='0.0.0.0')

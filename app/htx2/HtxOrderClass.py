@@ -243,6 +243,8 @@ class HuobiCoinFutureRestTradeAPI:
             uri = "/swap-api/v1/swap_cancel"
          
             json_dict = await self.request("POST", uri, body=body, auth=True)
+            if json_dict:
+                logger.debug(json_dict)
             return json_dict
 
         except Exception as e:
@@ -456,6 +458,8 @@ class HuobiCoinFutureRestTradeAPI:
                 
             except requests.exceptions.RequestException as e:
                 # If there is any exception with the request
+                if response:
+                    logger.error("ERROR RESPONSE IN PYTHON REQUEST")
                 logger.error(f"Exception in python_request {traceback.format_exc()}")
                 return {}
          

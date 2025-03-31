@@ -153,7 +153,7 @@ class Diaoyu:
         self.last_update_okx = time.time()
         # Time to keep an order in the recently_removed_orders deque (in seconds)
         self.GRACE_PERIOD = 10
-
+        self.revoke_reattempt = 5
 
 
     async def revoke_order_by_id(self):
@@ -164,7 +164,6 @@ class Diaoyu:
             return True
         self.order_id = self.order_queue[0]  # Peek at the oldest order
 
-
         try:
             tradeApi = self.htx_tradeapi
             revoke_orders = await tradeApi.revoke_order(self.ccy,
@@ -173,16 +172,34 @@ class Diaoyu:
                                     "contract_code": self.ccy.replace('-SWAP','')
                                     }
                                 )
-            self.order_queue.popleft()  # Remove from queue
+
+            if 'status' in revoke_orders:
+                self.order_queue.popleft()  # Remove from queue
+                return True
             # self.order_id = None
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
-            
+            # print(revoke_orders)
+            # if revoke_orders and revoke_orders['err_code']:
+            #     logger.error("REVOKE ORDER ERROR")
+
+            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
+            # logger.debug(revoke_orders['data']['errors'][0]['err_code'])
+            # if ('status' not in revoke_orders) or (revoke_orders['data']['errors'][0]['err_code']):
+            #     logger.debug(f'error detcethed {self.order_id}')
+            #     if self.revoke_reattempt > 0 :
+            #         logger.debug(f'revoke reattempt,{self.revoke_reattempt}')
+            #         self.revoke_order_by_id()
+            #         self.revoke_reattempt -= 1
+            #     else: 
+            #         logger.error(f"Revoke unsucessful after multiple attempts")
+            #         return False 
+            # else:
+            #     return True
 
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{traceback.format_exc()}")
-            self.revoke_order_by_id(self.order_id)
-            
-        return True
+            self.revoke_order_by_id()
+
+        # return True            
 
 
     # connection with okx bbo
@@ -322,7 +339,9 @@ class Diaoyu:
     async def update_order(self,algoname,best_bid,limit_buy_price,limit_buy_size,htx_direction,okx_direction):
         logger.debug(f"UPDATING ORDER {self.order_queue}")
         if len(self.order_queue) <= 1:
-            await self.revoke_order_by_id()
+            result = await self.revoke_order_by_id()
+            logger.debug(f"RESULT {result}")
+
             await self.place_limit_order_htx(algoname,best_bid,limit_buy_price,limit_buy_size,htx_direction,okx_direction)
 
 

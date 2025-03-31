@@ -29,3 +29,5 @@ tmux new-session -d -s htx_liveprice_app
 # Create a new window within that session, ensuring the environment is sourced
 tmux send-keys -t htx_liveprice_app "source $bar && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5012 app.htx2.htx_liveprice_server:app " C-m
 
+tmux new-session -d -s check_liq_prices
+tmux send-keys -t check_liq_prices "source ~/environments/test/bin/activate && /home/brenn/environments/test/bin/gunicorn app.status.twilio:app" C-m
