@@ -67,8 +67,6 @@ DB_CONFIG = {
     "port": 5432
 }
 
-
-
 # for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
 # Diaoxia conditions
 # - spread matches
@@ -77,6 +75,15 @@ DB_CONFIG = {
 # - lead and lag exchanges specified
 
 class Diaoxia:
+    best_bid: float 
+    best_bid_sz:int
+    best_ask: float
+    best_ask_sz:int
+    htx_best_bid: float
+    htx_best_bid_sz: int
+    htx_best_ask:float
+    htx_best_ask_sz:int
+    
     def __init__(self,row_dict,cursor):
         # shared_state
         self.row = row_dict
@@ -165,8 +172,6 @@ class Diaoxia:
         channel = "bbo-tbt"
         await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
 
-
-
   
 
     async def run_htx_positions(self):
@@ -228,9 +233,6 @@ class Diaoxia:
     def start_clients(self):
         """Sync wrapper to run start_clients() inside multiprocessing."""
         asyncio.run(self.start_clients_sync())  # En
-   
-
-
         
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
@@ -240,9 +242,7 @@ class Diaoxia:
             logger.debug(f"{self.username}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
         self.update_db()
 
-    
     def determine_trade_type(self,pos, algotypes):
-
         """
         Determines available trade actions based on position and strategy activity.
         :param pos: Current position (positive = long, negative = short)
@@ -305,8 +305,10 @@ class Diaoxia:
             logger.debug(f"{self.username}|{self.algoname}|OKXup:{datetime.fromtimestamp(self.last_update_okx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}|HTXup:{datetime.fromtimestamp(self.last_update_htx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} htxside:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz} okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]} ")
 
             # Precompute spread conditions
-            bid_ask_spread_1 = float(self.htx_best_bid) - float(self.best_ask)
-            bid_ask_spread_2 = float(self.best_bid) - float(self.htx_best_ask)
+            # bid_ask_spread_1 = float(self.htx_best_bid) - float(self.best_ask)
+            # bid_ask_spread_2 = float(self.best_bid) - float(self.htx_best_ask)
+            bid_ask_spread_1 = self.htx_best_bid - self.best_ask
+            bid_ask_spread_2 = self.best_bid - self.htx_best_ask
 
             # Determine min available amount for orders
             min_avail_amt_buy = min(int(self.htx_best_bid_sz), int(self.best_ask_sz), 100, revised_qty,1)
@@ -331,8 +333,6 @@ class Diaoxia:
                     self.place_market_order_okx(min_avail_amt_sell,self.lead_direction),
                 )
                 self.lead_filled_vol += min_avail_amt_sell
-                
-         
 
         except Exception as e:
             self.update_db()
