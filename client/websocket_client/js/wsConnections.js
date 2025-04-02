@@ -6,6 +6,8 @@
 //     // 'bnb': 'ws://localhost:8765/bnb'   // WebSocket for Binance (example)
 // };
 
+
+
 // Store the WebSocket connections
 const wsConnections = {};
 
@@ -119,6 +121,7 @@ const wsServers = {
 
 // Function to connect to Socket.IO servers for all exchanges
 function connectToSocketIO() {
+   
     console.log("CONNECTING")
     Object.keys(wsServers).forEach(exchange => {
         const socketUrl = wsServers[exchange];

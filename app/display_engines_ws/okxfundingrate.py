@@ -163,6 +163,7 @@ def handle_disconnect():
         loop.call_soon_threadsafe(loop.stop)
 
 
+
 @socketio.on('message')
 def handle_message(data):
     print('Received message: ' + str(data))

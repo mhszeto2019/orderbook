@@ -231,17 +231,36 @@ async def main():
 import asyncio
 loop = None
 
+from flask_socketio import SocketIO, emit
+
+
+active_sessions = set()
+
+
 def run_htx_client():
     # global loop
-    # loop = asyncio.new_event_loop()
-    # asyncio.set_event_loop(loop)
-    # loop.run_until_complete(main())
+    # if not loop:
+    #     loop = asyncio.new_event_loop()
+    
+    #     asyncio.set_event_loop(loop)
+    # else:
+    #     loop.run_until_complete(main())
     asyncio.run(main())
+    # await main
+
+@socketio.on('new_connection')
+def handle_new_connection(data):
+    session_id = data.get('sessionId')
+    if session_id in active_sessions:
+        emit('duplicate_connection', {'message': 'Duplicate connection detected.'})
+        return
+    active_sessions.add(session_id)
 
 
 # Flask-SocketIO event handling
 @socketio.on('connect')
 def handle_connect():
+    print(active_sessions)
     print("Client connected")
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_htx_client)
