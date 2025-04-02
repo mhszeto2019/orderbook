@@ -1,6 +1,5 @@
 // oms-open-positions-body
 
-
 async function populatePositions() {
     const openPositionDOM = document.getElementById('oms-open-positions-body');
     openPositionDOM.innerHTML = '';  // Clear the table before populating
@@ -145,48 +144,6 @@ function populateOpenPositionsTable(positions) {
 }
 
 
-
-
-// async function closePosition(posId,ccy,exchange) {
-//     // Data for the API (example, modify as needed)
-//     const token = getAuthToken();
-//     const username = localStorage.getItem('username')
-//     const redis_key = localStorage.getItem('key')
-//     if (!token |!username | !redis_key ) {
-//         alert("You must be logged in to access this.");
-//         return;
-//     }
-    
-//     request_data = {"username":username,"redis_key":redis_key,'posId':posId,'ccy':ccy,'exchange':exchange}
-
-  
-//     // Call the API using fetch
-//     const firstOrderPromise =  fetch(`http://${hostname}:5080/close_positions`, {
-//         method: 'POST',
-//         headers: {
-//             'Authorization': `Bearer ${token}`,
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(request_data)
-//     });
-
-//     const positioinResults = await Promise.allSettled([firstOrderPromise]);
-//     if (positioinResults[0].status === 'fulfilled') {
-//         // Extract the data from the resolved promise
-//         const positioinResponse = positioinResults[0].value;
-//         if (positioinResponse.ok) {
-//             // Parse the JSON data from the positioinResponse
-//             const positioinResponse_data = await positioinResponse.json();
-//             console.log(positioinResponse_data.data)
-//             // populateOpenPositionsTable(positioinResponse_data.data);
-//             populatePositions();
-//         } else {
-//             console.error('Error fetching positions:', positioinResponse.statusText);
-//         }
-//     } else {
-//         console.error('Request failed:', positioinResults[0].reason);
-//     }
-// }
 
 function Htx2OkxFormat(originalDataArray) {
     console.log('ori',originalDataArray)

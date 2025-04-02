@@ -20,10 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNotificationHub();
         updateNotificationCount();
     }
-
    
     showToast('Refresh page','exchange','ts',null,400,'undefined')
-
     
     document.addEventListener('DOMContentLoaded', function () {
         

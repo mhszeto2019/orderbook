@@ -324,7 +324,6 @@ class Diaoxia:
                 logger.debug(f"{self.username}|{self.algoname}|OKXup:{okx_update}|HTXup:{htx_update} htxside:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz} okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} SPREAD DETECTED Count:{self.check_count} ")
 
                 if self.check_count == self.check_requirement_count:
-
                     asyncio.gather(
                         self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
                         self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
@@ -338,6 +337,8 @@ class Diaoxia:
                     self.check_count += 1
                     self.row['user_algo_type_count'][self.username]['diaoxia']['sell'] += 1
                     time.sleep(self.call_interval)
+
+
 
             # buy htx
             elif spread < 0 and bid_ask_spread_2 >= abs(spread):
@@ -369,7 +370,9 @@ class Diaoxia:
                     self.row['user_algo_type_count'][self.username]['diaoxia']['buy'] -= 1
 
                     time.sleep(self.call_interval)
-
+                    
+            else:
+                self.check_count = 0
 
             
         except Exception as e:

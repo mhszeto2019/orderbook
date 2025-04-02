@@ -39,7 +39,6 @@ function updateLastTrades(exchange, currencyPair,instrument, message) {
         }
 
     })
-    
 }
 
 
@@ -107,10 +106,6 @@ function unixTsConversionHoursMinutes(timestampString) {
     return `${hours}:${minutes}:${seconds}:${milliseconds}`;
 }
 
-
-
-
-
 // Event: Connection established
 htxsocketLastTrades.on('connect', () => {
     console.log('Connected to the WebSocket server');
@@ -165,13 +160,15 @@ function populateLastTrades(exchange,currency,instrument) {
     for (let i = 1; i <= 2; i++) {
         // const timestamp = document.getElementById(`last-timestamp-${i}`);
         // Get the selected exchange for the current table
-        const selectedExchange = document.getElementById(`selected-exchange-lastprice-${i}`).innerText.toUpperCase();
-        const selectedCcy= document.getElementById(`selected-ccy-lastprice-${i}`).innerText;
+        // const selectedExchange = document.getElementById(`selected-exchange-lastprice-${i}`).innerText.toUpperCase();
+        const selectedExchange = document.getElementById(`exchange${i}-input`).value.toUpperCase();
+        const selectedCcy= document.getElementById(`currency-input`).value;
+        const lastTradeHeader = document.getElementById(`lastTrade-header-${i}`)
+
         // Check if the value ends with '-SWAP' and remove it if true
         const processedSelectedCcy = selectedCcy.endsWith('-SWAP') ? selectedCcy.replace('-SWAP', '') : selectedCcy;
         data = lastTrades[exchange][instrument][currency]
-        
-        
+        lastTradeHeader.innerHTML = `Last Trades: ${selectedExchange}`
         
         if (selectedExchange == exchange && processedSelectedCcy == currency) {
             const tableBody = document.getElementById(`lastprice-data-table-body-${i}`);
@@ -193,7 +190,7 @@ function populateLastTrades(exchange,currency,instrument) {
                 row.innerHTML = `
                     <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
 
-                    <td class ='${trade.side}'>${Number(trade.px).toLocaleString()}</td>
+                    <td class ='${trade.side}'>${Number(trade.px).toLocaleString(undefined, {minimumFractionDigits: 1,maximumFractionDigits: 1 })}</td>
                     <td class='${trade.side}'>${trade.sz}</td>
                 `;
 
