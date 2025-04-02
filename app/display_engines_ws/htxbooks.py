@@ -225,14 +225,19 @@ async def main():
     # swap.close()
     print('end SWAP ws.\n')
 
+
+
+
 import asyncio
 loop = None
 
 def run_htx_client():
-    global loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    # global loop
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_until_complete(main())
+    asyncio.run(main())
+
 
 # Flask-SocketIO event handling
 @socketio.on('connect')
@@ -241,22 +246,64 @@ def handle_connect():
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_htx_client)
 
+
 # @socketio.on('disconnect')
 # def handle_disconnect():
+#     swap.close()
+
+#     global loop
 #     print("Client disconnected")
+#     if loop and loop.is_running():
+#         # Stop all running tasks
+#         for task in asyncio.all_tasks(loop):
+#             task.cancel()
+#         # Optionally stop the event loop (not close)
+#         loop.call_soon_threadsafe(loop.stop)
+        
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    swap.close()
+    global swap
+    if swap:
+        try:
+            swap.close()
+            global loop
+            print("Client disconnected")
+            if loop and loop.is_running():
+                # Stop all running tasks
+                for task in asyncio.all_tasks(loop):
+                    task.cancel()
+                # Optionally stop the event loop (not close)
+                loop.call_soon_threadsafe(loop.stop)
+        except Exception as e:
+            print(f"Error during disconnect cleanup: {e}")
+        finally:
+            swap = None
 
-    global loop
-    print("Client disconnected")
-    if loop and loop.is_running():
-        # Stop all running tasks
-        for task in asyncio.all_tasks(loop):
-            task.cancel()
-        # Optionally stop the event loop (not close)
-        loop.call_soon_threadsafe(loop.stop)
+
+# Function to run the WebSocket client in the background
+# def run_htx_client():
+#     # Running the main function asynchronously in the background
+#     asyncio.run(main()) 
+
+    
+
+# # Flask-SocketIO event handling
+# @socketio.on('connect')
+# def handle_connect():
+#     print("Client connected")
+#     # Start the WebSocket client using a background task
+#     socketio.start_background_task(run_htx_client)
+
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     print("Client disconnected")
+#     global swap
+#     if swap:
+#         swap.close()  # Ensure WebSocket is properly closed
+#     swap = None
+
+
 
 
 

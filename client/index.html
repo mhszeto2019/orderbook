@@ -32,6 +32,9 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Falconstead </a>  
             <a >Welcome <tag id ="username_intro"></tag></a>
+
+            
+
             <script> document.getElementById('username_intro').innerHTML = localStorage.getItem('username')</script>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,6 +48,8 @@
                     </li>
 
           
+                  
+
                     <!-- Logout Link (Visible when logged in) -->
                     <li class="nav-item" id="logout-link" style="display: none;">
                         <a class="nav-link logout-btn" href="#" onclick="logout()">Logout</a>
@@ -54,25 +59,21 @@
         </div>
     </nav>
 
-    <!-- WARNING ALERT -->
-    <div class="container mt-3">
-        <div id="alertBox" class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong id="alertMessage">⚠️ Warning!</strong> Something needs your attention.
-            <button type="button" class="btn btn-danger btn-sm ms-3" onclick="stopTwilioCall()">Stop Call</button>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+      <!-- WARNING ALERT -->
+    <div id="alertBox" class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong id="alertMessage">⚠️ Warning!</strong> Something needs your attention.
+        <button type="button" class="btn btn-danger btn-sm ms-3" onclick="stopTwilioCall()">Stop Call</button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
     <div class = "row">
-
         <!-- DISPLAY TABLE -->
         <div class="col-lg-6 container-fluid mt-4" id="orderbookdisplayContainer">
   
             <!-- Container for the funding rates row -->
             <div class="row">
+
                  <!--WS STATUS BADGE  -->
-            
-                <!-- OKX Section -->
                 <div class="col-md-4 mb-4">
                     <h6>Connection Status:</h6>
                     <div class="d-flex flex-wrap">
@@ -81,56 +82,36 @@
                         <span id="status-bnb" class="statusbadge bg-danger mb-2">bnb: dead</span>
                     </div>
                 </div>
-                
+
+                <!-- Funding rate Section -->
                 <div id="okx-section" class="col-md-4 mb-4">
-                    
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="text-dark mb-0">OKX</h6>
                         <span id="fundingratets_okx" class="text-warning text-end">-</span>
                     </div>
                     <div class="">
-                        <!-- <div class="d-flex justify-content-between">
-                                <span id="funding-time-okx" class="text-primary text-end hover-info">--</span>
-                                
-                                <span id="next-funding-time-okx" class="text-primary text-end hover-info">--</span>
-                        </div> -->
-                        
                         <div class="d-flex justify-content-between">
-                            <!-- <span class="text-muted">Currency:</span> -->
                             <span id="currency-okx" class="text-primary text-end">--</span>
-                            <!-- <span class="text-muted">Funding Rate:</span> -->
                             <span id="funding-rate-okx" class="text-primary text-end">--</span>
-                    
                         </div>
                     </div>
                 </div>
             
-                <!-- HTX Section -->
                 <div id="htx-section" class="col-md-4 mb-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="text-dark mb-0">HTX</h6>
                         <span id="fundingratets-htx" class="text-warning text-end">-</span>
                     </div>
                     <div class="">
-                        <!-- <div class="d-flex justify-content-between">
-                            <span class="text-muted">Funding Time:</span>
-                            <span id="funding-time-htx" class="text-primary text-end">--</span>
-                            <span class="text-muted">Next Funding Time:</span>
-                            <span id="next-funding-time-htx" class="text-primary text-end">--</span>
-                        </div> -->
                         <div class="d-flex justify-content-between">
-                             <!-- <span class="text-muted">Currency:</span> -->
                              <span id="currency-htx" class="text-primary text-end">--</span>
-                            <!-- <span class="text-muted">Funding Rate:</span> -->
                             <span id="funding-rate-htx" class="text-primary text-end">--</span>
                            
                         </div>
                     </div>
                 </div>
+
             </div>
-            
-            
-            
             
             <!-- ORDERBOOK DISPLAY -->
             <div class="justify-content-between align-items-center mb-3">
@@ -189,25 +170,25 @@
                                 <div class="col-md-3">
                                     <div class="card shadow-sm">
                                         <div class="card-body py-0 my-0">
-                                        <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
-                                        
-                                        <!-- Row for Exchange and Currency -->
-                                        <div class="d-flex justify-content-between">
-                                            <p class="mb-0"><strong>Exchange:</strong> <span id="selected-exchange-lastprice-1" class="text-danger">Not Selected</span></p>
-                                            <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-1" class="text-danger">Not Selected</span></p>
+                                            <h5 class="text-center border-bottom  mb-3">Last Trades</h5>
+                                            <!-- Row for Exchange and Currency -->
+                                            <div class="d-flex justify-content-between">
+                                                <p class="mb-0"> <span id="selected-exchange-lastprice-1" class="text-danger">Not Selected</span></p>
+                                                <p class="mb-0"> <span id="selected-ccy-lastprice-1" class="text-danger">Not Selected</span></p>
+                                            </div>
                                         </div>
-                                    
-                                        
-                                        </div>
+
                                         <div class="orderbook-scroll-container scrollable-lastprice">
                                             <table class="orderBookTable">
                                             <thead>
-                                                <tr>
-                                                <th style='position: sticky; top: -1px;background: grey'>Ts</th>
-                                                <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
-                                                <th style='position: sticky; top: -1px;background: grey'>Direction</th>
+                                                <tr class="text-secondary small">
+                                                    <th style="position: sticky; top: -1px;">Ts</th>
+                                                    <th style="position: sticky; top: -1px;">Price(USD)</th>
+                                                    <th style="position: sticky; top: -1px;">Direction</th>
                                                 </tr>
+                                                
                                             </thead>
+
                                             <tbody id="lastprice-data-table-body-1">
                                                 <!-- Last price data will be dynamically inserted here -->
                                             </tbody>
@@ -218,55 +199,46 @@
                             
                                 <!-- leading Order Book Section -->
                                 <div class="col-md-3" >
-                                    <div class="orderbook-section">
-                                    <!-- <h4>Order Book 1</h4>
-                                    <div id="selected-info">
-                                        <p>Exchange: <span id="selected-exchange-orderbook-1">Not Selected</span></p>
-                                        <p>Currency: <span id="selected-ccy-orderbook-1">Not Selected</span></p>
-                                    </div>
-                                    <p id="orderbook-timestamp-1">Timestamp: Not Available</p> -->
-
-                                    <div class="container p-0">
-                                        <div class="card shadow-sm ">
-                                        <div class="card-body py-0 my-0">
-                                            <h5 class="text-center border-bottom  mb-3">Order Book 1</h5>
-                                            
-                                            <div class="d-flex justify-content-between">
-                                                <p class="mb-0"><span id="selected-exchange-orderbook-1" class="text-danger">Exchange</span></p>
-                                                <p class="mb-0"><span id="selected-ccy-orderbook-1" class="text-danger">Currency</span></p>
+                                    <div class="">
+                                        <div class="container p-0">
+                                            <div class="card shadow-sm ">
+                                            <div class="card-body py-0 my-0">
+                                                <h5 class="text-center border-bottom  mb-3">Order Book 1</h5>
+                                                
+                                                <div class="d-flex justify-content-between">
+                                                    <p class="mb-0"><span id="selected-exchange-orderbook-1" class="text-danger">Exchange</span></p>
+                                                    <p class="mb-0"><span id="selected-ccy-orderbook-1" class="text-danger">Currency</span></p>
+                                                </div>
+                                                <tag id="orderbook-timestamp-1" class="text-center text-muted m-0">
+                                                    <strong></strong> <span>Not Available</span>
+                                                </tag>
+                                                
                                             </div>
-                                            <tag id="orderbook-timestamp-1" class="text-center text-muted m-0">
-                                                <strong></strong> <span>Not Available</span>
-                                            </tag>
-                                            
-                                        </div>
-                                        </div>
-                                        <div class="orderbook-scroll-container scrollable-orderbook">
-                                            <table class="orderBookTable " id="orderBookTable1">
-                
-                                            <thead>
-                                                <tr>
-                                                <th style='position: sticky; top: -1px;background: grey'>Price</th>
-                                                <th style='position: sticky; top: -1px;background: grey'>Amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="order-data-table-body-1">
-                                                <!-- Order book data will be dynamically inserted here -->
-                                            </tbody>
-                                            </table>
-                                        </div>
+                                            </div>
+                                            <div class="scrollable-orderbook">
+                                                <table class="orderBookTable" id="orderBookTable1">
+                                                    <thead class="bg-light">
+                                                        <tr class="text-secondary small">
+                                                            <th style="position: sticky; top: 0; background: white; z-index: 2; text-align: center;">Ts</th>
+                                                            <th style="position: sticky; top: 0; background: white; z-index: 2; text-align: center;">Price(USD)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="order-data-table-body-1">
+                                                        <!-- Order book data will be dynamically inserted here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
 
-                                    </div>
+                                        </div>
                                     
                                     </div>
                                 </div>
 
                                 <!-- lagging Order Book Section -->
                                 <div class="col-md-3" >
-                                    <div class="orderbook-section ">
-                     
+                                    <div class="">
 
-                                    <div class="container p-0">
+                                    <div class="container ">
                                         <div class="card shadow-sm ">
                                         <div class="card-body py-0 my-0">
                                             <h5 class="text-center border-bottom  mb-3">Order Book 2</h5>
@@ -284,23 +256,23 @@
                                         </div>
                                         </div>
                                         
-                                        <div class="orderbook-scroll-container scrollable-orderbook">
-                                            <table class="orderBookTable " id="orderBookTable1">
+                                        <div class="scrollable-orderbook">
+                                            <table  id="orderBookTable2">
                 
-                                            <thead>
-                                                <tr>
-                                                <th style='position: sticky; top: -1px;background: grey'>Price</th>
-                                                <th style='position: sticky; top: -1px;background: grey'>Amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="order-data-table-body-2">
-                                                <!-- Order book data will be dynamically inserted here -->
-                                            </tbody>
+                                                <thead class="bg-light">
+                                                    <tr class="text-secondary small">
+                                                        <th style="position: sticky; top: 0; background: white; z-index: 2; text-align: center;">Ts</th>
+                                                        <th style="position: sticky; top: 0; background: white; z-index: 2; text-align: center;">Price(USD)</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody id="order-data-table-body-2">
+                                                    <!-- Order book data will be dynamically inserted here -->
+                                                </tbody>
                                             </table>
                                         </div>
 
                                     </div>
-
                                     
 
                                     </div>
@@ -308,7 +280,7 @@
 
                                     <!-- Second Exchange Last Prices -->
                                 <div class="col-md-3">
-                                    <div class="orderbook-section">
+                                    <div class="">
                                     
 
                                     <div class="card shadow-sm ">
@@ -321,15 +293,14 @@
                                             <p class="mb-0"><strong>Currency:</strong> <span id="selected-ccy-lastprice-2" class="text-danger">Not Selected</span></p>
                                         </div>
                                     
-                                    
                                         </div>
-                                        <div class="orderbook-scroll-container scrollable-lastprice">
-                                            <table class="orderBookTable">
+                                        <div class="scrollable-lastprice">
+                                            <table >
                                             <thead>
-                                                <tr>
-                                                <th style='position: sticky; top: -1px;background: grey'>Ts</th>
-                                                <th style='position: sticky; top: -1px;background: grey'>Price(USD)</th>
-                                                <th style='position: sticky; top: -1px;background: grey'>Direction</th>
+                                                <tr class="text-secondary small">
+                                                    <th style="position: sticky; top: -1px;">Ts</th>
+                                                    <th style="position: sticky; top: -1px;">Price(USD)</th>
+                                                    <th style="position: sticky; top: -1px;">Direction</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="lastprice-data-table-body-2">
@@ -410,22 +381,24 @@
             <!-- This section will only be visible if the JWT is present -->
             <div id="securedContent" class="alert alert-success" style="display: none;">
                     
-                <h4>Welcome, you have access to secured content!</h4>
-                <p>This section is protected by JWT. You are logged in.</p>
+                <div class="position-relative ">
+                    <div class = "text-end ">
 
-                <!-- Notification Hub Icon and Dropdown -->
-                <div class="position-relative text-end ">
-                    <button id="notification-icon" class="btn btn-light" onclick="toggleNotificationHub()">
-                        🛎 Notifications <span id="notification-count" class="badge bg-danger">0</span>
-                    </button>
-                    <div id="notification-hub" class="notification-hub bg-light shadow rounded" style="display: none;">
-                        <h5 class="p-2">Notifications</h5>
-                        <div id="toast-list" class="toast-list p-2" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Dynamic Toast Messages Will Appear Here -->
+                    
+
+                        <button id="notification-icon" class="btn btn-light" onclick="toggleNotificationHub()">
+                            🛎 Notifications <span id="notification-count" class="badge bg-danger">0</span>
+                        </button>
+                        <div id="notification-hub" class="notification-hub bg-light shadow rounded" style="display: none;">
+                            <h5 class="p-2">Notifications</h5>
+                            <div id="toast-list" class="toast-list p-2" style="max-height: 300px; overflow-y: auto;">
+                                <!-- Dynamic Toast Messages Will Appear Here -->
+                            </div>
+                            
+                            <button class="btn btn-secondary w-100" onclick="clearNotifications()">Clear All</button>
                         </div>
-                        
-                        <button class="btn btn-secondary w-100" onclick="clearNotifications()">Clear All</button>
                     </div>
+                    
                 </div>
 
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
@@ -759,7 +732,7 @@
          <!-- Order Management System Section -->
          <div id="securedContentOMS" class="alert alert-success" style="display: none;">
             <div class="card p-3">
-                <h2 class="text-center">Order Management System (Prototype)</h2>
+                <!-- <h2 class="text-center">Order Management System (Prototype)</h2> -->
 
                 <!-- Tabs -->
                 <ul class="nav nav-tabs flex-wrap" id="omsTabs" role="tablist">
@@ -1115,12 +1088,13 @@
             box-sizing: border-box; /* Include padding and border in the element's total width */
             scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
             scrollbar-width: thin; 
+            text-align: center;
         }
         .scrollable-table {
             max-height: 550px; /* Set a fixed height for uniformity */
             overflow-y: auto;  /* Enable vertical scrolling */
             border: 1px solid #ddd;  /* Optional border styling */
-            /* padding: 10px; */
+            padding: 10px;
             background-color: #f9f9f9; /* Light background for better readability */
             gap: 5px;  /* Add gap between asks and bids */
             scroll-behavior: smooth;  /* Smooth scrolling for a better experience */

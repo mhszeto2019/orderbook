@@ -36,7 +36,6 @@ logger.setLevel(logging.INFO)  # Set log level
 # Add the file handler to the logger
 logger.addHandler(file_handler)
 
-
 CORS(app)
 config_source = 'htx_live_trade'
 secretKey = config[config_source]['secretKey']
@@ -56,12 +55,12 @@ from cryptography.fernet import Fernet
 # Initialize the Trade API client
 # tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",secretKey,apiKey)
 
-
-
 @token_required
 @app.route('/htx/getfundingrate', methods=['POST'])
 async def getfundingrate():
+    print('getting htx_funding_rate')
     try:
+
         data = request.get_json()
         username = data.get('username')
         # Get the order data from the request
@@ -98,6 +97,7 @@ async def getfundingrate():
                 "contract_code": contract_code
                 }
                 )
+
             position_data = fundingrate.get('data', [])
             position_data['ts'] = fundingrate['ts']
             position_data['ccy']= instId
@@ -105,6 +105,7 @@ async def getfundingrate():
         
     except Exception as e:
         logger.debug(e)
+        return "TOKEN ERROR"
 
     return "TOKEN ERROR"
 

@@ -192,16 +192,17 @@ class AlgoFactory:
         self.shared_states[instance_id]['instrument'] = json_data['instrument']
         self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
         self.shared_states[instance_id]['state'] =  json_data['state']
+        # self.shared_states[instance_id]['filled_vol'] = json_data['filled_vol']
+        # self.shared_states[instance_id]['filled_qty'] = json_data['filled_qty']
+        logger.error(self.shared_states[instance_id]['filled_vol'])
 
         strat_and_process = self.algos.get(instance_id)
         # print(strat_and_process)
         strat = strat_and_process[0]
         # print(f"ALGO DETAILS that just got updated:{algo_details}")
-         
         username,algo_type,algo_name = instance_id.split('_')
-      
-
-        qty = int(json_data['qty'])
+        qty = int(json_data['qty']) 
+        filled_vol = self.shared_states[instance_id]['filled_vol']
         print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
         if  json_data['state']:
             self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
@@ -211,8 +212,8 @@ class AlgoFactory:
         for instance_id in self.shared_states:
             if username in instance_id:
                 self.shared_states[instance_id]['user_algo_type_count'] = self.user_algo_type_count
+
         # print(spread,type(spread),qty)
-        
         # self.shared_states[instance_id]['user_algo_type_count'] =  self.user_algo_type_count[username]
 
     def add_algo(self, instance_id, algo_details):
@@ -242,6 +243,7 @@ class AlgoFactory:
         row_dict['okx_apikey'] = algo_details[13]
         row_dict['okx_secretkey'] = algo_details[14]
         row_dict['okx_passphrase'] = algo_details[15]
+        row_dict['filled_vol'] = 0
         # row_dict[f'{row_dict['username']}_queue'] = self.queue
         
         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
@@ -250,7 +252,6 @@ class AlgoFactory:
 
         row_dict['user_algo_type_count'] = self.user_algo_type_count
         
-
         self.shared_states[instance_id] = self.manager.dict(row_dict)
         # Create the new strategy instance (Diaoyu)
     
@@ -336,6 +337,7 @@ class AlgoFactory:
             row_dict['okx_apikey'] = row[13]
             row_dict['okx_secretkey'] = row[14]
             row_dict['okx_passphrase'] = row[15]
+            row_dict['filled_vol'] = 0
             # row_dict[f'{row_dict['username']}_queue'] = []
 
             

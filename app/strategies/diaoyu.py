@@ -176,6 +176,15 @@ class Diaoyu:
             if 'status' in revoke_orders:
                 self.order_queue.popleft()  # Remove from queue
                 return True
+            else:
+                if self.revoke_reattempt > 0 :
+                    logger.debug(f'revoke reattempt,{self.revoke_reattempt}')
+                    self.revoke_order_by_id()
+                    self.revoke_reattempt -= 1
+                else:
+                    logger.error(f"Revoke unsucessful after multiple attempts")
+                    return False
+
             # self.order_id = None
             # print(revoke_orders)
             # if revoke_orders and revoke_orders['err_code']:
@@ -194,6 +203,7 @@ class Diaoyu:
             #         return False 
             # else:
             #     return True
+            logger.debug(f'Revoke orders result {revoke_orders}')
 
         except Exception as e:
             logger.error(f"{self.username}|{self.algotype}|{self.algoname}|Revoke Order not successful :{traceback.format_exc()}")
@@ -341,8 +351,8 @@ class Diaoyu:
         if len(self.order_queue) <= 1:
             result = await self.revoke_order_by_id()
             logger.debug(f"RESULT {result}")
-
-            await self.place_limit_order_htx(algoname,best_bid,limit_buy_price,limit_buy_size,htx_direction,okx_direction)
+            if result:
+                await self.place_limit_order_htx(algoname,best_bid,limit_buy_price,limit_buy_size,htx_direction,okx_direction)
 
 
 

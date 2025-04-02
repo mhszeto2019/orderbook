@@ -14,8 +14,6 @@ import os
 import traceback
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.append('/var/www/html/orderbook/app/htx2')
-import aiohttp
-import requests
 
 from pathlib import Path
 # Logger 
@@ -324,7 +322,7 @@ class HuobiCoinFutureRestTradeAPI:
 
     async def request(self, method, uri, params=None, body=None, headers=None, auth=False):
         """ Do HTTP request.
-        
+
         Args:
             method: HTTP request method. `GET` / `POST` / `DELETE` / `PUT`.
             uri: HTTP request uri.
@@ -337,8 +335,6 @@ class HuobiCoinFutureRestTradeAPI:
             success: Success results, otherwise it's None.
             error: Error information, otherwise it's None.
         """
-        current_time = time.time()
-
         if uri.startswith("http://") or uri.startswith("https://"):
             url = uri
         else:
@@ -356,7 +352,8 @@ class HuobiCoinFutureRestTradeAPI:
                            "SignatureMethod": "HmacSHA256",
                            "SignatureVersion": "2",
                            "Timestamp": timestamp})
-            
+            # print(uri)
+            # print(params)
             params["Signature"] = self.generate_signature(method, params, uri)
 
         if not headers:
@@ -366,8 +363,6 @@ class HuobiCoinFutureRestTradeAPI:
             headers["User-Agent"] = USER_AGENT
             # _, success, error = await AsyncHttpRequests.fetch("GET", url, params=params, headers=headers, timeout=10)
             try:
-                
-                # response_dict =await self.aiohttp_request("GET", url, params=params, data=body, headers=headers)
                 response_dict = self.python_request("GET", url, params=params, data=body, headers=headers)
             except Exception as e:
                 logger.error(f"Exception in request GET {traceback.format_exc()}")
@@ -376,9 +371,9 @@ class HuobiCoinFutureRestTradeAPI:
             headers["Content-type"] = "application/json"
             headers["User-Agent"] = USER_AGENT
             try:
-                # response_dict= await self.aiohttp_request("POST", url, params=params, data=body, headers=headers)
-                response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
 
+                response_dict= self.python_request("POST", url, params=params, data=body, headers=headers)
+               
                 if response_dict and response_dict['status']:
                     response_dict['sMsg'] = "Orders placed" 
                     response_dict['status'] = [response_dict['status'],response_dict.get('err_msg',"no error")]
@@ -389,119 +384,90 @@ class HuobiCoinFutureRestTradeAPI:
                 logger.error(f"EXCEPTION IN request POST {traceback.format_exc()}")
                 
                 response_dict = {}
-        logger.debug(time.time()-current_time)
+
         return response_dict
         
 
+    # def request_with_retry(url, params, data, headers, max_retries=5):
+    #     for i in range(max_retries):
+    #         try:
+    #             response = requests.post(url, params=params, json=data, headers=headers, timeout=5)
+    #             response.raise_for_status()
+    #             return response.json()
+    #         except requests.exceptions.SSLError as e:
+    #             print(f"SSL Error: {e}, retrying in {2**i} seconds...")
+    #             time.sleep(2**i)  # Exponential backoff
+    #         except requests.exceptions.RequestException as e:
+    #             print(f"Request Error: {e}, retrying in {2**i} seconds...")
+    #             time.sleep(2**i)
+    #     print("Max retries reached, request failed.")
+    #     return None
+
     def python_request(self,method, url, params, data, headers, max_retries = 3):
-        try:
-            if method.lower() == "post":
-                # Send POST request
-                logger.debug(f"SENDING {url} , params:{params},data:{data}, headers:{headers}")
-                response = requests.post(url, params=params, data=json.dumps(data), headers=headers,timeout=30)
-
-                status_code = response.status_code
-                # print(status_code,response.headers)
-                rate_limit_remaining = response.headers.get('ratelimit-remaining')
-                json_response = response.json()
-                # print(json_response)
-                json_response['sCode'] = status_code
-                json_response['rate_limit_remaining'] = rate_limit_remaining
-    
-                # # Check if the request was successful (status code 200)
-                # if response.status_code == 200:
-                #     # If successful, return the JSON response
-                #     # print(json_response)
-                #     return json_response  # Parse the JSON response from the server
-                # else:
-                #     # If not successful, log the status and response content
-                #     # print(f"Request failed with status code {response.status_code}")
-                #     return 
+        import requests
+        for i in range(max_retries):
+            try:
                 
-                return json_response
-            else:
-
-                response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
-                rate_limit_remaining = response.headers.get('ratelimit-remaining')
-
-                status_code = response.status_code
-                # print(status_code,response)
-                json_response = response.json()
-                json_response['sCode'] = status_code
-                json_response['rate_limit_remaining'] = rate_limit_remaining
-    
-                # Check if the request was successful (status code 200)
-                if response.status_code == 200:
-                    # If successful, return the JSON response
+                if method.lower() == "post":
+                    # Send POST request
+                    logger.debug(f"SENDING {url} , params:{params},data:{data}, headers:{headers}")
+                    response = requests.post(url, params=params, data=json.dumps(data), headers=headers,timeout=30)
+                    status_code = response.status_code
+                    # print(status_code,response.headers)
+                    rate_limit_remaining = response.headers.get('ratelimit-remaining')
+                    json_response = response.json()
                     # print(json_response)
-                    return json_response  # Parse the JSON response from the server
-                else:
-                    # If not successful, log the status and response content
-                    # print(f"Request failed with status code {response.status_code}")
+                    json_response['sCode'] = status_code
+                    json_response['rate_limit_remaining'] = rate_limit_remaining
+        
+                    # # Check if the request was successful (status code 200)
+                    # if response.status_code == 200:
+                    #     # If successful, return the JSON response
+                    #     # print(json_response)
+                    #     return json_response  # Parse the JSON response from the server
+                    # else:
+                    #     # If not successful, log the status and response content
+                    #     # print(f"Request failed with status code {response.status_code}")
+                    #     return json_response
                     return json_response
+                else:
 
-        except requests.exceptions.SSLError as ssle:
-            logger.error(f"Exception in python_request - SSLERROR:{ssle}")
-            # time.sleep(2**i)  # Exponential backoff
-            return {}
-            
-        except requests.exceptions.RequestException as e:
-            # If there is any exception with the request
-            if response:
-                logger.error("ERROR RESPONSE IN PYTHON REQUEST")
-            logger.error(f"Exception in python_request {traceback.format_exc()}")
-            return {}
+                    response = requests.get(url, params=params, data=json.dumps(data), headers=headers)
+                    rate_limit_remaining = response.headers.get('ratelimit-remaining')
+
+                    status_code = response.status_code
+                    # print(status_code,response)
+                    json_response = response.json()
+                    json_response['sCode'] = status_code
+                    json_response['rate_limit_remaining'] = rate_limit_remaining
+        
+                    # Check if the request was successful (status code 200)
+                    if response.status_code == 200:
+                        # If successful, return the JSON response
+                        # print(json_response)
+                        return json_response  # Parse the JSON response from the server
+                    else:
+                        # If not successful, log the status and response content
+                        # print(f"Request failed with status code {response.status_code}")
+                        return json_response
+
+            except requests.exceptions.SSLError as ssle:
+                logger.error(f"Exception in python_request - SSLERROR:{ssle}")
+                time.sleep(2**i)  # Exponential backoff
+                return {}
+                
+            except requests.exceptions.RequestException as e:
+                # If there is any exception with the request
+                if response:
+                    logger.error("ERROR RESPONSE IN PYTHON REQUEST")
+                logger.error(f"Exception in python_request {traceback.format_exc()}")
+                return {}
+         
+
 
         logger.error("Max retires exceeded")
-
         return {}
     
-
-    async def aiohttp_request(self,method, url, params=None, data=None, headers=None, max_retries=3, timeout=10):
-        """Perform an async HTTP request.
-
-        Args:
-            method (str): HTTP method ('GET', 'POST', etc.).
-            url (str): Target URL.
-            params (dict, optional): Query parameters.
-            data (dict, optional): JSON request body.
-            headers (dict, optional): HTTP headers.
-            max_retries (int): Number of retries on failure.
-            timeout (int): Timeout in seconds.
-
-        Returns:
-            dict: JSON response or empty dict on failure.
-        """
-
-        for attempt in range(max_retries):
-            try:
-                async with aiohttp.ClientSession() as session:  # ✅ Auto-closes session
-                    async with session.request(
-                        method, url, params=params, json=data, headers=headers, timeout=timeout
-                    ) as response:
-                        json_response = await response.json()
-                        json_response["status_code"] = response.status
-                        json_response["rate_limit_remaining"] = response.headers.get("ratelimit-remaining")
-
-                        if response.status == 200:
-                            return json_response
-                        else:
-                            logger.error(f"Request failed [{response.status}] {json_response}")
-
-            except aiohttp.ClientError as e:
-                print("ERROR")
-                logger.error(f"Request attempt {attempt + 1} failed: {e}")
-                await asyncio.sleep(2 ** attempt)  # Exponential backoff
-
-        logger.error("Max retries exceeded")
-        return {}
-
-
-
-    # Example usage:
-    # response = await aiohttp_request("POST", "https://api.exchange.com/order", params={}, data={"symbol": "BTC-USD"}, headers={})
-
-
     def generate_signature(self, method, params, request_path):
         try:
             if request_path.startswith("http://") or request_path.startswith("https://"):

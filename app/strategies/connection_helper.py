@@ -263,14 +263,6 @@ class HtxBbo:
         except Exception as e:
             logger.error(f"Exception error {traceback.format_exc()}")
 
-    # def stop(self):
-    #     """ Stop the subscription process. """
-    #     self.is_open = False
-    #     self._stop_event.set()
-    #     # print(self.loop)
-    #     # if self.ws:
-    #     #     self._close()
-    #     self.thread.join(timeout=5)  # Allow the thread to exit gracefully
 
     async def _run(self, subs, auth=False, callback=None):
         """ Run the WebSocket subscription in a new event loop. """
