@@ -131,7 +131,6 @@ class TraderNotifier:
         except Exception as e:
             print(f"ERROR {traceback.format_exc()}")
 
-   
 
     def check_liq_px_distance(self,exchanges,threshold, symbol="BTC-USD"):
         """
@@ -256,9 +255,6 @@ cursor.execute("""select
                 FROM traders left join api_credentials ac on traders.username = ac.username where traders.username ='brennan12' group by traders.username,traders.phone_number """)
 accounts = cursor.fetchall()
 trader_notifier_factory = TraderNotifierFactory()
-
-
-
 
 for account in accounts:
     # TraderNotifier(username, ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, YOUR_PHONE,HTX_APIKEY,HTX_SECRETKEY,OKX_APIKEY,OKX_SECRETKEY,OKX_PASSPHRASE)

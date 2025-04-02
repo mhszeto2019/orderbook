@@ -59,6 +59,12 @@
         </div>
     </nav>
 
+    <!-- This section will be visible if the JWT is NOT present -->
+    <div id="loginPrompt" class="alert alert-warning text-center">
+        <h4>You are not logged in.</h4>
+        <p>Please log in to access secured content.</p>
+    </div>
+
     <!-- WARNING ALERT -->
     <!-- <div id="alertBox" class="alert alert-warning alert-dismissible fade show" role="alert">
         <strong id="alertMessage">⚠️ Algo Warning!</strong>
@@ -171,7 +177,7 @@
                                 <div class="col-md-3">
                                     <div class="card shadow-sm">
                                         <div class="card-body py-0 my-0">
-                                            <h5 id="lastTrade-header-1" class="text-center border-bottom  mb-3">Last Trades</h5>
+                                            <h5 id="lastTrade-header-1" class="text-center ">Last Trades</h5>
                                             <!-- Row for Exchange and Currency -->
                                         
                                         </div>
@@ -200,8 +206,8 @@
                                     <div class="">
                                         <div class="container p-0">
                                             <div class="card shadow-sm">
-                                                <div class="card-body py-0 my-0">
-                                                    <h5 id="orderbook-header-1" class="text-center border-bottom mb-3">Order Book 1</h5>
+                                                <div class="card-body py-0 m-0">
+                                                    <h5 id="orderbook-header-1" class="text-center">Order Book 1</h5>
                                                     
                                                     <div id="orderbook-timestamp-1" class="text-center">
                                                         <!-- Timestamp content here -->
@@ -235,7 +241,7 @@
                                     <div class="container ">
                                         <div class="card shadow-sm ">
                                         <div class="card-body py-0 my-0">
-                                            <h5 id="orderbook-header-2" class="text-center border-bottom  mb-3">Order Book 2</h5>
+                                            <h5 id="orderbook-header-2" class="text-center ">Order Book 2</h5>
                                     
                                             <!-- Timestamp -->
                                             <div id="orderbook-timestamp-2" class="text-center">
@@ -270,7 +276,7 @@
 
                                         <div class="card shadow-sm ">
                                             <div class="card-body py-0 my-0">
-                                            <h5 id="lastTrade-header-2" class="text-center border-bottom  mb-3">Last Trades</h5>
+                                            <h5 id="lastTrade-header-2" class="text-center ">Last Trades</h5>
                                             
                                             </div>
                                             <div class="scrollable-lastprice">
@@ -347,13 +353,19 @@
             
         </div>
 
+
+
         <!-- FORM for ordering -->
         <div class="col-lg-6 container-fluid  mt-4">
-            <div id="alertBox" class="alert alert-warning alert-dismissible fade show" role="alert">
-                <strong id="alertMessage">⚠️ Algo Warning!</strong>
-                <button type="button" class="btn btn-danger btn-sm ms-3" onclick="stopTwilioCall()">Stop Call</button>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+            <!-- This section will only be visible if the JWT is NOT present -->
+            <div id="loginPromptBtn" class="alert alert-warning text-center h-100">
+                <h4>You are not logged in.</h4>
+                <p>Please log in to access secured content.</p>
+                <a href="auth.html" class="btn btn-primary" role="button">Log in</a>
             </div>
+
+
             <!-- This section will only be visible if the JWT is present -->
             <div id="securedContent" class="alert alert-success" style="display: none;">
                     
@@ -687,11 +699,7 @@
                 </div>
             </div>
         </div>
-            <!-- This section will be visible if the JWT is NOT present -->
-            <div id="loginPrompt" class="alert alert-warning">
-                <h4>You are not logged in.</h4>
-                <p>Please log in to access secured content.</p>
-            </div>
+           
 
         </div>
 
@@ -880,6 +888,9 @@
 
             // securedContentBidAskOrder
             const loginPrompt = document.getElementById('loginPrompt');
+            var loginPromptBtn = document.getElementById('loginPromptBtn');
+
+            
 
             if (token) {
                 // If the token is present, show the secured content
@@ -888,12 +899,17 @@
                 securedContentBidAskOrder.style.display = 'block';
 
                 loginPrompt.style.display = 'none';
+                loginPromptBtn.style.display = 'none';
+
             } else {
                 // If the token is not present, show the login prompt
                 securedContent.style.display = 'none';
                 securedContentOMS.style.display = 'none';
                 securedContentBidAskOrder.style.display = 'none';
+
                 loginPrompt.style.display = 'block';
+                loginPromptBtn.style.display = 'block';
+                
             }
         }
 
