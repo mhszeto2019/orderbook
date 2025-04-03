@@ -194,7 +194,7 @@ async def get_all_htx_open_orders():
             }
         )
         open_order_data = open_orders.get('data', [])
-        # print(open_order_data)
+        print(open_order_data)
         logger.info(open_order_data)
         return open_order_data
     

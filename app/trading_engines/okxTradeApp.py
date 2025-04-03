@@ -219,8 +219,10 @@ def get_all_okx_open_orders():
             api_creds_dict = json.loads(decrypted_data)
         tradeAPI = Trade.TradeAPI(api_creds_dict['okx_apikey'], api_creds_dict['okx_secretkey'], api_creds_dict['okx_passphrase'], False, '0')
         result = tradeAPI.get_order_list() if tradeAPI else []
-        print(result)
-        
+        # if not result['data']:
+        #     print(result['data'])
+        #     return result['data']
+            
         return result
    
     except Exception as e:

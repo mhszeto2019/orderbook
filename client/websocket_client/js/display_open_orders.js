@@ -669,6 +669,7 @@ async function get_tpsl_info(ordId,instId) {
 async function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
+    console.log(responseData)
     const transformedOrders = []
     for (const row of responseData.orders) {
         try {
