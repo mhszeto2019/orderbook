@@ -1,6 +1,5 @@
 
 
-
 // Function to open the modal
 function openAlgoModal() {
     const modal = document.getElementById('algoModal');
@@ -225,29 +224,32 @@ function fetchAlgoData() {
                 
                 newRow.innerHTML = `
                 <td>
-                    <div class="d-flex flex-column justify-content-center align-items-start ">
-                        <span class="badge ${badgeColor} fw-semibold px-2 py-1 text-uppercase">
+                    <div class="d-flex flex-column align-items-start">
+                        <!-- Algo Type -->
+                        <span class="badge ${badgeColor} fw-semibold px-3 py-2 text-uppercase mb-1">
                             ${algoType}
                         </span>
+                        <!-- Algo Name -->
                         <small class="text-muted">
                             ${algoName}
                         </small>
                     </div>
                 </td>
 
-                <td>
-                    <div class="d-flex flex-column gap-2">
-                        <div>
-                            <span class="text-muted small">Leading Exchange:</span>
-                            <div class="fw-semibold">${algo.lead_exchange.toUpperCase()}</div>
-                        </div>
-                        <div>
-                            <span class="text-muted small">Lagging Exchange:</span>
-                            <div class="fw-semibold">${algo.lag_exchange.toUpperCase()}</div>
-                        </div>
+                 <td>
+                    <div>
+                        <select class="form-control editable-field" id="input-${algoName}-leading-exchange" disabled>
+                            <option value="okx" ${algo.lead_exchange === 'okx' ? 'selected' : ''}>okx</option>
+                            <option value="htx" ${algo.lead_exchange === 'htx' ? 'selected' : ''}>htx</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select class="form-control editable-field" id="input-${algoName}-lagging-exchange" disabled>
+                            <option value="okx" ${algo.lag_exchange === 'okx' ? 'selected' : ''}>okx</option>
+                            <option value="htx" ${algo.lag_exchange === 'htx' ? 'selected' : ''}>htx</option>
+                        </select>
                     </div>
                 </td>
-
                     
                 <td>
                     <div>
@@ -256,7 +258,6 @@ function fetchAlgoData() {
                     <div>
                         <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}" disabled>
                     </div>
-
                 </td>
                    
                    
@@ -348,6 +349,7 @@ function fetchAlgoData() {
                                 // getting new fields
                                 lead_exchange = document.getElementById(`input-${algoName}-leading-exchange`).value
                                 lag_exchange = document.getElementById(`input-${algoName}-lagging-exchange`).value
+                                console.log(lead_excahnge,lag_exchange)
                                 spread = document.getElementById(`input-${algoName}-spread`).value
                                 qty = document.getElementById(`input-${algoName}-qty`).value
                                 ccy = document.getElementById(`input-${algoName}-ccy`).value

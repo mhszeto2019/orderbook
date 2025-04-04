@@ -40,7 +40,8 @@ def modify_algo(cursor):
     state = data.get('state')
     instrument = data.get('instrument')
     contract_type = data.get('contract_type')
-    print(username,algo_name)
+    print(username,algo_name,data)
+
     if not username or not algo_name:
         return jsonify({"error": "Missing required fields"}), 400
     # print(contract_type)
@@ -104,7 +105,7 @@ def add_algo(cursor):
 
     except Exception as e:
         # Handle any other unexpected errors
-        print('error!!')
+        logger.error(e)
         return jsonify({"error": str(e)}), 400
     finally:
         cursor.close()  # Close the cursor

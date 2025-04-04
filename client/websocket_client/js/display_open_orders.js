@@ -95,7 +95,7 @@ function populateOpenOpenOrdersTable(orders) {
         // Manually add a row with `colspan`
         const emptyMessage = `
             <tr>
-                <td colspan="11" class="text-center text-muted">No open orders available</td>
+                <td  class="text-center text-muted">No open orders available</td>
             </tr>`;
         $('#oms-open-orders-body').html(emptyMessage);
     } else {
