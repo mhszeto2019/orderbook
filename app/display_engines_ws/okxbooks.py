@@ -147,6 +147,7 @@ class OKXWebSocketClient:
 client = None
 loop = None
 from threading import Thread
+from gevent import monkey 
 
 # Example usage
 async def main():
@@ -177,6 +178,7 @@ def run_okx_client():
 @socketio.on('connect')
 def handle_connect(auth):
     global loop
+    monkey.patch_all()
     # if loop != None:
     #     loop.close()
     print("Client connected")
@@ -200,7 +202,6 @@ def handle_disconnect():
     global loop
     print('loop in disconnect',loop)
     # loop.run_until_complete(client.unsubscribe())x
-    loop.stop()
 
     print("Client disconnected")
     if loop and loop.is_running():

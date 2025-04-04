@@ -230,7 +230,7 @@ def main():
 
 import asyncio
 loop = None
-
+from gevent import monkey
 from flask_socketio import SocketIO, emit
 
 
@@ -262,6 +262,7 @@ def handle_new_connection(data):
 # Flask-SocketIO event handling
 @socketio.on('connect')
 def handle_connect():
+    monkey.patch_all()
     print(active_sessions)
     print("Client connected")
     # Start the WebSocket client using a background task

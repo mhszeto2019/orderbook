@@ -290,11 +290,10 @@ def change_answered_call_status():
 def check_alert_status():
     username = request.form.get('username')
     # print(username,status,type(username),type(status))
-    incident_status =trader_notifier_factory.get_trader_notifier(username).status 
+    incident_status =trader_notifier_factory.get_trader_notifier(username).running 
     answer_status = trader_notifier_factory.get_trader_notifier(username).answered
-    # print(trader_notifier_factory.get_trader_notifier(username).answered)
     print(incident_status,answer_status)
-    return "Status is ", 200
+    return {"running":f"{incident_status}","answered":f"{answer_status}"}, 200
 
 if __name__ == "__main__":
 

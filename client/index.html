@@ -25,6 +25,7 @@
 
 <body class="container-fluid">
     
+    
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
@@ -59,9 +60,17 @@
         <p>Please log in to access secured content.</p>
     </div>
 
-   
+    
 
     <div class = "row">
+        
+        <!-- WARNING ALERT -->
+        <!-- <div id="alertBox" class="text-center alert alert-warning alert-dismissible fade show" role="alert">
+            <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
+            <button type="button" class="btn btn-danger btn ms-3" onclick="stopTwilioCall()">Stop Call</button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div> -->
+   
         <!-- DISPLAY TABLE -->
         <div class="col-lg-6 container-fluid mt-4" id="orderbookdisplayContainer">
             <!-- Container for the funding rates row -->
@@ -302,7 +311,9 @@
                                 <!-- Card Section for Bid and Ask Prices -->
                                 <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center">
                                     <!-- Bid Card -->
-                                    <span class="quote-side-text text-success fw-bold">Bid</span>
+                                    <span id="quote-side-text" class="quote-side-text text-success fw-bold">
+                                        Bid (Buy <span id="arbButton-bid-buy"></span> Sell <span id="arbButton-bid-sell"></span>) 
+                                      </span>
                                     <div class="quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
                                         <div class="best-quote-price-container">
                                             <div class="price-data fs-4 fw-bold" id="buySpread">-</div>
@@ -324,7 +335,9 @@
                                         </div>
 
                                     </div>
-                                    <span class="quote-side-text text-danger fw-bold">Ask</span>
+                                    <span id="quote-side-text" class="quote-side-text text-danger fw-bold">
+                                        Ask (Sell <span id="arbButton-ask-sell"></span> Buy <span id="arbButton-ask-buy"></span>) 
+                                      </span>
     
                                 </div>
                             </div>
@@ -338,16 +351,15 @@
         </div>
 
 
-
         <!-- FORM for ordering -->
         <div class="col-lg-6 container-fluid  mt-4">
-            
+
             <!-- WARNING ALERT -->
-            <div id="alertBox" class="alert alert-warning alert-dismissible fade show" role="alert">
-                <strong id="alertMessage">⚠️ Algo Warning!</strong>
+            <!-- <div id="alertBox" class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
                 <button type="button" class="btn btn-danger btn-sm ms-3" onclick="stopTwilioCall()">Stop Call</button>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            </div> -->
 
             <!-- This section will only be visible if the JWT is NOT present -->
             <div id="loginPromptBtn" class="alert alert-warning text-center h-100">
@@ -546,6 +558,30 @@
                                 
                                     // Initialize form on page load
                                     document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
+
+                                    // Simulate condition for triggering warning
+                                    function checkCondition() {
+                                        console.log("Condition checked")
+                                        const formdata = new FormData();
+                                        formdata.append("username", localStorage.getItem('username'));
+                                        const check_alert_status = {
+                                            method: "POST",
+                                            body: formdata,
+                                        };
+                                        // fetch("http://127.0.0.1:9000/check_alert_status", check_alert_status)
+                                        // .then((response) => response.json())
+                                        // .then((result) => 
+                                        
+                                        //         console.log('hello')
+                                        
+                                        // )
+                                        // .catch((error) => console.error(error));
+
+                                    
+                                    }
+                                    document.addEventListener('DOMContentLoaded', checkCondition);
+
+
                                 </script>
 
                             </form>
@@ -829,7 +865,7 @@
                     <!-- Open Orders Tab -->
                     <div class="tab-pane fade" id="open-orders" role="tabpanel">
                        
-                        <p>
+                        <div>
                             <!-- First button (aligned left) -->
                             <button id="positions-refresh-btn" class="btn btn-primary btn-sm mb-2" onclick="populateOpenOrders()">Refresh</button>
                              <!-- Last updated (aligned right) -->
@@ -852,34 +888,10 @@
                                 <button id="lock-clear-btn" class="btn btn-secondary btn-sm mx-2" onclick="toggleLockClear()">🔒 Unlock</button>
                             </div>
                            
-                        </p>
+                        </div>
                         
                      
                         
-<!-- 
-                        <div class="table-responsive" style="height: 400px; overflow-y: auto;">
-                            <table class="OpenOrdersTable table table-hover table-bordered table-sm w-100">
-                                <thead class="table-light" style="position: sticky; top: 0; ">
-                                    <tr>
-                                        <th>Exchange</th>
-                                        <th>Symbol</th>
-                                        <th>Lev</th>
-                                        <th>Side</th>
-                                        <th>Fill|Order price</th>
-                                        <th>Filled|Total</th>
-                                        <th>TP|SL</th>
-                                        <th>Order status|Number</th>
-                                        <th>Order Time</th>
-                                        <th>Action1</th>
-                                        <th>Action2</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="oms-open-orders-body">
-                                  
-
-                                </tbody>
-                            </table>
-                        </div> -->
 
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table table-striped table-bordered table-hover table-sm align-middle text-nowrap w-100 OpenOrdersTable">

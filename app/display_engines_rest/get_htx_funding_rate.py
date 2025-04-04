@@ -48,6 +48,7 @@ redis_db = 0  # Default database
 import redis
 r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
 from htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
+from gevent import monkey 
 
 import asyncio
 import base64
@@ -58,6 +59,7 @@ from cryptography.fernet import Fernet
 @token_required
 @app.route('/htx/getfundingrate', methods=['POST'])
 async def getfundingrate():
+    monkey.patch_all()
     print('getting htx_funding_rate')
     try:
 

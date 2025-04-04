@@ -321,7 +321,6 @@ function fetchAlgoData() {
 
                 // Add event listeners for all inputs and selects in the row
                 const editableFields = newRow.querySelectorAll('.editable-field');
-                console.log(editableFields)
                 editableFields.forEach(field => {
                     // const originalValue = field.value || field.selectedOptions[0]?.value;
                     

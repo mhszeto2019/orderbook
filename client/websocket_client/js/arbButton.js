@@ -227,6 +227,12 @@ async function handleClick(type) {
     }).catch(error => console.error("Error with Promise.allSettled:", error));
 }
 
+document.getElementById("arbButton-bid-buy").textContent = document.getElementById("exchange1-input").value
+document.getElementById("arbButton-bid-sell").textContent = document.getElementById("exchange2-input").value
+
+
+document.getElementById("arbButton-ask-buy").textContent = document.getElementById("exchange2-input").value
+document.getElementById("arbButton-ask-sell").textContent = document.getElementById("exchange1-input").value
 
 function showToast(message,  apiSource = 'API',timestamp=null,orderId=null,statusCode=200,errCode =1039) {
     const toastMessage = {

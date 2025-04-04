@@ -190,6 +190,7 @@ def main():
 
 import asyncio
 loop = None
+from gevent import monkey
 
 def run_htx_client():
     # global loop
@@ -201,6 +202,7 @@ def run_htx_client():
 # Flask-SocketIO event handling
 @socketio.on('connect')
 def handle_connect():
+    monkey.patch_all()
     print("Client connected")
     # Start the WebSocket client using a background task
     socketio.start_background_task(run_htx_client)
