@@ -207,7 +207,7 @@ class WsSwaps(WsBase):
             
 swap = None
           
-async def main():
+def main():
     print('*****************\nstart SWAP ws.\n')
     global swap
     host = 'api.huobi.pro'
@@ -245,7 +245,9 @@ def run_htx_client():
     #     asyncio.set_event_loop(loop)
     # else:
     #     loop.run_until_complete(main())
-    asyncio.run(main())
+    # asyncio.run(main())
+    main()
+
     # await main
 
 @socketio.on('new_connection')

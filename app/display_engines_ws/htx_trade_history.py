@@ -170,7 +170,7 @@ class WsSwaps(WsBase):
             
 swap = None
           
-async def main():
+def main():
     print('*****************\nstart SWAP ws.\n')
     global swap
     host = 'api.huobi.pro'
@@ -192,12 +192,12 @@ import asyncio
 loop = None
 
 def run_htx_client():
-    global loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    # global loop
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_until_complete(main())
     # asyncio.run(main())
-
+    main()
 # Flask-SocketIO event handling
 @socketio.on('connect')
 def handle_connect():

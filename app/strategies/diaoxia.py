@@ -331,11 +331,11 @@ class Diaoxia:
                     # task_htx = asyncio.create_task(self.place_market_order_htx(min_avail_amt_sell, self.lag_direction))
                     # task_okx = asyncio.create_task(self.place_market_order_okx(min_avail_amt_sell, self.lead_direction))
                     self.row['filled_vol'] += min_avail_amt_buy
+                    self.row['user_algo_type_count'][self.username]['diaoxia']['sell'] += 1
                     
                     self.check_count = 0
                 else:
                     self.check_count += 1
-                    self.row['user_algo_type_count'][self.username]['diaoxia']['sell'] += 1
                     time.sleep(self.call_interval)
 
 
@@ -362,12 +362,13 @@ class Diaoxia:
                     )
                     # task_htx = asyncio.create_task(self.place_market_order_htx(min_avail_amt_sell, self.lag_direction))
                     # task_okx = asyncio.create_task(self.place_market_order_okx(min_avail_amt_sell, self.lead_direction))
+                    self.row['user_algo_type_count'][self.username]['diaoxia']['buy'] -= 1
+
                     self.row['filled_vol'] += min_avail_amt_buy
 
                     self.check_count = 0
                 else:
                     self.check_count += 1
-                    self.row['user_algo_type_count'][self.username]['diaoxia']['buy'] -= 1
 
                     time.sleep(self.call_interval)
                     

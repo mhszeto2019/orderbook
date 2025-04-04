@@ -224,41 +224,40 @@ function fetchAlgoData() {
                 }
                 
                 newRow.innerHTML = `
-
-                    <td >
-                        <div class="badge ${badgeColor}">
+                <td>
+                    <div class="d-flex flex-column justify-content-center align-items-start ">
+                        <span class="badge ${badgeColor} fw-semibold px-2 py-1 text-uppercase">
                             ${algoType}
-                        </div>
-                        <div class="text-muted">
+                        </span>
+                        <small class="text-muted">
                             ${algoName}
-                        </div>
-                    </td>
+                        </small>
+                    </div>
+                </td>
 
-                    <td>
+                <td>
+                    <div class="d-flex flex-column gap-2">
                         <div>
-                            <select class="form-control editable-field" id="input-${algoName}-leading-exchange" disabled>
-                                <option value="okx" ${algo.lead_exchange === 'okx' ? 'selected' : ''}>okx</option>
-                                <option value="htx" ${algo.lead_exchange === 'htx' ? 'selected' : ''}>htx</option>
-                            </select>
+                            <span class="text-muted small">Leading Exchange:</span>
+                            <div class="fw-semibold">${algo.lead_exchange.toUpperCase()}</div>
                         </div>
                         <div>
-                            <select class="form-control editable-field" id="input-${algoName}-lagging-exchange" disabled>
-                                <option value="okx" ${algo.lag_exchange === 'okx' ? 'selected' : ''}>okx</option>
-                                <option value="htx" ${algo.lag_exchange === 'htx' ? 'selected' : ''}>htx</option>
-                            </select>
+                            <span class="text-muted small">Lagging Exchange:</span>
+                            <div class="fw-semibold">${algo.lag_exchange.toUpperCase()}</div>
                         </div>
-                        
-                    </td>
+                    </div>
+                </td>
+
                     
-                    <td>
-                        <div>
-                            <input type="text" class="form-control editable-field" id="input-${algoName}-spread" placeholder="Spread" value="${algo.spread}" disabled>
-                        </div>
-                        <div>
-                            <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}" disabled>
-                        </div>
+                <td>
+                    <div>
+                        <input type="text" class="form-control editable-field" id="input-${algoName}-spread" placeholder="Spread" value="${algo.spread}" disabled>
+                    </div>
+                    <div>
+                        <input type="text" class="form-control editable-field" id="input-${algoName}-qty" placeholder="Quantity" value="${algo.qty}" disabled>
+                    </div>
 
-                    </td>
+                </td>
                    
                    
                     <td>
@@ -321,6 +320,7 @@ function fetchAlgoData() {
 
                 // Add event listeners for all inputs and selects in the row
                 const editableFields = newRow.querySelectorAll('.editable-field');
+                console.log(editableFields)
                 editableFields.forEach(field => {
                     // const originalValue = field.value || field.selectedOptions[0]?.value;
                     
@@ -377,16 +377,6 @@ function fetchAlgoData() {
                 });
             });
 
-            // Add a "Save All Changes" button
-            // const saveAllButton = document.getElementById('save-all-button');
-            // if (!saveAllButton) {
-            //     const newButton = document.createElement('button');
-            //     newButton.id = 'save-all-button';
-            //     newButton.textContent = 'Save All Changes';
-            //     newButton.className = 'btn btn-primary mt-3';
-            //     newButton.addEventListener('click', () => saveAllChanges());
-            //     document.body.appendChild(newButton);
-            // }
         })
         .catch(error => {
             console.error('Error fetching algo data:', error);
