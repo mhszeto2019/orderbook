@@ -44,6 +44,8 @@ import redis
 r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
 from htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 import datetime
+from datetime import datetime
+
 import asyncio
 import base64
 from cryptography.fernet import Fernet
@@ -358,7 +360,7 @@ async def ammend_order():
             result = await tradeApi.place_order(instId,body = {
                 "contract_code": instId,
                 "price": str(data["px"]) if data["px"] else "",
-                "created_at": str(datetime.datetime.now()),
+                "created_at": str(datetime.now()),
                 "volume": str(data["sz"]),
                 "direction": side,
                 "offset": "open",

@@ -34,28 +34,6 @@ from HtxOrderClass import HuobiCoinFutureRestTradeAPI
 
 import time
 
-# @app.route('/')
-# def home():
-#     return "Welcome to the OKX Trade API Flask App!"
-
-# # Route to test getting fills
-# @app.route('/get_fills', methods=['GET'])
-# def get_fills():
-
-#     begin = request.args.get('begin', '1717045609000')
-#     end = request.args.get('end', '1717045609100')
-#     # print(time.localtime())
-#     # current_ts = int(time.time() * 1000)
-#     current_ts = time.time() 
-#     day_before_ts = current_ts - 86400
-#     print(day_before_ts,current_ts)
-#     try:
-#         fills = tradeApi.get_fills(begin=int(current_ts * 1000), end=int(day_before_ts * 1000))
-#         print(fills)
-#         return jsonify(fills), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
 
 # get_open_orders means opening an order
 import asyncio

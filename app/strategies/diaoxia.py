@@ -276,12 +276,16 @@ class Diaoxia:
 
 
     def check_condition(self, spread :int, callback):
-        
         current_time = time.time()
         # print(current_time,max(self.last_update_okx, self.last_update_htx) , current_time - max(self.last_update_okx, self.last_update_htx) )
         if current_time - min(self.last_update_okx, self.last_update_htx) > 0.050:
             # logger.debug("Warning: Order book data is stale!")
             return
+
+        self.total_sell = -(self.row['user_algo_type_count'][self.username]['diaoyu']['sell'] + self.row['user_algo_type_count'][self.username]['diaoxia']['sell'])
+        self.total_buy = self.row['user_algo_type_count'][self.username]['diaoyu']['buy'] + self.row['user_algo_type_count'][self.username]['diaoxia']['buy']
+        # logger.debug(f"net_vol:{self.net_volume}|total_sell:{self.total_sell},total_buy:{self.total_buy},algo_count: {self.row['user_algo_type_count'][self.username]}")
+
         
         try:
             if self.row['filled_vol'] == int(self.qty):
@@ -293,7 +297,7 @@ class Diaoxia:
                 self.row['filled_vol'] = 0  # Reset when the algo is inactive
                 return
             
-            logger.debug(f"{self.total_sell},{self.total_buy},{self.net_volume}, {self.row['user_algo_type_count'][self.username]}")
+            logger.debug(f"net_vol:{self.net_volume}|total_sell:{self.total_sell},total_buy:{self.total_buy},algo_count: {self.row['user_algo_type_count'][self.username]}")
             if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume) ) :
                 logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
                 # self.diaoxia_offset = 'close'
