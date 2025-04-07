@@ -168,9 +168,6 @@ class TraderNotifier:
                     liq_px = float(data[symbol]['liq_px'])
                     last_px = float(data[symbol]['last_px'])
                     direction = data[symbol]['direction'] 
-                    print(liq_px,last_px,direction)
-                    
-
 
                     if direction == 'sell':
                         alert_px = liq_px * (1 - threshold)
@@ -192,6 +189,7 @@ class TraderNotifier:
                             print(f"RESOLVED: {exchange} {direction.upper()} position now safe")
                  
                 except (KeyError, TypeError, ValueError) as e:
+                    print("EXCEPTION ",e)
                     results[exchange] = {"error": f"Invalid data format: {e}"}
 
         return results
@@ -202,11 +200,14 @@ class TraderNotifier:
             # okx_liq_prices = self.get_okx_liq_px()
             # {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 77067.3, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}
             if self.x % 2: 
+                print(self.x)
                 self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 120000, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
             else:
                 self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
             self.x += 1
+
             result = self.check_liq_px_distance(self.exchanges,self.liq_alert_threshold)
+
             print(result)
             time.sleep(update_interval)
 
@@ -241,17 +242,18 @@ class TraderNotifier:
 
     def start_call(self,exchange,direction):
         """Constantly listens for answered status and triggers calls when needed."""
-        while self._state & 0b10 :
-
+        if self._state & 0b10 :
+        # print(self._state)
+        # while self._state:
             if self._state== 0b10: # ACTIVE_UNACKED
                 alert_status = self.start_alert(exchange,direction)
-
                 print(f"Alert active - {self.STATES[self._state]} {exchange} {direction}: {alert_status}")
                 
             
-            time.sleep(1)  # Reduced CPU usage
-        
+            time.sleep(10)  # Reduced CPU usage
+            
         print(f"Monitoring ended - Final state: {self.STATES[self._state]}")
+        return 
 
     def start_alert(self,exchange,direction):
         """Calls once and retries only if there's no response."""
