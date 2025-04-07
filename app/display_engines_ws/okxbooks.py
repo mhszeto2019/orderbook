@@ -25,7 +25,7 @@ from flask import Flask
 from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
-socketio = SocketIO(app, cors_allowed_origins="*", ='gevent')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
 # Set log directory and filename
 LOG_DIR = '/var/www/html/orderbook/logs'

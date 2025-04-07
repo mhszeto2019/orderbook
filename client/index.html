@@ -65,11 +65,11 @@
     <div class = "row">
         
         <!-- WARNING ALERT -->
-        <!-- <div id="alertBox" class="text-center alert alert-warning alert-dismissible fade show" role="alert">
+        <div id="alertBox" class="text-center alert alert-warning alert-dismissible fade show" role="alert">
             <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
             <button type="button" class="btn btn-danger btn ms-3" onclick="stopTwilioCall()">Stop Call</button>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div> -->
+        </div>
    
         <!-- DISPLAY TABLE -->
         <div class="col-lg-6 container-fluid mt-4" id="orderbookdisplayContainer">
@@ -516,6 +516,35 @@
                                 
                                 
                                 <script>
+                                    // Simulate condition for triggering warning
+                                    function checkCondition() {
+                                        console.log("Condition checked")
+                                        const formdata = new FormData();
+                                        formdata.append("username", localStorage.getItem('username'));
+                                        const check_alert_status = {
+                                            method: "POST",
+                                            body: formdata,
+                                        };
+                                        fetch("http://127.0.0.1:9000/check_alert_status", check_alert_status)
+                                        .then((response) => response.json())
+                                        .then((result) =>
+                                             {
+                                            console.log(result)
+                                            if (result.status == "INACTIVE"){
+                                                console.log("INACTIVE")
+                                                document.getElementById('alertBox').style.display = "None"
+                                            }
+
+                                            // if (result['answered'] || result['running']) {
+                                            //     // Do something here
+                                            //     console.log("Alert status triggered:", result);
+                                            // }
+                                        })
+                                        .catch((error) => console.error(error));
+                                    
+                                    }
+                                    document.addEventListener('DOMContentLoaded', checkCondition);
+
                                     function handleOrderTypeChange() {
 
                                         const orderType = document.getElementById('order-type-input').value;
@@ -557,29 +586,10 @@
                                     });
                                 
                                     // Initialize form on page load
+                                    
                                     document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
 
-                                    // Simulate condition for triggering warning
-                                    function checkCondition() {
-                                        console.log("Condition checked")
-                                        const formdata = new FormData();
-                                        formdata.append("username", localStorage.getItem('username'));
-                                        const check_alert_status = {
-                                            method: "POST",
-                                            body: formdata,
-                                        };
-                                        // fetch("http://127.0.0.1:9000/check_alert_status", check_alert_status)
-                                        // .then((response) => response.json())
-                                        // .then((result) => 
-                                        
-                                        //         console.log('hello')
-                                        
-                                        // )
-                                        // .catch((error) => console.error(error));
-
                                     
-                                    }
-                                    document.addEventListener('DOMContentLoaded', checkCondition);
 
 
                                 </script>

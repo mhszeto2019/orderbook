@@ -47,6 +47,14 @@ con = pg8000.connect(
 
 # client = Client(ACCOUNT_SID, AUTH_TOKEN)
 class TraderNotifier:
+
+    STATES = {
+        0b00: "INACTIVE",       # Not running (00)
+        0b10: "ACTIVE_UNACKED", # Running + unanswered (10)
+        0b11: "ACTIVE_ACKED",   # Running + answered (11)
+        0b01: "RESOLVED"        # Not running but was active (01)
+    }
+
     def __init__(self,username, ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE, YOUR_PHONE,HTX_APIKEY,HTX_SECRETKEY,OKX_APIKEY,OKX_SECRETKEY,OKX_PASSPHRASE):
         self.client = Client(ACCOUNT_SID, AUTH_TOKEN)
         self.username = username
@@ -59,9 +67,16 @@ class TraderNotifier:
         self.okx_apikey = OKX_APIKEY
         self.okx_secretkey = OKX_SECRETKEY
         self.okx_passphrase = OKX_PASSPHRASE
-        self.answered = False
-        self.running = False 
-        self.start_call()
+        
+        # self.answered = False
+        # self.running = False 
+
+        self._state = 0b00
+
+        # self.start_call(exchange=None,direction=None) 
+        # self.start_call()
+
+
         self.get_htx_liq_px_status = True
         self.get_okx_liq_px_status = True
         self.exchanges = {}
@@ -69,6 +84,9 @@ class TraderNotifier:
         self.liq_alert_threshold = 0.10
         self.update_thread = None
         self.update_thread_status = False
+        self.x = 0
+        # self._state = 0b00  # Initialize as inactive
+
 
     def get_htx_liq_px(self):
         try:
@@ -142,38 +160,54 @@ class TraderNotifier:
         :return: Dictionary with distance checks.
         """
         results = {}
+
         for exchange, data in exchanges.items():
+            print(f"EXCHANGE: {exchange},{data}")
             if symbol in data and isinstance(data[symbol], dict):
                 try:
                     liq_px = float(data[symbol]['liq_px'])
                     last_px = float(data[symbol]['last_px'])
                     direction = data[symbol]['direction'] 
+                    print(liq_px,last_px,direction)
+                    
+
 
                     if direction == 'sell':
-                        alert_px = liq_px * (1-threshold)
-                        if alert_px <= last_px:
-                            print(f"CALLLLLLLLLLL THE TRADER - its {exchange} with {alert_px}|{last_px}")
-                            self.running = True 
-                    else:
-                        alert_px = liq_px * (1+threshold)
-                        if alert_px >= last_px:
-                            print(f"CALLLLLLLLLLL THE TRADER - its {exchange} with {alert_px}|{last_px}")
-                            self.running = True
+                        alert_px = liq_px * (1 - threshold)
+                        should_alert = alert_px <= last_px
+                    else:  # direction == 'buy'
+                        alert_px = liq_px * (1 + threshold)
+                        should_alert = alert_px >= last_px
 
-                    if self.running:
-                        self.start_call()            
+                    # State transition logic
+                    if should_alert:
+                        if self._state != 0b10:  # Only trigger if not already active
+                            print(f"ALERT: {exchange} {direction.upper()} {alert_px:.2f} | {last_px:.2f}")
+                            self._state = 0b10  # ACTIVE_UNACKED
+                            self.start_call(exchange,direction)   
+                    else:
+                        print("SHOULDNT ALERT")
+                        if self._state & 0b10:  # If was active
+                            self._state = 0b01  # RESOLVED
+                            print(f"RESOLVED: {exchange} {direction.upper()} position now safe")
                  
                 except (KeyError, TypeError, ValueError) as e:
                     results[exchange] = {"error": f"Invalid data format: {e}"}
+
         return results
 
     def update_liq_px(self,update_interval = 10):
         while self.update_thread_status:
-            htx_liq_prices = self.get_htx_liq_px()
-            okx_liq_prices = self.get_okx_liq_px()
-            print(htx_liq_prices,okx_liq_prices,self.running, self.answered)
+            # htx_liq_prices = self.get_htx_liq_px()
+            # okx_liq_prices = self.get_okx_liq_px()
+            # {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 77067.3, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}
+            if self.x % 2: 
+                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 120000, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
+            else:
+                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
+            self.x += 1
             result = self.check_liq_px_distance(self.exchanges,self.liq_alert_threshold)
-            
+            print(result)
             time.sleep(update_interval)
 
     def start_background_update(self):
@@ -184,13 +218,20 @@ class TraderNotifier:
         update_thread.start()
 
    
-    def make_call(self):
+    def make_call(self,exchange,direction):
         """Initiates a call to the user's phone."""
         call = self.client.calls.create(
             to=self.YOUR_PHONE,
             from_=self.TWILIO_PHONE,
             url="https://handler.twilio.com/twiml/EH2940b91a251c76dd1d2d52e83a4ff983"
         )
+        # Could add SMS with position details
+        self.client.messages.create(
+            body=f"{exchange} {direction.upper()} LIQUIDATION WARNING!",
+            from_=self.TWILIO_PHONE,
+            to=self.YOUR_PHONE
+        )
+
         return call.sid
 
     def check_call_status(self, call_sid):
@@ -198,28 +239,34 @@ class TraderNotifier:
         call = self.client.calls(call_sid).fetch()
         return call.status  # Possible values: queued, ringing, in-progress, completed, busy, failed, no-answer
 
-    def start_call(self):
+    def start_call(self,exchange,direction):
         """Constantly listens for answered status and triggers calls when needed."""
-        while self.running:
-            if not self.answered:  # Only start alert if not answered
-                alert_status = self.start_alert()
-                print(alert_status)
-            time.sleep(5)  # Avoids excessive CPU usage
-        self.answered= False
-        return False
+        while self._state & 0b10 :
 
-    def start_alert(self):
+            if self._state== 0b10: # ACTIVE_UNACKED
+                alert_status = self.start_alert(exchange,direction)
+
+                print(f"Alert active - {self.STATES[self._state]} {exchange} {direction}: {alert_status}")
+                
+            
+            time.sleep(1)  # Reduced CPU usage
+        
+        print(f"Monitoring ended - Final state: {self.STATES[self._state]}")
+
+    def start_alert(self,exchange,direction):
         """Calls once and retries only if there's no response."""
-        call_sid = self.make_call()
+        call_sid = self.make_call(exchange,direction)
         # print(f"Calling... Call SID: {call_sid}")
         status = self.check_call_status(call_sid)
         # print(f"Call FIRST Status: {status}")
         while status not in ["in-progress", "completed"]:
-            # print(self.answered)
-            # print(status)
+          
             status = self.check_call_status(call_sid)
-        if self.answered:
-            self.running = False
+
+        # if self.answered:
+        #     self.state = False
+
+
         time.sleep(5)
         return False
 
@@ -272,7 +319,7 @@ def change_running_status():
     trader_notifier_factory.get_trader_notifier(username).running = status
     if status:
         print(status, trader_notifier_factory.get_trader_notifier(username).running)
-        trader_notifier_factory.get_trader_notifier(username).start_call()
+        # trader_notifier_factory.get_trader_notifier(username).start_call(exchange,direction)
     print(trader_notifier_factory.get_trader_notifier(username).running)
     return "Running status changed", 200
 
@@ -281,19 +328,33 @@ def change_answered_call_status():
     username = request.form.get('username')
     status = request.form.get('status')
     print(username,status,type(username),type(status))
-    trader_notifier_factory.get_trader_notifier(username).answered = status
-    print(trader_notifier_factory.get_trader_notifier(username).answered)
-    return "Alert tatus changed", 200
+    # trader_notifier_factory.get_trader_notifier(username).answered = status
+    # trader_alert_state = trader_notifier_factory.get_trader_notifier(username)._state
+    # print(trader_alert_state)
+    if trader_notifier_factory.get_trader_notifier(username)._state == 0b10:
+        trader_notifier_factory.get_trader_notifier(username)._state = 0b11
+        
+        print(trader_notifier_factory.get_trader_notifier(username)._state)
+
+        return {
+            "status": trader_notifier_factory.get_trader_notifier(username)._state,
+            "timestamp": datetime.now()
+            },200
+
+    return "Alert status change fail", 400
 
 
 @app.route('/check_alert_status', methods=['POST'])
 def check_alert_status():
     username = request.form.get('username')
-    # print(username,status,type(username),type(status))
-    incident_status =trader_notifier_factory.get_trader_notifier(username).running 
-    answer_status = trader_notifier_factory.get_trader_notifier(username).answered
-    print(incident_status,answer_status)
-    return {"running":f"{incident_status}","answered":f"{answer_status}"}, 200
+    trader_notifier = trader_notifier_factory.get_trader_notifier(username)
+    state = trader_notifier.STATES[trader_notifier._state]
+    # running_status = trader_notifier.running
+    print(state)
+    return {
+            "status": state,
+            "timestamp": datetime.now()
+            },200
 
 if __name__ == "__main__":
 

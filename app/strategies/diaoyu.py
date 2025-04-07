@@ -188,9 +188,7 @@ class Diaoyu:
 
     async def revoke_order_by_id(self):
         """Move an order to the recently removed queue instead of deleting immediately."""
-
         if not self.order_queue:
-            # print("⚠️ No orders to cancel")
             return True
         self.order_id = self.order_queue[0]  # Peek at the oldest order
 
@@ -215,24 +213,7 @@ class Diaoyu:
                     logger.error(f"Revoke unsucessful after multiple attempts")
                     return False
 
-            # self.order_id = None
-            # print(revoke_orders)
-            # if revoke_orders and revoke_orders['err_code']:
-            #     logger.error("REVOKE ORDER ERROR")
-
-            # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| htxside:{self.limit_buy_price}|{self.limit_buy_size}|{self.limit_ask_price}|{self.limit_buy_size}  okxside:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} order id:{self.order_id}  |Revoke order result:{revoke_orders}")
-            # logger.debug(revoke_orders['data']['errors'][0]['err_code'])
-            # if ('status' not in revoke_orders) or (revoke_orders['data']['errors'][0]['err_code']):
-            #     logger.debug(f'error detcethed {self.order_id}')
-            #     if self.revoke_reattempt > 0 :
-            #         logger.debug(f'revoke reattempt,{self.revoke_reattempt}')
-            #         self.revoke_order_by_id()
-            #         self.revoke_reattempt -= 1
-            #     else: 
-            #         logger.error(f"Revoke unsucessful after multiple attempts")
-            #         return False 
-            # else:
-            #     return True
+      
             logger.debug(f'Revoke orders result {revoke_orders}')
 
         except Exception as e:
