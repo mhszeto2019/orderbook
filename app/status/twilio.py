@@ -77,7 +77,7 @@ class TraderNotifier:
         self.get_okx_liq_px_status = True
         self.exchanges = {}
 
-        self.liq_alert_threshold = 0.10
+        self.liq_alert_threshold = 0.15
         self.update_thread = None
         self.update_thread_status = False
 
@@ -111,12 +111,12 @@ class TraderNotifier:
                 for contract_code in instId_list:
                     positions = asyncio.run(tradeApi.get_positions(instId, body={"contract_code": contract_code}))
                     # Use next() to safely get the first element or default to an empty dict
-                    # print(positions)
+                    print(positions)
                     position_data = next(iter(positions.get('data', [])), {})
                     if 'liq_px' and 'last_price' in position_data:
                         contract = position_data.get('contract_code', '')
                         htx_liq_prices[contract_code] = {"liq_px":position_data['liq_px'],"last_px":position_data['last_price'],"direction":position_data['direction'],"ts": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(positions['ts'] / 1000))}
-
+                    print(f"HTX POSITIONS {position_data}")
                         
 
 
@@ -220,17 +220,18 @@ class TraderNotifier:
                                 'exchange': exchange
                             }
 
-
-            # self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
-            if self.x %2:
-                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
-            else:
-                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 120000, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
-            self.x += 1
+            if self.username in ['testshw']:
+                self.exchanges['deribit'] = {'BTC-USD': {'liq_px':55000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+                # self.exchanges['deribit'] = {'BTC-USD': {'liq_px': '55000', 'last_px': '60000', 'direction': 'buy', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+            # if self.x %2:
+            #     self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+            # else:
+            #     self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 120000, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
+            # self.x += 1
 
             result = self.check_liq_px_distance(self.exchanges,self.liq_alert_threshold)
 
-            print(result)
+            # print(result)
             time.sleep(update_interval)
 
     def start_background_update(self):
@@ -290,16 +291,9 @@ class TraderNotifier:
     def start_alert(self,exchange,direction,liq_px,last_px):
         """Calls once and retries only if there's no response."""
         call_sid = self.make_call(exchange,direction,liq_px,last_px)
-        # print(f"Calling... Call SID: {call_sid}")
         status = self.check_call_status(call_sid)
-        # print(f"Call FIRST Status: {status}")
         while status not in ["in-progress", "completed"]:
-          
             status = self.check_call_status(call_sid)
-
-        # if self.answered:
-        #     self.state = False
-
 
         time.sleep(5)
         return False
@@ -333,7 +327,7 @@ cursor.execute("""select
                 MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
                 MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
                 MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase
-                FROM traders left join api_credentials ac on traders.username = ac.username where traders.username ='brennan12' group by traders.username,traders.phone_number """)
+                FROM traders left join api_credentials ac on traders.username = ac.username  group by traders.username,traders.phone_number """)
 accounts = cursor.fetchall()
 trader_notifier_factory = TraderNotifierFactory()
 

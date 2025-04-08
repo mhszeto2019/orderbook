@@ -199,7 +199,16 @@ def run_htx_client():
     # loop.run_until_complete(main())
     # asyncio.run(main())
     main()
+
 # Flask-SocketIO event handling
+@socketio.on('connect')
+def handle_connect():
+    monkey.patch_all()
+    print("Client connected")
+    # Start the WebSocket client using a background task
+    socketio.start_background_task(run_htx_client)
+
+
 @socketio.on('connect')
 def handle_connect():
     monkey.patch_all()

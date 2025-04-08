@@ -41,7 +41,6 @@ import requests
 async def gettradehistory():
 
     data = request.get_json()
-    print('data',data)
     # username = data.get('username')
     # # Get the order data from the request
     # # okx_secretkey_apikey_passphrase = r.get('user:test123d:api_credentials"')
@@ -77,7 +76,7 @@ async def gettradehistory():
         if not instId:
             return jsonify({"error": "instId is required"}), 400
 
-        url = f"https://api.hbdm.com/swap-ex/market/trade?contract_code={instId}&size=50"
+        url = f"https://api.hbdm.com/swap-ex/market/trade?contract_code={instId}"
 
         try:
             response = requests.get(url)
@@ -94,4 +93,4 @@ async def gettradehistory():
         print(e)
 
 if __name__ == "__main__":
-    app.run(port='5003')
+    app.run(port='6101')

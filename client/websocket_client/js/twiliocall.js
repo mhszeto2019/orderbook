@@ -9,13 +9,11 @@ function triggerWarning(message) {
 }
 
 
-
-
 // Simulating repeated calls every 20s
 twilioInterval = setInterval(() => {
-    // checkCondition()
+    checkCondition()
     console.log("🚨 Twilio is making another call...");
-}, 2000);
+}, 60000);
 
 // Stop Twilio Calls
 async function stopTwilioCall() {
@@ -29,7 +27,7 @@ async function stopTwilioCall() {
         body: formdata,
       };
       
-      fetch("http://127.0.0.1:9000/change_twilio_call_answered_status", requestOptions)
+      fetch(`http://${hostname}:9000/change_twilio_call_answered_status`, requestOptions)
         .then((response) => response.text())
         .then((result) => console.log(result))
         .catch((error) => console.error(error));
