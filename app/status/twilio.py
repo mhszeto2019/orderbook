@@ -84,9 +84,14 @@ class TraderNotifier:
         self.liq_alert_threshold = 0.10
         self.update_thread = None
         self.update_thread_status = False
-        self.x = 0
-        # self._state = 0b00  # Initialize as inactive
 
+        # self.last_prices = {} #{"BTC-USD":"80000", "ETH-USD":"1600"}
+        # self.last_price_update_times = {"BTC-USD":time.time(),"ETH-USD":time.time()} #{"BTC-USD":"80000", "ETH-USD":"1600"}
+        # self._state = 0b00  # Initialize as inactive
+        self.latest_prices = {
+                        'BTC-USD': {'ts': None, 'last_px': None, 'exchange': None},
+                        'ETH-USD': {'ts': None, 'last_px': None, 'exchange': None}
+                    }
 
     def get_htx_liq_px(self):
         try:
@@ -113,9 +118,10 @@ class TraderNotifier:
                     if 'liq_px' and 'last_price' in position_data:
                         contract = position_data.get('contract_code', '')
                         htx_liq_prices[contract_code] = {"liq_px":position_data['liq_px'],"last_px":position_data['last_price'],"direction":position_data['direction'],"ts": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(positions['ts'] / 1000))}
-                        # if alert:
-                        #     self.running = True
-                        #     self.start_call()
+
+                        
+
+
                 self.exchanges['htx'] = htx_liq_prices
                 return htx_liq_prices
 
@@ -142,6 +148,7 @@ class TraderNotifier:
                         direction = 'sell' if int(row['pos']) <0 else 'buy'
                         okx_liq_prices[contract_code] = {"liq_px":row['liqPx'],"last_px":row['last'],"direction":direction,"ts":current_ts.strftime('%Y-%m-%d %H:%M:%S')}
             
+
                 self.exchanges['okx'] = okx_liq_prices
                 
                 return okx_liq_prices
@@ -196,15 +203,49 @@ class TraderNotifier:
 
     def update_liq_px(self,update_interval = 10):
         while self.update_thread_status:
-            # htx_liq_prices = self.get_htx_liq_px()
-            # okx_liq_prices = self.get_okx_liq_px()
+            htx_liq_prices = self.get_htx_liq_px()
+            okx_liq_prices = self.get_okx_liq_px()
             # {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 77067.3, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}
-            if self.x % 2: 
-                print(self.x)
-                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 120000, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
-            else:
-                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
-            self.x += 1
+
+            # Find the entry with the latest timestamp
+            # latest_entry = max(
+            #     (
+            #         info
+            #         for ex in self.exchanges.values()
+            #         for info in ex.values()
+            #         if isinstance(info, dict) and 'ts' in info
+            #     ),
+            #     key=lambda x: datetime.strptime(x['ts'], "%Y-%m-%d %H:%M:%S")
+            # )
+
+            # # Get the last_px
+            # latest_px = float(latest_entry['last_px'])
+            # print("Latest last_px:", latest_px)
+
+
+            
+            # Find the latest entry with ts
+            for exchange, symbols in self.exchanges.items():
+                for symbol, info in symbols.items():
+                    if symbol in self.latest_prices and isinstance(info, dict) and 'ts' in info:
+                        ts = datetime.strptime(info['ts'], "%Y-%m-%d %H:%M:%S")
+                        current = self.latest_prices[symbol]['ts']
+                        if current is None or ts > current:
+                            self.latest_prices[symbol] = {
+                                'ts': ts,
+                                'last_px': float(info['last_px']),
+                                'exchange': exchange
+                            }
+
+            # Print results
+            # for symbol, details in self.latest_prices.items():
+            #     print(f"{symbol}: {details['last_px']} from {details['exchange']} at {details['ts']}")
+            # print(self.latest_prices['BTC-USD']['last_px'])
+
+            self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+            # else:
+                # self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}}
+            # self.x += 1
 
             result = self.check_liq_px_distance(self.exchanges,self.liq_alert_threshold)
 
@@ -232,7 +273,6 @@ class TraderNotifier:
             from_=self.TWILIO_PHONE,
             to=self.YOUR_PHONE
         )
-
         return call.sid
 
     def check_call_status(self, call_sid):
@@ -243,8 +283,7 @@ class TraderNotifier:
     def start_call(self,exchange,direction):
         """Constantly listens for answered status and triggers calls when needed."""
         if self._state & 0b10 :
-        # print(self._state)
-        # while self._state:
+        
             if self._state== 0b10: # ACTIVE_UNACKED
                 alert_status = self.start_alert(exchange,direction)
                 print(f"Alert active - {self.STATES[self._state]} {exchange} {direction}: {alert_status}")
@@ -336,7 +375,7 @@ def change_answered_call_status():
     if trader_notifier_factory.get_trader_notifier(username)._state == 0b10:
         trader_notifier_factory.get_trader_notifier(username)._state = 0b11
         
-        print(trader_notifier_factory.get_trader_notifier(username)._state)
+        # print(trader_notifier_factory.get_trader_notifier(username)._state)
 
         return {
             "status": trader_notifier_factory.get_trader_notifier(username)._state,

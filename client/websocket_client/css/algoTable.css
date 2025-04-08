@@ -9,4 +9,7 @@
     z-index: 10; /* Keep it above other content */
 }
 
+.black-text{
+    color:white
+   }
 
