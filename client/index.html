@@ -327,7 +327,7 @@
                                     
         
                                     <!-- Card Section for Bid and Ask Prices -->
-                                    <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center">
+                                    <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center ">
                                         <!-- Bid Card -->
                                         <span id="quote-side-text" class="quote-side-text text-success fw-bold">
                                             Bid (Buy <span id="arbButton-bid-buy"></span> Sell <span id="arbButton-bid-sell"></span>) 
@@ -400,19 +400,28 @@
                         
                     </div>
 
-                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist ">
+                    <!-- <ul class="nav nav-tabs  mb-3"  role="tablist ">
                         <li class="nav-item" role="presentation">
-                        <button class="btn nav-link active" id="pills-manual-order-tab" data-bs-toggle="pill" data-bs-target="#pills-manual-order" type="button" role="tab" aria-controls="pills-manual-order" aria-selected="true">Manual Order</button>
+                        <button class="btn nav-link active" id="pills-manual-order-tab" data-bs-toggle="tab" data-bs-target="#pills-manual-order" type="button" role="tab" aria-controls="pills-manual-order" aria-selected="true">Manual Order</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                        <button class="btn nav-link" id="pills-algo-order-tab" data-bs-toggle="pill" data-bs-target="#pills-algo-order" type="button" role="tab" aria-controls="pills-algo-order" aria-selected="false">Algo Order</button>
+                        <button class="btn nav-link" id="pills-algo-order-tab" data-bs-toggle="tab" data-bs-target="#pills-algo-order" type="button" role="tab" aria-controls="pills-algo-order" aria-selected="false">Algo Order</button>
+                        </li>
+                    </ul> -->
+
+                    <ul class="nav nav-tabs  mb-3"  role="tablist ">
+                        <li class="nav-item" role="presentation">
+                        <button class="btn nav-link active" id="pills-manual-order-tab" data-bs-toggle="tab" data-bs-target="#pills-manual-order" type="button" role="tab" >Manual Order</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                        <button class="btn nav-link" id="pills-algo-order-tab" data-bs-toggle="tab" data-bs-target="#pills-algo-order" type="button" role="tab" >Algo Order</button>
                         </li>
                     </ul>
                     
                     <div class="tab-content" id="pills-tabContent">
                         <div class="tab-pane fade show active" id="pills-manual-order" role="tabpanel" aria-labelledby="pills-manual-order-tab">
                             <!-- User Input Section -->
-                            <div class="card p-3 ">
+                            <div class="card p-4 ">
                                 <form id="order-form">
                                     <form id="order-form">
                                         <div class="row g-2">
@@ -616,88 +625,52 @@
                             <div>
                                 <!-- Algo Strats Table -->
                                 <!-- Algo List Table -->
-                                <section class="intro">
+                            <section class="intro">
 
-
-
-                            <div class="table-responsive" style="max-height: auto; overflow-y: auto;">
-                                <table class="table table-hover table-sm align-middle text-nowrap w-100 algo-table ">
-                                    <thead class="table sticky-top ">
-                                        <tr>
-                                            <th class='' >Algo Name</th>
-                                            <th class='' >Lead | Lag</th>
-                                            <th class='' >Spread | Qty</th>
-                                            <th class='' >Currency</th>
-                                            <th class='' >Instrument | Contract</th>
-                                            <th class='' >Status</th>
-                                            <th class='' >On / Off</th>
-                                            <th class='' >Actions</th>
+                                <!-- <div class="table-responsive" style="max-height: auto; overflow-y: auto;">
+                                    <table class="table table-hover table-sm align-middle text-nowrap w-100 algo-table ">
+                                        <thead class="table sticky-top ">
+                                            <tr>
+                                                <th class='' >Algo Name</th>
+                                                <th class='' >Lead | Lag</th>
+                                                <th class='' >Spread | Qty</th>
+                                                <th class='' >Currency</th>
+                                                <th class='' >Instrument | Contract</th>
+                                                <th class='' >Status</th>
+                                                <th class='' >On / Off</th>
+                                                <th class='' >Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="algo-list">
+                                        </tbody>
+                                        <tbody id="algo-list-new">
+                                        </tbody>
+                                    </table>
+                                </div> -->
+                                <table class="table table-hover table-sm align-middle text-nowrap w-100 border rounded shadow-sm algo-table">
+                                    <thead class="table-light sticky-top">
+                                        <tr class="text-uppercase small text-secondary">
+                                            <th class="py-2 px-3">Algo Name</th>
+                                            <th class="py-2 px-3">Lead / Lag</th>
+                                            <th class="py-2 px-3">Spread / Qty</th>
+                                            <th class="py-2 px-3">Currency</th>
+                                            <th class="py-2 px-3">Instrument / Contract</th>
+                                            <th class="py-2 px-3">Status</th>
+                                            <th class="py-2 px-3">On / Off</th>
+                                            <th class="py-2 px-3">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="algo-list">
-                                    </tbody>
-                                    <tbody id="algo-list-new">
-                                    </tbody>
+                                    <tbody id="algo-list"></tbody>
+                                    <tbody id="algo-list-new"></tbody>
                                 </table>
-                            </div>
+                                
 
-    <!-- 
-                                    <div class="algo-table" >
-                                        <table class="table table-hover mb-0" >
-                                            <thead>
-                                                <tr style="position: sticky; top: 0; z-index: 1020; font-size: small;">
-                                                    <th class='col-1' >Algo Name</th>
-                                                    <th class='col-1' >Lead | Lag</th>
-                                                    <th class='col-1' >Spread | Qty</th>
-                                                    <th class='col-1' >Currency</th>
-                                                    <th class='col-1' >Instrument | Contract</th>
-                                                    <th class='col-1' >Status</th>
-                                                    <th class='col-1' >On / Off</th>
-                                                    <th class='col-1' >Actions</th>
-                                                </tr>
-                                            </thead>
-                                                    
-                                                <tbody id="algo-list">
-                                                </tbody>
-                                                <tbody id="algo-list-new">
-                                                </tbody>
-                                        </table>
-                                    </div> -->
-                                </section> 
+                            </section> 
 
 
-                                <!-- <section class="intro">
-                                    <div class="col-12">
-                                        <div class="card">
-                                        <div class="card-body">
-                                            <div class="table-responsive">
-                                            <table class="table table-hover mb-0">
-                                                <thead>
-                                                    <tr style="position: sticky; top: 0; z-index: 1020; font-size: small;">
-                                                        <th>Algo Name</th>
-                                                        <th>Lead | Lag</th>
-                                                        <th>Spread | Qty</th>
-                                                        <th>Currency</th>
-                                                        <th>Instrument | Contract</th>
-                                                        <th>Status</th>
-                                                        <th>On / Off</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                    
-                                                <tbody id="algo-list">
-                                                </tbody>
-                                                <tbody id="algo-list-new">
-                                                </tbody>
-                                            </table>
-                                            </div>
-                                        </div>
-                                        </div>
-                                    </div>
-                                </section> -->
 
                                 <!-- Button to Open Modal -->
-                                <button class="btn btn-dark mt-3" onclick="openAlgoModal()">Add New Algo</button>
+                                <button class="btn btn-dark " onclick="openAlgoModal()">Add New Algo</button>
 
                                 <!-- Modal for Adding/Editing Algo -->
                                 <div class="modal" id="algoModal" tabindex="-1">
