@@ -472,8 +472,16 @@ class Diaoyu:
                 # asyncio.create_task(self.revoke_order_by_id())
                 logger.error(position_data)
                 logger.error(f"LIMIT ORDER FUNCTION ERROR:{traceback.format_exc()}")
-
-                # self.update_db()
+                if self.retries > 0:
+                    base_delay = 1  # base delay in seconds
+                    exp = 5 - self.retries  # 0 on first retry, increases over time
+                    sleep_time = base_delay * (2 ** exp)
+                    sleep_time += random.uniform(0, 0.5)  # optional jitter
+                    
+                    print(f"Retrying after {sleep_time:.2f}s...")
+                    time.sleep(sleep_time)
+                else:
+                    self.update_db()
                 # raise Exception
             finally:
                 return result
