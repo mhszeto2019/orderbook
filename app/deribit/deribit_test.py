@@ -1,20 +1,40 @@
 import asyncio
 import websockets
 import json
+import os
+import configparser
+config = configparser.ConfigParser()
+config_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config_folder', 'credentials.ini')
+# print("Config file path:", config_file_path)
+# Read the configuration file
+config.read(config_file_path)
+config_source = 'deribit'
+client_id = config[config_source]['apikey']
+client_secret = config[config_source]['secretkey']
 
 from app.deribit.credentials import client_id, client_secret, client_url
+
+
 
 # create a websocket object
 class WS_Client(object):
     def __init__(self, client_id=None, client_secret=None):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.client_url = 'wss://test.deribit.com/ws/api/v2'
+        self.client_url = 'wss://www.deribit.com/ws/api/v2'
         self.json = {
             "jsonrpc" : "2.0",
             "id" : 1,
             "method" : None,
         }
+        self.open = False
+    
+    # client refers to the python client to deribit server
+    async def start_client(self):
+        self.open = True
+    
+    async def stop_client(self):
+        self.open = False
 
     # send an authentication request
     async def private_api(self, request):
@@ -28,14 +48,16 @@ class WS_Client(object):
         self.json["params"] = options
 
         async with websockets.connect(self.client_url) as websocket:
+
             await websocket.send(json.dumps(self.json))
-            while websocket.open:
+            while self.open:
                 response = await websocket.recv()
                 
                 # send a private subscription request
                 if "private/subscribe" in request:
                     await websocket.send(request)
-                    while websocket.open:
+                    while self.open:
+                        
                         response = await websocket.recv()
                         response = json.loads(response)
                         print(response)
@@ -60,7 +82,7 @@ class WS_Client(object):
     async def public_sub(self, request):
         async with websockets.connect(self.client_url) as websocket:
             await websocket.send(request)
-            while websocket.open:
+            while self.open:
                 response = await websocket.recv()
                 response = json.loads(response)
                 print(response)
@@ -216,5 +238,9 @@ class WS_Client(object):
        return self.loop(self.private_api, self.json)
 
 client = WS_Client(client_id, client_secret)
-for i in range(100):
-    print(client.ticker('BTC-PERPETUAL'))
+
+asyncio.get_event_loop().run_until_complete(client.start_client())
+print(client.account_summary('BTC'))
+# print(client.get_position('BTC'))
+# for i in range(100):
+#     print(client.ticker('BTC-PERPETUAL'))
