@@ -89,13 +89,12 @@
                 
         </div>
 
-        <div class = "row px-4" >
+        <div class = "row px-4 " >
             
             <!-- DISPLAY TABLE -->
             <div class="col-lg-6 container-fluid mt-4" id="orderbookdisplayContainer">
                 <!-- Container for the funding rates row -->
                 <div class="row ">
-                    
                     <!--WS STATUS BADGE  -->
                     <div class="col-md-4 mb-4">
                         <h6 class = "header-text">Connection Status:</h6 >
@@ -135,50 +134,50 @@
                     </div>
 
                 </div>
-                
+
+
+                <div class="row">
                 <!-- ORDERBOOK DISPLAY -->
-                <div class="justify-content-between align-items-center mb-3">
+                        <div class="justify-content-between align-items-center mb-3">
                         <!-- CHOICES FOR LEADING AND LAGGING EXCHANGES -->
-                        <div class="row">
-                            
                             <div class="container">
                                 <div class="row align-items-center">
-                                <!-- Currency Input -->
-                                <div class="col-md-4 col-sm-12 mb-3">
-                                    <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                                    <select id="currency-input" class="form-select" aria-label="Currency" onchange="updateCurrency()">
-                                        <option value="">Select Currency</option>
-                                        <option value="BTC-USDC">BTC-USDC</option>
-                                        <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
-                                        <option value="BTC-USDT-SWAP">BTC-USDT-SWAP</option>
-                                    </select>
+                                    <!-- Currency Input -->
+                                    <div class="col-md-4 col-sm-12 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                            <select id="currency-input" class="form-select" aria-label="Currency" onchange="updateCurrency()">
+                                                <option value="">Select Currency</option>
+                                                <option value="BTC-USDC">BTC-USDC</option>
+                                                <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
+                                                <option value="BTC-USDT-SWAP">BTC-USDT-SWAP</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                            
-                                <!-- Exchange 1 Dropdown -->
-                                <div class="col-md-4 col-sm-12 mb-3">
-                                    <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-gear"></i></span>
-                                    <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange()">
-                                        <option value="">Select Exchange 1</option>
-                                        <option value="okx" selected>OKX</option>
-                                        <option value="htx">HTX</option>
-                                    </select>
+                                
+                                    <!-- Exchange 1 Dropdown -->
+                                    <div class="col-md-4 col-sm-12 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange()">
+                                                <option value="">Select Exchange 1</option>
+                                                <option value="okx" selected>OKX</option>
+                                                <option value="htx">HTX</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                            
-                                <!-- Exchange 2 Dropdown -->
-                                <div class="col-md-4 col-sm-12 mb-3">
-                                    <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-gear"></i></span>
-                                    <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange()">
-                                        <option value="">Select Exchange 2</option>
-                                        <option value="okx" >OKX</option>
-                                        <option value="htx" selected>HTX</option>
-                                    </select>
+                                
+                                    <!-- Exchange 2 Dropdown -->
+                                    <div class="col-md-4 col-sm-12 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange()">
+                                                <option value="">Select Exchange 2</option>
+                                                <option value="okx" >OKX</option>
+                                                <option value="htx" selected>HTX</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
 
@@ -195,24 +194,10 @@
                                             <div class="card-body py-0 my-0">
                                                 <h5 id="lastTrade-header-1" class="text-center ">Last Trades</h5>
                                                 <!-- Row for Exchange and Currency -->
-                                            
                                             </div>
 
                                             <div class="orderbook-scroll-container scrollable-lastprice">
-                                                <!-- <table class="orderBookTable">
-                                                <thead>
-                                                    <tr class="text-secondary small">
-                                                        <th style="position: sticky; top: -1px;">Ts</th>
-                                                        <th style="position: sticky; top: -1px;">Price(USD)</th>
-                                                        <th style="position: sticky; top: -1px;">Size</th>
-                                                    </tr>
-                                                    
-                                                </thead>
-
-                                                <tbody id="lastprice-data-table-body-1">
-                                                 
-                                                </tbody>
-                                                </table> -->
+                                               
                                                 <table class="orderBookTable">
                                                     <thead>
                                                         <tr class="text-secondary small">
@@ -228,7 +213,7 @@
                                             </div>
 
                                         </div>
-                                        </div>
+                                    </div>
                                 
                                     <!-- leading Order Book Section -->
                                     <div class="col-md-3" >
@@ -378,7 +363,7 @@
                             </div>
                         </div>
                         
-                    </div>
+                </div>
                 
             </div>
 

@@ -472,7 +472,8 @@ class Diaoyu:
                 # asyncio.create_task(self.revoke_order_by_id())
                 logger.error(position_data)
                 logger.error(f"LIMIT ORDER FUNCTION ERROR:{traceback.format_exc()}")
-                self.update_db()
+
+                # self.update_db()
                 # raise Exception
             finally:
                 return result
@@ -487,6 +488,7 @@ class Diaoyu:
                 result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
                 self.order_id = result['data'][0]['ordId']
                 logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| New order placed: {self.order_id}")
+
             except Exception as e:
                 logger.error(f"Place Limit order htx:{traceback.format_exc()}")
 
