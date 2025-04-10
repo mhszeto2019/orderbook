@@ -204,7 +204,7 @@ class AlgoFactory:
         qty = int(json_data['qty']) 
         filled_vol = self.shared_states[instance_id]['filled_vol']
         print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
-        
+
         if  json_data['state']:
             self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
         else:
@@ -248,8 +248,34 @@ class AlgoFactory:
         # row_dict[f'{row_dict['username']}_queue'] = self.queue
         
         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
+
+
+        # Check if the username exists, if not, initialize it
         if row_dict['username'] not in self.user_algo_type_count:
-            self.user_algo_type_count[row_dict['username']] = {"diaoyu":{"buy":0,"sell":0},"diaoxia":{"buy":0,"sell":0}}
+            self.user_algo_type_count[row_dict['username']] = {'net_availability': 0}
+
+        # Check if the algo_type exists for this username, if not, initialize it
+        if row_dict['algo_type'] not in self.user_algo_type_count[row_dict['username']]:
+            self.user_algo_type_count[row_dict['username']][row_dict['algo_type']] = {}
+
+        # Check if the algo_name exists for this algorithm type, if not, initialize it
+        if row_dict['algo_name'] not in self.user_algo_type_count[row_dict['username']][row_dict['algo_type']]:
+            self.user_algo_type_count[row_dict['username']][row_dict['algo_type']][row_dict['algo_name']] = {
+                'buy': 0,
+                'sell': 0,
+                'filled_amount': 0,
+                'remaining_amount': 0,
+                'average_fill_price': 0.0,
+                'total_executed_value': 0.0,
+                'max_position_limit': 100,
+                'start_time': None,
+                'end_time': None,
+                'execution_log': [],
+                'error_log': [],
+                'status': False
+            }
+
+        
 
         row_dict['user_algo_type_count'] = self.user_algo_type_count
         
@@ -273,7 +299,13 @@ class AlgoFactory:
                 side = 'sell' if int(json_data['spread']) > 0 else 'buy'
 
             if json_data['state']:
-                self.update_user_algo_type_count(json_data['username'],json_data['algo_type'],side,-int(json_data['qty']))
+                try:
+                    del self.user_algo_type_count[username][algo_type][algo_name]
+                    print(f"Algorithm '{algo_name}' removed successfully.")
+                except KeyError:
+                    print(f"Algorithm '{algo_name}' not found for {username} -> {algo_type}.")
+
+            logger.error(self.user_algo_type_count)
 
             if algo_id in self.algos:
                 logger.debug(f"Removing Algo {algo_id}")
@@ -340,16 +372,62 @@ class AlgoFactory:
             row_dict['okx_secretkey'] = row[14]
             row_dict['okx_passphrase'] = row[15]
             row_dict['filled_vol'] = 0
-            # row_dict[f'{row_dict['username']}_queue'] = []
+            # Initialising user_algo_type_count dictionary 
+            # self.user_algo_type_count[row_dict['username']] = {"diaoyu":{"buy":0,"sell":0},"diaoxia":{"buy":0,"sell":0}}
+            # self.user_algo_type_count[row_dict['username']] = {
+            #         'net_availability': 0,
+            #         row_dict['algo_type']: {
+            #             row_dict['algo_name']: {
+            #                 'buy': 0,
+            #                 'sell': 0,
+            #                 'filled_amount': 0,
+            #                 'remaining_amount': 0,
+            #                 'average_fill_price': 0.0,
+            #                 'total_executed_value': 0.0,
+            #                 'max_position_limit': 100,
+            #                 'start_time': None,
+            #                 'end_time': None,
+            #                 'execution_log': [],
+            #                 'error_log': [],
+            #                 'status': False
+            #             }
+            #         }
+            # }
 
-            
-            self.user_algo_type_count[row_dict['username']] = {"diaoyu":{"buy":0,"sell":0},"diaoxia":{"buy":0,"sell":0}}
-            row_dict['user_algo_type_count'] = self.user_algo_type_count
+            # Check if the username exists, if not, initialize it
+            if row_dict['username'] not in self.user_algo_type_count:
+                self.user_algo_type_count[row_dict['username']] = {'net_availability': 0}
+
+            # Check if the algo_type exists for this username, if not, initialize it
+            if row_dict['algo_type'] not in self.user_algo_type_count[row_dict['username']]:
+                self.user_algo_type_count[row_dict['username']][row_dict['algo_type']] = {}
+
+            # Check if the algo_name exists for this algorithm type, if not, initialize it
+            if row_dict['algo_name'] not in self.user_algo_type_count[row_dict['username']][row_dict['algo_type']]:
+                self.user_algo_type_count[row_dict['username']][row_dict['algo_type']][row_dict['algo_name']] = {
+                    'buy': 0,
+                    'sell': 0,
+                    'filled_amount': 0,
+                    'remaining_amount': 0,
+                    'average_fill_price': 0.0,
+                    'total_executed_value': 0.0,
+                    'max_position_limit': 100,
+                    'start_time': None,
+                    'end_time': None,
+                    'execution_log': [],
+                    'error_log': [],
+                    'status': False
+                }
+
           
+
+
+
+            row_dict['user_algo_type_count'] = self.user_algo_type_count
+            print(row_dict['user_algo_type_count'])
             # Create a unique instance ID
             instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
-            # print(f"Instance ID: {instance_id}")
-            # logger.debug(instance_id)
+         
             key,jwt_token = '',''
             # Initialize the strategy
             # Since Diaoyu is trading SWAP, we will keep contract type as None
@@ -378,24 +456,8 @@ class AlgoFactory:
         """Stop all strategies and terminate their processes."""
         print("Stopping all strategies and processes...")
         for instance_id, (strat, process) in self.algos.items():
-            # logger.debug('STOPPING')
-            # logger.debug(process)
-            # logger.debug(process.is_alive())
-            # logger.debug(instance_id)
-            # logger.debug(strat)
             strat.stop_clients()
 
-        #     if process.is_alive():
-        #         try:
-        #             print(f"Stopping strategy for {instance_id}...")
-        #             strat.stop()  # Call the strategy's stop function
-        #             process.terminate()  # Terminate the process
-        #             process.join()  # Wait for the process to shut down
-        #         except Exception as e:
-        #             print(f"Error while stopping strategy for {instance_id}: {e}")
-        # self.processes.clear()  # Clear the process list
-        # self.algos.clear()  # Clear the algos dictionary
-        # print("All strategies and processes stopped.")
 
 class DBListener(threading.Thread):
     """Simulates a database listener."""
