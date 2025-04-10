@@ -204,6 +204,7 @@ class AlgoFactory:
         qty = int(json_data['qty']) 
         filled_vol = self.shared_states[instance_id]['filled_vol']
         print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
+        
         if  json_data['state']:
             self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
         else:
@@ -270,6 +271,7 @@ class AlgoFactory:
                 side = 'buy' if int(json_data['spread']) > 0 else 'sell'
             elif json_data['algo_type'] == 'diaoxia':
                 side = 'sell' if int(json_data['spread']) > 0 else 'buy'
+
             if json_data['state']:
                 self.update_user_algo_type_count(json_data['username'],json_data['algo_type'],side,-int(json_data['qty']))
 

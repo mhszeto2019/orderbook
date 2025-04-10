@@ -49,28 +49,17 @@ import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 
-# Define the log directory and the log file name
 LOG_DIR = Path('/var/www/html/orderbook/logs')
 log_filename = LOG_DIR / (Path(__file__).stem + '.log')
-
-# === Step 1: Archive previous day's log if exists ===
-if log_filename.exists():
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    archive_dir = LOG_DIR / yesterday
-    archive_dir.mkdir(parents=True, exist_ok=True)
-    archived_log_path = archive_dir / log_filename.name
-    shutil.move(str(log_filename), str(archived_log_path))
-
-# === Step 2: Ensure log directory exists ===
-LOG_DIR.mkdir(parents=True, exist_ok=True)
-
-# === Step 3: Set up logging ===
+os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
 file_handler = logging.FileHandler(log_filename)
+# Set up a basic formatter
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
-
 logger = logging.getLogger('Diaoyu')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)  # Set log level
+# Add the file handler to the logger
 logger.addHandler(file_handler)
 
 

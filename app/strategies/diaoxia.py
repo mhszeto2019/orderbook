@@ -297,10 +297,10 @@ class Diaoxia:
                 self.row['filled_vol'] = 0  # Reset when the algo is inactive
                 return
             
-            logger.debug(f"net_vol:{self.net_volume}|total_sell:{self.total_sell},total_buy:{self.total_buy},algo_count: {self.row['user_algo_type_count'][self.username]}")
+            logger.debug(f"{self.username}|{self.algoname}|net_vol:{self.net_volume}|total_sell:{self.total_sell},total_buy:{self.total_buy},algo_count: {self.row['user_algo_type_count'][self.username]}")
             if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume) ) :
-                logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
-
+                logger.debug(f"{self.username}|{self.algoname}|self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
+                logger.debug(f"{self.username}|{self.algoname}: CLOSING DB")
                 # self.diaoxia_offset = 'close'
                 # self.row['filled_qty'] = self.row['filled_vol']
                 self.update_db()
