@@ -504,9 +504,12 @@ class Diaoyu:
                 # if trade and message['status'] in [4,5,6] and (self.order_id in self.active_orders or self.order_id in self.recently_removed_orders):
                     
                     # volume that is filled in this trade
-                    self.row['filled_volume'] = message['trade'][0]['trade_volume']
+                    # self.row['filled_volume'] = message['trade'][0]['trade_volume']
                     # we need to add volume of this trade into total volume filled for htx
-                    self.htx_filled_volume += self.row['filled_volume']
+                    # self.htx_filled_volume += self.row['filled_volume']
+                    self.row['user_algo_type_count'][self.algotype][self.algoname]['filled_amount'] +=  message['trade'][0]['trade_volume']
+                    self.row['user_algo_type_count'][self.algotype][self.algoname]['remaining_amount'] -=  message['trade'][0]['trade_volume']
+
 
                     # the quantity that we want to buy or sell
                     total_limit_buy_size = self.limit_buy_size
