@@ -507,8 +507,27 @@ class Diaoyu:
                     # self.row['filled_volume'] = message['trade'][0]['trade_volume']
                     # we need to add volume of this trade into total volume filled for htx
                     # self.htx_filled_volume += self.row['filled_volume']
-                    self.row['user_algo_type_count'][self.algotype][self.algoname]['filled_amount'] +=  message['trade'][0]['trade_volume']
-                    self.row['user_algo_type_count'][self.algotype][self.algoname]['remaining_amount'] -=  message['trade'][0]['trade_volume']
+                    # self.row['user_algo_type_count'][self.algotype][self.algoname]['filled_amount'] +=  message['trade'][0]['trade_volume']
+                    # self.row['user_algo_type_count'][self.algotype][self.algoname]['remaining_amount'] -=  message['trade'][0]['trade_volume']
+
+
+                    # UPDATE SHARED STATE
+                   
+                    # Step 1: Read the entire shared user_algo_type_count object
+                    user_data = self.row['user_algo_type_count']
+
+                    # Step 2: Modify the nested algo data
+                    algo_data = user_data[self.username][self.algotype][self.algoname]
+                    algo_data['filled_amount']  +=  message['trade'][0]['trade_volume']
+                    algo_data['remaining_amount'] -=  message['trade'][0]['trade_volume']
+
+                    # Step 3: Write it back to ensure the shared state gets updated
+                    user_data[self.username][self.algotype][self.algoname] = algo_data
+                    self.row['user_algo_type_count'] = user_data
+
+
+                    # Re-assign the modified dict back to ensure update is synced across processes
+                    user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
 
 
                     # the quantity that we want to buy or sell
