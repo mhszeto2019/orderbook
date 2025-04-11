@@ -15,7 +15,7 @@ import traceback
 sys.path.append('/var/www/html/orderbook/htx2')
 sys.path.append('/var/www/html/orderbook/htx2/alpha')
 # from app.trading_engines.htxTradeFuturesApp import place_limit_contract_order
-from app.htx2.HtxOrderClass import  HuobiCoinFutureRestTradeAPI
+from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 
 
 from okx import Trade
@@ -364,7 +364,10 @@ class Diaoyu:
     async def limit_order_function(self,limit_buy_price,limit_buy_size,htx_direction):
         with self.lock:
             try:
-                # print(limit_buy_price,limit_buy_size,htx_direction)
+                result = await self.htx_tradeapi.swap_cancel_after(1)
+                logger.debug(f"CANCEL AFTER: {result}")
+
+                logger.debug(f"limit_buy_price:{limit_buy_price},limit_buy_size:{limit_buy_size}|htx_direction:{htx_direction}")
 
                 result = None
                 positions = await self.htx_tradeapi.get_positions(self.ccy,body = {
@@ -402,20 +405,8 @@ class Diaoyu:
             
                 # If we dont need to close, we just open a position
                 if closing_size == 0:
-                    # same direction so we just add on
-                    # result = await self.htx_tradeapi.create_swap_orders(self.ccy,body = [{
-                    # "contract_code": self.ccy.replace('-SWAP',''),
-                    # "price": limit_buy_price,
-                    # "created_at": str(datetime.now()),
-                    # "volume": limit_buy_size,
-                    # "direction": htx_direction,
-                    # "offset": "open",
-                    # "lever_rate": 5,
-                    # "order_price_type": "limit"       
-                    # }]
-                    # )
-
-                    result = await self.htx_tradeapi.place_order(self.ccy,body = [{
+                  
+                    result = await self.htx_tradeapi.place_order(self.ccy,body = {
                     "contract_code": self.ccy.replace('-SWAP',''),
                     "price": limit_buy_price,
                     "created_at": str(datetime.now()),
@@ -424,11 +415,10 @@ class Diaoyu:
                     "offset": "open",
                     "lever_rate": 5,
                     "order_price_type": "limit"       
-                    }]
+                    }
                     )
                     logger.debug(result)
-                    # self.order_id  = result['data'][0]['ordId']
-                    # self.place_order(result['data'][0]['ordId'],result)
+                    
                     self.order_queue.append(result['data'][0]['ordId'])
 
                 # if cancellation is involved
@@ -438,7 +428,7 @@ class Diaoyu:
                     if int(closing_size) >= int(limit_buy_size):
                         # If there is position that can be closed and there are no more excess positions to carry on
                         # When there is a position  we need to close but no more availability to increase pos
-                        result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = [{
+                        result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
                         "contract_code": self.ccy.replace('-SWAP',''),
                         "price": limit_buy_price,
                         "created_at": str(datetime.now()),
@@ -447,16 +437,15 @@ class Diaoyu:
                         "offset": "close",
                         "lever_rate": 5,
                         "order_price_type":"limit"
-                        }]
+                        }
                         )
-                        # self.order_id  = result['data'][0]['ordId'] if result else None
-                        # self.place_order(result['data'][0]['ordId'],result)
+                      
                         self.order_queue.append(result['data'][0]['ordId'])
 
                     else:
                         # if there is position that can be closed and there are no more excess positions to carry on
                         # when theres pos we need to close but no more availability to increase pos
-                        result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = [{
+                        result = await self.htx_tradeapi.place_order(self.ccy.replace('-SWAP',''),body = {
                         "contract_code": self.ccy.replace('-SWAP',''),
                         "price": limit_buy_price,
                         "created_at": str(datetime.now()),
@@ -465,7 +454,7 @@ class Diaoyu:
                         "offset": "close",
                         "lever_rate": 5,
                         "order_price_type":"limit"
-                        }]
+                        }
                         )
                       
                         self.order_queue.append(result['data'][0]['ordId'])
@@ -499,8 +488,14 @@ class Diaoyu:
             try:
                 self.row['okx_direction'] = okx_direction
                 result = await self.limit_order_function(limit_buy_price, limit_buy_size, htx_direction)
-                self.order_id = result['data'][0]['ordId']
-                logger.debug(f"{self.username}|{self.algoname}| New order placed: {self.order_id}")
+                logger.debug(f"PLACE LIMIT ORDER HTX {result} {type(result) }")
+                # self.order_id = result['data'][0]['ordId']
+                
+                if result['data'][0].get('errors'):
+                    if result['data'][0]['errors'][0]['err_code'] in [1048]:
+                        logger.error(result['data'][0]['errors'][0]['err_msg'])
+                        self.update_db()
+
 
             except Exception as e:
                 logger.error(f"Place Limit order htx:{traceback.format_exc()}")
@@ -566,7 +561,7 @@ class Diaoyu:
 
     def okx_market_order_helper(self,vol,match_order_id):
         try:
-            result = self.okx_tradeapi.place_order(
+            result = self.okx_tradeapi.create_swap_orders(
                         instId= 'BTC-USD-SWAP',
                         tdMode= "cross", 
                         side= self.row['okx_direction'], 
@@ -574,6 +569,7 @@ class Diaoyu:
                         ordType= 'market',
                         sz= vol
                     )
+
             result['data'][0]['exchange']='okx'
             
             if result["code"] == "0":
@@ -591,7 +587,6 @@ class Diaoyu:
                 
                 else:
                     self.order_id  = match_order_id
-                    # self.place_order(match_order_id,result)
 
 
                 self.order_id  = None
@@ -631,7 +626,7 @@ class Diaoyu:
 
                 # Initialize TradeAPI
                 # tradeApi = self.okx_tradeapi
-                # result = tradeApi.place_order(
+                # result = tradeApi.create_swap_orders(
                 #     instId= 'BTC-USD-SWAP',
                 #     tdMode= "cross", 
                 #     side= self.row['okx_direction'], 
@@ -656,7 +651,7 @@ class Diaoyu:
                     
                 #     else:
                 #         self.order_id  = match_order_id
-                #         self.place_order(match_order_id,result)
+                #         self.create_swap_orders(match_order_id,result)
 
 
                 #     self.order_id  = None
