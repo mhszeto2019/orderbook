@@ -1,0 +1,19 @@
+[Unit]
+Description=htx_funding_rate
+After=network.target
+
+[Service]
+Type=simple
+User=brenn # Replace with your actual user
+WorkingDirectory=/var/www/html/orderbook
+ExecStart=/home/brenn/environments/venv/bin/activate/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5002 --workers 1 --pid /home/brenn/gunicorn_folder/htx_funding_rate.pid app.display_engines_rest.get_htx_funding_rate:app
+Environment="VIRTUAL_ENV=/home/brenn/environments/venv/bin/activate"
+Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin"
+Restart=always
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target

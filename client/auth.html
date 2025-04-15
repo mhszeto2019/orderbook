@@ -13,7 +13,6 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            color: #fff;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -21,47 +20,52 @@
         }
 
         .card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
         }
-
         .card-header {
-            background-color: #008CBA;
-            color: white;
+            background-color: #444;         /* Dark slate gray */
+            color: #f0f0f0;                 /* Light gray text */
             text-align: center;
             padding: 30px;
             font-size: 24px;
         }
 
         .card-body {
-            background: #132f44; /* Slightly warmer dark blue */
+            background: #1e1e1e;            /* Rich dark gray */
             padding: 40px;
             border-radius: 15px;
+            border-color: #555;
+
         }
 
         .form-control {
-            background-color: #2c3e50; /* Darker shade of blue-gray for better contrast */
-            border: 1px solid #34495e; /* Subtle contrast for input borders */
-            color: white;
+            background-color: #2a2a2a;      /* Deep gray input background */
+            border: 1px solid #555;         /* Mid-gray border */
+            color: #eee;                    /* Light text */
             margin-bottom: 15px;
         }
 
         .form-control:focus {
-            background-color: #48717b; /* Soft teal for a fresh focus effect */
-            border-color: #2980b9; /* Keep your blue border for consistency */
+            background-color: #333;         /* Slightly lighter on focus */
+            border-color: #888;             /* Highlight with a soft silvery gray */
+            box-shadow: 0 0 0 0.2rem rgba(200, 200, 200, 0.25); /* Optional glow */
+            color: #eee;                    /* Light text */
+
         }
 
-
         .btn-primary {
-            background-color: #008CBA;
-            border-color: #008CBA;
+            background-color: #666;         /* Medium gray button */
+            border-color: #666;
             padding: 12px;
             width: 100%;
             font-size: 18px;
+            color: #fff;
         }
 
         .btn-primary:hover {
-            background-color: #007B8F;
-            border-color: #007B8F;
+            background-color: #555;         /* Darker on hover */
+            border-color: #555;
         }
 
         .toggle-button {
@@ -95,6 +99,18 @@
             text-align: center;
             margin-bottom: 20px;
         }
+        body {
+            background-color: #121212;
+            color: #f0f0f0;
+        }
+        @keyframes subtlePulse {
+            0% {
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            }
+            100% {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+            }
+        }
     </style>
     
 </head>
@@ -112,11 +128,18 @@
                         <div class="logo-container">
                             <!-- <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Crypto Logo" class="crypto-logo">
                               -->
-                            <h2 class="navbar-brand fw-bold fs-2"  style=" 
-                                font-family: 'Orbitron', sans-serif;
-                                font-size: 2.75rem;
-                                letter-spacing: 1px;
-                            ">Falconstead</h2>
+                              <h2 class="navbar-brand fw-bold fs-4"
+                                style="
+                              font-family: 'Orbitron', sans-serif;
+                              letter-spacing: 2px;
+                              background: linear-gradient(90deg, #aaa, #ddd, #aaa);
+                              -webkit-background-clip: text;
+                              -webkit-text-fill-color: transparent;
+                              text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+                              animation: subtlePulse 3s ease-in-out infinite alternate;
+                          ">
+                              Falconstead
+                          </h2>
                             
                         </div>
 
@@ -148,7 +171,7 @@
                             <!-- <form id="signup-form" onsubmit="return validatePasswords()"> -->
                             <form id="signup-form" >
                                 <div class="container mt-4">
-                                    <h5 class="form-label text-primary mb-3">User Details</h5>
+                                    <h5 class="form-label text mb-3">User Details</h5>
 
                                     <div class="mb-3">
                                         <label for="reg-username" class="form-label">Full Name</label>
@@ -333,7 +356,7 @@
     
         
     </script>
-
+ 
 </body>
 
 </html>

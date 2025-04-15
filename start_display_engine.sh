@@ -22,6 +22,7 @@ htx_display_engine_last_trades_port=$HTX_DISPLAY_LAST_TRADES_PORT
 okx_display_engine_last_trades_port=$OKX_DISPLAY_LAST_TRADES_PORT
 
 db_port=$DB_PORT
+
 pid_folder=$PID_FOLDER
 
 

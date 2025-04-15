@@ -31,3 +31,6 @@ pip install -r /var/www/html/orderbook/requirements_venv.txt
 deactivate
 
 echo "Setup completed successfully!"
+
+
+#!/bin/bash
