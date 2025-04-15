@@ -96,6 +96,7 @@ class Diaoyu:
         self.htx_apikey =    self.row['htx_apikey']
         self.htx_secretkey = self.row['htx_secretkey']
         self.htx_tradeapi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",self.row['htx_apikey'],self.row['htx_secretkey'])
+        
         self.okx_api_key = self.row['okx_apikey']
         self.okx_secret_key = self.row['okx_secretkey']
         self.okx_passphrase = self.row['okx_passphrase']
