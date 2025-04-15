@@ -22,6 +22,13 @@ htx_display_engine_last_trades_port=$HTX_DISPLAY_LAST_TRADES_PORT
 okx_display_engine_last_trades_port=$OKX_DISPLAY_LAST_TRADES_PORT
 
 db_port=$DB_PORT
+pid_folder=$PID_FOLDER
+
+
+if [ ! -d "$PID_FOLDER" ]; then
+    echo "Creating gunicorn directory at $PID_FOLDER"
+    mkdir -p "$PID_FOLDER"
+fi
 
 # Start a new tmux session for okx_fundingrate_app
 # tmux new-session -d -s redis_connector
@@ -30,46 +37,46 @@ db_port=$DB_PORT
 # ~~~ ORDERBOOK ~~~
 tmux new-session -d -s okx_display_engine_orderbook
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t okx_display_engine_orderbook "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_orderbook_port --workers 1 app.display_engines_ws.okxbooks:app" C-m
+tmux send-keys -t okx_display_engine_orderbook "source $okxenv && gunicorn --daemon --pid $pid_folder/okx_display_engine_orderbook.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_orderbook_port --workers 1 app.display_engines_ws.okxbooks:app" C-m
 
 tmux new-session -d -s htx_display_engine_orderbook
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t htx_display_engine_orderbook "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_orderbook_port --workers 1 app.display_engines_ws.htxbooks:app" C-m
+tmux send-keys -t htx_display_engine_orderbook "source $venv && gunicorn --daemon --pid $pid_folder/htx_display_engine_orderbook.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_orderbook_port --workers 1 app.display_engines_ws.htxbooks:app" C-m
 
 # ~~~ ASSETS AND POSIITIONS ~~~
 tmux new-session -d -s okx_display_asset_and_position_engine
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t okx_display_asset_and_position_engine "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_asset_and_position_port app.display_engines_rest.okx_positions:app" C-m
+tmux send-keys -t okx_display_asset_and_position_engine "source $okxenv && gunicorn --daemon --pid $pid_folder/okx_display_asset_and_position_engine.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_asset_and_position_port app.display_engines_rest.okx_positions:app" C-m
 
 tmux new-session -d -s htx_display_asset_and_position_engine
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t htx_display_asset_and_position_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_asset_and_position_port app.display_engines_rest.htx_positions:app" C-m
+tmux send-keys -t htx_display_asset_and_position_engine "source $venv && gunicorn --daemon --pid $pid_folder/htx_display_asset_and_position_engine.pid  -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_asset_and_position_port app.display_engines_rest.htx_positions:app" C-m
 
 # ~~~ OPEN ORDERS ~~~
 # OKX OPEN ORDERS ENGINE NOT REQUIRED because it is with trades
 tmux new-session -d -s htx_display_open_orders_engine
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t htx_display_open_orders_engine "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_open_orders_port app.display_engines_rest.htx_open_orders:app --log-level info" C-m
+tmux send-keys -t htx_display_open_orders_engine "source $venv && gunicorn --daemon --pid $pid_folder/htx_display_open_orders_engine.pid  -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$htx_display_engine_open_orders_port app.display_engines_rest.htx_open_orders:app --log-level info" C-m
 
 # ~~~ FUNDING RATE~~~
 tmux new-session -d -s okx_funding_rate
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t okx_funding_rate "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$okx_display_engine_funding_rate_port app.display_engines_rest.get_okx_funding_rate:app --log-level info" C-m
+tmux send-keys -t okx_funding_rate "source $okxenv && gunicorn --daemon --pid $pid_folder/okx_funding_rate.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$okx_display_engine_funding_rate_port app.display_engines_rest.get_okx_funding_rate:app --log-level info" C-m
 
 tmux new-session -d -s htx_funding_rate
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t htx_funding_rate "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_funding_rate_port app.display_engines_rest.get_htx_funding_rate:app --log-level info" C-m
+tmux send-keys -t htx_funding_rate "source $venv && gunicorn --daemon --pid $pid_folder/htx_funding_rate.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_funding_rate_port app.display_engines_rest.get_htx_funding_rate:app --log-level info" C-m
 
 # ~~~ LAST TRADES BY PUBLIC ~~~
 tmux new-session -d -s okx_last_public_trades
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t okx_last_public_trades "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_last_trades_port app.display_engines_rest.get_okx_trade_history:app --log-level info" C-m
+tmux send-keys -t okx_last_public_trades "source $okxenv && gunicorn --daemon --pid $pid_folder/okx_last_public_trades.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$okx_display_engine_last_trades_port app.display_engines_rest.get_okx_trade_history:app --log-level info" C-m
 
 tmux new-session -d -s htx_last_public_trades
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t htx_last_public_trades "source $venv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_last_trades_port app.display_engines_ws.htx_trade_history:app --log-level info" C-m
+tmux send-keys -t htx_last_public_trades "source $venv && gunicorn --daemon --pid $pid_folder/htx_last_public_trades.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$htx_display_engine_last_trades_port app.display_engines_ws.htx_trade_history:app --log-level info" C-m
 
 tmux new-session -d -s db_connection
 # Create a new window within that session, ensuring the environment is sourced
-tmux send-keys -t db_connection "source $okxenv && gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$db_port app.db.db_connection:app --log-level info" C-m
+tmux send-keys -t db_connection "source $okxenv && gunicorn --daemon --pid $pid_folder/db_connection.pid -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers=1 -b 0.0.0.0:$db_port app.db.db_connection:app --log-level info" C-m
 
