@@ -211,7 +211,7 @@ class AlgoFactory:
 
     def update_algo(self, instance_id, algo_details):
         # Update existing strategy
-        shared_state = self.shared_states[instance_id]
+        # shared_state = self.shared_states[instance_id]
         logger.debug('UPDATING NEW STRAT')
         json_data = algo_details.get('data','')
         # Update state in multiprocess
@@ -228,14 +228,15 @@ class AlgoFactory:
 
         logger.info(self.shared_states[instance_id]['filled_vol'])
 
-        strat_and_process = self.algos.get(instance_id)
+        # strat_and_process = self.algos.get(instance_id)
         # print(strat_and_process)
 
-        strat = strat_and_process[0]
+        # strat = strat_and_process[0]
         # print(f"ALGO DETAILS that just got updated:{algo_details}")
         username,algo_type,algo_name = instance_id.split('_')
         qty = int(json_data['qty']) 
-        filled_vol = self.shared_states[instance_id]['filled_vol']
+        # filled_vol = self.shared_states[instance_id]['filled_vol']
+
         print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
 
         # if json_data['state']: #if status is True which means algo is on
@@ -329,7 +330,7 @@ class AlgoFactory:
         # Create the new strategy instance (Diaoyu)
     
         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
-        self.initialise_strat(row_dict['algo_type'],instance_id,self.conn.cursor())
+        self.initialise_strat(row_dict['algo_type'],instance_id,psycopg2.connect(**DB_CONFIG).cursor())
 
         for p in self.processes:
             p.join
@@ -367,113 +368,6 @@ class AlgoFactory:
         """Get an Algo instance."""
         with self.lock:
             return self.algos.get(algo_id)
-
-    # def execute_all(self):
-    #     """Execute all algorithms in parallel using multiprocessing."""
-
-    #     cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #     cur.execute("""SELECT
-    #         ad.username,
-    #         ad.algo_type,
-    #         ad.algo_name,
-    #         ad.lead_exchange,
-    #         ad.lag_exchange,
-    #         ad.spread,
-    #         ad.qty,
-    #         ad.ccy,
-    #         ad.instrument,
-    #         ad.contract_type,
-    #         ad.state,
-    #         MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
-    #         MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
-    #         MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
-    #         MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
-    #         MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase
-    #         FROM algo_dets ad
-    #         LEFT JOIN api_credentials ac ON ad.username = ac.username
-    #         GROUP BY ad.username, ad.algo_type, ad.algo_name, ad.lead_exchange,
-    #                 ad.lag_exchange, ad.spread, ad.qty, ad.ccy, ad.instrument,
-    #                 ad.contract_type, ad.state"""
-    #     )
-
-    #     algo_details = cur.fetchall()
-        
-    #     # ----------------------
-    #     # STEP 1: Populate algo count
-    #     # ----------------------
-    #     for row in algo_details:
-    #         username = row[0]
-    #         algo_type = row[1]
-    #         algo_name = row[2]
-    #         spread = int(row[5])
-    #         qty = int(row[6])
-
-    #         if username not in self.user_algo_type_count:
-    #             self.user_algo_type_count[username] = {'net_availability': 0}
-
-    #         if algo_type not in self.user_algo_type_count[username]:
-    #             self.user_algo_type_count[username][algo_type] = {}
-
-    #         if algo_name not in self.user_algo_type_count[username][algo_type]:
-    #             if algo_type == 'diaoyu':
-    #                 buy_amt = qty if spread > 0 else 0
-    #                 sell_amt = qty if spread < 0 else 0
-    #             else:
-    #                 buy_amt = qty if spread < 0 else 0
-    #                 sell_amt = qty if spread > 0 else 0
-
-    #             self.user_algo_type_count[username][algo_type][algo_name] = {
-    #                 'buy': buy_amt,
-    #                 'sell': sell_amt,
-    #                 'filled_amount': 0,
-    #                 'remaining_amount': 0,
-    #                 'average_fill_price': 0.0,
-    #                 'total_executed_value': 0.0,
-    #                 'max_position_limit': 100,
-    #                 'start_time': None,
-    #                 'end_time': None,
-    #                 'execution_log': [],
-    #                 'error_log': [],
-    #                 'status': False
-    #             }
-
-    #     # ----------------------
-    #     # STEP 2: Init shared state and spawn strategies
-    #     # ----------------------
-    #     for row in algo_details:
-    #         row_dict = {
-    #             'username': row[0],
-    #             'algo_type': row[1],
-    #             'algo_name': row[2],
-    #             'lead_exchange': row[3],
-    #             'lag_exchange': row[4],
-    #             'spread': row[5],
-    #             'qty': row[6],
-    #             'ccy': row[7],
-    #             'instrument': row[8],
-    #             'contract_type': row[9],
-    #             'state': row[10],
-    #             'htx_apikey': row[11],
-    #             'htx_secretkey': row[12],
-    #             'okx_apikey': row[13],
-    #             'okx_secretkey': row[14],
-    #             'okx_passphrase': row[15],
-    #             'filled_vol': 0,
-    #         }
-
-    #         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
-    #         self.shared_states[instance_id] = self.manager.dict(row_dict)
-
-    #         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
-    #         self.initialise_strat(
-    #             row_dict['algo_type'],
-    #             instance_id,
-    #             psycopg2.connect(**DB_CONFIG).cursor()
-    #         )
-
-    #     for p in self.processes:
-    #         p.join()
-
 
     def execute_all(self):
         """Execute all algorithms in parallel using multiprocessing."""
@@ -599,110 +493,6 @@ class AlgoFactory:
         
 
 
-
-    # def execute_all(self):
-    #     """Execute all algorithms in parallel using multiprocessing."""
-    #     cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #     cur.execute("""select
-    #         ad.username,
-    #         ad.algo_type,
-    #         ad.algo_name,
-    #         ad.lead_exchange,
-    #         ad.lag_exchange ,
-    #         ad.spread,
-    #         ad.qty,
-    #         ad.ccy,
-    #         ad.instrument,
-    #         ad.contract_type,
-    #         ad.state,
-    #         MAX(CASE WHEN exchange = 'htx' THEN apikey END) AS htx_apikey,
-    #         MAX(CASE WHEN exchange = 'htx' THEN secretkey END) AS htx_secretkey,
-    #         MAX(CASE WHEN exchange = 'okx' THEN apikey END) AS okx_apikey,
-    #         MAX(CASE WHEN exchange = 'okx' THEN secretkey END) AS okx_secretkey,
-    #         MAX(CASE WHEN exchange = 'okx' THEN passphrase END) AS okx_passphrase
-    #         FROM algo_dets ad left join api_credentials ac on ad.username = ac.username  group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
-    #     )
-    #     algo_details = cur.fetchall()
-    #     for row in algo_details:
-       
-    #         row_dict = {}
-    #         row_dict['username'] =  row[0]
-    #         row_dict['algo_type'] = row[1]
-    #         row_dict['algo_name'] = row[2]
-    #         row_dict['lead_exchange'] = row[3]
-    #         row_dict['lag_exchange'] = row[4]
-    #         row_dict['spread']= row[5]
-    #         row_dict['qty'] = row[6]
-    #         row_dict['ccy'] = row[7]
-    #         row_dict['instrument'] = row[8]
-    #         row_dict['contract_type'] = row[9]
-    #         row_dict['state'] = row[10]
-    #         # row_dict['trade_direction'] = row[11]
-    #         row_dict['htx_apikey'] = row[11]
-    #         row_dict['htx_secretkey'] = row[12]
-    #         row_dict['okx_apikey'] = row[13]
-    #         row_dict['okx_secretkey'] = row[14]
-    #         row_dict['okx_passphrase'] = row[15]
-    #         row_dict['filled_vol'] = 0
-
-    #         # INITIALISING USER_ALGO_TYPE_COUNT
-    #         # Check if the username exists, if not, initialize it
-    #         if row_dict['username'] not in self.user_algo_type_count:
-    #             self.user_algo_type_count[row_dict['username']] = {'net_availability': 0}
-
-    #         # Check if the algo_type exists for this username, if not, initialize it
-    #         if row_dict['algo_type'] not in self.user_algo_type_count[row_dict['username']]:
-    #             self.user_algo_type_count[row_dict['username']][row_dict['algo_type']] = {}
-
-    #         # Check if the algo_name exists for this algorithm type, if not, initialize it
-    #         if row_dict['algo_name'] not in self.user_algo_type_count[row_dict['username']][row_dict['algo_type']]:
-                
-    #             if row_dict['algo_type'] == 'diaoyu':
-
-    #                 buy_amt = int(row_dict['qty']) if int(row_dict['spread']) > 0 else 0
-    #                 sell_amt = int(row_dict['qty']) if int(row_dict['spread']) < 0 else 0
-    #             else:
-    #                 buy_amt = int(row_dict['qty']) if int(row_dict['spread']) < 0 else 0
-    #                 sell_amt = int(row_dict['qty']) if int(row_dict['spread']) > 0 else 0
-
-    #             self.user_algo_type_count[row_dict['username']][row_dict['algo_type']][row_dict['algo_name']] = {
-    #                 'buy': buy_amt,
-    #                 'sell': sell_amt,
-    #                 'filled_amount': 0,
-    #                 'remaining_amount': 0,
-    #                 'average_fill_price': 0.0,
-    #                 'total_executed_value': 0.0,
-    #                 'max_position_limit': 100,
-    #                 'start_time': None,
-    #                 'end_time': None,
-    #                 'execution_log': [],
-    #                 'error_log': [],
-    #                 'status': False
-    #             }
-
-          
-
-
-
-
-
-    #         # Create a unique instance ID
-    #         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
-         
-    #         key,jwt_token = '',''
-    #         # Initialize the strategy
-    #         # Since Diaoyu is trading SWAP, we will keep contract type as None
-    #         self.shared_states[instance_id] = self.manager.dict(row_dict)
-    #         # each multiprocess should have its own connection to db
-    #         logger.debug(f"CREATING NEW STRAT with - {self.shared_states[instance_id]}")
-        
-            
-    #         self.initialise_strat(row_dict['algo_type'],instance_id,psycopg2.connect(**DB_CONFIG).cursor())
-
-  
-
-    #     for p in self.processes:
-    #         p.join()
         
     def handle_termination_signal(self,signum, frame):
         """Signal handler for termination signals (SIGINT, SIGTERM)."""
