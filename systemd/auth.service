@@ -4,14 +4,14 @@ venv="/home/brenn/environments/venv"
 okxenv="/home/brenn/environments/okx"
 
 [Unit]
-Description=Gunicorn instance for htxbooks
+Description=Gunicorn instance for auth
 After=network.target
 
 [Service]
 User=brenn
-Group=brenn
+Group=
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=/home/brenn/environments/venv/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5091 --pid /home/brenn/gunicorn_folder/htxbooks.pid --access-logfile /home/brenn/gunicorn_folder/.log --error-logfile /home/brenn/gunicorn_folder/htxbooks.log app.display_engines_ws.htxbooks:app
+ExecStart=/home/brenn/environments/venv/bin/gunicorn -w 1 -b 0.0.0.0:5000 --pid /home/brenn/gunicorn_folder/auth.pid --access-logfile /home/brenn/gunicorn_folder/.log --error-logfile /home/brenn/gunicorn_folder/auth.log app.auth:app
 Environment="VIRTUAL_ENV=/home/brenn/environments/venv"
 Environment="PATH=$venv:$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

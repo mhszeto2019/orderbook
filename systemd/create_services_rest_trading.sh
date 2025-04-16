@@ -5,29 +5,21 @@
 source /var/www/html/orderbook/config_folder/bashconfig.env
 
 # Define the path to your virtual environment activation script
-venv="/home/brenn/environments/venv"
-okxenv="/home/brenn/environments/okx"
+venv="$HOME/environments/venv"
+okxenv="$HOME/environments/okx"
 
 # Directories for storing PID files and logs
-PID_FOLDER="/home/brenn/gunicorn_folder"
-USER="brenn"
-GROUP="brenn"
+PID_FOLDER="$HOME/gunicorn_folder"
+USER=$USER
+GROUP=$GROUP
 SERVICE_DIR="/var/www/html/orderbook/systemd" 
 
 # List of services with corresponding port variables
 declare -A SERVICES_PORTS
 SERVICES_PORTS=(
-  ["htxbooks"]=$HTX_DISPLAY_ORDERBOOK_PORT
-  ["okxbooks"]=$OKX_DISPLAY_ORDERBOOK_PORT
-  ["htx_display_engine_asset_and_position"]=$HTX_DISPLAY_ASSET_AND_POSITION_PORT
-  ["okx_display_engine_asset_and_position"]=$OKX_DISPLAY_ASSET_AND_POSITION_PORT
-  ["htx_display_engine_open_orders"]=$HTX_DISPLAY_OPEN_ORDERS_PORT
-  ["okx_display_engine_open_orders"]=$OKX_DISPLAY_OPEN_ORDERS_PORT
-  ["htx_display_engine_funding_rate"]=$HTX_DISPLAY_FUNDING_RATE_PORT
-  ["okx_display_engine_funding_rate"]=$OKX_DISPLAY_FUNDING_RATE_PORT
-  ["htx_display_engine_last_trades"]=$HTX_DISPLAY_LAST_TRADES_PORT
-  ["okx_display_engine_last_trades"]=$OKX_DISPLAY_LAST_TRADES_PORT
-  ["db_connection"]=$DB_PORT
+  ["htxTradeFuturesApp"]=$HTX_TRADING_PORT #REST
+  ["okxTradeApp"]=$OKX_TRADING_PORT #REST
+
 )
 
 # Loop through the services and create systemd files
@@ -44,8 +36,11 @@ for SERVICE_NAME in "${!SERVICES_PORTS[@]}"; do
 
     ENV_PATH_STR="\$okxenv"  # Use the okxenv environment for okx services
   else
-    echo "Unknown service type for $SERVICE_NAME, skipping."
-    continue
+  # can be changed if we dont want to use okx env in the future
+    ENV_PATH="$okxenv"
+    ENV_PATH_STR="\$okxenv"  # Use the okxenv environment for okx services
+    # echo "Unknown service type for $SERVICE_NAME, skipping."
+    # continue
   fi
   
   # Check if the service file already exists in the systemd folder, and delete it if it does
@@ -58,8 +53,8 @@ for SERVICE_NAME in "${!SERVICES_PORTS[@]}"; do
   cat <<EOF > "$SERVICE_DIR/$SERVICE_NAME.service"
 
 source /var/www/html/config_folder/bashconfig.env
-venv="/home/brenn/environments/venv"
-okxenv="/home/brenn/environments/okx"
+venv="$HOME/environments/venv"
+okxenv="$HOME/environments/okx"
 
 [Unit]
 Description=Gunicorn instance for $SERVICE_NAME
@@ -69,7 +64,7 @@ After=network.target
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$PORT --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.display_engines_ws.$SERVICE_NAME:app
+ExecStart=$ENV_PATH/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$PORT --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.trading_engines.$SERVICE_NAME:app
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

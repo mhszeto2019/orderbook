@@ -21,7 +21,7 @@
 BASE_LOG_DIR="/var/www/html/orderbook/logs"
 
 # List of log filenames to process
-LOG_FILES=("diaoyu.log" "diaoxia.log" )  # add more here
+LOG_FILES=("diaoyu.log" "diaoxia.log" "HtxOrderClass.log" )  # add more here
 
 # Today's date folder
 DATE_FOLDER="$(date +%F)"

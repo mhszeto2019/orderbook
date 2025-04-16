@@ -336,10 +336,12 @@ class Diaoxia:
             # Short position: Allow buy only to close
             if abs(remaining_pos) >= diaoxia_buy:
                 trade_type["buy"] = "close"
+                trade_type["sell"] = "open"
 
         elif net_availability > 0 and diaoxia_sell > 0:
             # Long position: Allow sell only to close
             if remaining_pos >= diaoxia_sell:
+                trade_type["buy"] = "open"
                 trade_type["sell"] = "close"
 
         elif net_availability == 0:
