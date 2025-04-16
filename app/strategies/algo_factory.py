@@ -179,10 +179,13 @@ class AlgoFactory:
         # If there is position, prioritise on closing first
 
         logger.info(f"POSITION DATA {position_data}")
-        direction = position_data[0]['direction']
+        if position_data:
+            direction = position_data[0]['direction']
 
-        availability = int(position_data[0]['volume']) if direction == 'buy' else -int(position_data[0]['volume'])
-    
+            availability = int(position_data[0]['volume']) if direction == 'buy' else -int(position_data[0]['volume'])
+        else:
+            availability = 0
+            
         logger.info(availability)
         return availability
 
@@ -281,7 +284,7 @@ class AlgoFactory:
 
         for instance_id in self.shared_states:
             if username in instance_id:
-                self.shared_states[instance_id]['user_algo_type_count']['net_availability'] = positions
+                self.user_algo_type_count[username]['net_availability'] = positions
                 self.shared_states[instance_id]['user_algo_type_count'] = self.user_algo_type_count
 
      

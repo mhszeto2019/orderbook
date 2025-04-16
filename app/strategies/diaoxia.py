@@ -349,6 +349,40 @@ class Diaoxia:
 
         return trade_type
 
+    def run_tasks(self, tasks):
+        async def runner():
+            await asyncio.gather(*tasks)
+
+        try:
+            # If we're already in an async context, schedule it
+            loop = asyncio.get_running_loop()
+            return asyncio.create_task(runner())
+        except RuntimeError:
+            # Not in an async context — safe to use asyncio.run
+            return asyncio.run(runner())
+
+    async def run_orders_and_update_state(self, min_avail_amt_buy):
+        await asyncio.gather(
+            self.place_market_order_htx(min_avail_amt_buy, self.lag_direction),
+            self.place_market_order_okx(min_avail_amt_buy, self.lead_direction),
+        )
+
+        # Step 1: Read the entire shared user_algo_type_count object
+        user_data = self.row['user_algo_type_count']
+
+        # Step 2: Modify the nested algo data
+        algo_data = user_data[self.username][self.algotype][self.algoname]
+        algo_data['filled_amount'] += min_avail_amt_buy
+        algo_data['remaining_amount'] -= min_avail_amt_buy
+
+        # Step 3: Write it back to ensure the shared state gets updated
+        user_data[self.username][self.algotype][self.algoname] = algo_data
+        self.row['user_algo_type_count'] = user_data
+
+
+        # Re-assign the modified dict back to ensure update is synced across processes
+        user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
+        
 
 
     def check_condition(self, spread :int, callback):
@@ -363,11 +397,12 @@ class Diaoxia:
         user_algo_type_count_dict = self.row['user_algo_type_count'][self.username]
         filled_amt = user_algo_type_count_dict[self.algotype][self.algoname]['filled_amount']
         remaining_amount = user_algo_type_count_dict[self.algotype][self.algoname]['remaining_amount']
+        logger.debug(f"net_avail{user_algo_type_count_dict['net_availability']}| remaining_amount:{remaining_amount}| filled_amt:{filled_amt}")
 
-        if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
-            logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
-            # self.diaoxia_offset = 'close'
-            self.update_db()
+        # if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
+        #     logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
+        #     # self.diaoxia_offset = 'close'
+        #     self.update_db()
 
         self.diaoxia_offset = self.determine_trade_type(user_algo_type_count_dict)
         # print(f"diaoxia_offset_time: {time.time() - next_current_time}")
@@ -397,44 +432,34 @@ class Diaoxia:
 
             # sell htx
             # Check spread conditions for order execution
+            self.order_tasks = []
             if spread > 0 and bid_ask_spread_1 >= spread:
                 logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]}|htx:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}|okx:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|Net_Avail:{self.net_volume} TL_B:{self.total_buy}|TL_S:{self.total_sell}|DY_B:{self.diaoyu_buy}|DY_S:{self.diaoyu_sell}|DX_B:{self.diaoxia_buy}|DX_S:{self.diaoxia_sell} SPREAD DETECTED Count:{self.check_count} ")
 
-            
+
 
                 if self.check_count == self.check_requirement_count:
-                    asyncio.gather(
-                        self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
-                        self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
-                    )
+                    # asyncio.gather(
+                    #     self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
+                    #     self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
+                    # )
+                    asyncio.create_task(self.run_orders_and_update_state(min_avail_amt_buy))
+
                     # task_htx = asyncio.create_task(self.place_market_order_htx(min_avail_amt_sell, self.lag_direction))
                     # task_okx = asyncio.create_task(self.place_market_order_okx(min_avail_amt_sell, self.lead_direction))
-
+                    # self.order_tasks.append(self.place_market_order_htx(min_avail_amt_buy, self.lag_direction))
+                    # self.order_tasks.append(self.place_market_order_okx(min_avail_amt_sell, self.lead_direction))
+                    
                     # user_algo_type_count_dict[self.algotype][self.algoname]['filled_amount'] += min_avail_amt_buy
                     # user_algo_type_count_dict[self.algotype][self.algoname]['remaining_amount'] -= min_avail_amt_buy
                     # UPDATE SHARED STATE
                    
-                    # # Step 1: Read the entire shared user_algo_type_count object
-                    # user_data = self.row['user_algo_type_count']
-
-                    # # Step 2: Modify the nested algo data
-                    # algo_data = user_data[self.username][self.algotype][self.algoname]
-                    # algo_data['filled_amount'] += min_avail_amt_buy
-                    # algo_data['remaining_amount'] -= min_avail_amt_buy
-
-                    # # Step 3: Write it back to ensure the shared state gets updated
-                    # user_data[self.username][self.algotype][self.algoname] = algo_data
-                    # self.row['user_algo_type_count'] = user_data
-
-
-                    # # Re-assign the modified dict back to ensure update is synced across processes
-                    # user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
                     
                     self.check_count = 0
                 else:
                     self.check_count += 1
                     time.sleep(self.call_interval)
-
+            
 
 
             # buy htx
@@ -451,29 +476,36 @@ class Diaoxia:
 
                 if self.check_count == self.check_requirement_count:
 
-                    asyncio.gather(
-                        self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
-                        self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
-                    )
+                    # asyncio.gather(
+                    #     self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
+                    #     self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
+                    # )
+                    asyncio.create_task(self.run_orders_and_update_state(min_avail_amt_buy))
+
                     # task_htx = asyncio.create_task(self.place_market_order_htx(min_avail_amt_sell, self.lag_direction))
                     # task_okx = asyncio.create_task(self.place_market_order_okx(min_avail_amt_sell, self.lead_direction))
                    
-                    # UPDATE SHARED STATE
+
+                    # self.order_tasks.append(self.place_market_order_htx(min_avail_amt_buy, self.lag_direction))
+                    # self.order_tasks.append(self.place_market_order_okx(min_avail_amt_sell, self.lead_direction))
+                    # asyncio.run(self._run_tasks(self.order_tasks))
+
+                    # # UPDATE SHARED STATE
                    
-                    # Step 1: Read the entire shared user_algo_type_count object
-                    user_data = self.row['user_algo_type_count']
+                    # # Step 1: Read the entire shared user_algo_type_count object
+                    # user_data = self.row['user_algo_type_count']
 
-                    # Step 2: Modify the nested algo data
-                    algo_data = user_data[self.username][self.algotype][self.algoname]
-                    algo_data['filled_amount'] += min_avail_amt_buy
-                    algo_data['remaining_amount'] -= min_avail_amt_buy
+                    # # Step 2: Modify the nested algo data
+                    # algo_data = user_data[self.username][self.algotype][self.algoname]
+                    # algo_data['filled_amount'] += min_avail_amt_buy
+                    # algo_data['remaining_amount'] -= min_avail_amt_buy
 
-                    # Step 3: Write it back to ensure the shared state gets updated
-                    user_data[self.username][self.algotype][self.algoname] = algo_data
-                    self.row['user_algo_type_count'] = user_data
+                    # # Step 3: Write it back to ensure the shared state gets updated
+                    # user_data[self.username][self.algotype][self.algoname] = algo_data
+                    # self.row['user_algo_type_count'] = user_data
 
           
-                    user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
+                    # user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
 
 
 
@@ -487,6 +519,16 @@ class Diaoxia:
                     
             else:
                 self.check_count = 0
+
+
+            # x = self._run_tasks(self.order_tasks)
+            # logger.debug(f"XVLAUE:{x} tasks: {self.order_tasks}")
+
+                   
+           
+
+
+            
             
             check_condition_time_end = time.time() - check_condition_time_start
             print(f"DIAOXIA OFFSET_TIME:{check_diaoxia_offset_time_end}| CONDITION CHECK:{check_condition_time_end} TL_TIME:{check_diaoxia_offset_time_end+check_condition_time_end}")
