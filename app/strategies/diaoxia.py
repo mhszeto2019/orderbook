@@ -336,12 +336,10 @@ class Diaoxia:
             # Short position: Allow buy only to close
             if abs(remaining_pos) >= diaoxia_buy:
                 trade_type["buy"] = "close"
-                trade_type["sell"] = "open"
 
         elif net_availability > 0 and diaoxia_sell > 0:
             # Long position: Allow sell only to close
             if remaining_pos >= diaoxia_sell:
-                trade_type["buy"] = "open"
                 trade_type["sell"] = "close"
 
         elif net_availability == 0:
@@ -416,21 +414,21 @@ class Diaoxia:
                     # user_algo_type_count_dict[self.algotype][self.algoname]['remaining_amount'] -= min_avail_amt_buy
                     # UPDATE SHARED STATE
                    
-                    # Step 1: Read the entire shared user_algo_type_count object
-                    user_data = self.row['user_algo_type_count']
+                    # # Step 1: Read the entire shared user_algo_type_count object
+                    # user_data = self.row['user_algo_type_count']
 
-                    # Step 2: Modify the nested algo data
-                    algo_data = user_data[self.username][self.algotype][self.algoname]
-                    algo_data['filled_amount'] += min_avail_amt_buy
-                    algo_data['remaining_amount'] -= min_avail_amt_buy
+                    # # Step 2: Modify the nested algo data
+                    # algo_data = user_data[self.username][self.algotype][self.algoname]
+                    # algo_data['filled_amount'] += min_avail_amt_buy
+                    # algo_data['remaining_amount'] -= min_avail_amt_buy
 
-                    # Step 3: Write it back to ensure the shared state gets updated
-                    user_data[self.username][self.algotype][self.algoname] = algo_data
-                    self.row['user_algo_type_count'] = user_data
+                    # # Step 3: Write it back to ensure the shared state gets updated
+                    # user_data[self.username][self.algotype][self.algoname] = algo_data
+                    # self.row['user_algo_type_count'] = user_data
 
 
-                    # Re-assign the modified dict back to ensure update is synced across processes
-                    user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
+                    # # Re-assign the modified dict back to ensure update is synced across processes
+                    # user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
                     
                     self.check_count = 0
                 else:
@@ -473,6 +471,12 @@ class Diaoxia:
                     # Step 3: Write it back to ensure the shared state gets updated
                     user_data[self.username][self.algotype][self.algoname] = algo_data
                     self.row['user_algo_type_count'] = user_data
+
+          
+                    user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
+
+
+
                     
 
                     self.check_count = 0

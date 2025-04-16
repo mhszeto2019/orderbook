@@ -40,6 +40,7 @@ dbname = config[config_source]['dbname']
 app = Flask(__name__)
 
 
+
 # Database configuration
 DB_CONFIG = {
     "dbname": dbname,
@@ -145,6 +146,9 @@ class AlgoFactory:
         self.queue = multiprocessing.Manager().Queue()
         self.user_algo_type_count = {}
 
+     
+        
+
 
     def initialise_strat(self,algo_type,instance_id,db_cursor):
         if algo_type == 'diaoyu':
@@ -164,6 +168,101 @@ class AlgoFactory:
         # Start the process
         process.start()
         self.processes.append(process)
+
+
+    def update_user_algo_type_count(self, username: str, algotype: str, spread: int, qty: int):
+        """Updates buy/sell counts for a user's algorithm type."""  
+        if algotype == 'diaoyu':
+            side = 'buy' if spread > 0 else 'sell'
+        elif algotype == 'diaoxia':
+            # if spread is negative, it sells on okx buy on htx
+            side = 'sell' if spread > 0 else 'buy'
+        # Safely update buy/sell count
+        
+        if self.user_algo_type_count[username][algotype][side]  < 0:
+            self.user_algo_type_count[username][algotype][side] = 0 
+        self.user_algo_type_count[username][algotype][side] += qty 
+
+    def reset_algo_count(self,username,algotype, algoname):
+        # self.user_algo_type_count[username][algotype][algoname] = {
+        #     'buy': 0,
+        #     'sell': 0,
+        #     'filled_amount': 0,
+        #     'remaining_amount': 0,
+        #     'average_fill_price': 0.0,
+        #     'total_executed_value': 0.0,
+        #     'max_position_limit': 100,
+        #     'start_time': None,
+        #     'end_time': None,
+        #     'execution_log': [],
+        #     'error_log': [],
+        #     'status': False
+        # }
+        
+        
+        self.user_algo_type_count[username][algotype][algoname]['filled_amount'] = 0
+        self.user_algo_type_count[username][algotype][algoname]['remaining_amount'] = self.user_algo_type_count[username][algotype][algoname]['buy'] if self.user_algo_type_count[username][algotype][algoname]['buy'] else self.user_algo_type_count[username][algotype][algoname]['sell']
+        self.user_algo_type_count[username][algotype][algoname]['total_executed_value'] = 0.0
+        self.user_algo_type_count[username][algotype][algoname]['start_time'] = None
+        self.user_algo_type_count[username][algotype][algoname]['end_time'] = None
+        self.user_algo_type_count[username][algotype][algoname]['execution_log'] = []
+        self.user_algo_type_count[username][algotype][algoname]['error_log'] = []
+        self.user_algo_type_count[username][algotype][algoname]['status'] =False
+
+        
+
+
+
+
+
+
+
+    def update_algo(self, instance_id, algo_details):
+        
+        # Update existing strategy
+        # shared_state = self.shared_states[instance_id]
+        logger.debug('UPDATING NEW STRAT')
+        json_data = algo_details.get('data','')
+        # Update state in multiprocess
+        self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
+        self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
+        self.shared_states[instance_id]['spread'] = json_data['spread']
+        self.shared_states[instance_id]['qty'] = json_data['qty']
+        self.shared_states[instance_id]['ccy'] = json_data['ccy']
+        self.shared_states[instance_id]['instrument'] = json_data['instrument']
+        self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
+        self.shared_states[instance_id]['state'] =  json_data['state']
+        # self.shared_states[instance_id]['filled_vol'] = json_data['filled_vol']
+        # self.shared_states[instance_id]['filled_qty'] = json_data['filled_qty']
+
+        logger.info(self.shared_states[instance_id]['filled_vol'])
+
+        # strat_and_process = self.algos.get(instance_id)
+        # print(strat_and_process)
+
+        # strat = strat_and_process[0]
+        # print(f"ALGO DETAILS that just got updated:{algo_details}")
+        username,algo_type,algo_name = instance_id.split('_')
+        qty = int(json_data['qty']) 
+        # filled_vol = self.shared_states[instance_id]['filled_vol']
+
+        print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
+
+        # if json_data['state']: #if status is True which means algo is on
+        #     self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
+        # else:
+        #     self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),-qty)
+
+        if not json_data['state']: #if status is False we reset the algo
+            self.reset_algo_count(username,algo_type,algo_name)
+        else:
+            self.user_algo_type_count[username][algo_type][algo_name]['status'] = True
+        logger.info("Updating algo")
+        logger.info(self.user_algo_type_count)
+
+        for instance_id in self.shared_states:
+            if username in instance_id:
+                self.shared_states[instance_id]['user_algo_type_count'] = self.user_algo_type_count
 
     async def get_positions_async(self,apikey,secretkey):
         positions = await HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",apikey,secretkey).get_positions('BTC',body = {
@@ -185,106 +284,6 @@ class AlgoFactory:
     
         logger.info(availability)
         return availability
-
-    def update_user_algo_type_count(self, username: str, algotype: str, spread: int, qty: int):
-        """Updates buy/sell counts for a user's algorithm type."""  
-        if algotype == 'diaoyu':
-            side = 'buy' if spread > 0 else 'sell'
-        elif algotype == 'diaoxia':
-            # if spread is negative, it sells on okx buy on htx
-            side = 'sell' if spread > 0 else 'buy'
-        # Safely update buy/sell count
-        
-        if self.user_algo_type_count[username][algotype][side]  < 0:
-            self.user_algo_type_count[username][algotype][side] = 0 
-        self.user_algo_type_count[username][algotype][side] += qty 
-
-
-
-    def reset_algo_count(self,username,algotype, algoname):
-        # self.user_algo_type_count[username][algotype][algoname] = {
-        #     'buy': 0,
-        #     'sell': 0,
-        #     'filled_amount': 0,
-        #     'remaining_amount': 0,
-        #     'average_fill_price': 0.0,
-        #     'total_executed_value': 0.0,
-        #     'max_position_limit': 100,
-        #     'start_time': None,
-        #     'end_time': None,
-        #     'execution_log': [],
-        #     'error_log': [],
-        #     'status': False
-        # }
-        self.user_algo_type_count[username][algotype][algoname]['filled_amount'] = 0
-        self.user_algo_type_count[username][algotype][algoname]['remaining_amount'] = self.user_algo_type_count[username][algotype][algoname]['buy'] if self.user_algo_type_count[username][algotype][algoname]['buy'] else self.user_algo_type_count[username][algotype][algoname]['sell']
-        self.user_algo_type_count[username][algotype][algoname]['total_executed_value'] = 0.0
-        self.user_algo_type_count[username][algotype][algoname]['start_time'] = None
-        self.user_algo_type_count[username][algotype][algoname]['end_time'] = None
-        self.user_algo_type_count[username][algotype][algoname]['execution_log'] = []
-        self.user_algo_type_count[username][algotype][algoname]['error_log'] = []
-        self.user_algo_type_count[username][algotype][algoname]['status'] =False
-
-        
-
-
-
-
-
-
-
-    def update_algo(self, instance_id, algo_details):
-        # Update existing strategy
-        # shared_state = self.shared_states[instance_id]
-        logger.debug('UPDATING NEW STRAT')
-        json_data = algo_details.get('data','')
-        # Update state in multiprocess
-     
-        # logger.info(f"{self.shared_state[instance_id]['htx_apikey']}")
-        # logger.info(algo_details)
-        # print(self.shared_states[instance_id]['htx_apikey'], flush=True)
-        htx_apikey = self.shared_states[instance_id]['htx_apikey']
-        htx_secretkey = self.shared_states[instance_id]['htx_secretkey']
-        positions =  asyncio.run(self.get_positions_async(htx_apikey,htx_secretkey))
-        
-        self.shared_states[instance_id]['lead_exchange'] = json_data['lead_exchange']
-        self.shared_states[instance_id]['lag_exchange'] = json_data['lag_exchange']
-        self.shared_states[instance_id]['spread'] = json_data['spread']
-        self.shared_states[instance_id]['qty'] = json_data['qty']
-        self.shared_states[instance_id]['ccy'] = json_data['ccy']
-        self.shared_states[instance_id]['instrument'] = json_data['instrument']
-        self.shared_states[instance_id]['contract_type'] = json_data['contract_type']
-        self.shared_states[instance_id]['state'] =  json_data['state']
-        # self.shared_states[instance_id]['filled_vol'] = json_data['filled_vol']
-        # self.shared_states[instance_id]['filled_qty'] = json_data['filled_qty']
-
-
-    
-        username,algo_type,algo_name = instance_id.split('_')
-        qty = int(json_data['qty']) 
-        # filled_vol = self.shared_states[instance_id]['filled_vol']
-
-        print(f"{username} |{algo_type}| json: {json_data['spread']} qty:{qty}")
-
-        # if json_data['state']: #if status is True which means algo is on
-        #     self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),qty)
-        # else:
-        #     self.update_user_algo_type_count(username,algo_type,int(json_data['spread']),-qty)
-
-        if not json_data['state']: #if status is False we reset the algo
-            self.reset_algo_count(username,algo_type,algo_name)
-        else:
-
-            self.user_algo_type_count[username][algo_type][algo_name]['status'] = True
-        logger.info("Updating algo")
-        logger.info(self.user_algo_type_count)
-
-        for instance_id in self.shared_states:
-            if username in instance_id:
-                self.shared_states[instance_id]['user_algo_type_count']['net_availability'] = positions
-                self.shared_states[instance_id]['user_algo_type_count'] = self.user_algo_type_count
-
-     
 
     def add_algo(self, instance_id, algo_details):
         """Add a new strategy or update an existing one."""
@@ -316,10 +315,14 @@ class AlgoFactory:
         # row_dict[f'{row_dict['username']}_queue'] = self.queue
         
         instance_id = f"{row_dict['username']}_{row_dict['algo_type']}_{row_dict['algo_name']}"
+        positions = asyncio.run(self.get_positions_async(row_dict['htx_apikey'],row_dict['htx_secretkey']))
+        # logger.info(positions)
+      
 
+        
         # Check if the username exists, if not, initialize it
         if row_dict['username'] not in self.user_algo_type_count:
-            self.user_algo_type_count[row_dict['username']] = {'net_availability': 0}
+            self.user_algo_type_count[row_dict['username']] = {'net_availability': positions}
 
         # Check if the algo_type exists for this username, if not, initialize it
         if row_dict['algo_type'] not in self.user_algo_type_count[row_dict['username']]:
@@ -444,9 +447,14 @@ class AlgoFactory:
             row_dict['filled_vol'] = 0
 
             # INITIALISING USER_ALGO_TYPE_COUNT
+
+            positions = asyncio.run(self.get_positions_async(row_dict['htx_apikey'],row_dict['htx_secretkey']))
+
+            logger.info(positions)
+
             # Check if the username exists, if not, initialize it
             if row_dict['username'] not in self.user_algo_type_count:
-                self.user_algo_type_count[row_dict['username']] = {'net_availability': 0}
+                self.user_algo_type_count[row_dict['username']] = {'net_availability': positions}
 
             # Check if the algo_type exists for this username, if not, initialize it
             if row_dict['algo_type'] not in self.user_algo_type_count[row_dict['username']]:
@@ -581,6 +589,7 @@ class DBListener(threading.Thread):
                     self.factory.remove_algo(instance_id,json_data)
 
                 else:
+                    logger.info("UPDATE")
                     json_data = algo_details['data']
                     # Initialize and start new AlgoRunTime instance
                     username = json_data['username']
@@ -590,6 +599,7 @@ class DBListener(threading.Thread):
                     # logger.debug("ALGO UPDATED!!!!!!!!!!!!!!")
                     if operation == "INSERT":
                         cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                        
                         # cur.execute("select * from algo_dets")
                         cur.execute(f"""select
                             ad.username,
@@ -611,7 +621,6 @@ class DBListener(threading.Thread):
                             FROM algo_dets ad left join api_credentials ac on ad.username = ac.username where ad.username= '{username}' and ad.algo_type ='{algo_type}' and algo_name='{algo_name}' group by ad.username,ad.algo_type,ad.algo_name,ad.lead_exchange,ad.lag_exchange,ad.spread,ad.qty,ad.ccy,ad.instrument,ad.contract_type,ad.state"""
                         )
                         new_algo_detail = cur.fetchone()
-                        logger.info(f"NEWALGODTEAIL{new_algo_detail}")
                         self.factory.add_algo(instance_id,new_algo_detail)
                     # For updates
                     else:
