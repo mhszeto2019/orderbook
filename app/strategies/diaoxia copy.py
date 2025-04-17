@@ -54,7 +54,6 @@ dbusername = config[config_source]['username']
 dbpassword = config[config_source]['password']
 dbname = config[config_source]['dbname']
 import time
-
 from app.strategies.connection_helper import OkxBbo,HtxBbo ,HtxPositions
 
 
@@ -67,8 +66,6 @@ DB_CONFIG = {
     "port": 5432
 }
 
-
-
 # for Diaoxia, positive spread means buying on lead and selling on lag while negative spread means selling on lead and buying on lag. 
 # Diaoxia conditions
 # - spread matches
@@ -77,6 +74,15 @@ DB_CONFIG = {
 # - lead and lag exchanges specified
 
 class Diaoxia:
+    best_bid: float 
+    best_bid_sz:int
+    best_ask: float
+    best_ask_sz:int
+    htx_best_bid: float
+    htx_best_bid_sz: int
+    htx_best_ask:float
+    htx_best_ask_sz:int
+    
     def __init__(self,row_dict,cursor):
         # shared_state
         self.row = row_dict
@@ -130,14 +136,14 @@ class Diaoxia:
         self.received_data = None  # Variable to store received data
 
         # status
-        self.lead_filled_vol = 0
+        self.row['filled_vol'] = 0
         self.lead_is_filled = False
 
         # db connection
         self.cursor = cursor
         # throttle
         self.last_call_time = 0
-        self.call_interval = 1
+        self.call_interval = 0.1
 
         # lock for race conditions
         self.order_lock = threading.Lock() 
@@ -156,6 +162,17 @@ class Diaoxia:
         self.last_update_okx = time.time()
         self.last_update_htx = time.time()
 
+        self.check_count = 0
+        self.check_requirement_count = 1 # means 2 because it checks on 0 and checks on 1 and fire 
+
+        self.total_buy = 0
+        self.total_sell = 0
+        self.diaoyu_buy = 0
+        self.diaoyu_sell = 0
+        self.diaoxia_buy = 0
+        self.diaoxia_sell = 0
+        self.is_order_running = False
+
 
     # connection with okx bbo
     async def run_okx_bbo(self):
@@ -165,9 +182,6 @@ class Diaoxia:
         channel = "bbo-tbt"
         await self.row['okx_client'].run(channel, currency_pairs, self.okx_publicCallback)
 
-
-
-  
 
     async def run_htx_positions(self):
         """Run the HtxPositions WebSocket client."""
@@ -189,6 +203,8 @@ class Diaoxia:
         htx_pos_client = HtxPositions(notification_url, notification_endpoint, access_key, secret_key,self.username,self.algoname)
         self.htx_pos_client = htx_pos_client
         await self.htx_pos_client.start(notification_subs, auth=True, callback=self.htx_position_publicCallback)
+
+   
 
     async def run_htx_bbo(self):
         """Run the HtxPositions WebSocket client asynchronously."""
@@ -228,115 +244,228 @@ class Diaoxia:
     def start_clients(self):
         """Sync wrapper to run start_clients() inside multiprocessing."""
         asyncio.run(self.start_clients_sync())  # En
-   
-
-
         
     def stop_clients(self):
         """Stop both WebSocket clients gracefully."""
         if self.row['okx_client']:
             self.row['okx_client'].close()
             self.row['okx_client'].unsubscribe()
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
+            logger.debug(f"{self.username}|{self.algoname}|CLOSE AND UNSUBSCRIBED FROM OKX")
         self.update_db()
 
-    
-    def determine_trade_type(self,pos, algotypes):
+    def determine_trade_type(self,algo_json_dict):
+        
+        net_availability = int(algo_json_dict['net_availability'])
 
-        """
-        Determines available trade actions based on position and strategy activity.
-        :param pos: Current position (positive = long, negative = short)
-        :param algotypes: Dictionary of trade strategies {'strategy_name': {'buy': x, 'sell': y}}
-        :return: Dict of trade types allowed for diaoxia {'buy': 'open/close/None', 'sell': 'open'}
-        """
+        total_buy = 0
+        total_sell = 0
+        diaoyu_buy = 0
+        diaoyu_sell = 0
+        diaoxia_buy = 0
+        diaoxia_sell = 0
 
-        diaoyu = algotypes.get("diaoyu", {"buy": 0, "sell": 0})
-        diaoxia = algotypes.get("diaoxia", {"buy": 0, "sell": 0})
+        # for algo_type, algos in algo_json_dict.items():
+        #     if algo_type == 'net_availability':
+        #         continue  # skip this non-algo key
 
+        #     for algo_name, stats in algos.items():
+        #         if stats['status']:
+        #             logger.debug(stats)
+        #             buy = stats.get('buy', 0) - stats.get('filled_amount', 0)
+        #             sell = stats.get('sell', 0) - stats.get('filled_amount', 0)
+
+        #             total_buy += buy
+        #             total_sell += sell
+
+        #             if algo_type == 'diaoyu':
+        #                 diaoyu_buy += buy
+        #                 diaoyu_sell += sell
+        #             if algo_type == 'diaoxia':
+        #                 diaoxia_buy += buy
+        #                 diaoxia_sell += sell
+
+        for algo_type, algos in algo_json_dict.items():
+            if algo_type == 'net_availability':
+                continue
+
+            for algo_name, stats in algos.items():
+                if stats['status']:
+                    buy = stats.get('buy', 0)
+                    sell = stats.get('sell', 0)
+                    filled = stats.get('filled_amount', 0)
+
+                    # Determine the net direction
+                    if buy > 0 and sell == 0:
+                        buy -= filled
+                    elif sell > 0 and buy == 0:
+                        sell -= filled
+                    # If it's a mix (e.g., buy and sell both > 0), we assume filled is equally from both? Customize this if needed.
+
+                    total_buy += buy
+                    total_sell += sell
+
+                    if algo_type == 'diaoyu':
+                        diaoyu_buy += buy
+                        diaoyu_sell += sell
+                    elif algo_type == 'diaoxia':
+                        diaoxia_buy += buy
+                        diaoxia_sell += sell
+
+
+        print("Total Buy:", total_buy)
+        print("Total Sell:", total_sell)
+        print("Diaoyu Buy:", diaoyu_buy)
+        print("Diaoyu Sell:", diaoyu_sell)
+        print("Diaoxia Buy:", diaoxia_buy)
+        print("Diaoxia Sell:", diaoxia_sell)
+
+        self.total_buy = total_buy
+        self.total_sell = total_sell
+        self.diaoyu_buy = diaoyu_buy
+        self.diaoyu_sell = diaoyu_sell
+        self.diaoxia_buy = diaoxia_buy
+        self.diaoxia_sell = diaoxia_sell
+
+  
         # Base availability logic
-        remaining_pos = pos + diaoyu["buy"] - diaoyu["sell"]  # Adjust for diaoyu activity
+        remaining_pos = net_availability + diaoyu_buy - diaoyu_sell  # Adjust for diaoyu activity
         
         # Determine diaoxia trade permissions
-        trade_type = {"buy": None, "sell": "open"}  # Default diaoxia can always sell (continue shorting)
-
-        if pos < 0:  # Short position
-            if diaoxia["buy"] > 0:
-                trade_type["buy"] = "close" if abs(remaining_pos) >= diaoxia["buy"] else None  # Can only cover short
-        elif pos > 0:  # Long position
-            if diaoxia["sell"] > 0:
-                trade_type["sell"] = "close" if remaining_pos >= diaoxia["sell"] else None  # Can only close long
-        else:  # No position
-            trade_type["buy"] = "open"
-            trade_type["sell"] = "open"
-
-        return trade_type
+        self.trade_type = {"buy": None, "sell": "open"}  # Default diaoxia can always sell (continue shorting)
 
 
 
-    def check_condition(self, spread :int, callback):
-        current_time = time.time()
-        # print(current_time,max(self.last_update_okx, self.last_update_htx) , current_time - max(self.last_update_okx, self.last_update_htx) )
-        if current_time - min(self.last_update_okx, self.last_update_htx) > 0.1:
-            # logger.debug("Warning: Order book data is stale!")
-            return
-        
+        if net_availability < 0 and diaoxia_buy > 0:
+            # Short position: Allow buy only to close
+            if abs(remaining_pos) >= diaoxia_buy:
+                self.trade_type["buy"] = "close"
+
+        elif net_availability > 0 and diaoxia_sell > 0:
+            # Long position: Allow sell only to close
+            if remaining_pos >= diaoxia_sell:
+                self.trade_type["sell"] = "close"
+
+        elif net_availability == 0:
+            # No position: Both directions allowed
+            self.trade_type["buy"] = "open"
+            self.trade_type["sell"] = "open"
+
+        return self.trade_type
+
+    def run_tasks(self, tasks):
+        async def runner():
+            await asyncio.gather(*tasks)
+
         try:
-            if self.lead_filled_vol >= int(self.qty):
-                self.update_db()
-                return
-               
+            # If we're already in an async context, schedule it
+            loop = asyncio.get_running_loop()
+            return asyncio.create_task(runner())
+        except RuntimeError:
+            # Not in an async context — safe to use asyncio.run
+            return asyncio.run(runner())
 
-            if not self.row['state']:
-                self.lead_filled_vol = 0  # Reset when the algo is inactive
+    async def run_orders_and_update_state(self, min_avail_amt_buy,trade_type):
+        await asyncio.gather(
+            self.place_market_order_htx(min_avail_amt_buy, self.lag_direction,trade_type),
+            self.place_market_order_okx(min_avail_amt_buy, self.lead_direction,trade_type),
+        )
+
+        # Step 1: Read the entire shared user_algo_type_count object
+        user_data = self.row['user_algo_type_count']
+
+        # Step 2: Modify the nested algo data
+        algo_data = user_data[self.username][self.algotype][self.algoname]
+        algo_data['filled_amount'] += min_avail_amt_buy
+        algo_data['remaining_amount'] -= min_avail_amt_buy
+
+        # Step 3: Write it back to ensure the shared state gets updated
+        user_data[self.username][self.algotype][self.algoname] = algo_data
+        self.row['user_algo_type_count'] = user_data
+
+        # Re-assign the modified dict back to ensure update is synced across processes
+        user_algo_type_count_dict[self.algotype][self.algoname] = algo_data
+        
+        self.check_count = 0
+
+
+
+    async def check_condition(self, spread :int,filled_amt,remaining_amount,trade_type, callback):
+        try:
+            check_condition_time_start = time.time()
+            # print(current_time,max(self.last_update_okx, self.last_update_htx) , current_time - max(self.last_update_okx, self.last_update_htx) )
+            if check_condition_time_start - min(self.last_update_okx, self.last_update_htx) > 0.050:
+                # logger.debug("Warning: Order book data is stale!")
+                self.is_order_running = False
                 return
             
-            # logger.debug(f"{self.total_sell},{self.total_buy},{self.net_volume}, {self.row['user_algo_type_count'][self.username]}")
-            if (self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume)):
-                logger.debug("self.net_volume > 0 and abs(self.total_sell) > abs(self.net_volume)) or (self.net_volume < 0 and abs(self.total_buy) > abs(self.net_volume")
-                # self.diaoxia_offset = 'close'
-                self.update_db()
-   
+            logger.debug("HELLO CHECKING CONDITION")
             
-            self.diaoxia_offset = self.determine_trade_type(self.net_volume,self.row['user_algo_type_count'][self.username])
+            check_diaoxia_offset_time_start = time.time()
+           
+            check_diaoxia_offset_time_end = time.time() - check_diaoxia_offset_time_start
+            print(check_diaoxia_offset_time_end)
+            try:
+                if remaining_amount == 0:
+                    self.update_db()
+                    # self.row['filled_vol'] = 0 # reset when algo is completed and switched off 
+                    return
+            
+                # Log order book data
+                logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]}|htx:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}|okx:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|Net_Avail:{self.net_volume} TL_B:{self.total_buy}|TL_S:{self.total_sell}|DY_B:{self.diaoyu_buy}|DY_S:{self.diaoyu_sell}|DX_B:{self.diaoxia_buy}|DX_S:{self.diaoxia_sell}")
+            
+                # Precompute spread conditions
+                bid_ask_spread_1 = float(self.htx_best_bid) - float(self.best_ask)
+                bid_ask_spread_2 = float(self.best_bid) - float(self.htx_best_ask)
 
-            revised_qty = int(self.qty) - self.lead_filled_vol
-            # logger.debug(f"{self.net_volume}, {self.total_buy}, {self.diaoxia_availability},{self.diaoxia_offset}")
-            # Log order book data
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| OKX upd: {datetime.fromtimestamp(self.last_update_okx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}| HTX upd: {datetime.fromtimestamp(self.last_update_htx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} htxside:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz} okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]} ")
+                # Determine min available amount for orders
+                min_avail_amt_buy = min(int(self.htx_best_bid_sz), int(self.best_ask_sz), 100, remaining_amount,1)
+                min_avail_amt_sell = min(int(self.best_bid_sz), int(self.htx_best_ask_sz), 100, remaining_amount,1)
+                okx_update = datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]
+                htx_update = datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]
 
-            # Precompute spread conditions
-            bid_ask_spread_1 = float(self.htx_best_bid) - float(self.best_ask)
-            bid_ask_spread_2 = float(self.best_bid) - float(self.htx_best_ask)
+                # sell htx
+                # Check spread conditions for order execution
+                self.order_tasks = []
+                if spread > 0 and bid_ask_spread_1 >= spread:
+                    logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]}|htx:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}|okx:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|Net_Avail:{self.net_volume} TL_B:{self.total_buy}|TL_S:{self.total_sell}|DY_B:{self.diaoyu_buy}|DY_S:{self.diaoyu_sell}|DX_B:{self.diaoxia_buy}|DX_S:{self.diaoxia_sell} SPREAD DETECTED Count:{self.check_count} ")
 
-            # Determine min available amount for orders
-            min_avail_amt_buy = min(int(self.htx_best_bid_sz), int(self.best_ask_sz), 100, revised_qty,1)
-            min_avail_amt_sell = min(int(self.best_bid_sz), int(self.htx_best_ask_sz), 100, revised_qty,1)
+                    if self.check_count == self.check_requirement_count:
+                     
+                        asyncio.create_task(self.run_orders_and_update_state(min_avail_amt_buy,trade_type))
 
-            # Check spread conditions for order execution
-            if spread > 0 and bid_ask_spread_1 >= spread:
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| OKX upd: {datetime.fromtimestamp(self.last_update_okx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}| HTX upd: {datetime.fromtimestamp(self.last_update_htx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} htxside:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz} okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} SPREAD DETECTED ")
+                        
+                    else:
+                        self.check_count += 1
+                        time.sleep(self.call_interval)
 
-                asyncio.gather(
-                    self.place_market_order_htx(min_avail_amt_buy,self.lag_direction),
-                    self.place_market_order_okx(min_avail_amt_buy,self.lead_direction),
-                )
-                self.lead_filled_vol += min_avail_amt_buy
+                # buy htx
+                elif spread < 0 and bid_ask_spread_2 >= abs(spread):
+                    
+                    logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]}|htx:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}|okx:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|Net_Avail:{self.net_volume} TL_B:{self.total_buy}|TL_S:{self.total_sell}|DY_B:{self.diaoyu_buy}|DY_S:{self.diaoyu_sell}|DX_B:{self.diaoxia_buy}|DX_S:{self.diaoxia_sell} SPREAD DETECTED Count:{self.check_count} ")
 
-            elif spread < 0 and bid_ask_spread_2 >= abs(spread):
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| OKX upd: {datetime.fromtimestamp(self.last_update_okx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}| HTX upd: {datetime.fromtimestamp(self.last_update_htx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} htxside:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz} okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} SPREAD DETECTED")
-
-                asyncio.gather(
-                    self.place_market_order_htx(min_avail_amt_sell,self.lag_direction),
-                    self.place_market_order_okx(min_avail_amt_sell,self.lead_direction),
-                )
-                self.lead_filled_vol += min_avail_amt_sell
+                    if self.check_count == self.check_requirement_count:
                 
-         
+                        asyncio.create_task(self.run_orders_and_update_state(min_avail_amt_buy,trade_type))
+                    
+                    else:
+                        self.check_count += 1
 
+                        time.sleep(self.call_interval)
+                        
+                else:
+                    self.check_count = 0
+
+                check_condition_time_end = time.time() - check_condition_time_start
+                print(f"DIAOXIA OFFSET_TIME:{check_diaoxia_offset_time_end}| CONDITION CHECK:{check_condition_time_end} TL_TIME:{check_diaoxia_offset_time_end+check_condition_time_end}")
+
+            except Exception as e:
+                self.update_db()
+                logger.debug(f"Error occurred in check_condition: {traceback.format_exc}")
+                raise e
         except Exception as e:
-            self.update_db()
-            logger.debug(f"Error occurred in check_condition: {traceback.format_exc}")
-            raise e
+            logger.error(e)
+        finally:
+            self.is_order_running = False
 
 
     def okx_publicCallback(self,message):
@@ -359,13 +488,35 @@ class Diaoxia:
                     # spread = float(self.spread)
                     self.limit_buy_price = float(self.best_bid) - float(self.spread)
                     self.limit_buy_size = self.qty
-                    
                     self.lead_direction, self.lag_direction = ('buy', 'sell') if float(self.spread) > 0 else ('sell', 'buy')
                     self.last_update_okx = time.time()
-                    self.check_condition(float(self.spread),'okx_callback')
+                    # logger.debug(self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['status'])
+                    self.state = self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['status']
+                    # if self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['status']:
+
+                    user_algo_type_count_dict = self.row['user_algo_type_count'][self.username]
+                    filled_amt = user_algo_type_count_dict[self.algotype][self.algoname]['filled_amount']
+                    remaining_amount = user_algo_type_count_dict[self.algotype][self.algoname]['remaining_amount']
+
+                    # logger.debug(f"net_avail:{user_algo_type_count_dict['net_availability']}| remaining_amount:{remaining_amount}| filled_amt:{filled_amt} |total_sell:{self.total_sell}|total_buy:{self.total_buy}")
+                    trade_type = self.determine_trade_type(user_algo_type_count_dict)
+                    
+
+                    if self.state :
+                        if ((user_algo_type_count_dict['net_availability'] < 0 and self.total_buy> abs(user_algo_type_count_dict['net_availability'])) or (user_algo_type_count_dict['net_availability'] > 0 and self.total_sell > abs(user_algo_type_count_dict['net_availability']))):
+                            self.update_db()
+                            
+                        if self.is_order_running:
+                            return
+                        self.is_order_running = True
+
+                        asyncio.create_task(self.check_condition(float(self.spread),filled_amt,remaining_amount,trade_type,'okx_callback'))
+                        
+                        
+                
                 
             except Exception as e:
-                logger.error(f"{self.username}|{self.algotype}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
+                logger.error(f"{self.username}|{self.algoname}|OKX PUBLICCALLBACK ERROR:{e}")
 
     async def place_order_htx_helper(self,tradeApi, instId, volume, direction, offset):
         
@@ -390,19 +541,32 @@ class Diaoxia:
                 if message.get('op') == "notify":
                     # logger.debug(message)
                     if message.get('data'):
-                        # total net availabilty is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
+                        # logger.debug(message.get('data'))
+                        # total net_volume is total position. i.e net_availability == 0 means theres no position and for htx, direction will be open
                         self.net_volume = sum(pos['volume'] if pos['direction'] == 'buy' else -pos['volume'] for pos in message['data'])
-                        self.total_sell = -(self.row['user_algo_type_count'][self.username]['diaoyu']['sell'] + self.row['user_algo_type_count'][self.username]['diaoxia']['sell'])
-                        self.total_buy = self.row['user_algo_type_count'][self.username]['diaoyu']['buy'] + self.row['user_algo_type_count'][self.username]['diaoxia']['buy']
-                      
+
+                        # THIS IS A UNIQUE WAY OF DOING THINGS BECAUSE ITS IN THE SHARED STATE
+                        user_data = self.row['user_algo_type_count']
+                        user_data[self.username]['net_availability'] = self.net_volume
+
+                        # logger.debug(user_data[self.username]['net_availability'])
+                        self.row['user_algo_type_count'] = user_data  
+                     
             except Exception as e:
                 logger.error(f"Error{traceback.format_exc()}")
 
-    async def place_market_order_htx(self,size,direction):
+    async def place_market_order_htx(self,size,direction,trade_type):
         # Use limit_buy_price and limit_buy_size directly instead of `self.limit_buy_price`
             try:
-                result = await self.place_order_htx_helper(self.htx_tradeapi, self.ccy.replace('-SWAP',''), size, direction,self.diaoxia_offset[direction])
-                logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| OKX upd: {datetime.fromtimestamp(self.last_update_okx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}| HTX upd: {datetime.fromtimestamp(self.last_update_htx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset[direction]}  htx_place_market_order result:{result}")
+                result = await self.place_order_htx_helper(self.htx_tradeapi, self.ccy.replace('-SWAP',''), size, direction,trade_type[direction])
+                logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]}|htx:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}|okx:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|Net_Avail:{self.net_volume} TL_B:{self.total_buy}|TL_S:{self.total_sell}|DY_B:{self.diaoyu_buy}|DY_S:{self.diaoyu_sell}|DX_B:{self.diaoxia_buy}|DX_S:{self.diaoxia_sell} htx_place_market_order result:{result}")
+
+                user_algo_type_count_dict = self.row['user_algo_type_count'][self.username]
+                filled_amt = user_algo_type_count_dict[self.algotype][self.algoname]['filled_amount']
+                remaining_amount = user_algo_type_count_dict[self.algotype][self.algoname]['remaining_amount']
+
+                logger.debug(f"net_avail:{user_algo_type_count_dict['net_availability']}| remaining_amount:{remaining_amount}| filled_amt:{filled_amt} |total_sell:{self.total_sell}|total_buy:{self.total_buy}")
+                # logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]} htx: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okx: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset[direction]}  htx_place_market_order result:{result}")
 
             except Exception as e:
                 self.update_db()
@@ -420,15 +584,19 @@ class Diaoxia:
                     self.htx_best_bid_sz = message['tick']['bid'][1]
                     self.htx_best_ask = message['tick']['ask'][0]
                     self.htx_best_ask_sz = message['tick']['ask'][1]
-                    self.check_condition(float(self.spread),'htx_callback')
-
-                    # logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|HTX BBO:{message}")
+                    # if self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['status']:
+                    self.state = self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['status']
+                    # if self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['status']:
+                    # if self.state and self.row['user_algo_type_count'][self.username][self.algotype][self.algoname]['remaining_amount'] != 0 :
+                    #     self.check_condition(float(self.spread),'htx_callback')
+                  
+                    # logger.debug(f"{self.username}|{self.algoname}|HTX BBO:{message}")
                     
                     
             except Exception as e:
-                logger.error(f"{self.username}|{self.algotype}|{self.algoname}| HTX PUBLICCALLBACK:",e)
+                logger.error(f"{self.username}|{self.algoname}| HTX PUBLICCALLBACK:", e)
 
-    async def place_market_order_okx(self,size,direction):
+    async def place_market_order_okx(self,size,direction,trade_type):
         try:
             # Initialize TradeAPI
             tradeApi = self.okx_tradeapi
@@ -450,11 +618,13 @@ class Diaoxia:
                 result['data'][0]['sCode'] = 400
                 logger.error('OKX MARKET TRADE FAILED')
 
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}| OKX upd: {datetime.fromtimestamp(self.last_update_okx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}| HTX upd: {datetime.fromtimestamp(self.last_update_htx).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} htxside: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okxside: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset} |okx_place_order result:{result} ")
+            logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]}|htx:{self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}|okx:{self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz}|Net_Avail:{self.net_volume} TL_B:{self.total_buy}|TL_S:{self.total_sell}|DY_B:{self.diaoyu_buy}|DY_S:{self.diaoyu_sell}|DX_B:{self.diaoxia_buy}|DX_S:{self.diaoxia_sell}|okx_place_order result:{result} ")
+            # logger.debug(f"{self.username}|{self.algoname}|OKX↑:{datetime.fromtimestamp(self.last_update_okx).strftime('%H:%M:%S.%f')[:-3]}|HTX↑:{datetime.fromtimestamp(self.last_update_htx).strftime('%H:%M:%S.%f')[:-3]} htx: {self.htx_best_bid}|{self.htx_best_bid_sz}|{self.htx_best_ask}|{self.htx_best_ask_sz}  okx: {self.best_bid}|{self.best_bid_sz}|{self.best_ask}|{self.best_ask_sz} {self.row['user_algo_type_count'][self.username]}|{self.diaoxia_availability}|{self.diaoxia_offset} |okx_place_order result:{result} ")
 
             return result
+
         except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|okx_place_market_order ERROR:{e}")
+            logger.error(f"{self.username}|{self.algoname}|okx_place_market_order ERROR:{e}")
 
     def connect_db(self):
         """Ensures the database connection is open and initializes the cursor."""
@@ -475,10 +645,12 @@ class Diaoxia:
                 self.cursor.connection.commit()
             self.cursor.connection.close()
             # https://stackoverflow.com/questions/64995178/decryption-failed-or-bad-record-mac-in-multiprocessing
-            logger.debug(f"{self.username}|{self.algotype}|{self.algoname}|Database Updated")
+            logger.debug(f"{self.username}|{self.algoname}|Database Updated")
+     
+
         
         except Exception as e:
-            logger.error(f"{self.username}|{self.algotype}|{self.algoname}|DATABASE Error:{traceback.format_exc()}")
+            logger.error(f"{self.username}|{self.algoname}|DATABASE Error:{traceback.format_exc()}")
         # finally:
         #     self.cursor.close()  # Close the cursor
         #     return 
