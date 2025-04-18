@@ -62,7 +62,7 @@ After=network.target
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$PORT --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.status.$SERVICE_NAME:app
+ExecStart=$ENV_PATH/bin/gunicorn -w 1 -b 0.0.0.0:$PORT --timeout 120 --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.status.$SERVICE_NAME:app
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

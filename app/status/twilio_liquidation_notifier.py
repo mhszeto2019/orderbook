@@ -18,6 +18,30 @@ import configparser
 from app.htx2.HtxOrderClass import HuobiCoinFutureRestTradeAPI
 from okx import Account
 
+import logging
+import sys
+
+
+# Logger 
+import os
+from pathlib import Path
+# Define the log directory and the log file name
+LOG_DIR = Path('/var/www/html/orderbook/logs')
+log_filename = LOG_DIR / (Path(__file__).stem + '.log')
+os.makedirs(LOG_DIR, exist_ok=True)
+# Set up basic logging configuration
+import logging
+file_handler = logging.FileHandler(log_filename)
+# Set up a basic formatter
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(formatter)
+logger = logging.getLogger('twilio_liq')
+logger.setLevel(logging.DEBUG)  # Set log level
+# Add the file handler to the logger
+logger.addHandler(file_handler)
+from datetime import datetime
+
+
 
 config = configparser.ConfigParser()
 config_file_path = os.path.join(os.path.dirname(__file__), '../..','config_folder', 'credentials.ini')
@@ -176,7 +200,7 @@ class TraderNotifier:
                     else:  # direction == 'buy'
                         alert_px = liq_px * (1 + threshold)
                         should_alert = alert_px >= last_px
-
+                
                     # State transition logic
                     if should_alert:
                         if self._state != 0b10:  # Only trigger if not already active
@@ -216,7 +240,9 @@ class TraderNotifier:
                                 'exchange': exchange
                             }
 
-            if self.username in ['brennan']:
+            # if self.username in ['brennan12']:
+            if self.username in ['testshw']:
+
                 # self.exchanges['deribit'] = {'BTC-USD': {'liq_px':55000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
 
                 # ts has to be the latest to update also because this is the laslt price
@@ -290,9 +316,11 @@ class TraderNotifier:
         """Calls once and retries only if there's no response."""
         call_sid = self.make_call(exchange,direction,liq_px,last_px)
         status = self.check_call_status(call_sid)
-        while status not in ["in-progress", "completed"]:
+        while status not in ["in-progress", "completed","busy"]:
+            # while stats is in queue or ringing , we check the call status
             status = self.check_call_status(call_sid)
-
+            logger.info(status)
+        # once call is in progress or completed we return False
         time.sleep(5)
         return False
 
