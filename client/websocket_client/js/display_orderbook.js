@@ -1,5 +1,24 @@
 let debounceTimeout = null;
 
+
+// function scrollOrderbookToMiddle(i) {
+//     const container = document.querySelector(`#scrollable-orderbook-${i}`);
+//     if (!container) {
+//       console.warn(`Orderbook container #scrollable-orderbook-${i} not found`);
+//       return;
+//     }
+  
+//     requestAnimationFrame(() => {
+//       const middle = (container.scrollHeight - container.clientHeight) / 2;
+//       container.scrollTop = middle;
+//       console.log(`Scrolled Orderbook ${i} to middle:`, middle);
+//     });
+//   }
+// const hasScrolledToMiddle = {
+//     1: false,
+//     2: false
+// };
+
 function populateOrderBook(exchange, data) {
     // Loop through each table (orderbook 1 and orderbook 2)
     for (let i = 1; i <= 2; i++) {
@@ -8,6 +27,7 @@ function populateOrderBook(exchange, data) {
         // Get the selected exchange for the current table
         const selectedExchange = document.getElementById(`exchange${i}-input`).value;
         const orderbookHeader = document.getElementById(`orderbook-header-${i}`)
+        const scrollableOrderbook =  document.getElementById(`orderBookTable${i}`)
         // If the selected exchange matches the current exchange from WebSocket
         if (selectedExchange === exchange) {
             const tableBody = document.getElementById(`order-data-table-body-${i}`);
@@ -37,6 +57,8 @@ function populateOrderBook(exchange, data) {
                                 <td>${item.size}</td>`;
                 tableBody.appendChild(row);
             });
+
+      
         }
     }
 }
@@ -76,6 +98,12 @@ function clearOrderbookTable() {
     if (orderbookTs1DOM) orderbookTs1DOM.innerHTML = '';
     if (orderbookTs2DOM) orderbookTs2DOM.innerHTML = '';
 }
+
+// Function to scroll the orderbook to the middle
+
+// Call the scrollToMiddle function when the page loads (or after content is updated)
+
+
 
 function clearlastPriceTable() {
 

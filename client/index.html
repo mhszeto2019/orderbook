@@ -27,6 +27,9 @@
 <!-- Include this once in your HTML -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
+
+
 <body class="text-light">
     
     <!-- NAVBAR -->
@@ -96,18 +99,19 @@
             <!-- DISPLAY TABLE -->
             <div class="col-lg-6 container-fluid mt-4 " id="orderbookdisplayContainer">
                 <!-- Container for the funding rates row -->
-                <div class="row ">
+                <div class="row">
                     <!--WS STATUS BADGE  -->
-                    <div class="col-md-4 mb-4">
+                    <!-- <div class="col-md-4 mb-4">
                         <h6 class = "header-text">Connection Status:</h6 >
                         <div class="d-flex flex-wrap">
                             <span id="status-okx" class="btn statusbadge bg-danger me-2 mb-2">okx: dead</span>
                             <span id="status-htx" class="btn statusbadge bg-danger me-2 mb-2">htx: dead</span>
-                            <span id="status-bnb" class="btn statusbadge bg-danger mb-2">bnb: dead</span>
+                            <span id="status-binance" class="btn statusbadge bg-danger mb-2">binance: dead</span>
                         </div>
-                    </div>
+                    </div> -->
+
                     <!-- Funding rate Section -->
-                    <div id="okx-section" class="col-md-4 mb-4">
+                    <div id="okx-section" class="col-md-3 mb-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <h6 class="header-text  mb-0">OKX</h6>
                             <span id="fundingratets_okx" class="text-warning text-end">-</span>
@@ -120,7 +124,7 @@
                         </div>
                     </div>
                 
-                    <div id="htx-section" class="col-md-4 mb-4">
+                    <div id="htx-section" class="col-md-3 mb-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <h6 class="header-text  mb-0">HTX</h6>
                             <span id="fundingratets-htx" class="text-warning text-end">-</span>
@@ -129,6 +133,33 @@
                             <div class="d-flex justify-content-between">
                                 <span id="currency-htx" class="text-primary text-end">--</span>
                                 <span id="funding-rate-htx" class="text-primary text-end">--</span>
+                            
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="binance-section" class="col-md-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="header-text  mb-0">BINANCE</h6>
+                            <span id="fundingratets_bnb" class="text-warning text-end">-</span>
+                        </div>
+                        <div class="">
+                            <div class="d-flex justify-content-between">
+                                <span id="currency-binance" class="text-primary text-end">--</span>
+                                <span id="funding-rate-binance" class="text-primary text-end">--</span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div id="htx-section" class="col-md-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="header-text mb-0">DERIBIT</h6>
+                            <span id="fundingratets-deribit" class="text-warning text-end">-</span>
+                        </div>
+                        <div class="">
+                            <div class="d-flex justify-content-between">
+                                <span id="currency-htx" class="text-primary text-end">--</span>
+                                <span id="funding-rate-deribit" class="text-primary text-end">--</span>
                             
                             </div>
                         </div>
@@ -164,6 +195,9 @@
                                                 <option value="">Select Exchange 1</option>
                                                 <option value="okx" selected>OKX</option>
                                                 <option value="htx">HTX</option>
+                                                <option value="binance">Binance</option>
+                                                <option value="deribi">Deribit</option>
+
                                             </select>
                                         </div>
                                     </div>
@@ -176,6 +210,9 @@
                                                 <option value="">Select Exchange 2</option>
                                                 <option value="okx" >OKX</option>
                                                 <option value="htx" selected>HTX</option>
+                                                <option value="binance">Binance</option>
+                                                <option value="deribi">Deribit</option>
+
                                             </select>
                                         </div>
                                     </div>
@@ -230,7 +267,9 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="scrollable-orderbook">
+                                                <!-- <div class="scrollable-orderbook"> -->
+                                                <div class="scrollable-orderbook overflow-auto border" id="scrollable-orderbook-1" style="height:290px;">
+
                                                     <table class="orderBookTable" id="orderBookTable1">
                                                         <thead class="bg-light">
                                                             <tr class="text-secondary small">
@@ -239,7 +278,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody id="order-data-table-body-1">
-                                                            <!-- Order book data will be dynamically inserted here -->
+                                                      
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -264,7 +303,7 @@
                                                 </div>
                                                 </div>
                                                 
-                                                <div class="scrollable-orderbook">
+                                                <div class="scrollable-orderbook overflow-auto border" id="scrollable-orderbook-2" style="height:290px;">
                                                     <table  id="orderBookTable2">
                         
                                                         <thead class="bg-light">
@@ -330,10 +369,10 @@
                                     <!-- Card Section for Bid and Ask Prices -->
                                     <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center ">
                                         <!-- Bid Card -->
-                                        <span id="quote-side-text" class="quote-side-text text-success fw-bold">
+                                        <span id="quote-side-text" class="col quote-side-text text-success text-center fw-bold">
                                             Bid (Buy <span id="arbButton-bid-buy"></span> Sell <span id="arbButton-bid-sell"></span>) 
                                         </span>
-                                        <div class="quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
+                                        <div class="col  quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
                                             <div class="best-quote-price-container">
                                                 <div class="price-data fs-4 fw-bold" id="buySpread">-</div>
                                             </div>
@@ -344,7 +383,7 @@
                                         </div>
                                 
                                         <!-- Ask Card -->
-                                        <div class="quote-price-card sell card p-3 text-center border-danger" onclick="handleClick('sell')" role="button" tabindex="0">
+                                        <div class="col  quote-price-card sell card p-3 text-center border-danger" onclick="handleClick('sell')" role="button" tabindex="0">
                                         
                                             <div class="best-quote-price-container">
                                                 <div class="price-data fs-4 fw-bold" id="sellSpread">-</div>
@@ -354,7 +393,7 @@
                                             </div>
 
                                         </div>
-                                        <span id="quote-side-text" class="quote-side-text text-danger fw-bold">
+                                        <span id="quote-side-text" class=" col  quote-side-text text-danger text-center fw-bold ">
                                             Ask (Sell <span id="arbButton-ask-sell"></span> Buy <span id="arbButton-ask-buy"></span>) 
                                         </span>
         
@@ -1140,6 +1179,7 @@
             
         });
 
+        
         </script>
         
         <style>
@@ -1193,8 +1233,8 @@
                 /* background-color:rgba(99, 1, 1, 0.707) */
             }
 
-            
-        
+           
+
            
             /* Make sure the parent container is a flex container */
             .orderbook-container {
@@ -1205,12 +1245,12 @@
 
             }
 
-            th, td {
-                /* width: 25%; Adjust based on the number of columns */
-                /* overflow: hidden; */
-                /* text-align: center; */
+            /* th, td {
+                width: 25%; 
+                overflow: hidden;
+                text-align: center;
             
-            }
+            } */
             
             .btn{
                 font-family: 'Orbitron', sans-serif;
@@ -1219,19 +1259,25 @@
             
             /* Set a fixed width for each orderbook container */
             .scrollable-orderbook {
-                max-height: 290px; /* Set a fixed height for uniformity */
-                overflow-y: auto;  /* Enable vertical scrolling */
-                border: 1px solid #ddd;  /* Optional border styling */
-                /* padding: 10px; */
-                /* background-color: #f9f9f9; Light background for better readability */
-                display: flex;
-                flex-direction: column;
-                gap: 5px;  /* Add gap between asks and bids */
-                box-sizing: border-box; /* Include padding and border in the element's total width */
-                scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
-                scrollbar-width: thin; 
+                max-height: 290px;
+                box-sizing: border-box;
+                }
+
+               .scrollable-orderbook th, td {
+                width: 25%; 
+                overflow: hidden;
                 text-align: center;
+            
             }
+            .scrollable-orderbook .asks ,.sell {
+                color: red;
+            }
+
+            /* Style for Bids (Green) */
+            .scrollable-orderbook .bids , .buy {
+                color: green;
+            }
+
         
 
             .scrollable-lastprice {
@@ -1250,34 +1296,8 @@
 
 
             /* Optional: Ensures each ask/bid has a consistent font size and line height */
-            .scrollable-orderbook p,
-            .scrollable-orderbook li {
-                font-size: 15px;
-                /* line-height: 1.6; */
-                margin: 0;
-                /* padding: 2px 0; */
-            }
-
-
-            .scrollable-orderbook ul  {
-                list-style-type: none;
-                padding-left: 0;
-                margin: 0;
-            }
-
-            .scrollable-orderbook li  {
-                margin-bottom: 5px;
-            }
-            /* Style for Asks (Red) */
-            .scrollable-orderbook .asks ,.sell {
-                color: red;
-            }
-
-            /* Style for Bids (Green) */
-            .scrollable-orderbook .bids , .buy {
-                color: green;
-            }
-
+                       /* Style for Asks (Red) */
+           
             .run-button {
                     color: #1db954; /* Spotify green */
                     cursor: pointer;

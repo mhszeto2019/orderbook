@@ -193,13 +193,24 @@ class TraderNotifier:
                     liq_px = float(data[symbol]['liq_px'])
                     last_px = float(data[symbol]['last_px'])
                     direction = data[symbol]['direction'] 
+                    logger.info(liq_px)
+                    logger.info(last_px)
+                    logger.info(direction)
+
                     
-                    if direction == 'sell':
-                        alert_px = liq_px * (1 - threshold)
-                        should_alert = alert_px <= last_px
+                    # if direction == 'sell':
+                    #     alert_px = liq_px * (1 - threshold)
+                    #     should_alert = alert_px <= last_px
+                    # else:  # direction == 'buy'
+                    #     alert_px = liq_px * (1 + threshold)
+                    #     should_alert = alert_px >= last_px
+                
+                    if direction == 'buy':
+                        alert_px = last_px * (1 - threshold)
+                        should_alert = alert_px <= float(liq_px)
                     else:  # direction == 'buy'
-                        alert_px = liq_px * (1 + threshold)
-                        should_alert = alert_px >= last_px
+                        alert_px = last_px * (1 + threshold)
+                        should_alert = alert_px >= float(liq_px)
                 
                     # State transition logic
                     if should_alert:
@@ -243,10 +254,15 @@ class TraderNotifier:
             # if self.username in ['brennan12']:
             if self.username in ['testshw']:
 
-                # self.exchanges['deribit'] = {'BTC-USD': {'liq_px':55000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+                self.exchanges['deribit'] = {'BTC-USD': {'liq_px':57000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'buy', 'ts': '2025-04-08 11:03:02'}}
+
+                self.exchanges['htx'] = {'BTC-USD': {'liq_px':105000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+
+                # self.exchanges['okx'] = {'BTC-USD': {'liq_px':105000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+
 
                 # ts has to be the latest to update also because this is the laslt price
-                self.exchanges['deribit'] = {'BTC-USD': {'liq_px': '55000', 'last_px': '60000', 'direction': 'buy', 'ts': '2025-04-18 17:01:02'},'ETH-USD': {'liq_px': 1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+                # self.exchanges['deribit'] = {'BTC-USD': {'liq_px': '55000', 'last_px': '60000', 'direction': 'buy', 'ts': '2025-04-18 17:01:02'},'ETH-USD': {'liq_px': 1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
             # if self.x %2:
             #     self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
             # else:
@@ -284,6 +300,7 @@ class TraderNotifier:
             body=(
                 f"Exchange: {exchange.upper()}\n"
                 f"Direction: {direction.upper()}\n"
+                f"Remedy: {'Cover short' if direction.upper() == 'SELL' else 'Cover long' }\n"
                 f"LIQUIDATION WARNING!\n"
                 f"Liquidation Price: {liq_px}\n"
                 f"Last Price: {last_px}"

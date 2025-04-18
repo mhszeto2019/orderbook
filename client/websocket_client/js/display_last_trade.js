@@ -158,9 +158,6 @@ function onLastTradeWsDataReceived(exchange,currency,instrument) {
 function populateLastTrades(exchange,currency,instrument) {
     // Loop through each table (orderbook 1 and orderbook 2)
     for (let i = 1; i <= 2; i++) {
-        // const timestamp = document.getElementById(`last-timestamp-${i}`);
-        // Get the selected exchange for the current table
-        // const selectedExchange = document.getElementById(`selected-exchange-lastprice-${i}`).innerText.toUpperCase();
         const selectedExchange = document.getElementById(`exchange${i}-input`).value.toUpperCase();
         const selectedCcy= document.getElementById(`currency-input`).value;
         const lastTradeHeader = document.getElementById(`lastTrade-header-${i}`)
@@ -176,17 +173,13 @@ function populateLastTrades(exchange,currency,instrument) {
             // console.log(lastTrades[selectedExchange][selectedCcy][instrument])
             // Format the timestamp to a human-readable date
             
-
+            tmp_ts = ""
             // Populate table with new data
             data.forEach(trade => {
+                console.log(trade)
                 const row = document.createElement('tr'); // Create a new table row
-
+                
                 // Create and append cells for price, time, direction, and amount
-                // row.innerHTML = `
-                //     <td>${trade.ts}</td>
-                //     <td class ='${trade.direction}'>${trade.price}</td>
-                //     <td class='${trade.direction}'>${trade.direction}(${trade.amount})</td>
-                // `;
                 row.innerHTML = `
                     <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
 

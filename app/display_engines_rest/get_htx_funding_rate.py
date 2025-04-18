@@ -58,7 +58,7 @@ from cryptography.fernet import Fernet
 
 @token_required
 @app.route('/htx/getfundingrate', methods=['POST'])
-async def getfundingrate():
+def getfundingrate():
     # monkey.patch_all()
     print('getting htx_funding_rate')
     try:
@@ -95,10 +95,10 @@ async def getfundingrate():
             tdMode= "cross"
         
             tradeApi = HuobiCoinFutureRestTradeAPI("https://api.hbdm.com",api_creds_dict['htx_secretkey'],api_creds_dict['htx_apikey'])
-            fundingrate = await tradeApi.get_funding_rate(contract_code,body = {
+            fundingrate = asyncio.run(tradeApi.get_funding_rate(contract_code,body = {
                 "contract_code": contract_code
                 }
-                )
+                ))
 
             position_data = fundingrate.get('data', [])
             position_data['ts'] = fundingrate['ts']

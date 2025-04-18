@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional custom styles for depth bar effect */
+@layer components {
+  .scrollable-orderbook {
+    @apply max-h-[290px] overflow-y-auto bg-[#0b0e11] rounded-md text-sm font-mono border border-gray-700;
+  }
+
+  .orderbook-row {
+    @apply relative flex justify-between px-3 py-1;
+  }
+
+  .orderbook-bar {
+    @apply absolute left-0 top-0 h-full z-0;
+  }
+
+  .orderbook-cell {
+    @apply relative z-10;
+  }
+
+  .orderbook-header {
+    @apply sticky top-0 z-10 bg-[#0b0e11] text-xs text-gray-400 border-b border-gray-700 text-center py-2;
+  }
+}
