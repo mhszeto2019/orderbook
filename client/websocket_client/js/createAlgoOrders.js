@@ -13,70 +13,117 @@ function closeAlgoModal() {
     // document.getElementById('algoForm').reset(); // Reset form fields
 }
 
+// CREATING OFFSET BUTTON
+const leadSelect = document.getElementById("new-algo-lead-exchange");
+const lagSelect = document.getElementById("new-algo-lag-exchange");
+const htxOffset = document.getElementById("new-algo-offset-container");
+function updateHTXVisibility() {
+const isHTXSelected = leadSelect.value === "htx" || lagSelect.value === "htx";
+htxOffset.style.display = isHTXSelected ? "block" : "none";
+}
+// Check on page load
+updateHTXVisibility();
+// Add change listeners to both dropdowns
+leadSelect.addEventListener("change", updateHTXVisibility);
+lagSelect.addEventListener("change", updateHTXVisibility);
+
 // Function to save the algo details
 function saveAlgo() {
     const algoType = document.getElementById('new-algo-type').value;
     const algoName = document.getElementById('new-algo-name').value;
     const leadExchange = document.getElementById('new-algo-lead-exchange').value;
     const lagExchange = document.getElementById('new-algo-lag-exchange').value;
+    const direction =  document.getElementById("new-algo-direction").value
+    const htxOffset =  document.getElementById("new-algo-offset").value
     const ccy = document.getElementById('new-algo-ccy').value;
     const spread = document.getElementById('new-algo-spread').value;
     const quantity = document.getElementById('new-algo-quantity').value;
     const instrument = document.getElementById('new-algo-instrument').value;
     const contractType = document.getElementById('new-algo-contract-type').value;
     const status = document.getElementById('new-algo-status').checked ? 'Active' : 'Inactive';
+
     const status_bool = document.getElementById('new-algo-status').checked 
     
-    if (!algoName || !spread || !quantity) {
-        alert('Please fill in all required fields.');
-        return;
+    var algoDetailsErrorList = []
+    
+    if (!algoName){
+        algoDetailsErrorList.push("algoname")
     }
 
-    if (leadExchange == lagExchange){
-        alert('Please select a different lead and lag exchange')
+    if (!spread){
+        algoDetailsErrorList.push("spread")
+    }
+
+    if (!quantity){
+        algoDetailsErrorList.push("quantity")
+    }
+
+    // if (!algoName || !spread || !quantity) {
+    //     alert('Please fill in all required fields.');
+    //     return;
+    // }
+   
+    let errorMessages = [];
+
+    if (algoDetailsErrorList && algoDetailsErrorList.length > 0) {
+        errorMessages.push('<strong>Please select the following:</strong><ul>' + 
+            algoDetailsErrorList.map(item => `<li>${item}</li>`).join('') + 
+        '</ul>');
+    }
+
+    if (leadExchange === lagExchange) {
+        errorMessages.push('<strong>Lead and Lag exchange cannot be the same.</strong>');
+    }
+
+    if (errorMessages.length > 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Oops!',
+            html: errorMessages.join('<br><br>'),
+            confirmButtonText: 'Got it',
+            confirmButtonColor: '#ddd',
+        });
         return;
     }
 
     const algoList_temp = document.getElementById('algo-list-new');
-    const algoList = document.getElementById('algo-list')
     const newRow = document.createElement('tr');
     newRow.innerHTML = `
-       <td >${algoType}-${algoName}</td>
-        <td>
-            <div>
-                <span>${leadExchange}</span><br />
-                <span>${lagExchange}</span>
-            </div>
-        </td>
-        <td>${spread} - ${quantity}</td>
-       
-        <td>${ccy}</td>
-        
-        <td>
-            ${instrument} (${contractType})
-        </td>
-       
-        <td>
-            <span class="badge bg-warning">New Order</span>
-        </td>
-        <td>
-            <span class="badge ${status === 'Active' ? 'bg-success' : 'bg-danger'}">
-                ${status}
-            </span>
-        </td>
-        
-        <td>
-            <div class="d-flex justify-content-around">
-                <button class="btn btn-success btn-sm me-1" onclick="saveNewAlgoRow(this)">
-                    <i class="bi bi-check-lg"></i> Save
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="deleteNewRow(this)">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-            </div>
-        </td>
-
-    `;
+            <td>${algoType}-${algoName}</td>
+            <td>
+                <div>
+                    <span>${leadExchange}</span><br />
+                    <span>${lagExchange}</span>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <span>${direction}</span><br />
+                    <span>${htxOffset}</span>
+                </div>
+            </td>
+            <td>${spread} - ${quantity}</td>
+            <td>${ccy}</td>
+            <td>${instrument} (${contractType})</td>
+            <td>
+                <span class="badge bg-warning">New Order</span>
+            </td>
+            <td>
+                <span class="badge ${status === 'Active' ? 'bg-success' : 'bg-danger'}">
+                    ${status}
+                </span>
+            </td>
+            <td>
+                <div class="d-flex justify-content-around">
+                    <button class="btn btn-success btn-sm me-1" onclick="saveNewAlgoRow(this)">
+                        <i class="bi bi-check-lg"></i> Save
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteNewRow(this)">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </td>
+        `;
     algoList_temp.appendChild(newRow);
 
     closeAlgoModal(); // Close modal after saving

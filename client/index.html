@@ -24,6 +24,8 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<!-- Include this once in your HTML -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <body class="text-light">
     
@@ -419,7 +421,7 @@
                     
                     <div class="tab-content" id="pills-tabContent">
                         <div class="tab-pane fade show active" id="pills-manual-order" role="tabpanel" aria-labelledby="pills-manual-order-tab">
-                            <!-- User Input Section -->
+                            <!-- MANUAL ORDER FORM Input Section -->
                             <div class="card p-4 ">
                                 <form id="order-form">
                                     <form id="order-form">
@@ -619,73 +621,57 @@
                                     </script>
 
                                 </form>
+                                
                             </div>
                         </div>
 
+
+                        
                         <div class="tab-pane fade " id="pills-algo-order" role="tabpanel" aria-labelledby="pills-algo-order-tab">
                             <div>
-                                <!-- Algo Strats Table -->
-                                <!-- Algo List Table -->
-                            <section class="intro">
-
+                            <!-- Algo Strats Table -->
+                            <!-- Algo List Table -->
+                            <section >
                                 <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
                                     <table class="table table-hover table-sm align-middle text-nowrap w-100 algo-table">
                                         <thead class="table-light sticky-top">
                                             <tr class="text-uppercase small">
-                                                 <th class="py-2 px-3">Algo Name</th>
-                                                <th class="py-2 px-3">Lead / Lag</th>
-                                                <th class="py-2 px-3">Spread / Qty</th>
-                                                <th class="py-2 px-3">Currency</th>
-                                                <th class="py-2 px-3">Instrument / Contract</th>
-                                                <th class="py-2 px-3">Status</th>
-                                                <th class="py-2 px-3">On / Off</th>
-                                                <th class="py-2 px-3">Actions</th>
+                                                <th class="">Algo Name</th>
+                                                <th class="">Lead / Lag</th>
+                                                <th class="">Direction / Offset</th>
+                                                <th class="">Spread / Qty</th>
+                                                <th class="">Currency</th>
+                                                <th class="">Instrument / Contract</th>
+                                                <th class="">Status</th>
+                                                <th class="">On / Off</th>
+                                                <th class="">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="algo-list"></tbody>
                                         <tbody id="algo-list-new"></tbody>
                                     </table>
                                 </div>
-                                
-                                
-                                <!-- <table class="table table-hover table-sm align-middle text-nowrap w-100 border rounded shadow-sm algo-table" style="max-height: auto; overflow-y: auto;">
-                                    <thead class="table-light sticky-top">
-                                        <tr class="text-uppercase small ">
-                                            <th class="py-2 px-3">Algo Name</th>
-                                            <th class="py-2 px-3">Lead / Lag</th>
-                                            <th class="py-2 px-3">Spread / Qty</th>
-                                            <th class="py-2 px-3">Currency</th>
-                                            <th class="py-2 px-3">Instrument / Contract</th>
-                                            <th class="py-2 px-3">Status</th>
-                                            <th class="py-2 px-3">On / Off</th>
-                                            <th class="py-2 px-3">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="algo-list"></tbody>
-                                    <tbody id="algo-list-new" ></tbody>
-                                </table> -->
-                                
-
+                            
                             </section> 
-
-
+                            <!-- ALGO ORDER FORM Input Section -->
 
                                 <!-- Button to Open Modal -->
                                 <button class="btn btn-dark " onclick="openAlgoModal()">Add New Algo</button>
 
                                 <!-- Modal for Adding/Editing Algo -->
-                                <div class="modal" id="algoModal" tabindex="-1">
+                                <div class="modal" id="algoModal" tabindex="">
                                     
                                     <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
 
                                             <div class="modal-header">
-                                                <h5 class="modal-title">Add New Algo</h5>
-                                                <button type="button" class="btn-close" onclick="closeAlgoModal()"></button>
+                                                <h5 class="modal-title" >Add New Algo</h5>
+                                                <!-- <button type="button" class="btn-close" onclick="closeAlgoModal()"></button> -->
                                             </div>
                                             
                                             <div class="modal-body">
                                                 <form id="new-algoForm">
+
                                                     <!-- Algo Type and Algo name -->
                                                     <div class="row">
                                                         <div class="input-group mb-3">
@@ -698,7 +684,9 @@
                                                                     <!-- Additional options can be added here -->
                                                                 </select>
                                                             </div>
+
                                                             <input type="text" class="form-control" id="new-algo-name" placeholder="Type algo name" >
+
                                                         </div>
                                                     </div>
 
@@ -706,19 +694,45 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <label for="new-algo-lead-exchange" class="form-label">Lead Exchange</label>
-                                                            <select class="form-select" id="new-algo-lead-exchange">
+                                                            <select class="form-select" id="new-algo-lead-exchange" >
                                                                 <option value="okx" selected>OKX</option>
                                                                 <option value="htx">HTX</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <label for="new-algo-lag-exchange" class="form-label">Lag Exchange</label>
-                                                            <select class="form-select" id="new-algo-lag-exchange">
+                                                            <label for="new-algo-lag-exchange" class="form-label" >Lag Exchange</label>
+                                                            <select class="form-select" id="new-algo-lag-exchange" >
                                                                 <option value="okx">OKX</option>
-                                                                <option value="htx" selected>HTX</option>
+                                                                <option value="htx" >HTX</option>
                                                             </select>
                                                         </div>
                                                     </div>
+
+                                                     <!-- direction and Offset -->
+                                                     <div class="row mt-3">
+                                                        <div class="col-md-6">
+                                                            <label for="new-algo-direction" class="form-label">Direction</label>
+
+                                                            <select class="form-select" id="new-algo-direction">
+                                                                <option value="buy">BUY</option>
+                                                                <option value="sell" selected>Sell</option>
+                                                            </select>
+
+                                                        </div>
+
+                                                        <div class="col-md-6" id="new-algo-offset-container" style="display: none;">
+                                                            <label for="new-algo-offset" class="form-label">Offset</label>
+
+                                                            <select class="form-select" id="new-algo-offset" >
+                                                                <option value="open">Open</option>
+                                                                <option value="close" selected>Close</option>
+                                                            </select>
+                                                        </div>
+
+                                                 
+                                                        
+                                                    </div>
+
                                                     <!-- Spread and Quantity -->
                                                     <div class="row mt-3">
                                                         <div class="col-md-6">
@@ -730,6 +744,9 @@
                                                             <input type="number" class="form-control" id="new-algo-quantity" placeholder="Enter Quantity">
                                                         </div>
                                                     </div>
+                                                   
+
+
                                                     <!-- Instrument and Contract Type -->
                                                     <div class="row mt-3">
                                                         <div class="col-md-6">
@@ -1189,10 +1206,10 @@
             }
 
             th, td {
-                width: 25%; /* Adjust based on the number of columns */
-                overflow: hidden;
-                text-overflow: ellipsis;
+                /* width: 25%; Adjust based on the number of columns */
+                /* overflow: hidden; */
                 /* text-align: center; */
+            
             }
             
             .btn{

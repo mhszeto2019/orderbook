@@ -92,7 +92,7 @@
         <div class = "row px-4 " >
             
             <!-- DISPLAY TABLE -->
-            <div class="resizable-container col-lg-6 container-fluid mt-4 " id="orderbookdisplayContainer">
+            <div class="col-lg-6 container-fluid mt-4 " id="orderbookdisplayContainer">
                 <!-- Container for the funding rates row -->
                 <div class="row ">
                     <!--WS STATUS BADGE  -->
@@ -104,7 +104,6 @@
                             <span id="status-bnb" class="btn statusbadge bg-danger mb-2">bnb: dead</span>
                         </div>
                     </div>
-                    <div class="resize-handle"></div>
                     <!-- Funding rate Section -->
                     <div id="okx-section" class="col-md-4 mb-4">
                         <div class="d-flex justify-content-between align-items-center">
@@ -369,7 +368,7 @@
 
 
             <!-- FORM for ordering -->
-            <div class="resizable-container col-lg-6 container-fluid  mt-4">
+            <div class="col-lg-6 container-fluid  mt-4">
 
                 <!-- This section will only be visible if the JWT is NOT present -->
                 <div id="loginPromptBtn" class="alert alert-warning text-center h-100">
@@ -535,31 +534,7 @@
                                     
                                     
                                     <script>
-
-    // Get the elements
-    const resizableContainer = document.querySelector('.resizable-container');
-    const resizeHandle = document.querySelector('.resize-handle');
-    let isResizing = false;
-
-    // When mouse is pressed on the resize handle, start resizing
-    resizeHandle.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        document.body.style.cursor = 'ew-resize'; // Change cursor when resizing starts
-    });
-
-    // When mouse is moved, resize the container
-    document.addEventListener('mousemove', (e) => {
-        if (isResizing) {
-            const newWidth = e.clientX - resizableContainer.offsetLeft; // Calculate the new width
-            resizableContainer.style.width = `${newWidth}px`; // Set the new width
-        }
-    });
-
-    // When mouse is released, stop resizing
-    document.addEventListener('mouseup', () => {
-        isResizing = false;
-        document.body.style.cursor = 'default'; // Reset cursor when resizing stops
-    });
+    
 
                                         // Simulate condition for triggering warning
                                         function checkCondition() {
@@ -835,28 +810,7 @@
                                     Last updated: <span id="last-updated-positions">-</span>
                                 </tag>
                             </p>
-    <!--                        
-                            <div class="table-responsive">
-                            
-                                <table class="OMStable table table-hover table-bordered table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Exchange</th>
-                                            <th>Instrument ID</th>
-                                            <th>Lev</th>
-                                            <th>Mgn Ratio</th>
-                                            <th>Position (Buy/Sell)</th>
-                                            <th>ADL</th>
-                                            <th>Liquidation Price</th>
-                                            <th>Price</th>
-                                            <th>PnL</th>
-                                            <th>Ts</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="oms-open-positions-body">
-                                    </tbody>
-                                </table>
-                            </div> -->
+    
 
 
                             <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">

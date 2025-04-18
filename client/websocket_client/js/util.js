@@ -39,8 +39,7 @@ function updateCurrencyOptionsGeneral(instrumentInputId, currencyInputId, contra
     }
 }
 
-
-
+ 
 // Setting algo type name - triggered in modal when we selectn new algo type
   function setnewAlgoType(element) {
     // Get the value stored in the data-value attribute of the clicked <a> tag
