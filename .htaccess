@@ -1,0 +1,14 @@
+# Disable directory listing
+Options -Indexes
+
+# Allow access to only HTML files
+<FilesMatch "\.(html|htm)$">
+    Require all granted
+</FilesMatch>
+
+# Deny access to sensitive files (e.g., PHP scripts, config files, log files, e>
+<FilesMatch "\.(php|ini|conf|json|log|sql|env)$">
+    Require all denied
+</FilesMatch>
+
+
