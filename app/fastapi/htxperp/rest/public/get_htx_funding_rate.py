@@ -177,7 +177,6 @@ async def get_funding_rate(
         json_dict['ccy'] = payload.ccy
         json_dict['exchange'] = 'htxperp'
 
-
         logger.info(f"{payload.ccy}|{json_dict}")
         await exchange.close()
         # print(result)

@@ -15,6 +15,7 @@ async function populateFundingRate(){
         // alert("You must be logged in to access this.");
         return;
     }
+    // console.log(document.getElementById('fundingrate-currency-input'))
     ccy = document.getElementById('fundingrate-currency-input').value
     const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
 

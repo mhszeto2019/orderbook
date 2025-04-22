@@ -5,9 +5,9 @@ const wsConnections = {};
 
 // Store the exchange data for each exchange
 const lastData = {
-    'okx': null,
-    'htx': null,
-    'bnb': null
+    'okxperp': {},
+    'htxperp': {},
+    'binanceperp': {}
 };
 
 
@@ -28,29 +28,64 @@ function updateArbOrder(buySpreadpx,buysz,sellSpreadpx,sellsz,buysellgap){
 }
 
 function compareData(newData) {
-    const exchange = newData.exchange;
-    // const otherExchange = exchange === 'htx' ? 'okx' : 'htx';
-    exchange1 = document.getElementById('exchange1-input').value
-    exchange2 = document.getElementById('exchange2-input').value
-    // Get the previous data for the current exchange and the other exchange
-    const currentData = newData;
+    // const exchange = newData.exchange;
+    // // const otherExchange = exchange === 'htx' ? 'okx' : 'htx';
+    let exchange1 = document.getElementById('exchange1-input').value
+    let exchange2 = document.getElementById('exchange2-input').value
+    let marketType1 = document.getElementById('market-type-orderbook1').value
+    let marketType2 = document.getElementById('market-type-orderbook2').value
+    let ccy1 = document.getElementById('currency-input-orderbook1').value
+    let ccy2 = document.getElementById('currency-input-orderbook2').value
+
+    // // Get the previous data for the current exchange and the other exchange
+    if (marketType1 == 'perp'){
+        exchange1 = exchange1 + 'perp'
+    }
+    else{
+        exchange1 = exchange1 + 'spot'
+
+    }
+
+    if (marketType2 == 'perp'){
+        exchange2 = exchange2 + 'perp'
+    }
+    else{
+        exchange2 = exchange2 + 'spot'
+
+    }
+    // console.log(exchange1,exchange2)
+    // const currentData = newData;
     const previousDataEx1 = lastData[exchange1];
     const previousDataEx2 = lastData[exchange2];
-    // console.log("ex1:",previousDataEx1,"ex2:",previousDataEx2,"newdata",newData)
-    // console.log(JSON.parse(currentData.bid_list)[0].price)
-    // If both previous data exist, compare them
-    if (previousDataEx1 && previousDataEx2) {
-        // Get the best bid and ask prices for both exchanges
-        const bestBidEx1 = JSON.parse(previousDataEx1.bid_price)
-        const bestBidSzEx1 = JSON.parse(previousDataEx1.bid_size)
-        const bestAskEx1 = JSON.parse(previousDataEx1.ask_price)
-        const bestAskSzEx1 = JSON.parse(previousDataEx1.ask_size)
+    // if (previousDataEx1[ccy1] && previousDataEx2[ccy2] ) {
+    //     console.log(previousDataEx1[ccy1]['best_bid'])
+    //     console.log(previousDataEx2[ccy2]['best_ask'])
+    // }
+    // console.log(ccy2)
+    // console.log(previousDataEx2[ccy2])
+    // console.log(previousDataEx1)
+    // console.log(ccy1,ccy2)
+    // console.log(lastData[exchange1][ccy1]['best_bid'][0])
 
-        const bestBidEx2 = JSON.parse(previousDataEx2.bid_price)
-        const bestBidSzEx2 = JSON.parse(previousDataEx2.bid_size)
-        const bestAskEx2 = JSON.parse(previousDataEx2.ask_price)
-        const bestAskSzEx2 = JSON.parse(previousDataEx2.ask_size)
-        
+    // console.log(previousDataEx1)
+    // If both previous data exist, compare them
+    let bestBidEx1, bestBidSzEx1, bestAskEx1, bestAskSzEx1;
+    let bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2;
+
+    if (previousDataEx1[ccy1] && previousDataEx2[ccy2]) {
+        bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0];
+        bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][1];
+        bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0];
+        bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][1];
+
+        bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0];
+        bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][1];
+        bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0];
+        bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][1];
+    }
+    // console.log(bestBidEx1)
+    // You can now use them outside the if block
+
   
         
         // if user wants to buy, it will be buying from exchange1 and selling exchange2 so we take exchange2's bid - exchange1's ask
@@ -73,13 +108,9 @@ function compareData(newData) {
         // console.log("buySpread",buySpread, `(${buySzSpread})` ,"\nsellSpread",sellSpread,`(${sellSpread})`)
 
         updateArbOrder(buySpread,buySzSpread,sellSpread,sellSzSpread,buysellgap)
-        
    
     }
   
-    // Update the last data received for the current exchange
-    lastData[exchange] = currentData;
-  }
   
   // Function to process data when received (this can be customized)
   function onWsDataReceived(exchange, data) {
@@ -112,16 +143,35 @@ let socket1 = null;
 
 // Only attach listeners once
 let listenersAttached = false;
+let listenersAttached2 = false;
+
+function compareDataQueue(data){
+    json_data = JSON.parse(data)
+    // console.log(json_data)
+    symbol = json_data['symbol']
+    exchange = json_data['exchange']
+    if (!lastData[exchange][symbol]) {
+        lastTrades[exchange][symbol] = []
+    }
+    lastData[exchange][symbol] =  json_data
+    // console.log(lastData)
+    compareData(lastData)
+
+}
 
 function connectToSocketIO1(socketUrl1) {
     socket1 = new WebSocket(socketUrl1);
 
     socket1.onopen = () => {
         console.log("Connected to server:", socketUrl1);
+        socket1.send("Client connected and ready");
+
     };
 
     socket1.onmessage = (event) => {
+        compareDataQueue(event.data)
         clearOrderbookTable(1);
+
         populateOrderBook(1, exchange_orderbook1, event.data);
         socket1.send("message Received");
     };
@@ -174,12 +224,14 @@ function sendMarketData(forceReconnect = false) {
 
     const socketUrl1 = wsServers[exchange_orderbook1][market_type_orderbook1];
 
-    if (forceReconnect && socket1) {
+    if (forceReconnect ) {
         disconnectSocket1(socket1);
         connectToSocketIO1(socketUrl1);
+   
     } else if (socket1 && socket1.readyState === WebSocket.OPEN) {
         clearOrderbookTable(1);
         socket1.send(JSON.stringify(json_dict));
+
     }
 }
 
@@ -202,19 +254,16 @@ function connectToSocketIO2(socketUrl2) {
     socket2 = new WebSocket(socketUrl2);
     socket2.onopen = () => {
         console.log("Connected to server:ws://localhost:5090/ws");
-    };
         
-    socket2.onopen = () => {
-        // console.log("Connected to server");
-        // socket1.send("Client connected and ready");
-    };
+        socket2.send("Client connected and ready");
 
+    };
+    
     socket2.onmessage = (event) => {
-        // console.log("Received from server:", event.data);
-        // acknowledge message receive from server
-        // console.log(event.data)
-        // console.log(typeof event.data)
+        compareDataQueue(event.data)
+        
         clearOrderbookTable(2)
+        
         populateOrderBook(2,exchange_orderbook2,event.data)
         socket2.send("message Receieved")
         
@@ -261,20 +310,64 @@ function connectToSocketIO2(socketUrl2) {
     });
 
 
+// Only attach listeners once
+    if (!listenersAttached2) {
+        attachListeners2();
+        listenersAttached2 = true;
+        }
 
-    // Optional cleanup on page unload
+    // Clean up on unload
     window.addEventListener("beforeunload", () => {
         if (socket2) socket2.close(1000, "Client left");
     });
+    }
 
-}
+    function attachListeners2() {
+    document.getElementById('market-type-orderbook2').addEventListener('change', () => {
+        sendMarketData2();
+    });
 
-function disconnectSocket2(socket2) {
-    if (socket2) {
+    document.getElementById('currency-input-orderbook2').addEventListener('change', () => {
+        sendMarketData2();
+    });
+
+    document.getElementById('exchange2-input').addEventListener('change', () => {
+        sendMarketData2(true);  // force reconnect
+    });
+    }
+
+    function sendMarketData2(forceReconnect = false) {
+    const market_type_orderbook2 = document.getElementById('market-type-orderbook1').value;
+    const currency_orderbook2 = document.getElementById('currency-input-orderbook1').value;
+    const exchange_orderbook2 = document.getElementById('exchange1-input').value;
+    const json_dict = {
+        symbol: currency_orderbook2,
+        market_type: market_type_orderbook2,
+        exchange_type: exchange_orderbook2
+    };
+
+    console.log(json_dict);
+
+    const socketUrl2 = wsServers[exchange_orderbook2][market_type_orderbook2];
+
+    if (forceReconnect ) {
+        disconnectSocket1(socket2);
+        connectToSocketIO1(socketUrl2);
+
+    } else if (socket2 && socket2.readyState === WebSocket.OPEN) {
+        clearOrderbookTable(2);
+        socket2.send(JSON.stringify(json_dict));
+
+    }
+    }
+
+    function disconnectSocket2(socket2) {
+    if (socket2 && socket2.readyState === WebSocket.OPEN) {
         socket2.close(1000, "Manual disconnect");
         console.log("Socket manually disconnected");
     }
-}
+    }
+
 
 
 // Set up button 3 click event listener
@@ -288,10 +381,6 @@ document.getElementById('exchange2-input').addEventListener('change', () => {
     disconnectSocket2(socket2)
     connectToSocketIO2(socketUrl2)
 });
-
-
-
-
 
 
 

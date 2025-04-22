@@ -2,7 +2,6 @@ let debounceTimeout = null;
 
 
 function populateOrderBook(i,exchange, data) {
-    // console.log(exchange)
 
     const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
     // Get the selected exchange for the current table
@@ -63,10 +62,8 @@ const debouncedPopulateOrderBook = debounce(populateOrderBook, 10);
 function clearOrderbookTable(tableNumber) {
 
     const orderbookTs1DOM = document.getElementById(`orderbook-timestamp-${tableNumber}`);
-    // const orderbookTs2DOM = document.getElementById('orderbook-timestamp-2');
 
     const orderbookDisplay1DOM = document.getElementById(`order-data-table-body-${tableNumber}`);
-    // const orderbookDisplay2DOM = document.getElementById('order-data-table-body-2');
 
     // Safely clear tables and timestamps
     if (orderbookDisplay1DOM) {
@@ -74,19 +71,12 @@ function clearOrderbookTable(tableNumber) {
             orderbookDisplay1DOM.firstChild.remove();
         }
     }
-    // if (orderbookDisplay2DOM) {
-    //     while (orderbookDisplay2DOM.firstChild) {
-    //         orderbookDisplay2DOM.firstChild.remove();
-    //     }
-    // }
+ 
 
     if (orderbookTs1DOM) orderbookTs1DOM.innerHTML = '';
-    // if (orderbookTs2DOM) orderbookTs2DOM.innerHTML = '';
 }
 
-// Function to scroll the orderbook to the middle
 
-// Call the scrollToMiddle function when the page loads (or after content is updated)
 
 
 
@@ -107,16 +97,6 @@ function clearlastPriceTable() {
         }
     }
  
-}
-
-function onWsDataReceived(exchange,message) {
-    try {
-        
-        populateOrderBook(exchange,message)
-    
-    } catch (error) {
-        console.error("Error processing WebSocket data:", error);
-    }
 }
 
 

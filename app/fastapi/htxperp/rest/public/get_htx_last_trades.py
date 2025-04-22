@@ -108,7 +108,7 @@ exchange = None
 
 
 
-@app.get("/okxperp/")
+@app.get("/htxperp/")
 async def read_root():
     return {"message": "Welcome to the FastAPI with ccxt integration!"}
 
@@ -118,7 +118,7 @@ class FundingRateRequest(BaseModel):
     redis_key: str
     ccy: str
 
-@app.post("/htx_perp/get_last_trades")
+@app.post("/htxperp/get_last_trades")
 async def get_last_trades(
     payload: FundingRateRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -155,7 +155,6 @@ async def get_last_trades(
         ccy_str = ccy.replace('-SWAP','')
         result = await exchange.fetch_trades(ccy_str)
        
-       
         row =  result[-10:]
 
         # print(row)
@@ -164,8 +163,7 @@ async def get_last_trades(
         json_dict['trades'] = result[-10:]
         # json_dict['ts'] = result['fundingTimestamp']
         json_dict['ccy'] = payload.ccy
-        json_dict['exchange'] = 'okxperp'
-
+        json_dict['exchange'] = 'htxperp'
         logger.info(f"{payload.ccy}|{json_dict}")
         await exchange.close()
         # print(result)

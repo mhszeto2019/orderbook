@@ -3,7 +3,8 @@
 // const okxsocketLastTrades = io('http://localhost:5098');
 
 let lastTrades = {
-    "htxperp": {}, // Exchange
+    "htxperp": {}, // 
+    "htxspot": {}, // 
     "okxperp": {},  // Another exchange
     "okxspot": {}  // Another exchange
 
@@ -80,7 +81,6 @@ async function getTradeHistory(){
         if (response.ok) {
             
             const response_data = await response.json();
-            console.log(response_data)
             updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
             populateLastTrades(1) 
             
@@ -119,23 +119,23 @@ async function getTradeHistory2(){
     });
 
 
-    const results = await Promise.allSettled([firstLastTradePromise2]);
+    const results2 = await Promise.allSettled([firstLastTradePromise2]);
 
     // Handle SECOND TABLE Response
-    if (results[0].status === 'fulfilled') {
-        const response = results[0].value;
+    if (results2[0].status === 'fulfilled') {
+        const response = results2[0].value;
         if (response.ok) {
             
             const response_data = await response.json();
-            console.log("HELLOOO")
             updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
+
             populateLastTrades(2) 
             
         } else {
             console.error('Error fetching SECOND TABLE trades:', response.statusText);
         }
     } else {
-        console.error('SECOND TABLE Request failed:', results[0].reason);
+        console.error('SECOND TABLE Request failed:', results2[0].reason);
     }
 
 }
@@ -176,7 +176,6 @@ function populateLastTrades(tableNo) {
     const lastTradeHeader = document.getElementById(`lastTrade-header-${tableNo}`)
     const market_type = document.getElementById(`market-type-orderbook${tableNo}`).value
 
-    console.log(market_type)
     if (market_type == 'perp'){
         selectedExchange += 'perp'
     }
@@ -184,7 +183,6 @@ function populateLastTrades(tableNo) {
         selectedExchange += 'spot'
     }
     
-    // console.log(lastTrades,selectedExchange,selectedCcy)
 
     // Check if the value ends with '-SWAP' and remove it if true
     data = lastTrades[selectedExchange][selectedCcy]
@@ -192,10 +190,8 @@ function populateLastTrades(tableNo) {
         
         const tableBody = document.getElementById(`lastprice-data-table-body-${tableNo}`);
         tableBody.innerHTML = ''
-        
         // Populate table with new data
         data.forEach(trade => {
-            // console.log(trade)
             const row = document.createElement('tr'); // Create a new table row
             
             // Create and append cells for price, time, direction, and amount

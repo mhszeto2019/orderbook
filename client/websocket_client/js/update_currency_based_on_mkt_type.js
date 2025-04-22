@@ -5,7 +5,7 @@ const currencyOptions = {
         { value: 'BTC-USDC', text: 'BTC-USDC' }
     ],
     perp: [
-        // { value: '', text: '--Not Selected--' },
+        { value: '', text: '--Not Selected--' },
         { value: 'BTC-USD-SWAP', text: 'BTC-USD-SWAP' },
         { value: 'BTC-USDT-SWAP', text: 'BTC-USDT-SWAP' },
         { value: 'ETH-USD-SWAP', text: 'ETH-USD-SWAP' }

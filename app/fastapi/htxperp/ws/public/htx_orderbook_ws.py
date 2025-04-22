@@ -209,15 +209,20 @@ class OrderBookStreamer:
         try:
             while self.running:
                 # Example fetch
-                orderbook = await self.exchange.watch_order_book(symbol)
+                htx_symbol = symbol.replace("-SWAP","")
+                orderbook = await self.exchange.watch_order_book(htx_symbol)
                 # print(orderbook)
+                # print(orderbook["bids"][0],orderbook['asks'][0])
                 await broadcast({
                     "symbol": symbol,
                     "bids": orderbook["bids"][:5],
                     "asks": orderbook["asks"][:5],
-                    "timestamp": orderbook["timestamp"]
+                    "timestamp": orderbook["timestamp"],
+                    "best_bid":orderbook['bids'][0],
+                    "best_ask":orderbook['asks'][0],
+                    "exchange":"htxperp"
                 })
-                await asyncio.sleep(1)
+                # await asyncio.sleep(1)
         except Exception as e:
             print(f"Streamer error: {e}")
         # finally:
@@ -244,11 +249,11 @@ async def websocket_endpoint(websocket: WebSocket):
     streamer = None
     try:
         while True:
-            time.sleep(0.1)
+            # time.sleep(0.1)
             client_text = await websocket.receive_text() 
             if 'symbol' in client_text:
                 json_dict = json.loads(client_text)
-                symbol = json_dict['symbol'].replace("-SWAP","")
+                symbol = json_dict['symbol']
 
                 if streamer:
                     await streamer.stop()

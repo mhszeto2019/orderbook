@@ -137,76 +137,14 @@
                                     <i class="bi bi-currency-dollar"></i>
                                 </span>
                                 <select id="fundingrate-currency-input" class="form-select">
-                                    
+
                                     <!-- Options will be populated via JS -->
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <script>
-                        // const currencyOptions = {
-                        //     spot: [
-                        //         { value: 'BTC-USD', text: 'BTC-USD' },
-                        //         { value: 'BTC-USDT', text: 'BTC-USDT' },
-                        //         { value: 'BTC-USDC', text: 'BTC-USDC' }
-                        //     ],
-                        //     perp: [
-                        //         { value: 'BTC-USD-SWAP', text: 'BTC-USD-SWAP' },
-                        //         { value: 'BTC-USDT-SWAP', text: 'BTC-USDT-SWAP' }
-                        //     ],
-                        //     futures: [
-                        //         { value: 'BTC-USD-FUT', text: 'BTC-USD-FUT' },
-                        //         { value: 'BTC-USDT-FUT', text: 'BTC-USDT-FUT' }
-                        //     ]
-                        // };
-
-                        // function updateCurrencyOptions() {
-                        //     const marketType = document.getElementById('market-type').value;
-                        //     const currencySelect = document.getElementById('fundingrate-currency-input');
-                        //     currencySelect.innerHTML = ''; // Clear old options
-
-                        //     const options = currencyOptions[marketType] || [];
-                        //     options.forEach(opt => {
-                        //         const option = document.createElement('option');
-                        //         option.value = opt.value;
-                        //         option.textContent = opt.text;
-                        //         currencySelect.appendChild(option);
-                        //         if (opt.value === "BTC-USD") {
-                        //             option.selected = true;
-                        //         }
-                        //     });
-                            
-                        // }
-
-                        // // Initialize with default market type (spot)
-                        // document.addEventListener('DOMContentLoaded', updateCurrencyOptions);
-
-                        // function populateFundingRate() {
-                        //     const marketType = document.getElementById('market-type').value;
-                        //     const selectedCurrency = document.getElementById('fundingrate-currency-input').value;
-
-                        //     console.log('Market Type:', marketType);
-                        //     console.log('Selected Currency:', selectedCurrency);
-
-                        //     // You can now call your fetch function or manipulate the DOM
-                        //     // e.g., fetchFundingRate(marketType, selectedCurrency);
-                        // }
-
-                        // document.addEventListener('DOMContentLoaded', function () {
-                        //     const marketTypeSelect = document.getElementById('market-type-input');
-                        //     const currencySelect = document.getElementById('fundingrate-currency-input');
-
-                        //     if (marketTypeSelect) {
-                        //         marketTypeSelect.addEventListener('change', populateFundingRate);
-                        //     }
-
-                        //     if (currencySelect) {
-                        //         currencySelect.addEventListener('change', populateFundingRate);
-                        //     }
-                        // });
-
-                    </script>
+                  
 
                     
                     
@@ -407,8 +345,9 @@
                                                         <h5 id="orderbook-header-1" class="text-center">Order Book 1</h5>
                                                         
                                                         <div id="orderbook-timestamp-1" class="text-center">
-                                                            <!-- Timestamp content here -->
                                                             <strong></strong> <span>Not Selected</span>
+
+                                                            <!-- Timestamp content here -->
 
                                                         </div>
                                                     </div>
