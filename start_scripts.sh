@@ -17,6 +17,12 @@ run_app "app.fastapi.okxperp.rest.public.get_okx_funding_rate:app " 5001
 # Run the second app (auth)
 run_app "app.fastapi.htxperp.rest.public.get_htx_funding_rate:app" 5000
 
+uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091
+uvicorn app.fastapi.okxperp.ws.public.okx_orderbook_ws:app --port 5090
 
+
+uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app 
+python3 app.fastapi.okxperp.rest.public.get_okx_last_trades:app 
 # Wait for all background jobs (apps) to finish
 wait
+

@@ -5,8 +5,11 @@ const currencyOptions = {
         { value: 'BTC-USDC', text: 'BTC-USDC' }
     ],
     perp: [
+        // { value: '', text: '--Not Selected--' },
         { value: 'BTC-USD-SWAP', text: 'BTC-USD-SWAP' },
-        { value: 'BTC-USDT-SWAP', text: 'BTC-USDT-SWAP' }
+        { value: 'BTC-USDT-SWAP', text: 'BTC-USDT-SWAP' },
+        { value: 'ETH-USD-SWAP', text: 'ETH-USD-SWAP' }
+
     ],
     futures: [
         { value: 'BTC-USD-FUT', text: 'BTC-USD-FUT' },
@@ -25,9 +28,9 @@ function updateCurrencyOptions() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        if (opt.value === "BTC-USD") {
-            option.selected = true;
-        }
+        // if (opt.value === "BTC-USD") {
+        //     option.selected = true;
+        // }
     });
     
 }
@@ -43,9 +46,9 @@ function updateCurrencyOptionsOrderbook1() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        if (opt.value == "BTC-USD") {
-            option.selected = true;
-        }
+        // if (opt.value == "BTC-USD") {
+        //     option.selected = true;
+        // }
     });
     
 }
@@ -60,9 +63,9 @@ function updateCurrencyOptionsOrderbook2() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        if (opt.value == "BTC-USD-SWAP") {
-            option.selected = true;
-        }
+        // if (opt.value == "BTC-USD-SWAP") {
+        //     option.selected = true;
+        // }
     });
     
 }

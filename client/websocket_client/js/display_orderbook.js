@@ -17,8 +17,10 @@ function populateOrderBook(i,exchange, data) {
     data = JSON.parse(data)
 
     const bid_list = data.bids;
-    const ask_list = data.asks.sort();
-    timestamp.innerHTML = `${data.timestamp}`;
+    const ask_list = data.asks.reverse();
+    const readableTime = new Date(data.timestamp).toLocaleString();
+    timestamp.innerHTML = readableTime;
+    // timestamp.innerHTML = `${data.timestamp}`;
     
     orderbookHeader.innerHTML = `Orderbook: ${selectedExchange.toUpperCase()}` 
     // // Populate asks
@@ -58,13 +60,13 @@ function debounce(func, delay) {
 const debouncedPopulateOrderBook = debounce(populateOrderBook, 10);
 
 
-function clearOrderbookTable() {
+function clearOrderbookTable(tableNumber) {
 
-    const orderbookTs1DOM = document.getElementById('orderbook-timestamp-1');
-    const orderbookTs2DOM = document.getElementById('orderbook-timestamp-2');
+    const orderbookTs1DOM = document.getElementById(`orderbook-timestamp-${tableNumber}`);
+    // const orderbookTs2DOM = document.getElementById('orderbook-timestamp-2');
 
-    const orderbookDisplay1DOM = document.getElementById('order-data-table-body-1');
-    const orderbookDisplay2DOM = document.getElementById('order-data-table-body-2');
+    const orderbookDisplay1DOM = document.getElementById(`order-data-table-body-${tableNumber}`);
+    // const orderbookDisplay2DOM = document.getElementById('order-data-table-body-2');
 
     // Safely clear tables and timestamps
     if (orderbookDisplay1DOM) {
@@ -72,14 +74,14 @@ function clearOrderbookTable() {
             orderbookDisplay1DOM.firstChild.remove();
         }
     }
-    if (orderbookDisplay2DOM) {
-        while (orderbookDisplay2DOM.firstChild) {
-            orderbookDisplay2DOM.firstChild.remove();
-        }
-    }
+    // if (orderbookDisplay2DOM) {
+    //     while (orderbookDisplay2DOM.firstChild) {
+    //         orderbookDisplay2DOM.firstChild.remove();
+    //     }
+    // }
 
     if (orderbookTs1DOM) orderbookTs1DOM.innerHTML = '';
-    if (orderbookTs2DOM) orderbookTs2DOM.innerHTML = '';
+    // if (orderbookTs2DOM) orderbookTs2DOM.innerHTML = '';
 }
 
 // Function to scroll the orderbook to the middle

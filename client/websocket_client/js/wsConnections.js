@@ -97,33 +97,33 @@ const wsServers = {
 market_type_orderbook1 = document.getElementById('market-type-orderbook1').value
 currency_orderbook1 = document.getElementById('currency-input-orderbook1').value
 exchange_orderbook1 = document.getElementById('exchange1-input').value
+
+market_type_orderbook2 = document.getElementById('market-type-orderbook2').value
+currency_orderbook2 = document.getElementById('currency-input-orderbook2').value
+exchange_orderbook2 = document.getElementById('exchange2-input').value
+
 socketUrl1 =  wsServers[exchange_orderbook1][market_type_orderbook1]
+socketUrl2 =  wsServers[exchange_orderbook2][market_type_orderbook2]
 
-let socket1 = null
+
+
 let socket2 = null 
+let socket1 = null;
 
-// Function to connect to Socket.IO servers for all exchanges
+// Only attach listeners once
+let listenersAttached = false;
+
 function connectToSocketIO1(socketUrl1) {
-  
-
     socket1 = new WebSocket(socketUrl1);
+
     socket1.onopen = () => {
-        console.log("Connected to server:ws://localhost:5090/ws");
-    };
-        
-    socket1.onopen = () => {
-        // console.log("Connected to server");
-        // socket1.send("Client connected and ready");
+        console.log("Connected to server:", socketUrl1);
     };
 
     socket1.onmessage = (event) => {
-        // console.log("Received from server:", event.data);
-        // acknowledge message receive from server
-        // console.log(event.data)
-        // console.log(typeof event.data)
-        populateOrderBook(1,exchange_orderbook1,event.data)
-        socket1.send("message Receieved")
-        
+        clearOrderbookTable(1);
+        populateOrderBook(1, exchange_orderbook1, event.data);
+        socket1.send("message Received");
     };
 
     socket1.onclose = () => {
@@ -134,33 +134,128 @@ function connectToSocketIO1(socketUrl1) {
         console.log("WebSocket Error: ", error);
     };
 
+    // Only attach listeners once
+    if (!listenersAttached) {
+        attachListeners();
+        listenersAttached = true;
+    }
+
+    // Clean up on unload
+    window.addEventListener("beforeunload", () => {
+        if (socket1) socket1.close(1000, "Client left");
+    });
+}
+
+function attachListeners() {
+    document.getElementById('market-type-orderbook1').addEventListener('change', () => {
+        sendMarketData();
+    });
+
+    document.getElementById('currency-input-orderbook1').addEventListener('change', () => {
+        sendMarketData();
+    });
+
+    document.getElementById('exchange1-input').addEventListener('change', () => {
+        sendMarketData(true);  // force reconnect
+    });
+}
+
+function sendMarketData(forceReconnect = false) {
+    const market_type_orderbook1 = document.getElementById('market-type-orderbook1').value;
+    const currency_orderbook1 = document.getElementById('currency-input-orderbook1').value;
+    const exchange_orderbook1 = document.getElementById('exchange1-input').value;
+    const json_dict = {
+        symbol: currency_orderbook1,
+        market_type: market_type_orderbook1,
+        exchange_type: exchange_orderbook1
+    };
+
+    console.log(json_dict);
+
+    const socketUrl1 = wsServers[exchange_orderbook1][market_type_orderbook1];
+
+    if (forceReconnect && socket1) {
+        disconnectSocket1(socket1);
+        connectToSocketIO1(socketUrl1);
+    } else if (socket1 && socket1.readyState === WebSocket.OPEN) {
+        clearOrderbookTable(1);
+        socket1.send(JSON.stringify(json_dict));
+    }
+}
+
+function disconnectSocket1(socket) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close(1000, "Manual disconnect");
+        console.log("Socket manually disconnected");
+    }
+}
+
+
+
+
+
+
+// Function to connect to Socket.IO servers for all exchanges
+function connectToSocketIO2(socketUrl2) {
+  
+
+    socket2 = new WebSocket(socketUrl2);
+    socket2.onopen = () => {
+        console.log("Connected to server:ws://localhost:5090/ws");
+    };
+        
+    socket2.onopen = () => {
+        // console.log("Connected to server");
+        // socket1.send("Client connected and ready");
+    };
+
+    socket2.onmessage = (event) => {
+        // console.log("Received from server:", event.data);
+        // acknowledge message receive from server
+        // console.log(event.data)
+        // console.log(typeof event.data)
+        clearOrderbookTable(2)
+        populateOrderBook(2,exchange_orderbook2,event.data)
+        socket2.send("message Receieved")
+        
+    };
+
+
+    socket2.onclose = () => {
+        console.log("Disconnected from server");
+    };
+
+    socket2.onerror = (error) => {
+        console.log("WebSocket Error: ", error);
+    };
+
     // Send any message you like
     function sendMessage(message) {
-        socket1.send(message);
+        socket2.send(message);
     }
 
     
 
     //  // Set up button click event listener
     // Set up button 1 click event listener
-    document.getElementById('market-type-orderbook1').addEventListener('click', () => {
-        market_type_orderbook1 = document.getElementById('market-type-orderbook1').value
-        currency_orderbook1 = document.getElementById('currency-input-orderbook1').value
-        exchange_orderbook1 = document.getElementById('exchange1-input').value
-        // console.log(market_type_orderbook1,currency_orderbook1,exchange_orderbook1)
-        json_dict = {"symbol":currency_orderbook1,"market_type":market_type_orderbook1,"exchange_type":exchange_orderbook1}
+    document.getElementById('market-type-orderbook2').addEventListener('change', () => {
+        market_type_orderbook2 = document.getElementById('market-type-orderbook2').value
+        currency_orderbook2 = document.getElementById('currency-input-orderbook2').value
+        exchange_orderbook2 = document.getElementById('exchange2-input').value
+        json_dict = {"symbol":currency_orderbook2,"market_type":market_type_orderbook2,"exchange_type":exchange_orderbook2}
 
+        clearOrderbookTable(2)
         sendMessage(JSON.stringify(json_dict));
 
     });
 
     // Set up button 2 click event listener
-    document.getElementById('currency-input-orderbook1').addEventListener('click', () => {
-        market_type_orderbook1 = document.getElementById('market-type-orderbook1').value
-        currency_orderbook1 = document.getElementById('currency-input-orderbook1').value
-        exchange_orderbook1 = document.getElementById('exchange1-input').value
-        json_dict = {"symbol":currency_orderbook1,"market_type":market_type_orderbook1,"exchange_type":exchange_orderbook1}
-
+    document.getElementById('currency-input-orderbook2').addEventListener('change', () => {
+        market_type_orderbook2 = document.getElementById('market-type-orderbook2').value
+        currency_orderbook2 = document.getElementById('currency-input-orderbook2').value
+        exchange_orderbook2 = document.getElementById('exchange2-input').value
+        json_dict = {"symbol":currency_orderbook2,"market_type":market_type_orderbook2,"exchange_type":exchange_orderbook2}
+        clearOrderbookTable(2)
         sendMessage(JSON.stringify(json_dict));
 
     });
@@ -169,14 +264,14 @@ function connectToSocketIO1(socketUrl1) {
 
     // Optional cleanup on page unload
     window.addEventListener("beforeunload", () => {
-        if (socket1) socket1.close(1000, "Client left");
+        if (socket2) socket2.close(1000, "Client left");
     });
 
 }
 
-function disconnectSocket1(socket1) {
-    if (socket1) {
-        socket1.close(1000, "Manual disconnect");
+function disconnectSocket2(socket2) {
+    if (socket2) {
+        socket2.close(1000, "Manual disconnect");
         console.log("Socket manually disconnected");
     }
 }
@@ -184,15 +279,20 @@ function disconnectSocket1(socket1) {
 
 // Set up button 3 click event listener
 // CHANGE EXCHANGE 
-document.getElementById('exchange1-input').addEventListener('click', () => {
-    market_type_orderbook1 = document.getElementById('market-type-orderbook1').value
-    currency_orderbook1 = document.getElementById('currency-input-orderbook1').value
-    exchange_orderbook1 = document.getElementById('exchange1-input').value
-    json_dict = {"symbol":currency_orderbook1,"market_type":market_type_orderbook1,"exchange_type":exchange_orderbook1}
-    socketUrl1 = wsServers[exchange_orderbook1][market_type_orderbook1]
-    disconnectSocket1(socket1)
-    connectToSocketIO1(socketUrl1)
+document.getElementById('exchange2-input').addEventListener('change', () => {
+    market_type_orderbook2 = document.getElementById('market-type-orderbook2').value
+    currency_orderbook2 = document.getElementById('currency-input-orderbook2').value
+    exchange_orderbook2 = document.getElementById('exchange2-input').value
+    json_dict = {"symbol":currency_orderbook2,"market_type":market_type_orderbook2,"exchange_type":exchange_orderbook2}
+    socketUrl2 = wsServers[exchange_orderbook2][market_type_orderbook2]
+    disconnectSocket2(socket2)
+    connectToSocketIO2(socketUrl2)
 });
+
+
+
+
+
 
 
 // Function to clear old data from lastData (for memory management)
@@ -208,3 +308,4 @@ function clearOldData() {
 setInterval(clearOldData, 60000); // Clear old data every 60 seconds
 
 connectToSocketIO1(socketUrl1)
+connectToSocketIO2(socketUrl2)
