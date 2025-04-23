@@ -29,13 +29,19 @@ import ccxt  # noqa: E402
 
 print('CCXT Version:', ccxt.__version__)
 
-exchange = ccxt.huobi({
-   'apiKey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746',
-   'secret': 'c5a5a686-b39d1d16-79864b22-f3e72',
-   'options': {
-       'defaultType': 'swap',
-   },
+# exchange = ccxt.huobi({
+#    'apiKey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746',
+#    'secret': 'c5a5a686-b39d1d16-79864b22-f3e72',
+#    'options': {
+#        'defaultType': 'swap',
+#    },
+# })
+exchange = ccxt.okx({
+   'apiKey': 'a0de3940-5679-4939-957a-51c87a8502d9',
+   'secret': 'FA44BCAAC3788C2AB4AFC77047930792',
+   'password': 'falconstead@Trading2024',
 })
+
 
 markets = exchange.load_markets()
 
@@ -75,30 +81,31 @@ markets = exchange.load_markets()
 
 
 # creating and canceling inverse swap (limit) order
-symbol = 'BTC-USD'
+symbol = 'BTC-USD-SWAP'
 order_type = 'limit'
 side = 'buy'
 offset = 'open'
 leverage = 5
 amount = 1
-price = 1
+price = 80000
 
 params = {'offset': offset, 'lever_rate': leverage}
 
 try:
    # fetching current balance
-   balance = exchange.fetch_balance()
+   balance = exchange.fetch_positions(symbols=['BTC-USD-SWAP'])
    print(balance)
+   for i in range(5):
+      # placing an order
+      order = exchange.create_order(symbol, order_type, side, amount, price, params)
+      print(order)
 
-   # placing an order
-#    order = exchange.create_order(symbol, order_type, side, amount, price, params)
-#    print(order)
-
-#    # listing open orders
-#    open_orders = exchange.fetch_open_orders(symbol)
+   # # listing open orders
+   # open_orders = exchange.fetch_open_orders(symbol)
    # print(open_orders)
 
-   # canceling an order
-#    cancelOrder = exchange.cancel_order(order['id'], symbol)
+   # # canceling an order
+   # cancelOrder = exchange.cancel_order(order['id'], symbol)
+
 except Exception as e:
    print(type(e).__name__, str(e))
