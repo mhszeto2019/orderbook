@@ -193,18 +193,9 @@ class TraderNotifier:
                     liq_px = float(data[symbol]['liq_px'])
                     last_px = float(data[symbol]['last_px'])
                     direction = data[symbol]['direction'] 
-                    logger.info(liq_px)
-                    logger.info(last_px)
-                    logger.info(direction)
+                    logger.info(f"[{self.username}]|liq_px:{liq_px}|last_px:{last_px}|direction:{direction}[ALERT WHEN {last_px * (1 - threshold) if direction =='buy' else last_px * (1 + threshold) } {'less' if direction =='buy' else 'more'  }  than liq_px]")
 
-                    
-                    # if direction == 'sell':
-                    #     alert_px = liq_px * (1 - threshold)
-                    #     should_alert = alert_px <= last_px
-                    # else:  # direction == 'buy'
-                    #     alert_px = liq_px * (1 + threshold)
-                    #     should_alert = alert_px >= last_px
-                
+         
                     if direction == 'buy':
                         alert_px = last_px * (1 - threshold)
                         should_alert = alert_px <= float(liq_px)
@@ -215,6 +206,7 @@ class TraderNotifier:
                     # State transition logic
                     if should_alert:
                         if self._state != 0b10:  # Only trigger if not already active
+                            logger.info(f"[{self.username}]|CALLING,position unsafe Exchange:{exchange}|Direction:{direction.upper()}|liq_px:{liq_px}|last_px{last_px}")
                             print(f"ALERT: {exchange} {direction.upper()} {alert_px:.2f} | {last_px:.2f} ")
                             self._state = 0b10  # ACTIVE_UNACKED
                             self.start_call(exchange,direction,liq_px,last_px)   
@@ -232,6 +224,30 @@ class TraderNotifier:
 
         return results
 
+
+    def parse_timestamp(self,ts):
+        """Helper function to convert ts to a datetime object."""
+        if isinstance(ts, (int, float)):
+            # assume Unix timestamp, convert to datetime
+            # if it's in milliseconds (e.g., 1745377162187), divide by 1000
+            if ts > 1e12:
+                ts = ts / 1000
+            return datetime.fromtimestamp(ts)
+        elif isinstance(ts, str):
+            try:
+                return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    return datetime.fromtimestamp(float(ts))  # fallback: try parsing as float timestamp string
+                except ValueError:
+                    logger.warning(f"[{self.username}]|Unrecognized timestamp format: {ts}")
+                    return None
+        elif isinstance(ts, datetime):
+            return ts
+        else:
+            logger.warning(f"Unsupported timestamp type: {type(ts)}")
+            return None
+
     def update_liq_px(self,update_interval = 10):
         while self.update_thread_status:
             htx_liq_prices = self.get_htx_liq_px()
@@ -239,30 +255,55 @@ class TraderNotifier:
             # {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 77067.3, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}
 
             # Find the latest entry with ts
+            # for exchange, symbols in self.exchanges.items():
+            #     for symbol, info in symbols.items():
+            #         if symbol in self.latest_prices and isinstance(info, dict) and 'ts' in info:
+            #             # ts = datetime.strptime(info['ts'], "%Y-%m-%d %H:%M:%S")
+            #             ts = info['ts']
+
+            #             # print(ts,self.latest_prices[symbol]['ts'])
+            #             current = self.latest_prices[symbol]['ts']
+            #             if current is None or ts > current:
+            #                 self.latest_prices[symbol] = {
+            #                     'ts': ts,
+            #                     'last_px': float(info['last_px']),
+            #                     'exchange': exchange
+            #                 }
+
             for exchange, symbols in self.exchanges.items():
                 for symbol, info in symbols.items():
                     if symbol in self.latest_prices and isinstance(info, dict) and 'ts' in info:
-                        ts = datetime.strptime(info['ts'], "%Y-%m-%d %H:%M:%S")
-                        current = self.latest_prices[symbol]['ts']
-                        if current is None or ts > current:
+                        ts = self.parse_timestamp(info['ts'])
+                        current = self.parse_timestamp(self.latest_prices[symbol].get('ts'))
+
+                        if ts and (current is None or ts > current):
                             self.latest_prices[symbol] = {
                                 'ts': ts,
                                 'last_px': float(info['last_px']),
                                 'exchange': exchange
                             }
 
+            logger.info(f"[{self.username}]|latest_px{self.latest_prices['BTC-USD']['last_px']}|ts:{self.latest_prices['BTC-USD']['ts']}|exchanges:{self.exchanges}")
+
             # if self.username in ['brennan12']:
-            if self.username in ['testshw']:
+            if self.username in ['SHWfalconstead']:
 
                 self.exchanges['deribit'] = {'BTC-USD': {'liq_px':57000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'buy', 'ts': '2025-04-08 11:03:02'}}
 
-                self.exchanges['htx'] = {'BTC-USD': {'liq_px':105000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+                # self.exchanges['htx2'] = {'BTC-USD': {'liq_px':112000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
 
+            if self.username in ['falconpat']:
+
+                self.exchanges['deribit'] = {'BTC-USD': {'liq_px':62420, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'buy', 'ts': '2025-04-08 11:03:02'}}
+
+                # self.exchanges['htx2'] = {'BTC-USD': {'liq_px':112000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+            
                 # self.exchanges['okx'] = {'BTC-USD': {'liq_px':105000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
 
 
                 # ts has to be the latest to update also because this is the laslt price
                 # self.exchanges['deribit'] = {'BTC-USD': {'liq_px': '55000', 'last_px': '60000', 'direction': 'buy', 'ts': '2025-04-18 17:01:02'},'ETH-USD': {'liq_px': 1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
+
             # if self.x %2:
             #     self.exchanges['deribit'] = {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': '2025-04-07 14:01:02'},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
             # else:
@@ -289,20 +330,14 @@ class TraderNotifier:
             from_=self.TWILIO_PHONE,
             url="https://handler.twilio.com/twiml/EH2940b91a251c76dd1d2d52e83a4ff983"
         )
-        # Could add SMS with position details
-        # self.client.messages.create(
-        #     body=f"Exchange:{exchange} Direction:{direction.upper()} LIQUIDATION WARNING! Liqudation Price:{liq_px} Last Price:{last_px}",
-        #     from_=self.TWILIO_PHONE,
-        #     to=self.YOUR_PHONE
-        # )
-
+        # ADDING SMS
         self.client.messages.create(
             body=(
-                f"Exchange: {exchange.upper()}\n"
+                f"[LIQUIDATION WARNING! - {exchange.upper()}]\n"
+                f"Username: {self.username}\n"
                 f"Direction: {direction.upper()}\n"
                 f"Remedy: {'Cover short' if direction.upper() == 'SELL' else 'Cover long' }\n"
-                f"LIQUIDATION WARNING!\n"
-                f"Liquidation Price: {liq_px}\n"
+                f"Liqn Price: {liq_px}\n"
                 f"Last Price: {last_px}"
             ),
             from_=self.TWILIO_PHONE,
@@ -336,7 +371,7 @@ class TraderNotifier:
         while status not in ["in-progress", "completed","busy"]:
             # while stats is in queue or ringing , we check the call status
             status = self.check_call_status(call_sid)
-            logger.info(status)
+            logger.info(f"self.username|{status}")
         # once call is in progress or completed we return False
         time.sleep(5)
         return False

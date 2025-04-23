@@ -215,8 +215,8 @@ class OrderBookStreamer:
                 # print(orderbook["bids"][0],orderbook['asks'][0])
                 await broadcast({
                     "symbol": symbol,
-                    "bids": orderbook["bids"][:5],
-                    "asks": orderbook["asks"][:5],
+                    "bids": orderbook["bids"][:10],
+                    "asks": orderbook["asks"][:10],
                     "timestamp": orderbook["timestamp"],
                     "best_bid":orderbook['bids'][0],
                     "best_ask":orderbook['asks'][0],
