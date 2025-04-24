@@ -143,22 +143,27 @@ let socket2 = null
 let socket1 = null;
 
 // Only attach listeners once
-let listenersAttached = false;
+let listenersAttached1= false;
 let listenersAttached2 = false;
 
 function compareDataQueue(data){
+    // console.log(data)
     json_data = JSON.parse(data)
-    // console.log(json_data)
+    console.log(json_data)
     symbol = json_data['symbol']
     exchange = json_data['exchange']
+    // market_type = json
+    console.log(exchange)
+
     if (!lastData[exchange][symbol]) {
         lastTrades[exchange][symbol] = []
     }
     lastData[exchange][symbol] =  json_data
-    // console.log(lastData)
+    console.log(lastData)
     compareData(lastData)
 
 }
+
 
 
 // Function to connect to Socket.IO servers for all exchanges
@@ -166,8 +171,8 @@ function connectToSocketIO1(socketUrl1) {
 
     socket1 = new WebSocket(socketUrl1);
     socket1.onopen = () => {
-        console.log("Connected to server:ws://localhost:5090/ws");
-        // socket1.send(JSON.parse({"action":"start"}));
+        console.log("Connected to server:ws://localhost:5090");
+        // socket2.send(JSON.parse({"action":"start"}));
         input_data = {"action":"start",
                     "ccy":document.getElementById('currency-input-orderbook1').value,
                     "exchange":document.getElementById('exchange1-input').value,
@@ -175,18 +180,17 @@ function connectToSocketIO1(socketUrl1) {
                      }
 
         socket1.send(JSON.stringify(input_data));
-        // socket1.send("Client connected and ready");
+        // socket2.send("Client connected and ready");
     };
     
     socket1.onmessage = (event) => {
         // console.log(event.data)
-        // compareDataQueue(event.data)
+        compareDataQueue(event.data)
         // clearOrderbookTable(2)
         populateOrderBook(1,exchange_orderbook1,event.data)
-        // socket1.send(JSON.stringify({"action":"ping","ccy":document.getElementById('currency-input-orderbook2').value}))
+        // socket2.send(JSON.stringify({"action":"ping","ccy":document.getElementById('currency-input-orderbook2').value}))
         
     };
-
 
     socket1.onclose = () => {
         input_data = {"action":"stop",
@@ -203,8 +207,6 @@ function connectToSocketIO1(socketUrl1) {
     socket1.onerror = (error) => {
         console.log("WebSocket Error: ", error);
     };
-
-
 
 // Only attach listeners once
     if (!listenersAttached1) {
@@ -233,10 +235,11 @@ function connectToSocketIO1(socketUrl1) {
     }
 
     function sendMarketData1(forceReconnect = false) {
+    console.log('hello')
     const market_type_orderbook1 = document.getElementById('market-type-orderbook1').value;
     const currency_orderbook1 = document.getElementById('currency-input-orderbook1').value;
     const exchange_orderbook1 = document.getElementById('exchange1-input').value;
-    const json_dict = {
+    let json_dict = {
         action: "change",
         ccy: currency_orderbook1,
         market_type: market_type_orderbook1,
@@ -248,8 +251,8 @@ function connectToSocketIO1(socketUrl1) {
     const socketUrl1 = wsServers[exchange_orderbook1][market_type_orderbook1];
     
     if (forceReconnect ) {
-        disconnectSocket2(socket1);
-        // clearOrderbookTable(1);
+        disconnectSocket1(socket1);
+        // clearOrderbookTable(2);
 
         connectToSocketIO1(socketUrl1);
 
@@ -261,14 +264,11 @@ function connectToSocketIO1(socketUrl1) {
     }
 
     function disconnectSocket1(socket1) {
-    if (socket1 && socket2.readyState === WebSocket.OPEN) {
+    if (socket1 && socket1.readyState === WebSocket.OPEN) {
         socket1.close(1000, "Manual disconnect");
         console.log("Socket manually disconnected");
     }
     }
-
-
-
 
 
 
@@ -280,7 +280,7 @@ function connectToSocketIO2(socketUrl2) {
 
     socket2 = new WebSocket(socketUrl2);
     socket2.onopen = () => {
-        console.log("Connected to server:ws://localhost:5090/ws");
+        console.log("Connected to server:ws://localhost:5091/ws");
         // socket2.send(JSON.parse({"action":"start"}));
         input_data = {"action":"start",
                     "ccy":document.getElementById('currency-input-orderbook2').value,
@@ -294,13 +294,12 @@ function connectToSocketIO2(socketUrl2) {
     
     socket2.onmessage = (event) => {
         // console.log(event.data)
-        // compareDataQueue(event.data)
+        compareDataQueue(event.data)
         // clearOrderbookTable(2)
         populateOrderBook(2,exchange_orderbook2,event.data)
         // socket2.send(JSON.stringify({"action":"ping","ccy":document.getElementById('currency-input-orderbook2').value}))
         
     };
-
 
     socket2.onclose = () => {
         input_data = {"action":"stop",
@@ -317,8 +316,6 @@ function connectToSocketIO2(socketUrl2) {
     socket2.onerror = (error) => {
         console.log("WebSocket Error: ", error);
     };
-
-
 
 // Only attach listeners once
     if (!listenersAttached2) {
@@ -380,9 +377,6 @@ function connectToSocketIO2(socketUrl2) {
         console.log("Socket manually disconnected");
     }
     }
-
-
-
 
 
 // Function to clear old data from lastData (for memory management)

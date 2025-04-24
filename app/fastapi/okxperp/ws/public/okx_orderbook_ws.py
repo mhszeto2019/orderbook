@@ -64,230 +64,162 @@ import time
 app = FastAPI()
 
 # Store connected WebSocket clients
-clients: List[WebSocket] = []
+# clients: List[WebSocket] = []
+# clients: List[WebSocket] = []
+
 
 import ccxt.pro
 import asyncio
+
 sio = socketio.AsyncServer(async_mode='asgi')  
 
-# class OrderBookStreamer:
-#     def __init__(self, sio, depth='books5'):
-#         self.sio = sio                        # socketio.AsyncServer instance
-#         self.depth = depth                    # depth: 'books5', 'bbo-tbt', etc.
-#         self.exchange = None
-#         self.symbol = None                    # symbol like 'BTC-USD-SWAP'
-#         self.running = False
-
-#     async def start(self, symbol):
-#         self.symbol = symbol
-#         self.exchange = ccxt.pro.okx({
-#             'options': {
-#                 'watchOrderBook': {
-#                     'depth': self.depth
-#                 }
-#             }
-#         })
-#         await self.exchange.load_markets()
-#         self.running = True
-
-#         print(f"Subscribed to {symbol} with depth {self.depth}")
-#         await self._stream()
-
-#     async def _stream(self):
-#         try:
-#             while self.running:
-#                 orderbook = await self.exchange.watch_order_book(self.symbol)
-#                 # Emit to clients via socket
-#                 # await self.sio.emit(self.symbol, {
-#                 #     'symbol': self.symbol,
-#                 #     'bids': orderbook['bids'][:5],
-#                 #     'asks': orderbook['asks'][:5],
-#                 #     'timestamp': orderbook['timestamp']
-#                 # })
-#                 # print(self.symbol,{
-#                 #     'symbol': self.symbol,
-#                 #     'bids': orderbook['bids'][:5],
-#                 #     'asks': orderbook['asks'][:5],
-#                 #     'timestamp': orderbook['timestamp']
-#                 # })
-#                 await broadcast({
-#                     'symbol': self.symbol,
-#                     'bids': orderbook['bids'][:5],
-#                     'asks': orderbook['asks'][:5],
-#                     'timestamp': orderbook['timestamp']
-#                 })
-                
-#         except Exception as e:
-#             print(f"[ERROR] Streaming error: {e}")
-#             await self.stop()
-
-#     async def stop(self):
-#         self.running = False
-#         if self.exchange:
-            
-#             try:
-#                 await self.exchange.close()
-#                 await self.cleanup()
-#                 print(f"Unsubscribed and closed connection for {self.symbol}")
-#             except Exception as e:
-#                 print(f"[ERROR] while closing exchange: {e}")
-
-#                 await self.cleanup()
-
-#     async def cleanup(self):
-#         if self.exchange is not None:
-#             await self.exchange.close()  # this closes aiohttp connector
-
-#     async def change_symbol(self,new_symbol:str):
-#         self.symbol = new_symbol 
-
-#     async def change_depth(self,new_depth:str):
-#         # print(new_depth)
-#         self.depth = new_depth
-
-
-
-# # # WebSocket route for connecting to the server
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     clients.append(websocket)  # Add client to the list of connected clients
-#     try:
-#         depth = 'books5'
-#         exchange = 'okx'
-#         ccy= 'BTC-USD-SWAP'
-#         market_type = 'PERP'
-#         streamer = OrderBookStreamer(sio=sio, depth=depth)
-#         print('hello')
-#         # run class in the background 
-#         asyncio.create_task(streamer.start(ccy))
-        
-#         while True:
-#             # print('CONNECTION')
-#             time.sleep(0.1)
-#             client_text = await websocket.receive_text()  # Receive data from the client
-#             # print(client_text)
-#             # print(type(client_text))
-            
-#             # Parse it into a Python dictionary
-#             # print(type(parsed_data))
-#             if 'symbol' in client_text:
-#                 json_dict = json.loads(client_text)
-#                 print(json_dict)
-#                 # Change the depth dynamically based on client input
-#                 await streamer.stop()
-
-#                 # await streamer.change_depth('bbo-tbt')
-#                 await streamer.change_symbol(json_dict['symbol'])
-#                 streamer = OrderBookStreamer(sio=sio, depth=depth)
-
-#                 asyncio.create_task(streamer.start(json_dict['symbol']))
- 
-
-
-#     except WebSocketDisconnect:
-#         clients.remove(websocket)  # Remove client from the list when disconnected
-#         print("Client disconnected")
 
 # # Helper function to broadcast a message to all connected clients
-# async def broadcast(message):
-#     for client in clients:
-#         try:
-#             await client.send_text(json.dumps(message))
-#         except:
-#             clients.remove(client)  # Remove client if it is disconnected
-
-
-async def broadcast(message):
-    for client in clients:
-        try:
-            await client.send_text(json.dumps(message))
-        except:
-            clients.remove(client)  # Remove client if it is disconnected
-
-
+async def broadcast(message,client):
+    try:
+        await client.send_text(json.dumps(message))
+    except:
+        'hello'
+    # for client in clients:
+    #     try:
+    #         await client.send_text(json.dumps(message))
+    #     except:
+    #         clients.remove(client)  # Remove client if it is disconnected
 
 
 class OrderBookStreamer:
-    def __init__(self, sio, depth):
+    def __init__(self, sio, depth,exchange_name,websocket_client):
         self.sio = sio
         self.depth = depth
+        self.exchange_name = exchange_name
         self.exchange = None
         self.running = False
+        self.symbol = None
+        self.websocket_client = websocket_client
+    
 
-    async def start(self, symbol):
-        self.exchange = ccxt.pro.okx({
+    async def start(self, symbol="BTC-USD-SWAP"):
+        exchange_name = self.exchange_name.lower()  # e.g., "okx", "binance", etc.
+        # Get the exchange class dynamically
+        exchange_class = getattr(ccxt.pro, exchange_name)
+        # Instantiate the exchange
+        self.exchange = exchange_class({
             'options': {
                 'watchOrderBook': {
                     'depth': self.depth
                 }
             }
         })
+     
+        self.symbol = symbol
         self.running = True
         try:
             while self.running:
                 # Example fetch
-                orderbook = await self.exchange.watch_order_book(symbol)
-                # print(orderbook)
+                conditional_symbol = symbol.replace("-SWAP","") if self.exchange_name in ['htx'] else symbol
+                orderbook = await self.exchange.watch_order_book(conditional_symbol)
+                # print(orderbook["bids"][0],orderbook['asks'][0])
                 await broadcast({
-                    "symbol": symbol,
+                    "symbol": self.symbol,
                     "bids": orderbook["bids"][:10],
                     "asks": orderbook["asks"][:10],
                     "timestamp": orderbook["timestamp"],
                     "best_bid":orderbook['bids'][0],
                     "best_ask":orderbook['asks'][0],
-                    "exchange":"okxperp"
-
-                })
-                # await asyncio.sleep(1)
+                    "exchange":self.exchange_name,
+                    # 'market_type':self.market_type
+                },self.websocket_client)
+                # await asyncio.sleep(0.1)
         except Exception as e:
             print(f"Streamer error: {e}")
-        # finally:
-            # await self.cleanup()
+        finally:
+            await self.cleanup()
 
     async def stop(self):
         self.running = False
-        # await self.cleanup()
+        await self.cleanup()
 
-    # async def cleanup(self):
-    #     if self.exchange is not None:
-    #         await self.exchange.close()  # this closes aiohttp connector
+    async def cleanup(self):
+        if self.exchange is not None:
+            await self.exchange.close()  # this closes aiohttp connector
 
     async def change_symbol(self, new_symbol):
-        await self.stop()
-        await self.start(new_symbol)
+        print('change symbol')
+        # await self.stop()
+        # await self.start(new_symbol)
+        self.symbol=new_symbol
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    clients.append(websocket)
+    # clients.append(websocket)
 
     depth = 'books5'
     streamer = None
     try:
         while True:
-            # time.sleep(0.1)
-        
-            client_text = await websocket.receive_text() 
-            if 'symbol' in client_text:
-                json_dict = json.loads(client_text)
-                symbol = json_dict['symbol']
+            try:
+                msg_from_client = await websocket.receive_text()
+                print(msg_from_client)
+                json_data = json.loads(msg_from_client)
+                action = json_data['action']
+                ccy = json_data['ccy']
+                market_type = json_data['ccy']
+                exchange = json_data['exchange']
 
-                if streamer:
-                    await streamer.stop()
+                time.sleep(2)
+                # print('connection')
+                # time.sleep(2)
+            except asyncio.CancelledError:
+                break
 
-                streamer = OrderBookStreamer(sio=sio, depth=depth)
-                asyncio.create_task(streamer.start(symbol))
+
+            if action == 'start':
+                print('start',ccy)
+                streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_name=exchange,websocket_client=websocket)
+                asyncio.create_task(streamer.start(ccy))
+                await websocket.send_text(json.dumps({"pong":True}))
+
+            elif action == 'stop':
+                print('stop')
+                await streamer.stop()
+                await websocket.send_text(json.dumps({"pong":True}))
+
+
+            elif action == 'change':
+                await streamer.stop()
+                streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_name=exchange,websocket_client=websocket)
+                asyncio.create_task(streamer.start(ccy))
+                await websocket.send_text(json.dumps({"pong":True}))
+
+            elif action == 'subscribe':
+                
+                print('subscribe')
+
+            elif action == 'unsubscribe':
+                print('unsubscribe')
+
+           
+
+            elif action == 'ping':
+                await websocket.send_text(json.dumps({"pong":True}))
+                print('ping')
+
+          
 
     except WebSocketDisconnect:
-        clients.remove(websocket)
+        print("Client disconnected")
+    finally:
         if streamer:
             await streamer.stop()
-        print("Client disconnected")
+
+
+
 
 
 # async def main():
-#     exchange = ccxt.pro.okx({
+#     exchange = ccxt.pro.htx({
 #         'options': {
 #             'watchOrderBook': {
 #                 # 'depth': 'bbo-tbt',  # tick-by-tick best bidask
@@ -297,7 +229,7 @@ async def websocket_endpoint(websocket: WebSocket):
 #     })
 #     markets = await exchange.load_markets()
 #     # exchange.verbose = True  # uncomment for debugging purposes if necessary
-#     symbol = 'BTC-USD-SWAP'
+#     symbol = 'BTC-USD'
 #     while True:
 #         try:
 #             # -----------------------------------------------------------------
@@ -320,5 +252,4 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 
-
-# asyncio.create_task(run_stream())
+# asyncio.create_task(main())
