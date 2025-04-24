@@ -5,7 +5,7 @@ const currencyOptions = {
         { value: 'BTC-USDC', text: 'BTC-USDC' }
     ],
     perp: [
-        { value: '', text: '--Not Selected--' },
+        // { value: '', text: '--Not Selected--' },
         { value: 'BTC-USD-SWAP', text: 'BTC-USD-SWAP' },
         { value: 'BTC-USDT-SWAP', text: 'BTC-USDT-SWAP' },
         { value: 'ETH-USD-SWAP', text: 'ETH-USD-SWAP' }
@@ -63,9 +63,11 @@ function updateCurrencyOptionsOrderbook2() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        // if (opt.value == "BTC-USD-SWAP") {
-        //     option.selected = true;
-        // }
+        if (opt.value == "BTC-USD-SWAP") {
+            option.selected = true;
+            console.log("SELECTIONEDD")
+            console.log(currencySelect.value)
+        }
     });
     
 }
