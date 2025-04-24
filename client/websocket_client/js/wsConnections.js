@@ -120,8 +120,8 @@ function compareData(newData) {
   }
 
 const wsServers = {
-    'okx':{'perp':`ws://localhost:5091/ws2`,'spot':''},
-    'htx':{'perp':`ws://localhost:5091/ws`,'spot':''},
+    'okx':{'perp':`ws://${hostname}:5091/ws`,'spot':''},
+    'htx':{'perp':`ws://${hostname}:5091/ws2`,'spot':''},
     
 
 };
@@ -154,7 +154,9 @@ function compareDataQueue(data){
     exchange = json_data['exchange']
     // market_type = json
     // console.log(exchange)
-
+    // if (!lastData[exchange]) {
+    //     lastTrades[exchange] = {symbol:[]}
+    // }
     if (!lastData[exchange][symbol]) {
         lastTrades[exchange][symbol] = []
     }
@@ -185,8 +187,8 @@ function connectToSocketIO1(socketUrl1) {
     
     socket1.onmessage = (event) => {
         // console.log(event.data)
+        
         compareDataQueue(event.data)
-        // clearOrderbookTable(2)
         populateOrderBook(1,exchange_orderbook1,event.data)
         // socket2.send(JSON.stringify({"action":"ping","ccy":document.getElementById('currency-input-orderbook2').value}))
         
@@ -246,7 +248,6 @@ function connectToSocketIO1(socketUrl1) {
         exchange: exchange_orderbook1
     };
 
-    console.log(json_dict);
 
     const socketUrl1 = wsServers[exchange_orderbook1][market_type_orderbook1];
     

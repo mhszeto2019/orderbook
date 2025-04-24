@@ -1,3 +1,7 @@
+
+
+
+
 import json
 import os
 import configparser
@@ -82,10 +86,6 @@ from cryptography.fernet import Fernet
 # Define the Redis connection
 r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
-
-
-
-
 print('CCXT Version:', ccxt.__version__)
 
 # exchange = ccxt.huobi({
@@ -95,76 +95,97 @@ print('CCXT Version:', ccxt.__version__)
 #        'defaultType': 'swap',
 #    },
 # })
-exchange = ccxt.okx({
-   'apiKey': 'a0de3940-5679-4939-957a-51c87a8502d9',
-   'secret': 'FA44BCAAC3788C2AB4AFC77047930792',
-   'password': 'falconstead@Trading2024',
-})
+# exchange = ccxt.okx({
+#    'apiKey': 'a0de3940-5679-4939-957a-51c87a8502d9',
+#    'secret': 'FA44BCAAC3788C2AB4AFC77047930792',
+#    'password': 'falconstead@Trading2024',
+# })
+
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
+# FastAPI app instance
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-markets = exchange.load_markets()
+class TradeRequest(BaseModel):
+   
+   leadingExchange:str
+   laggingExchange:str
+   instrument1:str
+   instrument2:str
+   instrument:str
+   ordType:str
+   px1:str
+   px2:str
+   px:str
+   sz:int
+   side:str
+   username:str
+   redis_key:str
+   offset:str
+   offset1:str
+   offset2:str
+   
+
+@app.post("/okxperp/place_order")
+async def place_order(
+   payload: TradeRequest,
+   token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
+):
+   json_dict = {}
+
+   key_string = payload.redis_key
+   if key_string.startswith("b'") and key_string.endswith("'"):
+      cleaned_key_string = key_string[2:-1]
+   else:
+      cleaned_key_string = key_string
+
+   # Decode and prepare the key
+   key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+   key_bytes = cleaned_key_string.encode('utf-8')
+   cipher_suite = Fernet(key_bytes)
+
+   # Fetch encrypted credentials from Redis
+   cache_key = f"user:{payload.username}:api_credentials"
+   encrypted_data = r.get(cache_key)
+
+   
+   if not encrypted_data:
+      raise HTTPException(status_code=404, detail="Credentials not found")
+
+   # Decrypt the credentials
+   decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+   api_creds_dict = json.loads(decrypted_data)
+ 
+   exchange = ccxt.okx({
+   'apiKey': api_creds_dict['okx_apikey'],
+   'secret': api_creds_dict['okx_secretkey'],
+   'password': api_creds_dict['okx_passphrase'],
+   })
+   
+   # # markets = exchange.load_markets()
+   # balance = exchange.fetch_positions(symbols=['BTC-USD'])
+   # print(payload)
+   symbol = payload.instrument
+   order_type = payload.ordType
+   amount=payload.sz
+   side = payload.side
+   price = payload.px
+   # order_type = 'limit'
+   # price = '98000'
+   params = {'offset': payload.offset, 'lever_rate': 5}
+   order = exchange.create_order(symbol, order_type, side, amount, price, params)
+   return order
 
 
-# exchange.verbose = True  # uncomment for debugging purposes if necessary
-
-
-# # creating and canceling a linear swap (limit) order
-# symbol = 'ADA/USDT:USDT'
-# order_type = 'limit'
-# side = 'buy'
-# offset = 'open'
-# leverage = 1
-# amount = 1
-# price = 1
-
-# params = {'offset': offset, 'lever_rate': leverage}
-
-# try:
-#    # fetching current balance
-#    balance = exchange.fetch_balance()
-#    # print(balance)
-
-#    # placing an order
-#    order = exchange.create_order(symbol, order_type, side, amount, price, params)
-#    # print(order)
-
-#    # listing open orders
-#    open_orders = exchange.fetch_open_orders(symbol)
-#    # print(open_orders)
-
-#    # canceling an order
-#    cancelOrder = exchange.cancel_order(order['id'], symbol)
-#    print(cancelOrder)
-# except Exception as e:
-#    print(type(e).__name__, str(e))
-
-
-# creating and canceling inverse swap (limit) order
-
-symbol = 'BTC-USD-SWAP'
-order_type = 'limit'
-side = 'buy'
-offset = 'open'
-leverage = 5
-amount = 1
-price = 80000
-
-params = {'offset': offset, 'lever_rate': leverage}
-
-try:
-   # fetching current balance
-   balance = exchange.fetch_positions(symbols=['BTC-USD-SWAP'])
-   print(balance)
-      # placing an order
-   # order = exchange.create_order(symbol, order_type, side, amount, price, params)
-   # print(order)
-
-   # # listing open orders
-   # open_orders = exchange.fetch_open_orders(symbol)
-   # print(open_orders)
-
-   # # canceling an order
-   # cancelOrder = exchange.cancel_order(order['id'], symbol)
-
-except Exception as e:
-   print(type(e).__name__, str(e))

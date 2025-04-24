@@ -270,35 +270,59 @@
                                         </div>
                                     </div>
 
-
-                                 <!-- Exchange 1 Dropdown -->
-                                 <div class="col-md-6 col-sm-12 mb-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-gear"></i></span>
-                                        <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange()">
-                                            <option value="">Select Exchange 1</option>
-                                            <option value="okx" selected>OKX</option>
-                                            <option value="htx">HTX</option>
-                                            <option value="binance">Binance</option>
-                                            <option value="deribi">Deribit</option>
-
-                                        </select>
-                                    </div>
-                                </div>
-                                    <!-- Exchange 2 Dropdown -->
-                                    <div class="col-md-6 col-sm-12 mb-3">
+                                        
+                                    <!-- Exchange 1 -->
+                                    <div class="col-md-3 col-sm-6 mb-3">
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-gear"></i></span>
-                                            <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange()">
-                                                <option value="">Select Exchange 2</option>
-                                                <option value="okx" >OKX</option>
-                                                <option value="htx" selected>HTX</option>
+                                            <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange(1)" >
+                                                <option value="">Select Exchange 1</option>
+                                                <option value="okx" selected>OKX</option>
+                                                <option value="htx">HTX</option>
                                                 <option value="binance">Binance</option>
                                                 <option value="deribi">Deribit</option>
-
                                             </select>
                                         </div>
                                     </div>
+
+                                    <!-- HTX Open/Close (1) -->
+                                    <div id="htx-open-close-wrapper1" class="col-md-3 col-sm-6 mb-3" style="visibility: hidden;">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <select id="htx-open-close-1" class="form-select" aria-label="Open/Close">
+                                                <option value="">SELECT OPEN/CLOSE</option>
+                                                <option value="open">OPEN</option>
+                                                <option value="close">CLOSE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Exchange 2 -->
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange(2)" >
+                                                <option value="">Select Exchange 2</option>
+                                                <option value="okx">OKX</option>
+                                                <option value="htx" selected>HTX</option>
+                                                <option value="binance">Binance</option>
+                                                <option value="deribi">Deribit</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- HTX Open/Close (2) -->
+                                    <div id="htx-open-close-wrapper2" class="col-md-3 col-sm-6 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <select id="htx-open-close-2" class="form-select" aria-label="Open/Close">
+                                                <option value="">SELECT OPEN/CLOSE</option>
+                                                <option value="open">OPEN</option>
+                                                <option value="close">CLOSE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
@@ -1107,7 +1131,53 @@
             function getAuthToken() {
                 return localStorage.getItem('jwt_token');  // You can change this to sessionStorage if needed
             }
-            
+
+            function updateExchange(which) {
+                    const exchangeId = `exchange${which}-input`;
+                    const wrapperId = `htx-open-close-wrapper${which}`;
+                    const selectedExchange = document.getElementById(exchangeId).value.toLowerCase();
+                    const wrapper = document.getElementById(wrapperId);
+                    const dropdown = document.getElementById(exchangeId);
+
+                    // Show/Hide HTX-specific dropdown
+                    if (selectedExchange === 'htx') {
+                        wrapper.style.visibility = 'visible';
+                    } else {
+                        wrapper.style.visibility = 'hidden';
+                    }
+
+                    // Temporarily disable dropdown to avoid race condition / coroutine issues
+                    dropdown.disabled = true;
+
+                    // Send WebSocket message or whatever async operation here
+                    if (which === 1 && typeof socket1 !== 'undefined') {
+                        const input_data = {
+                            action: "change",
+                            ccy: document.getElementById('currency-input-orderbook1').value,
+                            exchange: selectedExchange,
+                            market_type: document.getElementById('market-type-orderbook1')?.value || ""
+                        };
+                        socket1.send(JSON.stringify(input_data));
+                    }
+
+                    if (which === 2 && typeof socket2 !== 'undefined') {
+                        const input_data = {
+                            action: "change",
+                            ccy: document.getElementById('currency-input-orderbook2').value,
+                            exchange: selectedExchange,
+                            market_type: document.getElementById('market-type-orderbook2')?.value || ""
+                        };
+                        socket2.send(JSON.stringify(input_data));
+                    }
+
+                    // Re-enable after delay (adjust time as needed)
+                    setTimeout(() => {
+                        dropdown.disabled = false;
+                    }, 1500); // 1.5s delay to let coroutine settle
+                }
+
+
+
 
             // Check if the JWT token is present and display the corresponding content
             function checkJWTAndDisplay() {

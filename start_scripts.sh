@@ -27,10 +27,13 @@ python3 app.fastapi.okxperp.rest.public.get_okx_last_trades:app
 wait
 
 
+uvicorn app.fastapi.auth:app --port 5000
+uvicorn app.fastapi.okxperp.rest.public.get_okx_funding_rate:app --port 5001 --reload
+uvicorn app.fastapi.htxperp.rest.public.get_htx_funding_rate:app --port 5002 --reload
+uvicorn app.fastapi.htxperp.rest.public.get_htx_last_trades:app --port 6101 --reload
+uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --reload
 
-# uvicorn app.fastapi.okxperp.rest.public.get_okx_funding_rate:app --port 5001 --reload
-# uvicorn app.fastapi.htxperp.rest.public.get_htx_funding_rate:app --port 5002 --reload
-# uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091 --reload
-# uvicorn app.fastapi.htxperp.rest.public.get_htx_last_trades:app --port 6101 --reload
-# uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --reload
+uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091 --reload
 
+uvicorn app.fastapi.htxperp.rest.private.place_htx_order:app --port 5081 --reload
+uvicorn app.fastapi.okxperp.rest.private.place_okx_order:app --port 5080 --reload

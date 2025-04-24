@@ -35,6 +35,8 @@ function updateCurrencyOptions() {
     
 }
 
+
+
 function updateCurrencyOptionsOrderbook1() {
     const marketType = document.getElementById('market-type-orderbook1').value;
     const currencySelect = document.getElementById('currency-input-orderbook1');

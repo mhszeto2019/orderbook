@@ -101,12 +101,11 @@ origins = [
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 
 class TradeRequest(BaseModel):
@@ -115,16 +114,22 @@ class TradeRequest(BaseModel):
    laggingExchange:str
    instrument1:str
    instrument2:str
+   instrument:str
    ordType:str
    px1:str
    px2:str
+   px:str
    sz:int
    side:str
    username:str
    redis_key:str
+   offset:str
+   offset1:str
+   offset2:str
+   
 
-@app.post("/htxperp/place_market_order")
-async def place_market_order(
+@app.post("/htxperp/place_order")
+async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
 ):
@@ -152,7 +157,6 @@ async def place_market_order(
    # Decrypt the credentials
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
-   print(api_creds_dict)
 
    exchange = ccxt.huobi({
       'apiKey': api_creds_dict['htx_apikey'],
@@ -162,12 +166,23 @@ async def place_market_order(
       },
    })
 
-   markets = exchange.load_markets()
-   balance = exchange.fetch_positions(symbols=['BTC-USD'])
+   # # markets = exchange.load_markets()
+   # balance = exchange.fetch_positions(symbols=['BTC-USD'])
    print(payload)
-   # order = exchange.create_order(symbol, order_type, side, amount, price, params)
 
-   print(balance)
+   symbol = payload.instrument.replace('-SWAP','')
+   order_type = payload.ordType
+   if order_type == 'market':
+      order_type = 'optimal_5'
+   amount=payload.sz
+   side = payload.side
+   price = payload.px
+   # order_type = 'limit'
+   # price = '80000'
+   params = {'offset': payload.offset, 'lever_rate': 5}
+   order = exchange.create_order(symbol, order_type, side, amount, price, params)
+   # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
+   return order
 
 
 

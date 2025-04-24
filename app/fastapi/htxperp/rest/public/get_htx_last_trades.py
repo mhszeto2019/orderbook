@@ -96,7 +96,7 @@ origins = [
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -105,7 +105,6 @@ app.add_middleware(
 
 # Define a global exchange object to be used across multiple requests if needed
 exchange = None
-
 
 
 @app.get("/htxperp/")
@@ -154,7 +153,7 @@ async def get_last_trades(
         ccy = payload.ccy
         ccy_str = ccy.replace('-SWAP','')
         result = await exchange.fetch_trades(ccy_str)
-       
+
         row =  result[-10:]
 
         # print(row)
@@ -165,19 +164,22 @@ async def get_last_trades(
         json_dict['ccy'] = payload.ccy
         json_dict['exchange'] = 'htxperp'
         logger.info(f"{payload.ccy}|{json_dict}")
-        await exchange.close()
         # print(result)
         # if result.get('data'):
         #     print('success')
         # result['ccy'] = funding_rate
+        await exchange.close()
+
         return json_dict
+
+
 
     except Exception as e:
         print(f"Error in get_funding_rate: {e}")
-        await exchange.close()
+        # await exchange.close()
 
         raise HTTPException(status_code=500, detail=str(e))
-
+  
 
 @app.on_event("shutdown")
 async def shutdown_event():

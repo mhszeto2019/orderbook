@@ -58,11 +58,19 @@ from app.util import token_required,get_logger
 logger = logging.getLogger('okxbooks')
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+
 import asyncio
 from typing import List
 import time
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Store connected WebSocket clients
 # clients: List[WebSocket] = []
 # clients: List[WebSocket] = []
@@ -135,7 +143,9 @@ class OrderBookStreamer:
         except Exception as e:
             print(f"Streamer error: {e}")
         finally:
-            await self.cleanup()
+            # await self.exchange.close()
+            print("STOP ENSURED")
+            await self.stop()
 
     async def stop(self):
         self.running = False
@@ -159,6 +169,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     depth = 'books5'
     streamer = None
+    streamer_task = None
     try:
         while True:
             try:
@@ -170,7 +181,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 market_type = json_data['market_type']
                 exchange = json_data['exchange']
                 exchange_name = exchange + market_type
-                time.sleep(2)
+                # time.sleep(2)
                 # print('connection')
                 # time.sleep(2)
             except asyncio.CancelledError:
@@ -179,8 +190,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
             if action == 'start':
                 print('start',ccy)
+                if streamer_task and not streamer_task.done():
+                    streamer_task.cancel()
                 streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_class=exchange,market_type=market_type,websocket_client=websocket)
-                asyncio.create_task(streamer.start(ccy))
+                streamer_task = asyncio.create_task(streamer.start(ccy))
                 await websocket.send_text(json.dumps({"pong":True}))
 
             elif action == 'stop':
@@ -190,9 +203,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
             elif action == 'change':
+               
                 await streamer.stop()
+                if streamer_task and not streamer_task.done():
+                    streamer_task.cancel()
+                    await asyncio.sleep(0.1)
                 streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_class=exchange,market_type=market_type,websocket_client=websocket)
-                asyncio.create_task(streamer.start(ccy))
+                streamer_task = asyncio.create_task(streamer.start(ccy))
                 await websocket.send_text(json.dumps({"pong":True}))
 
             elif action == 'subscribe':
@@ -226,6 +243,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     depth = 'books5'
     streamer = None
+    streamer_task = None
     try:
         while True:
             try:
@@ -245,9 +263,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
             if action == 'start':
+                if streamer_task and not streamer_task.done():
+                    streamer_task.cancel()
                 print('start',ccy)
                 streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_class=exchange,market_type=market_type,websocket_client=websocket)
-                asyncio.create_task(streamer.start(ccy))
+                streamer_task = asyncio.create_task(streamer.start(ccy))
                 await websocket.send_text(json.dumps({"pong":True}))
 
             elif action == 'stop':
@@ -257,9 +277,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
             elif action == 'change':
+                
                 await streamer.stop()
+                if streamer_task and not streamer_task.done():
+                    streamer_task.cancel()
                 streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_class=exchange,market_type=market_type,websocket_client=websocket)
-                asyncio.create_task(streamer.start(ccy))
+                streamer_task = asyncio.create_task(streamer.start(ccy))
                 await websocket.send_text(json.dumps({"pong":True}))
 
             elif action == 'subscribe':
@@ -268,8 +291,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif action == 'unsubscribe':
                 print('unsubscribe')
-
-           
 
             elif action == 'ping':
                 await websocket.send_text(json.dumps({"pong":True}))

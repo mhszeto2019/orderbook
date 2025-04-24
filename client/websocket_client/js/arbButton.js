@@ -28,6 +28,9 @@ async function handleClick(type) {
 
     const instrument1 = document.getElementById('currency-input-orderbook1').value;
     const instrument2 = document.getElementById('currency-input-orderbook2').value;
+    
+    const offset1 = document.getElementById('htx-open-close-1').value;
+    const offset2 = document.getElementById('htx-open-close-2').value;
 
     // const instId = document.getElementById('currency-input').value;
     const sz = document.getElementById('qty-input').value;
@@ -43,6 +46,19 @@ async function handleClick(type) {
     } else {
         side = 'sell';
     }
+    if (leadingExchange == 'htx'){
+        validateSelectInput('htx-open-close-1')
+        if (!offset2){
+            return
+        }
+    }
+    if (laggingExchange == 'htx'){
+        console.log("lag")
+        validateSelectInput('htx-open-close-2')
+        if (!offset2){
+            return
+        }
+    }
 
     const orderData = {
         leadingExchange,
@@ -55,16 +71,22 @@ async function handleClick(type) {
         sz,
         side,
         username,
-        redis_key
+        redis_key,
+        offset1,
+        offset2
     };
+
     fastapi_folder1 = leadingExchange + marketType1
     fastapi_folder2 = laggingExchange + marketType2
 
-    console.log(fastapi_folder1,fastapi_folder2)
-
+    // console.log(fastapi_folder1,fastapi_folder2)
+    // console.log(offset1,offset2)
     // Set up first order request
     orderData.px = orderData.px1;
-    const firstOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder1)}/${fastapi_folder1}/place_${ordType}_order`, {
+    orderData.instrument = orderData.instrument1;
+    orderData.offset = orderData.offset1;
+
+    const firstOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder1)}/${fastapi_folder1}/place_order`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -77,7 +99,11 @@ async function handleClick(type) {
     const secondOrderData = { ...orderData }; // Clone the order data
     secondOrderData.side = orderData.side === 'buy' ? 'sell' : 'buy';
     secondOrderData.px = orderData.px2;
-    const secondOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder2)}/${fastapi_folder2}/place_${ordType}_order`, {
+    secondOrderData.instrument = orderData.instrument2;
+    secondOrderData.offset = orderData.offset2;
+
+
+    const secondOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder2)}/${fastapi_folder2}/place_order`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -144,4 +170,15 @@ function showToast(message,  apiSource = 'API',timestamp=null,orderId=null,statu
  
     updateNotificationHub();
     updateNotificationCount();
+}
+
+function validateSelectInput(selectId) {
+    const select = document.getElementById(selectId);
+    if (select.value === "") {
+        select.classList.add("invalid-select");
+        return false;
+    } else {
+        select.classList.remove("invalid-select");
+        return true;
+    }
 }
