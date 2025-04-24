@@ -26,3 +26,11 @@ python3 app.fastapi.okxperp.rest.public.get_okx_last_trades:app
 # Wait for all background jobs (apps) to finish
 wait
 
+
+
+# uvicorn app.fastapi.okxperp.rest.public.get_okx_funding_rate:app --port 5001 --reload
+# uvicorn app.fastapi.htxperp.rest.public.get_htx_funding_rate:app --port 5002 --reload
+# uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091 --reload
+# uvicorn app.fastapi.htxperp.rest.public.get_htx_last_trades:app --port 6101 --reload
+# uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --reload
+

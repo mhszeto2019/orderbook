@@ -149,17 +149,17 @@ let listenersAttached2 = false;
 function compareDataQueue(data){
     // console.log(data)
     json_data = JSON.parse(data)
-    console.log(json_data)
+    // console.log(json_data)
     symbol = json_data['symbol']
     exchange = json_data['exchange']
     // market_type = json
-    console.log(exchange)
+    // console.log(exchange)
 
     if (!lastData[exchange][symbol]) {
         lastTrades[exchange][symbol] = []
     }
     lastData[exchange][symbol] =  json_data
-    console.log(lastData)
+    // console.log(lastData)
     compareData(lastData)
 
 }
@@ -314,7 +314,7 @@ function connectToSocketIO2(socketUrl2) {
     };
 
     socket2.onerror = (error) => {
-        console.log("WebSocket Error: ", error);
+        console.error("WebSocket Error: ", error);
     };
 
 // Only attach listeners once
