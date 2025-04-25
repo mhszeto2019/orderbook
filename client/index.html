@@ -276,7 +276,8 @@
                                     <!-- Exchange 1 -->
                                     <div class="col-md-3 col-sm-6 mb-3">
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
                                             <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange(1)" >
                                                 <option value="">Select Exchange 1</option>
                                                 <option value="okx" selected>OKX</option>
@@ -302,7 +303,7 @@
                                     <!-- Exchange 2 -->
                                     <div class="col-md-3 col-sm-6 mb-3">
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
                                             <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange(2)" >
                                                 <option value="">Select Exchange 2</option>
                                                 <option value="okx">OKX</option>
@@ -983,17 +984,17 @@
 
 
                             <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-borderless table-hover table-sm align-middle text-nowrap w-100 OMStable">
+                                <table class="table table-borderless table-hover  text-nowrap w-100 OMStable">
                                     <thead class="table-primary  sticky-top">
                                         <tr>
                                             <th >Exchange</th>
                                             <th >Instrument ID</th>
                                             <th >Lev</th>
-                                            <th >Mgn Ratio</th>
+                                            <!-- <th >Mgn Ratio</th> -->
                                             <th >Position (Buy/Sell)</th>
                                             <th >ADL</th>
                                             <th >Liquidation Price</th>
-                                            <th >Price</th>
+                                            <th >Avg Price</th>
                                             <th >PnL</th>
                                             <th >Ts</th>
                                         </tr>
@@ -1044,16 +1045,15 @@
                                     <thead class="sticky-top">
                                         <tr>
                                             <th style="width: 8%;">Exchange</th>
-                                            <th style="width: 10%;">Symbol</th>
+                                            <th style="width: 5%;">Symbol</th>
                                             <th style="width: 5%;">Lev</th>
                                             <th style="width: 6%;">Side</th>
                                             <th style="width: 12%;">Fill / Order Price</th>
                                             <th style="width: 12%;">Filled / Total</th>
-                                            <th style="width: 10%;">TP / SL</th>
                                             <th style="width: 13%;">Status / Order #</th>
                                             <th style="width: 10%;">Order Time</th>
-                                            <th style="width: 7%;">Action 1</th>
-                                            <th style="width: 7%;">Action 2</th>
+                                            <!-- <th style="width: 7%;">Action 1</th> -->
+                                            <th style="width: 20%;">Action 2</th>
                                         </tr>
                                     </thead>
                                     <tbody id="oms-open-orders-body">
@@ -1142,7 +1142,7 @@
             function updateExchange(which) {
                     // let shouldScroll = !container.dataset.hasScrolled;
                     const scrollableOrdebook = document.getElementById(`scrollable-orderbook-${which}`);
-                    console.log(which)
+                    // console.log(which)
                     // scrollableOrdebook.dataset.hasScrolled = 'true'
                     // shouldScrollState[which] = !scrollableOrdebook.dataset.hasScrolled;
                     // console.log(shouldScrollState[which])

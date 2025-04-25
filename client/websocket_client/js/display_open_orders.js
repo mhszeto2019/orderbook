@@ -20,7 +20,7 @@ async function populateOpenOrders() {
     
     // Set up both the OKX and HTX requests
     const [okxResponse, htxResponse] = await Promise.all([
-        fetch(`http://${hostname}:5080/okx/get_all_okx_open_orders`, {
+        fetch(`http://${hostname}:6060/okxperp/get_all_open_orders`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -28,7 +28,7 @@ async function populateOpenOrders() {
             },
             body: JSON.stringify(request_data)
         }),
-        fetch(`http://${hostname}:6061/htx/swap/get_all_htx_open_orders`, {
+        fetch(`http://${hostname}:6061/htxperp/get_all_open_orders`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -44,28 +44,35 @@ async function populateOpenOrders() {
         // Handle OKX Response
         if (okxResponse.ok) {
             const okxData = await okxResponse.json();
-            if (okxData.data) {
-                allOpenOrders = allOpenOrders.concat(okxData.data.map(position => ({
-                    ...position,
-                    exchange: 'OKX'
-                })));
-            } else {
-                console.error(okxData.msg, okxData.code);
-            }
+            console.log(okxData)
+            okxData.forEach(
+                openOrder=>{
+                    console.log(openOrder)
+                    allOpenOrders.push(openOrder)
+                }
+            )
+
+            
+            
+            
         } else {
             console.error('Error fetching OKX orders:', okxResponse.statusText);
         }
 
-        // Handle HTX Response
+        // Handle OKX Response
         if (htxResponse.ok) {
             const htxData = await htxResponse.json();
-            const formattedData = await Htx2OkxFormatOrders(htxData);  // Format HTX data as needed
-            allOpenOrders = allOpenOrders.concat(formattedData.map(position => ({
-                ...position,
-                exchange: 'HTX'
-            })));
+            console.log(htxData)
+            htxData.forEach(
+                openOrder2=>{
+                    console.log(openOrder2)
+                    allOpenOrders.push(openOrder2)
+                }
+            )
+            
+            
         } else {
-            console.error('Error fetching HTX orders:', htxResponse.statusText);
+            console.error('Error fetching OKX orders:', okxResponse.statusText);
         }
 
         // After both responses are handled, populate the table with all orders
@@ -82,16 +89,15 @@ async function populateOpenOrders() {
 }
 
 
-const ordersHist = {};
-
-function populateOpenOpenOrdersTable(orders) {
+let ordersHist = {}
+function populateOpenOpenOrdersTable(allOpenOrders) {
     // Get reference to the DataTable instance (or initialize if not already)
     const openordersTable = $('.OpenOrdersTable').DataTable();
 
     // Clear existing rows from DataTable
     openordersTable.clear();
 
-    if (orders.length === 0) {
+    if (allOpenOrders.length === 0) {
         // Manually add a row with `colspan`
         const emptyMessage = `
             <tr>
@@ -100,33 +106,25 @@ function populateOpenOpenOrdersTable(orders) {
         $('#oms-open-orders-body').html(emptyMessage);
     } else {
         // Add rows dynamically
-        orders.forEach(position => {
+        allOpenOrders.forEach(openOrder => {
             // Collect necessary data for ordersHist
-            const orderId = position.ordId;
-            ordersHist[orderId] = {
-                orderPx: position.px,
-                orderSz: position.sz,
-                side: position.side,
-                stop_limit: "N/A",
-                take_profit: "N/A",
-                algo_id: "N/A"
-            };
-
-            // Process attachAlgoOrds
-            const algoData = processAlgoData(position.attachAlgoOrds, orderId);
-
             openordersTable.row.add([
-                position.exchange || 'N/A',  // New exchange column
-                position.instId || 'N/A',
-                position.lever || 'N/A',
-                position.side || 'N/A',
-                position.px || 'N/A',
-                position.sz ? Number.parseFloat(position.sz).toFixed(1) : 'N/A',
-                algoData,  // Display attachAlgoOrds content
-                orderId,
-                position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A',
-                createButton('primary', position.ordId, ordersHist[orderId]['algo_id'], position.instId, position.exchange, 'Modify'),
-                createButton('danger', position.ordId, ordersHist[orderId]['algo_id'], position.instId, position.exchange, 'Delete')
+                openOrder.exchange || 'N/A',  // New exchange column
+                openOrder.instrument_id || 'N/A',
+                openOrder.leverage || 'N/A',
+                `${openOrder.side} (${openOrder.offset})`  || 'N/A',
+                // openOrder.order_type || 'N/A',
+                openOrder.price || 'N/A',
+                 `${openOrder.amount ? Number.parseFloat(openOrder.amount).toFixed(1) : 'N/A'} | ${openOrder.fill_size ? Number.parseFloat(openOrder.fill_size).toFixed(1) : 'N/A'}`,
+                openOrder.order_id || 'N/A',
+                openOrder.ts ? new Date(parseInt(openOrder.ts)).toLocaleString() : 'N/A',
+                
+                // openOrder.order_type || 'N/A',
+
+
+                // position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A',
+                // createButton('primary', openOrder.order_id,  openOrder.instrument_id, openOrder.exchange, 'Modify'),
+                createButton('danger', openOrder.order_id,  openOrder.instrument_id, openOrder.exchange, 'Delete')
             ]);
         });
     }
@@ -160,225 +158,224 @@ function processAlgoData(attachAlgoOrds, orderId) {
 }
 
 // Function to create action buttons
-function createButton(type, orderId, algoId, instId, exchange, action) {
+function createButton(type, orderId, instId, exchange, action) {
     return `
-        <button class="btn btn-${type} btn-sm" data-order-id="${orderId}" data-algo-id="${algoId}" onclick="handle${action}('${instId}', '${orderId}', '${algoId}', '${exchange}')">${action}</button>
+        <button class="btn btn-${type} btn-sm" data-order-id="${orderId}"  onclick="handle${action}('${instId}', '${orderId}', '${exchange}')">${action}</button>
     `;
 }
 
 
-function handleModify(instId, ordId,algoId,exchange) {
-    // Get the modal element
-    const modal = document.getElementById('modifyPositionModal');
+// function handleModify(instId, ordId,algoId,exchange) {
+//     // Get the modal element
+//     const modal = document.getElementById('modifyPositionModal');
 
-    // Reference the form inside the modal
-    const form = document.getElementById('modifyPositionForm');
+//     // Reference the form inside the modal
+//     const form = document.getElementById('modifyPositionForm');
 
-    // Clear any existing content in the form
-    form.innerHTML = '';
+//     // Clear any existing content in the form
+//     form.innerHTML = '';
 
-    // Dynamically add form fields for modification
-    form.innerHTML = `
-    <div class="row mb-3">
-        <!-- Exchange -->
-        <div class="col-md-3">
-            <label for="exchange" class="form-label">Exchange</label>
-            <div class="input-group">
-                <input type="text" class="form-control form-control-sm" id="exchange" name="exchange" value="${exchange}" readonly>
-            </div>
-        </div>
+//     // Dynamically add form fields for modification
+//     form.innerHTML = `
+//     <div class="row mb-3">
+//         <!-- Exchange -->
+//         <div class="col-md-3">
+//             <label for="exchange" class="form-label">Exchange</label>
+//             <div class="input-group">
+//                 <input type="text" class="form-control form-control-sm" id="exchange" name="exchange" value="${exchange}" readonly>
+//             </div>
+//         </div>
         
-        <!-- CCY (Instrument ID) -->
-        <div class="col-md-3">
-            <label for="instId" class="form-label">CCY</label>
-            <div class="input-group">
-                <input type="text" class="form-control form-control-sm" id="instId" name="instId" value="${instId}" readonly>
-            </div>
-        </div>
+//         <!-- CCY (Instrument ID) -->
+//         <div class="col-md-3">
+//             <label for="instId" class="form-label">CCY</label>
+//             <div class="input-group">
+//                 <input type="text" class="form-control form-control-sm" id="instId" name="instId" value="${instId}" readonly>
+//             </div>
+//         </div>
         
-        <!-- Order ID -->
-        <div class="col-md-3">
-            <label for="ordId" class="form-label">Order ID</label>
-            <div class="input-group">
-                <input type="text" class="form-control form-control-sm" id="ordId" name="ordId" value="${ordId}" readonly>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('ordId')" title="Copy Order ID">
-                    <i class="bi bi-clipboard"></i>
-                </button>
-            </div>
-        </div>
+//         <!-- Order ID -->
+//         <div class="col-md-3">
+//             <label for="ordId" class="form-label">Order ID</label>
+//             <div class="input-group">
+//                 <input type="text" class="form-control form-control-sm" id="ordId" name="ordId" value="${ordId}" readonly>
+//                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('ordId')" title="Copy Order ID">
+//                     <i class="bi bi-clipboard"></i>
+//                 </button>
+//             </div>
+//         </div>
         
-        <!-- Algo ID -->
-        <div class="col-md-3">
-            <label for="algoId" class="form-label">Algo ID</label>
-            <div class="input-group">
-                <input type="text" class="form-control form-control-sm" id="algoId" name="algoId" value="${algoId}" readonly>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('algoId')" title="Copy Algo ID">
-                    <i class="bi bi-clipboard"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+//         <!-- Algo ID -->
+//         <div class="col-md-3">
+//             <label for="algoId" class="form-label">Algo ID</label>
+//             <div class="input-group">
+//                 <input type="text" class="form-control form-control-sm" id="algoId" name="algoId" value="${algoId}" readonly>
+//                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('algoId')" title="Copy Algo ID">
+//                     <i class="bi bi-clipboard"></i>
+//                 </button>
+//             </div>
+//         </div>
+//     </div>
 
 
-    <!-- Row 2: Order Size and Price -->
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label for="side" class="form-label">Order Side</label>
-            <select class="form-control form-control-sm" id="side" name="side">
-                <option value="buy" ${ordersHist[ordId]['side'] === 'buy' ? 'selected' : ''}>Buy</option>
-                <option value="sell" ${ordersHist[ordId]['side'] === 'sell' ? 'selected' : ''}>Sell</option>
-            </select>
-        </div>
+//     <!-- Row 2: Order Size and Price -->
+//     <div class="row mb-3">
+//         <div class="col-md-4">
+//             <label for="side" class="form-label">Order Side</label>
+//             <select class="form-control form-control-sm" id="side" name="side">
+//                 <option value="buy" ${ordersHist[ordId]['side'] === 'buy' ? 'selected' : ''}>Buy</option>
+//                 <option value="sell" ${ordersHist[ordId]['side'] === 'sell' ? 'selected' : ''}>Sell</option>
+//             </select>
+//         </div>
 
-        <div class="col-md-4">
-            <label for="orderSize" class="form-label">Order Size</label>
-            <input type="number" step="0.01" class="form-control" id="orderSize" value="${ordersHist[ordId]['orderSz']}" name="orderSize" placeholder="Enter new order size">
-        </div>
-        <div class="col-md-4">
-            <label for="orderPrice" class="form-label">Order Price</label>
-            <input type="number" step="0.01" class="form-control" id="orderPrice" value="${ordersHist[ordId]['orderPx']}" name="orderPrice" placeholder="Enter new order price">
-        </div>
-    </div>
+//         <div class="col-md-4">
+//             <label for="orderSize" class="form-label">Order Size</label>
+//             <input type="number" step="0.01" class="form-control" id="orderSize" value="${ordersHist[ordId]['orderSz']}" name="orderSize" placeholder="Enter new order size">
+//         </div>
+//         <div class="col-md-4">
+//             <label for="orderPrice" class="form-label">Order Price</label>
+//             <input type="number" step="0.01" class="form-control" id="orderPrice" value="${ordersHist[ordId]['orderPx']}" name="orderPrice" placeholder="Enter new order price">
+//         </div>
+//     </div>
 
-    <!-- Row 3: Stop Loss and Take Profit -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label for="stopLoss" class="form-label">Stop Loss (SL)</label>
-            <input type="number" step="0.01" class="form-control" id="stopLoss" value="${ordersHist[ordId]?.['stop_limit'] || 'None'}" name="stopLoss" placeholder="Enter new SL price">
-        </div>
-        <div class="col-md-6">
-            <label for="takeProfit" class="form-label">Take Profit (TP)</label>
-            <input type="number" step="0.01" class="form-control" id="takeProfit" value="${ordersHist[ordId]?.['take_profit'] || 'None'}" name="takeProfit" placeholder="Enter new TP price">
-        </div>
-    </div>
-</div>
+//     <!-- Row 3: Stop Loss and Take Profit -->
+//     <div class="row mb-3">
+//         <div class="col-md-6">
+//             <label for="stopLoss" class="form-label">Stop Loss (SL)</label>
+//             <input type="number" step="0.01" class="form-control" id="stopLoss" value="${ordersHist[ordId]?.['stop_limit'] || 'None'}" name="stopLoss" placeholder="Enter new SL price">
+//         </div>
+//         <div class="col-md-6">
+//             <label for="takeProfit" class="form-label">Take Profit (TP)</label>
+//             <input type="number" step="0.01" class="form-control" id="takeProfit" value="${ordersHist[ordId]?.['take_profit'] || 'None'}" name="takeProfit" placeholder="Enter new TP price">
+//         </div>
+//     </div>
+// </div>
 
-    `;
-    // Display the modal
-    modal.style.display = 'block';
+//     `;
+//     // Display the modal
+//     modal.style.display = 'block';
 
-}
+// }
 
 // Function to close the modal
-function closeModifyOrderModal() {
-    const modal = document.getElementById('modifyPositionModal');
-    modal.style.display = 'none';
-}
+// function closeModifyOrderModal() {
+//     const modal = document.getElementById('modifyPositionModal');
+//     modal.style.display = 'none';
+// }
 
-document.getElementById('modifyPositionForm').addEventListener('submit', async function (event) {
-    // Prevent the default form submission (which causes a page refresh)
-    event.preventDefault();
+// document.getElementById('modifyPositionForm').addEventListener('submit', async function (event) {
+//     // Prevent the default form submission (which causes a page refresh)
+//     event.preventDefault();
 
-    // Close the modal
-    closeModifyOrderModal();
+//     // Close the modal
+//     closeModifyOrderModal();
 
-    // Optional: Add your logic for handling the form submission here
-    const formData = new FormData(this); // Collect form data 
-    const token = getAuthToken();
-    const username = localStorage.getItem('username');
-    const redis_key = localStorage.getItem('key');
+//     // Optional: Add your logic for handling the form submission here
+//     const formData = new FormData(this); // Collect form data 
+//     const token = getAuthToken();
+//     const username = localStorage.getItem('username');
+//     const redis_key = localStorage.getItem('key');
 
-    if (!token || !username || !redis_key) {
-        // alert("You must be logged in to access this.");
-        return;
-    }
-    const exchange = formData.get('exchange').toLowerCase()
-    const request_data = { "username": username, "redis_key": redis_key, 'ordId':formData.get('ordId'),'algoId':formData.get('algoId'),'px':formData.get('orderPrice'),'sz':formData.get('orderSize'),'ccy':formData.get('instId'),'exchange':'okx','stopLoss':formData.get('stopLoss'),'takeProfit':formData.get('takeProfit'),'orderPrice':formData.get('orderPrice'),'exchange':exchange,'side':formData.get('side')};
-    if (exchange == 'okx'){
-        const firstAmmendPromise = fetch(`http://${hostname}:5080/okx/ammend_order`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(request_data)
-            });
-            try {
-                const results = await Promise.allSettled([firstAmmendPromise]);
+//     if (!token || !username || !redis_key) {
+//         // alert("You must be logged in to access this.");
+//         return;
+//     }
+//     const exchange = formData.get('exchange').toLowerCase()
+//     const request_data = { "username": username, "redis_key": redis_key, 'ordId':formData.get('ordId'),'algoId':formData.get('algoId'),'px':formData.get('orderPrice'),'sz':formData.get('orderSize'),'ccy':formData.get('instId'),'exchange':'okx','stopLoss':formData.get('stopLoss'),'takeProfit':formData.get('takeProfit'),'orderPrice':formData.get('orderPrice'),'exchange':exchange,'side':formData.get('side')};
+//     if (exchange == 'okx'){
+//         const firstAmmendPromise = fetch(`http://${hostname}:5080/okx/ammend_order`, {
+//             method: 'POST',
+//             headers: {
+//                 'Authorization': `Bearer ${token}`,
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(request_data)
+//             });
+//             try {
+//                 const results = await Promise.allSettled([firstAmmendPromise]);
     
-                // Array to hold combined orders
-                let allOpenOrders = [];
+//                 // Array to hold combined orders
+//                 let allOpenOrders = [];
     
-                // Handle OKX Response
-                if (results[0].status === 'fulfilled') {
-                    const response = results[0].value;
-                    if (response.ok) {
-                        const response_data = await response.json();
-                        if (response_data.data){
-                            // Append OKX data to allOpenOrders
-                            allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
-                                ...position,
-                                exchange: 'OKX'  // Add exchange name to each position
-                            })));
-                        }
-                        else{
-                            console.error(response_data['msg'],response_data['code'])
-                        }
+//                 // Handle OKX Response
+//                 if (results[0].status === 'fulfilled') {
+//                     const response = results[0].value;
+//                     if (response.ok) {
+//                         const response_data = await response.json();
+//                         if (response_data.data){
+//                             // Append OKX data to allOpenOrders
+//                             allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
+//                                 ...position,
+//                                 exchange: 'OKX'  // Add exchange name to each position
+//                             })));
+//                         }
+//                         else{
+//                             console.error(response_data['msg'],response_data['code'])
+//                         }
                         
-                    } else {
-                        console.error('Error fetching OKX orders:', response.statusText);
-                    }
-                } else {
-                    console.error('OKX Request failed:', results[0].reason);
-                }
-            } catch (error) {
-                console.error('Error in fetching and populating data:', error);
-            }
-    }
-    else if (exchange == 'htx'){
-        const firstAmmendPromise = fetch(`http://${hostname}:6061/htx/swap/ammend_order`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(request_data)
-            });
-            try {
-                const results = await Promise.allSettled([firstAmmendPromise]);
+//                     } else {
+//                         console.error('Error fetching OKX orders:', response.statusText);
+//                     }
+//                 } else {
+//                     console.error('OKX Request failed:', results[0].reason);
+//                 }
+//             } catch (error) {
+//                 console.error('Error in fetching and populating data:', error);
+//             }
+//     }
+//     else if (exchange == 'htx'){
+//         const firstAmmendPromise = fetch(`http://${hostname}:6061/htx/swap/ammend_order`, {
+//             method: 'POST',
+//             headers: {
+//                 'Authorization': `Bearer ${token}`,
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(request_data)
+//             });
+//             try {
+//                 const results = await Promise.allSettled([firstAmmendPromise]);
     
-                // Array to hold combined orders
-                let allOpenOrders = [];
+//                 // Array to hold combined orders
+//                 let allOpenOrders = [];
     
-                // Handle OKX Response
-                if (results[0].status === 'fulfilled') {
-                    const response = results[0].value;
-                    if (response.ok) {
-                        const response_data = await response.json();
-                        if (response_data.data){
-                            // Append OKX data to allOpenOrders
-                            allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
-                                ...position,
-                                exchange: 'HTX'  // Add exchange name to each position
-                            })));
-                        }
-                        else{
-                            console.error(response_data['msg'],response_data['code'])
-                        }
+//                 // Handle OKX Response
+//                 if (results[0].status === 'fulfilled') {
+//                     const response = results[0].value;
+//                     if (response.ok) {
+//                         const response_data = await response.json();
+//                         if (response_data.data){
+//                             // Append OKX data to allOpenOrders
+//                             allOpenOrders = allOpenOrders.concat(response_data.data.map(position => ({
+//                                 ...position,
+//                                 exchange: 'HTX'  // Add exchange name to each position
+//                             })));
+//                         }
+//                         else{
+//                             console.error(response_data['msg'],response_data['code'])
+//                         }
                         
-                    } else {
-                        console.error('Error fetching HTX orders:', response.statusText);
-                    }
-                } else {
-                    console.error('HTX Request failed:', results[0].reason);
-                }
-            } catch (error) {
-                console.error('Error in fetching and populating data:', error);
-            }
-    }
+//                     } else {
+//                         console.error('Error fetching HTX orders:', response.statusText);
+//                     }
+//                 } else {
+//                     console.error('HTX Request failed:', results[0].reason);
+//                 }
+//             } catch (error) {
+//                 console.error('Error in fetching and populating data:', error);
+//             }
+//     }
         
-    populateOpenOrders();
+//     populateOpenOrders();
     
 
 
 
-});
+// });
 
 
 
-async function handleDelete(instId, ordId,algoId,exchange) {
-    // Add your delete logic here
-    exchange = exchange.toLowerCase()
+async function handleDelete(instId, ordId,exchange) {
+    console.log(instId,ordId,exchange)
     const token = getAuthToken();
     const username = localStorage.getItem('username')
     const redis_key = localStorage.getItem('key')
@@ -386,63 +383,38 @@ async function handleDelete(instId, ordId,algoId,exchange) {
         // alert("You must be logged in to access this.");
         return;
     }
-    request_data = {"username":username,"redis_key":redis_key,'ordId':ordId,'ccy':instId,'exchange':exchange}
-    if (exchange == 'okx')
-        {
-            // Call the API using fetch
-            const firstOrderPromise =  fetch(`http://${hostname}:5080/okx/cancel_order_by_id`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(request_data)
-            });
+    request_data = {"username":username,"redis_key":redis_key,'order_id':ordId,'instrument_id':instId}
+    const exchange_map= {
+        'okxperp':5080,
+        'htxperp':5081
+    }
+    // Call the API using fetch
+    const firstOrderPromise = fetch(`http://${hostname}:${exchange_map[exchange]}/${exchange}/cancel_order_by_id`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
 
-            const results = await Promise.allSettled([firstOrderPromise]);
-            if (results[0].status === 'fulfilled') {
-                // Extract the data from the resolved promise
-                const response = results[0].value;
-                if (response.ok) {
-                    // Parse the JSON data from the response
-                    const response_data = await response.json();
-                    // populateOpenOpenOrdersTable(response_data.data);
-                    populateOpenOrders();
-                } else {
-                    console.error('Error fetching orders:', response.statusText);
-                }
-            } else {
-                console.error('Request failed:', results[0].reason);
-            }
+    const results = await Promise.allSettled([firstOrderPromise]);
+    if (results[0].status === 'fulfilled') {
+        // Extract the data from the resolved promise
+        const response = results[0].value;
+        if (response.ok) {
+            // Parse the JSON data from the response
+            const response_data = await response.json();
+            // populateOpenOpenOrdersTable(response_data.data);
+            populateOpenOrders();
+        } else {
+            console.error('Error fetching orders:', response.statusText);
         }
-    else if (exchange == 'htx'){
-            // Call the API using fetch
-            const firstOrderPromise =  fetch(`http://${hostname}:6061/htx/swap/cancel_order_by_id`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(request_data)
-            });
-
-            const results = await Promise.allSettled([firstOrderPromise]);
-            if (results[0].status === 'fulfilled') {
-                // Extract the data from the resolved promise
-                const response = results[0].value;
-                if (response.ok) {
-                    // Parse the JSON data from the response
-                    const response_data = await response.json();
-                    // populateOpenOpenOrdersTable(response_data.data);
-                    populateOpenOrders();
-                } else {
-                    console.error('Error fetching orders:', response.statusText);
-                }
-            } else {
-                console.error('Request failed:', results[0].reason);
-            }
-        }
-}
+    } else {
+        console.error('Request failed:', results[0].reason);
+    }
+ 
+    }
 
 // Lock state variable
 let isLocked = true;

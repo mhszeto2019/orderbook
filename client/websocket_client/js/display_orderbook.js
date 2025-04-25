@@ -55,7 +55,6 @@ function populateOrderBook(i, exchange, data) {
 
     const container = document.getElementById(`scrollable-orderbook-${i}`);
     const tableBody = document.getElementById(`order-data-table-body-${i}`);
-    console.log(i)
     // let shouldScroll = !container.dataset.hasScrolled;
     shouldScrollState[i] = !container.dataset.hasScrolled;
     // console.log(shouldScrollState[i])

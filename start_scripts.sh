@@ -35,5 +35,12 @@ uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --re
 
 uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091 --reload
 
-uvicorn app.fastapi.htxperp.rest.private.place_htx_order:app --port 5081 --reload
+uvicorn app.fastapi.okxperp.rest.private.get_okx_positions:app --port 5070 --reload
+uvicorn app.fastapi.htxperp.rest.private.get_htx_positions:app --port 5071 --reload
+
 uvicorn app.fastapi.okxperp.rest.private.place_okx_order:app --port 5080 --reload
+uvicorn app.fastapi.htxperp.rest.private.place_htx_order:app --port 5081 --reload
+
+
+ uvicorn app.fastapi.okxperp.rest.private.get_okx_orders:app --port 6060 --reload
+ uvicorn app.fastapi.htxperp.rest.private.get_htx_orders:app --port 6061 --reload

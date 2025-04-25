@@ -4,7 +4,7 @@ async function populatePositions() {
     const openPositionDOM = document.getElementById('oms-open-positions-body');
     openPositionDOM.innerHTML = '';  // Clear the table before populating
     const openPositionTS = document.getElementById('last-updated-positions');
-    onePositionTs =''
+    let onePositionTs =''
     updateTime(openPositionTS);  // Update the timestamp of when the data was last fetched
 
     const token = getAuthToken();
@@ -19,7 +19,7 @@ async function populatePositions() {
     const request_data = { "username": username, "redis_key": redis_key };
 
     // Set up both the OKX and HTX requests
-    const firstOrderPromise = fetch(`http://${hostname}:5070/okx/get_all_positions`, {
+    const firstOrderPromise = fetch(`http://${hostname}:5070/okxperp/get_all_positions`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -28,7 +28,7 @@ async function populatePositions() {
         body: JSON.stringify(request_data)
     });
 
-    const secondOrderPromise = fetch(`http://${hostname}:5071/htx/get_all_positions`, {
+    const secondOrderPromise = fetch(`http://${hostname}:5071/htxperp/get_all_positions`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -38,54 +38,50 @@ async function populatePositions() {
     });
 
     try {
-        const positioinResults = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);
+        const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);
 
         // Array to hold combined positions
         let allPositions = [];
 
         // Handle OKX Response
-        if (positioinResults[0].status === 'fulfilled') {
-            const positioinResponse = positioinResults[0].value;
-            if (positioinResponse.ok) {
-                const positioinResponse_data = await positioinResponse.json();
+        if (Promises[0].status === 'fulfilled') {
+            const pos = Promises[0].value;
 
-                if (positioinResponse_data.data){
-                    // Append OKX data to allPositions
-                    allPositions = allPositions.concat(positioinResponse_data.data.map(position => ({
-                        ...position,
-                        exchange: 'OKX'  // Add exchange name to each position
-                    })));
-                }
-                else{
-                    console.error(positioinResponse_data['msg'],positioinResponse_data['code'])
-                }
-                
-            } else {
-                console.error('Error fetching OKX positions:', positioinResponse.statusText);
+            if (pos.ok) {
+                let posData = await pos.json()
+                console.log(posData)
+                    posData.forEach(posRow => {
+                        // console.log(posRow)
+                        allPositions.push(posRow)
+                    }
+                )
             }
+
+           
+        } else {
+            console.error('OKX Request failed:', positioinResults[0].reason);
+        }
+        if (Promises[1].status === 'fulfilled') {
+            const pos = Promises[1].value;
+            // console.log(pos)
+
+            if (pos.ok) {
+                let posData = await pos.json()
+                console.log(posData)
+                    posData.forEach(posRow => {
+                        // console.log(posRow)
+                        allPositions.push(posRow)
+                        // console.log(allPositions)
+                    }
+                )
+            }
+            
+            
         } else {
             console.error('OKX Request failed:', positioinResults[0].reason);
         }
 
-        // Handle HTX Response
-        if (positioinResults[1].status === 'fulfilled') {
-            const positioinResponse = positioinResults[1].value;
-            
-            if (positioinResponse.ok) {
-                const positioinResponse_data = await positioinResponse.json();
-                const formattedData = Htx2OkxFormat(positioinResponse_data);  // Format HTX data as needed
-                // Append HTX data to allPositions
-                allPositions = allPositions.concat(formattedData.map(position => ({
-                    ...position,
-                    exchange: 'HTX'  // Add exchange name to each position
-                })));
-            } else {
-                console.error('Error fetching HTX positions:', positioinResponse.statusText);
-            }
-        } else {
-            console.error('HTX Request failed:', positioinResults[1].reason);
-        }
-
+       
         // After both positioinResponses are handled, populate the table with all positions
         populateOpenPositionsTable(allPositions);
 
@@ -118,23 +114,27 @@ function populateOpenPositionsTable(positions) {
         // Manually add a row with `colspan`
         const emptyMessage = `
             <tr>
-                <td colspan="10" class="text-center text-muted">No open positions available</td>
+                <td  class="text-muted">No open positions available</td>
             </tr>`;
         $('#oms-open-positions-body').html(emptyMessage);
     } else {
         // Add rows dynamically
         positions.forEach(position => {
+            console.log(position)
+            // {'adl': '1', 'exchange': 'htxperp', 'instrument_id': 'BTC-USD-SWAP', 'leverage': '5', 'margin_ratio': '0.000426913935217944', 'position': '2.000000000000000000', 'price': 93681.59513309693, 'pnl': '3.21384591400000000000000000000000000000000000000E-7', 'liquidation_price': '63619.175984357167389881', 'ts': 1745569604074}
+
             omsTable.row.add([
                 position.exchange || 'N/A',  // New exchange column
-                position.instId || 'N/A',
-                position.lever || 'N/A',
-                position.mgnRatio ? Number.parseFloat(position.mgnRatio).toFixed(2) : 'N/A',
-                position.pos || 'N/A',
+                position.instrument_id || 'N/A',
+                position.leverage || 'N/A',
+                // position.margin_ratio ? Number.parseFloat(position.margin_ratio).toFixed(2) : 'N/A',
+                position.position ? Number.parseFloat(position.position).toFixed(2) : 'N/A',
                 position.adl || 'N/A',
-                position.liqPx ? Number.parseFloat(position.liqPx).toFixed(2) : 'N/A',
-                position.avgPx || 'N/A',
+                position.liquidation_price ? Number.parseFloat(position.liquidation_price).toFixed(2) : 'N/A',
+                position.price  ? Number.parseFloat(position.price).toFixed(2) : 'N/A',
                 position.pnl ? Number.parseFloat(position.pnl).toFixed(10) : 'N/A',
-                position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A'
+                position.ts ? new Date(parseInt(position.ts)).toLocaleString() : 'N/A',
+                // position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A'
             ]);
         });
     }
