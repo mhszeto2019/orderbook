@@ -49,13 +49,8 @@ async function handleClick(type) {
     if (leadingExchange == 'htx'){
         validateSelectInput('htx-open-close-1')
         if (!offset2){
-
-            Swal.fire({
-                title: "Missing Item!",
-                text: "Select Open/Close",
-                icon: "warning"
-              });
-
+      
+          
             return
         }
     }
@@ -63,14 +58,9 @@ async function handleClick(type) {
         console.log("lag")
         validateSelectInput('htx-open-close-2')
 
-        Swal.fire({
-            title: "Missing Item!",
-            text: "Select Open/Close",
-            icon: "warning"
-          });
 
         if (!offset2){
-            
+         
             return
         }
     }
@@ -191,6 +181,12 @@ function validateSelectInput(selectId) {
     const select = document.getElementById(selectId);
     if (select.value === "") {
         select.classList.add("invalid-select");
+     
+        Swal.fire({
+            title: "Missing Item!",
+            text: "Select Open/Close",
+            icon: "warning"
+          });
         return false;
     } else {
         select.classList.remove("invalid-select");
