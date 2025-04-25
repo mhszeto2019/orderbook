@@ -60,8 +60,10 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto" id="navbar-links">
+                    
                     <!-- Login Link (Visible when logged out) -->
                     <li class="nav-item" id="login-link">
                         <a class="nav-link" href="auth.html">Login</a>
@@ -82,138 +84,130 @@
 
         <!-- This section will be visible if the JWT is NOT present -->
         <div id="loginPrompt" class="alert alert-warning text-center">
+
             <h4>You are not logged in.</h4>
             <p>Please log in to access secured content.</p>
+
         </div>
         
         <div class = "row px-4 ">
-            
+
             <!-- WARNING ALERT -->
             <div id="alertBox" class="text-center alert alert-dark alert-dismissible fade show " role="alert">
                 <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
                 <button type="button" class="btn btn-danger btn ms-3" onclick="stopTwilioCall()">Stop Call</button>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-                
+
         </div>
 
-        <div class = "row px-4 " >
+        <div class = "row px-4  " >
             
             <!-- DISPLAY TABLE -->
-            <div class="col-lg-6 container-fluid mt-4 " id="orderbookdisplayContainer">
+            <div class="col-lg-6 container-fluid " id="orderbookdisplayContainer">
                 <!-- Container for the funding rates row -->
-                <div class="row">
-                    <!--WS STATUS BADGE  -->
-                    <!-- <div class="col-md-4 mb-4">
-                        <h6 class = "header-text">Connection Status:</h6 >
-                        <div class="d-flex flex-wrap">
-                            <span id="status-okx" class="btn statusbadge bg-danger me-2 mb-2">okx: dead</span>
-                            <span id="status-htx" class="btn statusbadge bg-danger me-2 mb-2">htx: dead</span>
-                            <span id="status-binance" class="btn statusbadge bg-danger mb-2">binance: dead</span>
-                        </div>
-                    </div> -->
-                    <!-- Include Bootstrap Icons if not already -->
+                
+                <div class="">
+                <span class ='header-text badge-md mb-3 '>FUNDING RATE</span>
 
-                    <div class="row">
+                    <div class="row ">
                         <!-- Market Type Selector -->
-                        <div class="col-md-4 col-sm-12 mb-3">
+                        <div class="col-md-6">
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="bi bi-graph-up"></i>
                                 </span>
                                 <select id="market-type" class="form-select" onchange="updateCurrencyOptions()">
                                     <option value="">Select Market</option>
-                                    <!-- <option value="spot" selected>SPOT</option> -->
                                     <option value="perp" selected>PERP</option>
-                                    <!-- <option value="futures">FUTURES</option> -->
                                 </select>
                             </div>
                         </div>
-
+                
                         <!-- Currency Selector -->
-                        <div class="col-md-4 col-sm-12 mb-3">
+                        <div class="col-md-6">
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="bi bi-currency-dollar"></i>
                                 </span>
                                 <select id="fundingrate-currency-input" class="form-select">
-
                                     <!-- Options will be populated via JS -->
                                 </select>
                             </div>
                         </div>
                     </div>
-
-                  
-
-                    
-                    
-                    
-                    
-                 
-                    <div>
-
-                    </div>
-
-                    <div id="okx-section" class="col-md-3 mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="header-text  mb-0">OKX</h6>
-                            <span id="fundingratets-okxperp" class="text-warning text-end">-</span>
-                        </div>
-                        <div class="">
-                            <div class="d-flex justify-content-between">
-                                <span id="currency-okxperp" class="text-primary text-end">--</span>
-                                <span id="funding-rate-okxperp" class="text-primary text-end">--</span>
-                            </div>
-                        </div>
-                    </div>
                 
-                    <div id="htx-section" class="col-md-3 mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="header-text  mb-0">HTX</h6>
-                            <span id="fundingratets-htxperp" class="text-warning text-end">-</span>
-                        </div>
-                        <div class="">
-                            <div class="d-flex justify-content-between">
-                                <span id="currency-htxperp" class="text-primary text-end">--</span>
-                                <span id="funding-rate-htxperp" class="text-primary text-end">--</span>
-                            
+                    <div class="row ">
+                        <!-- Funding Cards -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-light shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="header-text fw-bold">OKX</h6>
+                                        <span id="fundingratets-okxperp" class="text-warning">-</span>
+                                    </div>
+                                    <div class=" d-flex justify-content-between">
+                                        <span id="currency-okxperp" class="text-primary">--</span>
+                                        <span id="funding-rate-okxperp" class="text-primary">--</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div id="binance-section" class="col-md-3 mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="header-text  mb-0">BINANCE</h6>
-                            <span id="fundingratets_bnb" class="text-warning text-end">-</span>
-                        </div>
-                        <div class="">
-                            <div class="d-flex justify-content-between">
-                                <span id="currency-binance" class="text-primary text-end">--</span>
-                                <span id="funding-rate-binance" class="text-primary text-end">--</span>
-                            </div>
-                        </div>
-                    </div>
                 
-                    <div id="htx-section" class="col-md-3 mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="header-text mb-0">DERIBIT</h6>
-                            <span id="fundingratets-deribit" class="text-warning text-end">-</span>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-light shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="header-text fw-bold">HTX</h6>
+                                        <span id="fundingratets-htxperp" class="text-warning">-</span>
+                                    </div>
+                                    <div class=" d-flex justify-content-between">
+                                        <span id="currency-htxperp" class="text-primary">--</span>
+                                        <span id="funding-rate-htxperp" class="text-primary">--</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="">
-                            <div class="d-flex justify-content-between">
-                                <span id="currency-htx" class="text-primary text-end">--</span>
-                                <span id="funding-rate-deribit" class="text-primary text-end">--</span>
-                            
+                
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-light shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="header-text fw-bold">BINANCE</h6>
+                                        <span id="fundingratets_bnb" class="text-warning">-</span>
+                                    </div>
+                                    <div class=" d-flex justify-content-between">
+                                        <span id="currency-binance" class="text-primary">--</span>
+                                        <span id="funding-rate-binance" class="text-primary">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-light shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="header-text fw-bold">DERIBIT</h6>
+                                        <span id="fundingratets-deribit" class="text-warning">-</span>
+                                    </div>
+                                    <div class=" d-flex justify-content-between">
+                                        <span id="currency-deribit" class="text-primary">--</span>
+                                        <span id="funding-rate-deribit" class="text-primary">--</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
+                
 
 
                 <div class="row">
                 <!-- ORDERBOOK DISPLAY -->
+                        <span class ='header-text my-3'>DISPLAY</span>
+                
+
                         <div class="m-0 p-0">
                         <!-- CHOICES FOR LEADING AND LAGGING EXCHANGES -->
                             <div class="container">
@@ -270,7 +264,6 @@
                                         </div>
                                     </div>
 
-                                        
                                     <!-- Exchange 1 -->
                                     <div class="col-md-3 col-sm-6 mb-3">
                                         <div class="input-group">
@@ -519,7 +512,7 @@
 
 
             <!-- FORM for ordering -->
-            <div class="col-lg-6 container-fluid  mt-4">
+            <div class="col-lg-6 container-fluid ">
 
                 <!-- This section will only be visible if the JWT is NOT present -->
                 <div id="loginPromptBtn" class="alert alert-warning text-center h-100">

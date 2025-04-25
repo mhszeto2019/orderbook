@@ -181,9 +181,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 market_type = json_data['market_type']
                 exchange = json_data['exchange']
                 exchange_name = exchange + market_type
-                # time.sleep(2)
-                # print('connection')
-                # time.sleep(2)
+              
             except asyncio.CancelledError:
                 break
 
@@ -255,7 +253,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 market_type = json_data['market_type']
                 exchange = json_data['exchange']
                 exchange_name = exchange + market_type
-                time.sleep(2)
+                # time.sleep(2)
                 # print('connection')
                 # time.sleep(2)
             except asyncio.CancelledError:

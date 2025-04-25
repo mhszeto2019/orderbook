@@ -49,13 +49,28 @@ async function handleClick(type) {
     if (leadingExchange == 'htx'){
         validateSelectInput('htx-open-close-1')
         if (!offset2){
+
+            Swal.fire({
+                title: "Missing Item!",
+                text: "Select Open/Close",
+                icon: "warning"
+              });
+
             return
         }
     }
     if (laggingExchange == 'htx'){
         console.log("lag")
         validateSelectInput('htx-open-close-2')
+
+        Swal.fire({
+            title: "Missing Item!",
+            text: "Select Open/Close",
+            icon: "warning"
+          });
+
         if (!offset2){
+            
             return
         }
     }
