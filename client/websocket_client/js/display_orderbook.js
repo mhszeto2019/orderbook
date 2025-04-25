@@ -1,50 +1,112 @@
 let debounceTimeout = null;
 
 
-function populateOrderBook(i,exchange, data) {
+// function populateOrderBook(i,exchange, data) {
 
-    const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
-    // Get the selected exchange for the current table
-    const selectedExchange = document.getElementById(`exchange${i}-input`).value;
-    const orderbookHeader = document.getElementById(`orderbook-header-${i}`)
-    const scrollableOrderbook =  document.getElementById(`orderBookTable${i}`)
-    // If the selected exchange matches the current exchange from WebSocket
+//     const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
+//     // Get the selected exchange for the current table
+//     const selectedExchange = document.getElementById(`exchange${i}-input`).value;
+//     const orderbookHeader = document.getElementById(`orderbook-header-${i}`)
+//     const scrollableOrderbook =  document.getElementById(`orderBookTable${i}`)
+//     // If the selected exchange matches the current exchange from WebSocket
    
-    const tableBody = document.getElementById(`order-data-table-body-${i}`);
-    // Clear the previous data in the table
-    tableBody.innerHTML = '';
-    data = JSON.parse(data)
+//     const tableBody = document.getElementById(`order-data-table-body-${i}`);
+//     // Clear the previous data in the table
+//     tableBody.innerHTML = '';
+//     data = JSON.parse(data)
 
-    const bid_list = data.bids;
-    const ask_list = data.asks.reverse();
+//     const bid_list = data.bids;
+//     const ask_list = data.asks.reverse();
+//     const readableTime = new Date(data.timestamp).toLocaleString();
+//     timestamp.innerHTML = readableTime;
+//     // timestamp.innerHTML = `${data.timestamp}`;
+    
+//     orderbookHeader.innerHTML = `Orderbook: ${selectedExchange.toUpperCase()}` 
+//     // // Populate asks
+//     ask_list.forEach(item => {
+//         const row = document.createElement('tr');  // Create a new row
+//         row.classList.add('asks');  // Add class 'ask' for styling purposes
+//         row.innerHTML = `<td>${item[0]}</td>
+//         <td>${item[1]}</td>`;
+//         tableBody.appendChild(row);
+//     });
+
+//     // Add a separator row between asks and bids
+//     const separatorRow = document.createElement('tr');
+//     separatorRow.innerHTML = `<td colspan="2" style="border-top: 2px solid #000; text-align: center;"></td>`;
+
+//     tableBody.appendChild(separatorRow);
+//     // Populate bids
+//     bid_list.forEach(item => {
+//         const row = document.createElement('tr');  // Create a new row
+//         row.classList.add('bids');  // Add class 'bid' for styling purposes
+//         row.innerHTML = `<td>${item[0]}</td>
+//                         <td>${item[1]}</td>`;
+//         tableBody.appendChild(row);
+//     });
+
+      
+// }
+
+
+function populateOrderBook(i, exchange, data) {
+    
+    const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
+
+    const container = document.getElementById(`scrollable-orderbook-${i}`);
+    const tableBody = document.getElementById(`order-data-table-body-${i}`);
+    console.log(i)
+    // let shouldScroll = !container.dataset.hasScrolled;
+    shouldScrollState[i] = !container.dataset.hasScrolled;
+    // console.log(shouldScrollState[i])
+    // Store previous scroll state
+
+    // Clear existing content
+    tableBody.innerHTML = '';
+    data = JSON.parse(data);
+
+
     const readableTime = new Date(data.timestamp).toLocaleString();
     timestamp.innerHTML = readableTime;
     // timestamp.innerHTML = `${data.timestamp}`;
+
+    // Process asks (reverse order)
+    data.asks.reverse().forEach(item => {
+        tableBody.innerHTML += `<tr class="asks"><td>${item[0]}</td><td>${item[1]}</td></tr>`;
+    });
+
+    // Add separator
+    tableBody.innerHTML += `<tr id="separator-row-${i}"><td colspan="2" style="border-top:2px solid #000;"></td></tr>`;
+
+    // Process bids
+    data.bids.forEach(item => {
+        tableBody.innerHTML += `<tr class="bids"><td>${item[0]}</td><td>${item[1]}</td></tr>`;
+    });
+  
+                
+    // console.log(tableBody.getBoundingClientRect())
     
-    orderbookHeader.innerHTML = `Orderbook: ${selectedExchange.toUpperCase()}` 
-    // // Populate asks
-    ask_list.forEach(item => {
-        const row = document.createElement('tr');  // Create a new row
-        row.classList.add('asks');  // Add class 'ask' for styling purposes
-        row.innerHTML = `<td>${item[0]}</td>
-        <td>${item[1]}</td>`;
-        tableBody.appendChild(row);
-    });
-
-    // Add a separator row between asks and bids
-    const separatorRow = document.createElement('tr');
-    separatorRow.innerHTML = `<td colspan="2" style="border-top: 2px solid #000; text-align: center;"></td>`;
-    tableBody.appendChild(separatorRow);
-    // Populate bids
-    bid_list.forEach(item => {
-        const row = document.createElement('tr');  // Create a new row
-        row.classList.add('bids');  // Add class 'bid' for styling purposes
-        row.innerHTML = `<td>${item[0]}</td>
-                        <td>${item[1]}</td>`;
-        tableBody.appendChild(row);
-    });
-
-      
+    // Only scroll on first load
+    if (shouldScrollState[i]) {
+        setTimeout(() => {
+            const separator = document.getElementById(`separator-row-${i}`);
+            if (separator) {
+                // Calculate scroll position accounting for sticky header
+                const headerHeight = container.querySelector('thead').offsetHeight;
+                const separatorPos = separator.offsetTop;
+                console.log(separatorPos,container.clientHeight,headerHeight)
+                const scrollPos = separatorPos - (container.clientHeight / 2) -headerHeight/2 ;
+                console.log(scrollPos)
+                container.scrollTo({
+                    top: scrollPos,
+                    behavior: 'smooth'
+                });
+                
+                // Mark as scrolled
+                container.dataset.hasScrolled = 'true';
+            }
+        }, 50);
+    }
 }
 
 // Debounce function that delays execution of populateOrderBook
@@ -117,3 +179,4 @@ window.onload = function() {
     updateExchange()
     console.log("The document has finished loading!");
 };
+
