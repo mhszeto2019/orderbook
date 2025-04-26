@@ -1,31 +1,30 @@
 #!/bin/bash
 
-# Define logs directory
-LOG_DIR="./logs"
-mkdir -p $LOG_DIR
+# Create a new tmux session
+tmux new-session -d -s uvicorn_servers -n 'auth' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.auth:app --port 5001'
 
-# Start each uvicorn server
-echo "Starting Uvicorn servers..."
+# Create windows for public funding rate services
+tmux new-window -t uvicorn_servers -n 'okx_funding' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.okxperp.rest.public.get_okx_funding_rate:app --port 5001  --reload'
+tmux new-window -t uvicorn_servers -n 'htx_funding' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.htxperp.rest.public.get_htx_funding_rate:app --port 5002  --reload'
 
-nohup uvicorn app.fastapi.okxperp.rest.public.get_okx_funding_rate:app --port 5001 --reload > $LOG_DIR/okx_funding_rate.log 2>&1 &
-echo "OKX funding rate on port 5001"
+# Create windows for last trades endpoints
+tmux new-window -t uvicorn_servers -n 'htx_trades' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.htxperp.rest.public.get_htx_last_trades:app --port 6101  --reload'
+tmux new-window -t uvicorn_servers -n 'okx_trades' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100  --reload'
 
-nohup uvicorn app.fastapi.htxperp.rest.public.get_htx_funding_rate:app --port 5002 --reload > $LOG_DIR/htx_funding_rate.log 2>&1 &
-echo "HTX funding rate on port 5002"
+# Create window for HTX orderbook websocket
+tmux new-window -t uvicorn_servers -n 'htx_orderbook' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091  --reload'
 
-nohup uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091 --reload > $LOG_DIR/htx_orderbook_ws.log 2>&1 &
-echo "HTX orderbook WS on port 5091"
+# Create windows for position endpoints
+tmux new-window -t uvicorn_servers -n 'okx_positions' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.okxperp.rest.private.get_okx_positions:app --port 5070  --reload'
+tmux new-window -t uvicorn_servers -n 'htx_positions' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.htxperp.rest.private.get_htx_positions:app --port 5071  --reload'
 
-nohup uvicorn app.fastapi.htxperp.rest.public.get_htx_last_trades:app --port 6101 --reload > $LOG_DIR/htx_last_trades.log 2>&1 &
-echo "HTX last trades on port 6101"
+# Create windows for order placement
+tmux new-window -t uvicorn_servers -n 'place_okx' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.okxperp.rest.private.place_okx_order:app --port 5080  --reload'
+tmux new-window -t uvicorn_servers -n 'place_htx' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.htxperp.rest.private.place_htx_order:app --port 5081  --reload'
 
-nohup uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --reload > $LOG_DIR/okx_last_trades.log 2>&1 &
-echo "OKX last trades on port 6100"
+# Create windows for order history
+tmux new-window -t uvicorn_servers -n 'okx_orders' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.okxperp.rest.private.get_okx_orders:app --port 6060  --reload'
+tmux new-window -t uvicorn_servers -n 'htx_orders' 'source ~/environments/okx/bin/activate && uvicorn app.fastapi.htxperp.rest.private.get_htx_orders:app --port 6061  --reload'
 
-nohup uvicorn app.fastapi.htxperp.rest.private.place_htx_order:app --port 5081 --reload > $LOG_DIR/place_htx_order.log 2>&1 &
-echo "HTX place order on port 5081"
-
-nohup uvicorn app.fastapi.okxperp.rest.private.place_okx_order:app --port 5080 --reload > $LOG_DIR/place_okx_order.log 2>&1 &
-echo "OKX place order on port 5080"
-
-echo "All servers started."
+echo "All services started in tmux session 'uvicorn_servers'"
+echo "Attach to the session with: tmux attach -t uvicorn_servers"

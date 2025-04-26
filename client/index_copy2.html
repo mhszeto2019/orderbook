@@ -24,6 +24,14 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<!-- Include this once in your HTML -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="./websocket_client/js/update_currency_based_on_mkt_type.js"></script>
+
+
+
+
 
 <body class="text-light">
     
@@ -52,8 +60,10 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto" id="navbar-links">
+                    
                     <!-- Login Link (Visible when logged out) -->
                     <li class="nav-item" id="login-link">
                         <a class="nav-link" href="auth.html">Login</a>
@@ -74,109 +84,248 @@
 
         <!-- This section will be visible if the JWT is NOT present -->
         <div id="loginPrompt" class="alert alert-warning text-center">
+
             <h4>You are not logged in.</h4>
             <p>Please log in to access secured content.</p>
+
         </div>
         
         <div class = "row px-4 ">
-            
+
             <!-- WARNING ALERT -->
             <div id="alertBox" class="text-center alert alert-dark alert-dismissible fade show " role="alert">
                 <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
                 <button type="button" class="btn btn-danger btn ms-3" onclick="stopTwilioCall()">Stop Call</button>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-                
+
         </div>
 
-        <div class = "row px-4 " >
+        <div class = "row px-4  " >
             
             <!-- DISPLAY TABLE -->
-            <div class="col-lg-6 container-fluid mt-4 " id="orderbookdisplayContainer">
+            <div class="col-lg-6 container-fluid " id="orderbookdisplayContainer ">
                 <!-- Container for the funding rates row -->
-                <div class="row ">
-                    <!--WS STATUS BADGE  -->
-                    <div class="col-md-4 mb-4">
-                        <h6 class = "header-text">Connection Status:</h6 >
-                        <div class="d-flex flex-wrap">
-                            <span id="status-okx" class="btn statusbadge bg-danger me-2 mb-2">okx: dead</span>
-                            <span id="status-htx" class="btn statusbadge bg-danger me-2 mb-2">htx: dead</span>
-                            <span id="status-bnb" class="btn statusbadge bg-danger mb-2">bnb: dead</span>
+                <div class=" text-center">
+                    <span class="px-3 text-muted fw-medium small text-uppercase header-text">
+                      FUNDING RATE
+                    </span>
+                  </div>
+                
+                <div class="container-fluid p-3 ">
+                    <!-- Control Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="input-group bg-white rounded-3 shadow-sm">
+                                <span class="input-group-text bg-transparent border-0">
+                                    <i class="bi bi-graph-up text-secondary"></i>
+                                </span>
+                                <select id="market-type" class="form-select border-0 shadow-none" onchange="updateCurrencyOptions()">
+                                    <option value="">Select Market</option>
+                                    <option value="perp" selected>PERP</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <!-- Funding rate Section -->
-                    <div id="okx-section" class="col-md-4 mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="header-text  mb-0">OKX</h6>
-                            <span id="fundingratets_okx" class="text-warning text-end">-</span>
-                        </div>
-                        <div class="">
-                            <div class="d-flex justify-content-between">
-                                <span id="currency-okx" class="text-primary text-end">--</span>
-                                <span id="funding-rate-okx" class="text-primary text-end">--</span>
+                        
+                        <div class="col-md-6">
+                            <div class="input-group bg-white rounded-3 shadow-sm">
+                                <span class="input-group-text bg-transparent border-0">
+                                    <i class="bi bi-currency-dollar text-secondary"></i>
+                                </span>
+                                <select id="fundingrate-currency-input" class="form-select border-0 shadow-none">
+                                    <!-- Options will be populated via JS -->
+                                </select>
                             </div>
                         </div>
                     </div>
                 
-                    <div id="htx-section" class="col-md-4 mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="header-text  mb-0">HTX</h6>
-                            <span id="fundingratets-htx" class="text-warning text-end">-</span>
+                    <!-- Cards Row -->
+                    <div class="row g-3">
+                        <!-- OKX Card -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0 fw-semibold text-muted">OKX</h6>
+                                        <span id="fundingratets-okxperp" class="badge  bg-opacity-10 text-warning small">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-end">
+                                        <span id="currency-okxperp" class="text-muted small">--</span>
+                                        <span id="funding-rate-okxperp" class="fw-bold text-primary fs-5">--</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="">
-                            <div class="d-flex justify-content-between">
-                                <span id="currency-htx" class="text-primary text-end">--</span>
-                                <span id="funding-rate-htx" class="text-primary text-end">--</span>
-                            
+                
+                        <!-- HTX Card -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0 fw-semibold text-muted">HTX</h6>
+                                        <span id="fundingratets-htxperp" class="badge  bg-opacity-10 text-warning small">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-end">
+                                        <span id="currency-htxperp" class="text-muted small">--</span>
+                                        <span id="funding-rate-htxperp" class="fw-bold text-primary fs-5">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Binance Card -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0 fw-semibold text-muted">BINANCE</h6>
+                                        <span id="fundingratets_bnb" class="badge  bg-opacity-10 text-warning small">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-end">
+                                        <span id="currency-binance" class="text-muted small">--</span>
+                                        <span id="funding-rate-binance" class="fw-bold text-primary fs-5">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Deribit Card -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0 fw-semibold text-muted">DERIBIT</h6>
+                                        <span id="fundingratets-deribit" class="badge  bg-opacity-10 text-warning small">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-end">
+                                        <span id="currency-deribit" class="text-muted small">--</span>
+                                        <span id="funding-rate-deribit" class="fw-bold text-primary fs-5">--</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
 
 
                 <div class="row">
                 <!-- ORDERBOOK DISPLAY -->
-                        <div class="justify-content-between align-items-center mb-3">
+                <div class="py-1 my-2 text-center">
+                    <span class="px-3 text-muted fw-medium small text-uppercase header-text">
+                      DISPLAY
+                    </span>
+                  </div>
+                
+
+                        <div class="m-0 p-0">
                         <!-- CHOICES FOR LEADING AND LAGGING EXCHANGES -->
                             <div class="container">
                                 <div class="row align-items-center">
-                                    <!-- Currency Input -->
-                                    <div class="col-md-4 col-sm-12 mb-3">
+
+                                    <div class="col-md-3 col-sm-12 mb-3">
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                                            <select id="currency-input" class="form-select" aria-label="Currency" onchange="updateCurrency()">
-                                                <option value="">Select Currency</option>
-                                                <option value="BTC-USDC">BTC-USDC</option>
-                                                <option value="BTC-USD-SWAP" selected>BTC-USD-SWAP</option>
-                                                <option value="BTC-USDT-SWAP">BTC-USDT-SWAP</option>
+                                            <span class="input-group-text">
+                                                <i class="bi bi-graph-up"></i>
+                                            </span>
+                                            <select id="market-type-orderbook1" class="form-select" onchange="updateCurrencyOptionsOrderbook1()">
+                                                <option value="">Select Market</option>
+                                                <!-- <option value="spot" selected>SPOT</option> -->
+                                                <option value="perp" selected>PERP</option>
+                                                <!-- <option value="futures">FUTURES</option> -->
                                             </select>
                                         </div>
                                     </div>
-                                
-                                    <!-- Exchange 1 Dropdown -->
-                                    <div class="col-md-4 col-sm-12 mb-3">
+
+                                    <!-- Currency Input -->
+                                    <div class="col-md-3 col-sm-12 mb-3">
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
-                                            <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange()">
+                                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                            <select id="currency-input-orderbook1" class="form-select" aria-label="Currency" onchange="updateCurrency()">
+                                                <option value="">Select Currency</option>
+                               
+                                            </select>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-3 col-sm-12 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-graph-up"></i>
+                                            </span>
+                                            <select id="market-type-orderbook2" class="form-select" onchange="updateCurrencyOptionsOrderbook2()">
+                                                <option value="">Select Market</option>
+                                                <!-- <option value="spot" selected>SPOT</option> -->
+                                                <option value="perp" selected>PERP</option>
+                                                <!-- <option value="futures">FUTURES</option> -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Currency Input -->
+                                    <div class="col-md-3 col-sm-12 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                            <select id="currency-input-orderbook2" class="form-select" aria-label="Currency" onchange="updateCurrency()">
+                                                <option value="">Select Currency</option>
+                               
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Exchange 1 -->
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="input-group">
+                                            
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <select id="exchange1-input" class="form-select" aria-label="Exchange 1" onchange="updateExchange(1)" >
                                                 <option value="">Select Exchange 1</option>
                                                 <option value="okx" selected>OKX</option>
                                                 <option value="htx">HTX</option>
+                                                <option value="binance">Binance</option>
+                                                <option value="deribi">Deribit</option>
                                             </select>
                                         </div>
                                     </div>
-                                
-                                    <!-- Exchange 2 Dropdown -->
-                                    <div class="col-md-4 col-sm-12 mb-3">
+
+                                    <!-- HTX Open/Close (1) -->
+                                    <div id="htx-open-close-wrapper1" class="col-md-3 col-sm-6 mb-3" style="visibility: hidden;">
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-gear"></i></span>
-                                            <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange()">
-                                                <option value="">Select Exchange 2</option>
-                                                <option value="okx" >OKX</option>
-                                                <option value="htx" selected>HTX</option>
+                                            <select id="htx-open-close-1" class="form-select" aria-label="Open/Close">
+                                                <option value="">SELECT OPEN/CLOSE</option>
+                                                <option value="open">OPEN</option>
+                                                <option value="close">CLOSE</option>
                                             </select>
                                         </div>
                                     </div>
+
+                                    <!-- Exchange 2 -->
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <select id="exchange2-input" class="form-select" aria-label="Exchange 2" onchange="updateExchange(2)" >
+                                                <option value="">Select Exchange 2</option>
+                                                <option value="okx">OKX</option>
+                                                <option value="htx" selected>HTX</option>
+                                                <option value="binance">Binance</option>
+                                                <option value="deribi">Deribit</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- HTX Open/Close (2) -->
+                                    <div id="htx-open-close-wrapper2" class="col-md-3 col-sm-6 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-gear"></i></span>
+                                            <select id="htx-open-close-2" class="form-select" aria-label="Open/Close">
+                                                <option value="">SELECT OPEN/CLOSE</option>
+                                                <option value="open">OPEN</option>
+                                                <option value="close">CLOSE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
@@ -223,12 +372,17 @@
                                                         <h5 id="orderbook-header-1" class="text-center">Order Book 1</h5>
                                                         
                                                         <div id="orderbook-timestamp-1" class="text-center">
+                                                            <strong></strong> <span>Not Selected</span>
+
                                                             <!-- Timestamp content here -->
+
                                                         </div>
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="scrollable-orderbook">
+                                                <!-- <div class="scrollable-orderbook"> -->
+                                                <div class="scrollable-orderbook overflow-auto border" id="scrollable-orderbook-1" style="height:290px;">
+
                                                     <table class="orderBookTable" id="orderBookTable1">
                                                         <thead class="bg-light">
                                                             <tr class="text-secondary small">
@@ -237,9 +391,10 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody id="order-data-table-body-1">
-                                                            <!-- Order book data will be dynamically inserted here -->
+                                                      
                                                         </tbody>
                                                     </table>
+                                                  
                                                 </div>
 
                                             </div>
@@ -257,12 +412,12 @@
                                             
                                                     <!-- Timestamp -->
                                                     <div id="orderbook-timestamp-2" class="text-center">
-                                                        <strong></strong> <span>Not Available</span>
+                                                        <strong></strong> <span>Not Selected</span>
                                                     </div>
                                                 </div>
                                                 </div>
                                                 
-                                                <div class="scrollable-orderbook">
+                                                <div class="scrollable-orderbook overflow-auto border" id="scrollable-orderbook-2" style="height:290px;">
                                                     <table  id="orderBookTable2">
                         
                                                         <thead class="bg-light">
@@ -328,10 +483,10 @@
                                     <!-- Card Section for Bid and Ask Prices -->
                                     <div class="RfsSpreadCell_rfs-spread-base-cell-prices d-flex justify-content-center ">
                                         <!-- Bid Card -->
-                                        <span id="quote-side-text" class="quote-side-text text-success fw-bold">
+                                        <span id="quote-side-text" class="col quote-side-text text-success text-center fw-bold">
                                             Bid (Buy <span id="arbButton-bid-buy"></span> Sell <span id="arbButton-bid-sell"></span>) 
                                         </span>
-                                        <div class="quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
+                                        <div class="col  quote-price-card buy card p-3 text-center" onclick="handleClick('buy')" role="button" tabindex="0">
                                             <div class="best-quote-price-container">
                                                 <div class="price-data fs-4 fw-bold" id="buySpread">-</div>
                                             </div>
@@ -342,7 +497,7 @@
                                         </div>
                                 
                                         <!-- Ask Card -->
-                                        <div class="quote-price-card sell card p-3 text-center border-danger" onclick="handleClick('sell')" role="button" tabindex="0">
+                                        <div class="col  quote-price-card sell card p-3 text-center border-danger" onclick="handleClick('sell')" role="button" tabindex="0">
                                         
                                             <div class="best-quote-price-container">
                                                 <div class="price-data fs-4 fw-bold" id="sellSpread">-</div>
@@ -352,7 +507,7 @@
                                             </div>
 
                                         </div>
-                                        <span id="quote-side-text" class="quote-side-text text-danger fw-bold">
+                                        <span id="quote-side-text" class=" col  quote-side-text text-danger text-center fw-bold ">
                                             Ask (Sell <span id="arbButton-ask-sell"></span> Buy <span id="arbButton-ask-buy"></span>) 
                                         </span>
         
@@ -368,7 +523,7 @@
 
 
             <!-- FORM for ordering -->
-            <div class="col-lg-6 container-fluid  mt-4">
+            <div class="col-lg-6 container-fluid ">
 
                 <!-- This section will only be visible if the JWT is NOT present -->
                 <div id="loginPromptBtn" class="alert alert-warning text-center h-100">
@@ -419,7 +574,7 @@
                     
                     <div class="tab-content" id="pills-tabContent">
                         <div class="tab-pane fade show active" id="pills-manual-order" role="tabpanel" aria-labelledby="pills-manual-order-tab">
-                            <!-- User Input Section -->
+                            <!-- MANUAL ORDER FORM Input Section -->
                             <div class="card p-4 ">
                                 <form id="order-form">
                                     <form id="order-form">
@@ -619,73 +774,57 @@
                                     </script>
 
                                 </form>
+                                
                             </div>
                         </div>
 
+
+                        
                         <div class="tab-pane fade " id="pills-algo-order" role="tabpanel" aria-labelledby="pills-algo-order-tab">
                             <div>
-                                <!-- Algo Strats Table -->
-                                <!-- Algo List Table -->
-                            <section class="intro">
-
+                            <!-- Algo Strats Table -->
+                            <!-- Algo List Table -->
+                            <section >
                                 <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
                                     <table class="table table-hover table-sm align-middle text-nowrap w-100 algo-table">
                                         <thead class="table-light sticky-top">
                                             <tr class="text-uppercase small">
-                                                 <th class="py-2 px-3">Algo Name</th>
-                                                <th class="py-2 px-3">Lead / Lag</th>
-                                                <th class="py-2 px-3">Spread / Qty</th>
-                                                <th class="py-2 px-3">Currency</th>
-                                                <th class="py-2 px-3">Instrument / Contract</th>
-                                                <th class="py-2 px-3">Status</th>
-                                                <th class="py-2 px-3">On / Off</th>
-                                                <th class="py-2 px-3">Actions</th>
+                                                <th class="">Algo Name</th>
+                                                <th class="">Lead / Lag</th>
+                                                <th class="">Direction / Offset</th>
+                                                <th class="">Spread / Qty</th>
+                                                <th class="">Currency</th>
+                                                <th class="">Instrument / Contract</th>
+                                                <th class="">Status</th>
+                                                <th class="">On / Off</th>
+                                                <th class="">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="algo-list"></tbody>
                                         <tbody id="algo-list-new"></tbody>
                                     </table>
                                 </div>
-                                
-                                
-                                <!-- <table class="table table-hover table-sm align-middle text-nowrap w-100 border rounded shadow-sm algo-table" style="max-height: auto; overflow-y: auto;">
-                                    <thead class="table-light sticky-top">
-                                        <tr class="text-uppercase small ">
-                                            <th class="py-2 px-3">Algo Name</th>
-                                            <th class="py-2 px-3">Lead / Lag</th>
-                                            <th class="py-2 px-3">Spread / Qty</th>
-                                            <th class="py-2 px-3">Currency</th>
-                                            <th class="py-2 px-3">Instrument / Contract</th>
-                                            <th class="py-2 px-3">Status</th>
-                                            <th class="py-2 px-3">On / Off</th>
-                                            <th class="py-2 px-3">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="algo-list"></tbody>
-                                    <tbody id="algo-list-new" ></tbody>
-                                </table> -->
-                                
-
+                            
                             </section> 
-
-
+                            <!-- ALGO ORDER FORM Input Section -->
 
                                 <!-- Button to Open Modal -->
                                 <button class="btn btn-dark " onclick="openAlgoModal()">Add New Algo</button>
 
                                 <!-- Modal for Adding/Editing Algo -->
-                                <div class="modal" id="algoModal" tabindex="-1">
+                                <div class="modal" id="algoModal" tabindex="">
                                     
                                     <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
 
                                             <div class="modal-header">
-                                                <h5 class="modal-title">Add New Algo</h5>
-                                                <button type="button" class="btn-close" onclick="closeAlgoModal()"></button>
+                                                <h5 class="modal-title" >Add New Algo</h5>
+                                                <!-- <button type="button" class="btn-close" onclick="closeAlgoModal()"></button> -->
                                             </div>
                                             
                                             <div class="modal-body">
                                                 <form id="new-algoForm">
+
                                                     <!-- Algo Type and Algo name -->
                                                     <div class="row">
                                                         <div class="input-group mb-3">
@@ -698,7 +837,9 @@
                                                                     <!-- Additional options can be added here -->
                                                                 </select>
                                                             </div>
+
                                                             <input type="text" class="form-control" id="new-algo-name" placeholder="Type algo name" >
+
                                                         </div>
                                                     </div>
 
@@ -706,19 +847,45 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <label for="new-algo-lead-exchange" class="form-label">Lead Exchange</label>
-                                                            <select class="form-select" id="new-algo-lead-exchange">
+                                                            <select class="form-select" id="new-algo-lead-exchange" >
                                                                 <option value="okx" selected>OKX</option>
                                                                 <option value="htx">HTX</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <label for="new-algo-lag-exchange" class="form-label">Lag Exchange</label>
-                                                            <select class="form-select" id="new-algo-lag-exchange">
+                                                            <label for="new-algo-lag-exchange" class="form-label" >Lag Exchange</label>
+                                                            <select class="form-select" id="new-algo-lag-exchange" >
                                                                 <option value="okx">OKX</option>
-                                                                <option value="htx" selected>HTX</option>
+                                                                <option value="htx" >HTX</option>
                                                             </select>
                                                         </div>
                                                     </div>
+
+                                                     <!-- direction and Offset -->
+                                                     <div class="row mt-3">
+                                                        <div class="col-md-6">
+                                                            <label for="new-algo-direction" class="form-label">Direction</label>
+
+                                                            <select class="form-select" id="new-algo-direction">
+                                                                <option value="buy">BUY</option>
+                                                                <option value="sell" selected>Sell</option>
+                                                            </select>
+
+                                                        </div>
+
+                                                        <div class="col-md-6" id="new-algo-offset-container" style="display: none;">
+                                                            <label for="new-algo-offset" class="form-label">Offset</label>
+
+                                                            <select class="form-select" id="new-algo-offset" >
+                                                                <option value="open">Open</option>
+                                                                <option value="close" selected>Close</option>
+                                                            </select>
+                                                        </div>
+
+                                                 
+                                                        
+                                                    </div>
+
                                                     <!-- Spread and Quantity -->
                                                     <div class="row mt-3">
                                                         <div class="col-md-6">
@@ -730,6 +897,9 @@
                                                             <input type="number" class="form-control" id="new-algo-quantity" placeholder="Enter Quantity">
                                                         </div>
                                                     </div>
+                                                   
+
+
                                                     <!-- Instrument and Contract Type -->
                                                     <div class="row mt-3">
                                                         <div class="col-md-6">
@@ -814,17 +984,17 @@
 
 
                             <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-borderless table-hover table-sm align-middle text-nowrap w-100 OMStable">
+                                <table class="table table-borderless table-hover  text-nowrap w-100 OMStable">
                                     <thead class="table-primary  sticky-top">
                                         <tr>
                                             <th >Exchange</th>
                                             <th >Instrument ID</th>
                                             <th >Lev</th>
-                                            <th >Mgn Ratio</th>
+                                            <!-- <th >Mgn Ratio</th> -->
                                             <th >Position (Buy/Sell)</th>
                                             <th >ADL</th>
                                             <th >Liquidation Price</th>
-                                            <th >Price</th>
+                                            <th >Avg Price</th>
                                             <th >PnL</th>
                                             <th >Ts</th>
                                         </tr>
@@ -875,16 +1045,15 @@
                                     <thead class="sticky-top">
                                         <tr>
                                             <th style="width: 8%;">Exchange</th>
-                                            <th style="width: 10%;">Symbol</th>
+                                            <th style="width: 5%;">Symbol</th>
                                             <th style="width: 5%;">Lev</th>
                                             <th style="width: 6%;">Side</th>
                                             <th style="width: 12%;">Fill / Order Price</th>
                                             <th style="width: 12%;">Filled / Total</th>
-                                            <th style="width: 10%;">TP / SL</th>
                                             <th style="width: 13%;">Status / Order #</th>
                                             <th style="width: 10%;">Order Time</th>
-                                            <th style="width: 7%;">Action 1</th>
-                                            <th style="width: 7%;">Action 2</th>
+                                            <!-- <th style="width: 7%;">Action 1</th> -->
+                                            <th style="width: 20%;">Action 2</th>
                                         </tr>
                                     </thead>
                                     <tbody id="oms-open-orders-body">
@@ -942,6 +1111,10 @@
         <script src="websocket_client/js/display_fundingrate.js"></script>
 
         <script>
+
+            let shouldScrollState = {}
+
+
             // Clear JWT token from localStorage when no longer needed
             function clearAuthToken() {
                 localStorage.removeItem('jwt_token');
@@ -965,7 +1138,60 @@
             function getAuthToken() {
                 return localStorage.getItem('jwt_token');  // You can change this to sessionStorage if needed
             }
-            
+
+            function updateExchange(which) {
+                    // let shouldScroll = !container.dataset.hasScrolled;
+                    const scrollableOrdebook = document.getElementById(`scrollable-orderbook-${which}`);
+                    // console.log(which)
+                    // scrollableOrdebook.dataset.hasScrolled = 'true'
+                    // shouldScrollState[which] = !scrollableOrdebook.dataset.hasScrolled;
+                    // console.log(shouldScrollState[which])
+
+                    const exchangeId = `exchange${which}-input`;
+                    const wrapperId = `htx-open-close-wrapper${which}`;
+                    const selectedExchange = document.getElementById(exchangeId).value.toLowerCase();
+                    const wrapper = document.getElementById(wrapperId);
+                    const dropdown = document.getElementById(exchangeId);
+
+                    // Show/Hide HTX-specific dropdown
+                    if (selectedExchange === 'htx') {
+                        wrapper.style.visibility = 'visible';
+                    } else {
+                        wrapper.style.visibility = 'hidden';
+                    }
+
+                    // Temporarily disable dropdown to avoid race condition / coroutine issues
+                    dropdown.disabled = true;
+
+                    // Send WebSocket message or whatever async operation here
+                    if (which === 1 && typeof socket1 !== 'undefined') {
+                        const input_data = {
+                            action: "change",
+                            ccy: document.getElementById('currency-input-orderbook1').value,
+                            exchange: selectedExchange,
+                            market_type: document.getElementById('market-type-orderbook1')?.value || ""
+                        };
+                        socket1.send(JSON.stringify(input_data));
+                    }
+
+                    if (which === 2 && typeof socket2 !== 'undefined') {
+                        const input_data = {
+                            action: "change",
+                            ccy: document.getElementById('currency-input-orderbook2').value,
+                            exchange: selectedExchange,
+                            market_type: document.getElementById('market-type-orderbook2')?.value || ""
+                        };
+                        socket2.send(JSON.stringify(input_data));
+                    }
+
+                    // Re-enable after delay (adjust time as needed)
+                    setTimeout(() => {
+                        dropdown.disabled = false;
+                    }, 1500); // 1.5s delay to let coroutine settle
+                }
+
+
+
 
             // Check if the JWT token is present and display the corresponding content
             function checkJWTAndDisplay() {
@@ -1123,6 +1349,7 @@
             
         });
 
+        
         </script>
         
         <style>
@@ -1176,8 +1403,8 @@
                 /* background-color:rgba(99, 1, 1, 0.707) */
             }
 
-            
-        
+           
+          
            
             /* Make sure the parent container is a flex container */
             .orderbook-container {
@@ -1188,12 +1415,12 @@
 
             }
 
-            th, td {
-                width: 25%; /* Adjust based on the number of columns */
+            /* th, td {
+                width: 25%; 
                 overflow: hidden;
-                text-overflow: ellipsis;
-                /* text-align: center; */
-            }
+                text-align: center;
+            
+            } */
             
             .btn{
                 font-family: 'Orbitron', sans-serif;
@@ -1202,19 +1429,26 @@
             
             /* Set a fixed width for each orderbook container */
             .scrollable-orderbook {
-                max-height: 290px; /* Set a fixed height for uniformity */
-                overflow-y: auto;  /* Enable vertical scrolling */
-                border: 1px solid #ddd;  /* Optional border styling */
-                /* padding: 10px; */
-                /* background-color: #f9f9f9; Light background for better readability */
-                display: flex;
-                flex-direction: column;
-                gap: 5px;  /* Add gap between asks and bids */
-                box-sizing: border-box; /* Include padding and border in the element's total width */
-                scroll-behavior: smooth;  /* Smooth scrolling for a better experience */
-                scrollbar-width: thin; 
+                max-height: 290px;
+                box-sizing: border-box;
+                }
+
+               .scrollable-orderbook th, td {
+                width: 25%; 
+                overflow: hidden;
                 text-align: center;
+            
             }
+
+            .scrollable-orderbook .asks ,.sell {
+                color: red;
+            }
+
+            /* Style for Bids (Green) */
+            .scrollable-orderbook .bids , .buy {
+                color: green;
+            }
+
         
 
             .scrollable-lastprice {
@@ -1233,34 +1467,8 @@
 
 
             /* Optional: Ensures each ask/bid has a consistent font size and line height */
-            .scrollable-orderbook p,
-            .scrollable-orderbook li {
-                font-size: 15px;
-                /* line-height: 1.6; */
-                margin: 0;
-                /* padding: 2px 0; */
-            }
-
-
-            .scrollable-orderbook ul  {
-                list-style-type: none;
-                padding-left: 0;
-                margin: 0;
-            }
-
-            .scrollable-orderbook li  {
-                margin-bottom: 5px;
-            }
-            /* Style for Asks (Red) */
-            .scrollable-orderbook .asks ,.sell {
-                color: red;
-            }
-
-            /* Style for Bids (Green) */
-            .scrollable-orderbook .bids , .buy {
-                color: green;
-            }
-
+                       /* Style for Asks (Red) */
+           
             .run-button {
                     color: #1db954; /* Spotify green */
                     cursor: pointer;

@@ -64,7 +64,7 @@ function populateOrderBook(i, exchange, data) {
     tableBody.innerHTML = '';
     data = JSON.parse(data);
 
-
+   
     const readableTime = new Date(data.timestamp).toLocaleString();
     timestamp.innerHTML = readableTime;
     // timestamp.innerHTML = `${data.timestamp}`;
