@@ -951,10 +951,12 @@ body.dark-mode.force-black {
                                                 Lagging Exchange
                                             </label>
                                         </div>
+
                                         <div class="d-flex">
                                             <div class="col form-floating">
                                                 <select class="form-select" id="manual-order-form-exchange-input1" aria-label="Exchange Select">
                                                 <option value="" disabled>Select Exchange</option>
+                                                <option value="none" >EMPTY LEG</option>
                                                 <option value="htx">HTX</option>
                                                 <option value="okx" selected>OKX</option>
                                                 </select>
@@ -971,6 +973,7 @@ body.dark-mode.force-black {
                                             <div class="col form-floating">
                                                 <select class="form-select" id="manual-order-form-exchange-input2" aria-label="Exchange Select">
                                                 <option value="" disabled>Select Exchange</option>
+                                                <option value="none" >EMPTY LEG</option>
                                                 <option value="htx">HTX</option>
                                                 <option value="okx" selected>OKX</option>
                                                 </select>
@@ -985,46 +988,67 @@ body.dark-mode.force-black {
                                                 <label for="manual-order-form-market-type2">Market Type</label>
                                             </div>
                                         </div>
+
+
                                     </div>
                                 
                                     <!-- Currency and Order Type Section -->
                                     <div class="row g-2 mb-2 ">
                                         <div class="d-flex ">
                                             <div class="col form-floating">
+                                                <select class="form-select" id="manual-order-form-offset-input1" aria-label="Offset Select" value = 'none'>
+                                                <!-- Offset options will be dynamically populated here -->
+                                                </select>
+                                                <label for="manual-order-form-offset-input1">Offset</label>
+                                            </div>
+
+                                            <div class="col form-floating mx-3">
                                                 <select class="form-select" id="manual-order-form-currency-input1" aria-label="Currency Select">
                                                 <!-- Currency options will be dynamically populated here -->
                                                 </select>
                                                 <label for="manual-order-form-currency-input1">Currency</label>
                                             </div>
-                                            <div class="col form-floating mx-3">
-                                                <select class="form-select" id="manual-order-form-order-type1" aria-label="Order Type Select" >
-                                                <option value="none" disabled>NA</option>
-                                                <option value="limit">LIMIT</option>
-                                                <option value="market" selected>MARKET</option>
-                                                </select>
-                                                <label for="manual-order-form-order-type1">Order Type</label>
-                                            </div>
+                                            
+                                          
                                             <div class="col form-floating">
+                                                <select class="form-select" id="manual-order-form-offset-input2" aria-label="Offset Select" value = ''>
+                                                <!-- Offset options will be dynamically populated here -->
+                                                </select>
+                                                <label for="manual-order-form-offset-input2">Offset</label>
+                                            </div>
+
+                                            <div class="col form-floating mx-3">
                                                 <select class="form-select" id="manual-order-form-currency-input2" aria-label="Currency Select">
                                                 <!-- Currency options will be dynamically populated here -->
                                                 </select>
                                                 <label for="manual-order-form-currency-input2">Currency</label>
                                             </div>
-                                            <div class="col form-floating mx-3">
-                                                <select class="form-select" id="manual-order-form-order-type2" aria-label="Order Type Select">
-                                                <option value="none" disabled>NA</option>
-                                                <option value="limit" selected >LIMIT</option>
-                                                <option value="market" >MARKET</option>
-                                                </select>
-                                                <label for="manual-order-form-order-type2">Order Type</label>
-                                            </div>
+                                            
                                         </div>
                                     </div>
+                                    <div class="row g-2 mb-2 ">
+                                        <div class="col form-floating">
+                                            <select class="form-select" id="manual-order-form-order-type1" aria-label="Order Type Select" >
+                                            <option value="none" disabled>NA</option>
+                                            <option value="limit">LIMIT</option>
+                                            <option value="market" selected>MARKET</option>
+                                            </select>
+                                            <label for="manual-order-form-order-type1">Order Type</label>
+                                        </div>
 
+                                        <div class="col form-floating mx-3">
+                                            <select class="form-select" id="manual-order-form-order-type2" aria-label="Order Type Select">
+                                            <option value="none" disabled>NA</option>
+                                            <option value="limit" selected >LIMIT</option>
+                                            <option value="market" >MARKET</option>
+                                            </select>
+                                            <label for="manual-order-form-order-type2">Order Type</label>
+                                        </div>
+                                    </div>
                                     
                                     <!-- <div class="bg-light bg-opacity-10">
                                         -----------------   Prices   ----------------- -->
-                                        
+
                                         <!-- QTY AND PRICE FIELD -->
                                         <div class="row g-2 mb-2">
                                            
@@ -1273,7 +1297,7 @@ body.dark-mode.force-black {
                                                         </div>
 
                                                         <div class="col-md-6" id="new-algo-offset-container" style="display: none;">
-                                                            <label for="new-algo-offset" class="form-label">Offset</label>
+                                                            <label for="new-algo-offset" class="form-label" >Offset</label>
 
                                                             <select class="form-select" id="new-algo-offset" >
                                                                 <option value="open">Open</option>

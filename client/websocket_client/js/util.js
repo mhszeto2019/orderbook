@@ -176,18 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Function to hide price fields
-    function hidePriceFields() {
-        document.getElementById('manual-order-form-price-field1').classList.add('hidden');
-        document.getElementById('manual-order-form-price-field2').classList.add('hidden');
-    }
-  
-    // Function to show price fields
-    function showPriceFields() {
-        document.getElementById('manual-order-form-price-field1').classList.remove('hidden');
-        document.getElementById('manual-order-form-price-field2').classList.remove('hidden');
-    }
-
+    
  
     const orderType1 = document.getElementById('manual-order-form-order-type1')
     const orderType2 = document.getElementById('manual-order-form-order-type2')
@@ -211,40 +200,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     }
 
-    // Select currency based on exchange and market type
-    function updateOffsetField() {
+      // Select currency based on exchange and market type
+      function updateOffsetField() {
 
-        const exchange1 = document.getElementById('manual-order-form-exchange-input1')
-        const exchange2 = document.getElementById('manual-order-form-exchange-input2')
-        let offsetField1 = document.getElementById('manual-order-form-offset-field1')
-        let offsetField2 = document.getElementById('manual-order-form-offset-field2')
-
-        if (exchange1.value == 'htx'){
-            offsetField1.classList.add('hidden');
-
-        }
-        else{
-            offsetField1.classList.remove('hidden');
-
-        }
-
-        if (exchange1.value == 'htx'){
-            offsetField2.classList.add('hidden');
-
-        }
-        else{
-            offsetField2.classList.remove('hidden');
-
-        }
+        const exchangeType1 = document.getElementById('manual-order-form-exchange-input1').value;
+        const exchangeType2 = document.getElementById('manual-order-form-exchange-input2').value;
         
-
-    }
-
- 
-    document.getElementById('manual-order-form-exchange-input1').addEventListener('change', updateOffsetField);
-    document.getElementById('manual-order-form-exchange-input2').addEventListener('change', updateOffsetField);
-
-  });
+  
+      // POTENTIALLY ADD EXCHANGE TYPE AND MARKET TYPE TO DERIVE CURRENCIES PRESENT
+  
+        const offsetTypes = ['open', 'close'];
+  
+        // Function to update currency dropdowns based on market type
+        function populateOffsets(selectId, exchangeType) {
+            const offsetSelect = document.getElementById(selectId);
+            offsetSelect.innerHTML = '';  // Clear previous options
+            const options = exchangeType === 'htx' ? offsetTypes : [];
+            if (options){
+                options.forEach(offset => {
+                    const option = document.createElement('option');
+                    option.value = offset;
+                    option.textContent = offset;
+                    offsetSelect.appendChild(option);
+                });
+            }
+          
+        }
+  
+        // Update currency options based on market type
+        populateOffsets('manual-order-form-offset-input1', exchangeType1);
+        populateOffsets('manual-order-form-offset-input2', exchangeType2);
+      }
+  
+      // Event listeners for changes in market type
+      document.getElementById('manual-order-form-exchange-input1').addEventListener('change', updateOffsetField);
+      document.getElementById('manual-order-form-exchange-input2').addEventListener('change', updateOffsetField);
+  
+      // Initial population of currency options
+      updateOffsetField();
+});
 
 
  
