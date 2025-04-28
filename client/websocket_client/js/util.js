@@ -39,6 +39,7 @@
 //     }
 // }
 
+
 // CHANGING CURRENCY BASED ON PERP AND SPOT
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the tooltips
@@ -85,6 +86,111 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCurrencyOptions();
   });
 
+
+
+// CHANGING PRICE FIELD BASED ON ORDER TYPE
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the tooltips
+    var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Function to hide price fields
+    function hidePriceFields() {
+        document.getElementById('manual-order-form-price-field1').classList.add('hidden');
+        document.getElementById('manual-order-form-price-field2').classList.add('hidden');
+    }
+  
+    // Function to show price fields
+    function showPriceFields() {
+        document.getElementById('manual-order-form-price-field1').classList.remove('hidden');
+        document.getElementById('manual-order-form-price-field2').classList.remove('hidden');
+    }
+
+ 
+    const orderType1 = document.getElementById('manual-order-form-order-type1')
+    const orderType2 = document.getElementById('manual-order-form-order-type2')
+    let priceField1 = document.getElementById('manual-order-form-price-field1')
+    let priceField2 = document.getElementById('manual-order-form-price-field2')
+    if (orderType1.value == 'market'){
+        priceField1.classList.add('hidden');
+
+    }
+    else{
+        priceField1.classList.remove('hidden');
+
+    }
+
+    if (orderType2.value == 'market'){
+        priceField2.classList.add('hidden');
+
+    }
+    else{
+        priceField2.classList.remove('hidden');
+
+    }
+
+    // Select currency based on exchange and market type
+    function updateCurrencyOptions() {
+        const orderType1 = document.getElementById('manual-order-form-order-type1')
+        const orderType2 = document.getElementById('manual-order-form-order-type2')
+        let priceField1 = document.getElementById('manual-order-form-price-field1')
+        let priceField2 = document.getElementById('manual-order-form-price-field2')
+        console.log(orderType1.value)
+
+        if (orderType1.value == 'market'){
+            priceField1.classList.add('hidden');
+
+        }
+        else{
+            priceField1.classList.remove('hidden');
+
+        }
+
+        if (orderType2.value == 'market'){
+            priceField2.classList.add('hidden');
+
+        }
+        else{
+            priceField2.classList.remove('hidden');
+
+        }
+        
+
+    }
+
+ 
+    document.getElementById('manual-order-form-order-type1').addEventListener('change', updateCurrencyOptions);
+    document.getElementById('manual-order-form-order-type2').addEventListener('change', updateCurrencyOptions);
+
+
+    //   // Function to update currency dropdowns based on market type
+    //   function populateCurrencies(selectId, marketType) {
+    //     const currencySelect = document.getElementById(selectId);
+    //     currencySelect.innerHTML = '';  // Clear previous options
+    //     const options = marketType === 'spot' ? currenciesSpot : currenciesPerp;
+
+    //     options.forEach(currency => {
+    //       const option = document.createElement('option');
+    //       option.value = currency;
+    //       option.textContent = currency;
+    //       currencySelect.appendChild(option);
+    //     });
+    //   }
+
+    //   // Update currency options based on market type
+    //   populateCurrencies('manual-order-form-currency-input1', marketType1);
+    //   populateCurrencies('manual-order-form-currency-input2', marketType2);
+    // }
+
+    // // Event listeners for changes in market type
+    // document.getElementById('manual-order-form-market-type1').addEventListener('change', updateCurrencyOptions);
+    // document.getElementById('manual-order-form-market-type2').addEventListener('change', updateCurrencyOptions);
+
+    // // Initial population of currency options
+    // updateCurrencyOptions();
+  });
 
 
  

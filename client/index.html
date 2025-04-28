@@ -35,7 +35,8 @@
 
 
 <body >
-   
+    
+    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold fs-4 p-3" href="#">Falconstead</a>
@@ -70,22 +71,68 @@
 
         </div>
     </nav>
+    <!-- notification-hub  -->
+    <div id="alertBox" class="alert alert-dark  alert-dismissible fade show mb-0 rounded-0" role="alert">
+
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div>
+                <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
+                <span class="ms-2 small">BTC is approaching liquidation threshold</span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-danger btn-outline-danger me-2 text-white" onclick="stopTwilioCall()">
+                <i class="bi bi-telephone-x "></i> 
+                Stop Call
+                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+
+        <script>
+
+            // Simulate condition for triggering warning
+            function checkCondition() {
+                console.log("Condition checked")
+                const formdata = new FormData();
+                formdata.append("username", localStorage.getItem('username'));
+                const check_alert_status = {
+                    method: "POST",
+                    body: formdata,
+                };
+                fetch(`http://${hostname}:9000/check_alert_status`, check_alert_status)
+                .then((response) => response.json())
+                .then((result) =>
+                    {
+                    console.log(result)
+                    if (result.status == "INACTIVE"|result.status == "ACTIVE_ACKED"){
+                        console.log(result.status)
+                        document.getElementById('alertBox').style.display = "None"
+                        // document.getElementById('alertBox').style.display = "block"
+
+                    }else{
+                        document.getElementById('alertBox').style.display = "block"
+                    }
+
+                    // if (result['answered'] || result['running']) {
+                    //     // Do something here
+                    //     console.log("Alert status triggered:", result);
+                    // }
+                })
+                .catch((error) => console.error(error));
+            
+            }
+            document.addEventListener('DOMContentLoaded', checkCondition);
+
+
+        </script>
+    </div>
+
 
     <div class="container-fluid p-0 background">
-        <!-- Alert Box -->
-        <div id="alertBox" class="alert alert-dark alert-dismissible fade show mb-0 rounded-0" role="alert">
-            <div class="container-fluid d-flex justify-content-between align-items-center">
-                <div>
-                    <strong id="alertMessage">⚠️ Liquidation Warning!</strong>
-                    <span class="ms-2 small">BTC is approaching liquidation threshold</span>
-                </div>
-                <div>
-                    <button type="button" class="btn btn-sm btn-danger btn-outline-danger me-2 text-white" onclick="stopTwilioCall()">
-                    <i class="bi bi-telephone-x "></i> Stop Call
-                    </button>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </div>
+
+     
+
+            
 
             <!-- WARNING ALERT -->
             <!-- <div class = "row px-4 ">
@@ -107,7 +154,7 @@
                     <div class="d-flex align-items-center me-3 flex-shrink-0 px-3">
                         <select id="market-type" class="form-select form-select-sm border-0 shadow-none  rounded-pill" onchange="updateCurrencyOptions()">
                         <option value="">Market</option>
-                        <option value="perp" selected>PERP</option>
+                        <option value="perp" selected>PERP/FUTURES</option>
                         <option value="spot">Spot</option>
                         </select>
                     </div>
@@ -213,10 +260,13 @@
 
         </div>
     </div>
+
+    <!-- dark mode styling -->
     <style>
 
         /* Dark mode select dropdowns */
 .dark-mode select,
+.dark-mode input,
 .dark-mode select.form-select {
   background-color: #343a40 !important;
   color: white !important;
@@ -416,92 +466,96 @@ body.dark-mode.force-black {
     border: 1px solid red; /* Red border when inside dark mode */
 }
 
-      </style>
+    </style>
+    <!-- dark mode script -->
       
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+
+      
+        // Toggle dark mode
+        document.getElementById('darkModeSwitch').addEventListener('change', function() {
+        document.body.classList.toggle('dark-mode', this.checked);
+            // Save preference to localStorage
+            localStorage.setItem('darkMode', this.checked);
+            });
+        // Initialize dark mode from localStorage
+        if (localStorage.getItem('darkMode') === 'true') {
+        document.getElementById('darkModeSwitch').checked = true;
+            document.body.classList.add('dark-mode');
+        }
+        // Timeframe filter buttons
+        document.querySelectorAll('.btn-group button').forEach(button => {
+            button.addEventListener('click', function() {
+            document.querySelector('.btn-group .active').classList.remove('active');
+            this.classList.add('active');
+            // Add your filter logic here
+            });
+        });
+        isDark = localStorage.getItem('darkMode') === 'true'; 
+
+        console.log('isdark?',isDark)
+            if (!isDark) {
+                // Apply the 'dark-image' class to each .black-image element for dark mode
+                document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                    logo.classList.add('black-image');
+                });
+            } else {
+                // Remove the 'dark-image' class when dark mode is disabled
+                document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                    logo.classList.remove('black-image');
+                });
+            }
+
+
+
+    });
+        
+
+    document.getElementById('darkModeSwitch').addEventListener('change', function() {
+        const isDark = this.checked;
+        document.body.classList.toggle('dark-mode', isDark);
+        
+        // Force redraw of select elements
+            document.querySelectorAll('select').forEach(select => {
+                select.style.display = 'none';
+                select.offsetHeight; // Trigger reflow
+                select.style.display = '';
+            });
+
             
 
-            // Toggle dark mode
-            document.getElementById('darkModeSwitch').addEventListener('change', function() {
-            document.body.classList.toggle('dark-mode', this.checked);
-                // Save preference to localStorage
-                localStorage.setItem('darkMode', this.checked);
-             });
-            // Initialize dark mode from localStorage
-            if (localStorage.getItem('darkMode') === 'true') {
-            document.getElementById('darkModeSwitch').checked = true;
-                document.body.classList.add('dark-mode');
-            }
-            // Timeframe filter buttons
-            document.querySelectorAll('.btn-group button').forEach(button => {
-                button.addEventListener('click', function() {
-                document.querySelector('.btn-group .active').classList.remove('active');
-                this.classList.add('active');
-                // Add your filter logic here
-                });
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.toggle('dark-mode', isDark);
             });
-            isDark = localStorage.getItem('darkMode') === 'true'; 
+            document.querySelectorAll('.nav-link').forEach(tab => {
+                tab.style.display = 'none';
+                void tab.offsetHeight;
+                tab.style.display = '';
+            });
+            
+            console.log(isDark)
 
-            console.log('isdark?',isDark)
-             if (!isDark) {
-                    // Apply the 'dark-image' class to each .black-image element for dark mode
-                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
-                        logo.classList.add('black-image');
-                    });
-                } else {
-                    // Remove the 'dark-image' class when dark mode is disabled
-                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
-                        logo.classList.remove('black-image');
-                    });
-                }
+            if (!isDark) {
+                // Apply the 'dark-image' class to each .black-image element for dark mode
+                document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                    logo.classList.add('black-image');
+                });
+            } else {
+                // Remove the 'dark-image' class when dark mode is disabled
+                document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                    logo.classList.remove('black-image');
+                });
+            }
 
-
+            
 
         });
-            
+        
 
-        document.getElementById('darkModeSwitch').addEventListener('change', function() {
-            const isDark = this.checked;
-            document.body.classList.toggle('dark-mode', isDark);
-            
-            // Force redraw of select elements
-                document.querySelectorAll('select').forEach(select => {
-                    select.style.display = 'none';
-                    select.offsetHeight; // Trigger reflow
-                    select.style.display = '';
-                });
-                document.querySelectorAll('.btn').forEach(btn => {
-                    btn.classList.toggle('dark-mode', isDark);
-                });
-                document.querySelectorAll('.nav-link').forEach(tab => {
-                    tab.style.display = 'none';
-                    void tab.offsetHeight;
-                    tab.style.display = '';
-                });
-                
-                console.log(isDark)
-
-                if (!isDark) {
-                    // Apply the 'dark-image' class to each .black-image element for dark mode
-                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
-                        logo.classList.add('black-image');
-                    });
-                } else {
-                    // Remove the 'dark-image' class when dark mode is disabled
-                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
-                        logo.classList.remove('black-image');
-                    });
-                }
-
-               
-
-            });
-          
-
-            // Force button redraw if needed
-            
-      </script>
+     
+    </script>
 
 
     <div class="container-fluid p-0 background ">
@@ -543,7 +597,7 @@ body.dark-mode.force-black {
                                             <select id="market-type-orderbook1" class="form-select" onchange="updateCurrencyOptionsOrderbook1()">
                                                 <option value="">Select Market</option>
                                                 <!-- <option value="spot" selected>SPOT</option> -->
-                                                <option value="perp" selected>PERP</option>
+                                                <option value="perp" selected>PERP/FUTURES</option>
                                                 <!-- <option value="futures">FUTURES</option> -->
                                             </select>
                                         </div>
@@ -569,7 +623,7 @@ body.dark-mode.force-black {
                                             <select id="market-type-orderbook2" class="form-select" onchange="updateCurrencyOptionsOrderbook2()">
                                                 <option value="">Select Market</option>
                                                 <!-- <option value="spot" selected>SPOT</option> -->
-                                                <option value="perp" selected>PERP</option>
+                                                <option value="perp" selected>PERP/FUTURES</option>
                                                 <!-- <option value="futures">FUTURES</option> -->
                                             </select>
                                         </div>
@@ -866,15 +920,7 @@ body.dark-mode.force-black {
                         </div>
                         
                     </div>
-
-                    <!-- <ul class="nav nav-tabs  mb-3"  role="tablist ">
-                        <li class="nav-item" role="presentation">
-                        <button class="btn nav-link active" id="pills-manual-order-tab" data-bs-toggle="tab" data-bs-target="#pills-manual-order" type="button" role="tab" aria-controls="pills-manual-order" aria-selected="true">Manual Order</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                        <button class="btn nav-link" id="pills-algo-order-tab" data-bs-toggle="tab" data-bs-target="#pills-algo-order" type="button" role="tab" aria-controls="pills-algo-order" aria-selected="false">Algo Order</button>
-                        </li>
-                    </ul> -->
+                  
 
                     <ul class="nav nav-tabs  mb-3"  role="tablist ">
                         <li class="nav-item" role="presentation">
@@ -920,7 +966,7 @@ body.dark-mode.force-black {
                                                     <option value="" disabled >Select Market Type</option>
                                                     <option value="none" >NA</option>
                                                     <option value="spot">SPOT</option>
-                                                    <option value="perp" selected>PERP</option>
+                                                    <option value="perp" selected>PERP/FUTURES</option>
                                                 </select>
                                                 <label for="manual-order-form-market-type1">Market Type</label>
                                             </div>
@@ -938,7 +984,7 @@ body.dark-mode.force-black {
                                                     <option value="" disabled >Select Market Type</option>
                                                     <option value="none" >NA</option>
                                                     <option value="spot">SPOT</option>
-                                                    <option value="perp" selected>PERP</option>
+                                                    <option value="perp" selected>PERP/FUTURES</option>
                                                 </select>
                                                 <label for="manual-order-form-market-type2">Market Type</label>
                                             </div>
@@ -1023,7 +1069,7 @@ body.dark-mode.force-black {
                                                 <select class="form-select" id="manual-order-form-market-type1" aria-label="Market Type Select">
                                                 <option value="" disabled>Select Market Type</option>
                                                 <option value="spot">SPOT</option>
-                                                <option value="perp" selected>PERP</option>
+                                                <option value="perp" selected>PERP/FUTURES</option>
                                                 </select>
                                                 <label for="manual-order-form-market-type1">Market Type</label>
                                             </div>
@@ -1039,7 +1085,7 @@ body.dark-mode.force-black {
                                                 <select class="form-select" id="manual-order-form-market-type2" aria-label="Market Type Select">
                                                 <option value="" disabled>Select Market Type</option>
                                                 <option value="spot">SPOT</option>
-                                                <option value="perp" selected>PERP</option>
+                                                <option value="perp" selected>PERP/FUTURES</option>
                                                 </select>
                                                 <label for="manual-order-form-market-type2">Market Type</label>
                                             </div>
@@ -1047,8 +1093,8 @@ body.dark-mode.force-black {
                                     </div>
                                 
                                     <!-- Currency and Order Type Section -->
-                                    <div class="row g-2 mb-2">
-                                        <div class="d-flex">
+                                    <div class="row g-2 mb-4 ">
+                                        <div class="d-flex ">
                                             <div class="col form-floating">
                                                 <select class="form-select" id="manual-order-form-currency-input1" aria-label="Currency Select">
                                                 <!-- Currency options will be dynamically populated here -->
@@ -1056,7 +1102,7 @@ body.dark-mode.force-black {
                                                 <label for="manual-order-form-currency-input1">Currency</label>
                                             </div>
                                             <div class="col form-floating mx-3">
-                                                <select class="form-select" id="manual-order-form-order-type1" aria-label="Order Type Select">
+                                                <select class="form-select" id="manual-order-form-order-type1" aria-label="Order Type Select" >
                                                 <option value="none">NA</option>
                                                 <option value="limit">LIMIT</option>
                                                 <option value="market" selected>MARKET</option>
@@ -1071,65 +1117,139 @@ body.dark-mode.force-black {
                                             </div>
                                             <div class="col form-floating mx-3">
                                                 <select class="form-select" id="manual-order-form-order-type2" aria-label="Order Type Select">
-                                                <option value="none">NA</option>
-                                                <option value="limit">LIMIT</option>
-                                                <option value="market" selected>MARKET</option>
+                                                <option value="none" >NA</option>
+                                                <option value="limit" selected >LIMIT</option>
+                                                <option value="market" >MARKET</option>
                                                 </select>
                                                 <label for="manual-order-form-order-type2">Order Type</label>
                                             </div>
                                         </div>
                                     </div>
 
-     
+                                    <!-- <div class="bg-light bg-opacity-10">
+                                        -----------------   Prices   ----------------- -->
+                                        <div class="row g-2 mb-2">
 
-                                    <div class="row g-2 mb-2">
-                                        <div class="d-flex">
-                                            <div class="col form-floating mx-3">
-                                                <input type="number" id="manual-order-form-price1" class="form-control" placeholder="Price" required>
-                                                <label for="manual-order-form-price1">Price1</label>
+                                            <div class="d-flex align-items-center justify-content-between ">
+                                              <!-- Price 1 Input Field -->
+    
+                                                <div id="manual-order-form-price-field1" class="col-lg-6 form-floating">
+                                                        <div class="input-group">
+                                                  
+    
+                                                            <!-- Price Input Field -->
+                                                            <input type="number" id="manual-order-form-price1" class="form-control" placeholder="Price" value="0" required>
+                                                            
+                                                            <!-- Buttons for Price -->
+                                                            <div class="input-group-append">
+                                                                <button id="add-10" class="btn btn-sm ">+10</button>
+                                                                <button id="add-20" class="btn btn-sm ">+20</button>
+                                                                <button id="add-30" class="btn btn-sm ">+30</button>
+                                                            </div>
+                                                        </div>
+                                                </div>
+                                          
+                                              <!-- Price 2 Input Field -->
+                                              <div id="manual-order-form-price-field2" class="col-lg-6 form-floating">
+                                                <div class="input-group">
+                                                  <!-- Price Input Field -->
+                                                  <input type="number" id="manual-order-form-price2" class="form-control" placeholder="Price" value="0" required>
+                                                  
+                                                  <!-- Buttons for Price -->
+                                                  <div class="input-group-append">
+                                                    <button id="add2-10" class="btn btn-sm ">+10</button>
+                                                    <button id="add2-20" class="btn btn-sm ">+20</button>
+                                                    <button id="add2-30" class="btn btn-sm ">+30</button>
+                                                  </div>
+                                                </div>
+                                              </div>
                                             </div>
-
-                                            <div class="col form-floating mx-3">
-                                                <select class="form-select" id="manual-order-form-price2" aria-label="Price Select">
-                                                <option value="none">NA</option>
-                                                <option value="limit">LIMIT</option>
-                                                <option value="market" selected>MARKET</option>
-                                                </select>
-                                                <label for="manual-order-form-price2">Price2</label>
-                                            </div>
-
                                         </div>
+                                    <!-- </div> -->
 
-                                    </div>
+                                   
+                                      
 
 
+                                    <script>
+                                       
+                                        // Default increment values
+                                        let increments = [10, 20, 30];
                                     
-                                
+                                        // Function to update the value in the input field
+                                        function updateInputValue(increment,priceNumber) {
+                                          let inputField = document.getElementById(`manual-order-form-price${priceNumber}`);
+                                          inputField.value = parseInt(inputField.value) + increment;
+                                        }
+                                    
+                                        // Event listeners for the +10, +20, +30 buttons
+                                        document.getElementById("add-10").addEventListener("click", function() {
+                                          updateInputValue(increments[0],1);
+                                        });
+                                    
+                                        document.getElementById("add-20").addEventListener("click", function() {
+                                          updateInputValue(increments[1],1);
+                                        });
+                                    
+                                        document.getElementById("add-30").addEventListener("click", function() {
+                                          updateInputValue(increments[2],1);
+                                        });
+
+                                        document.getElementById("add2-10").addEventListener("click", function() {
+                                          updateInputValue(increments[0],2);
+                                        });
+                                    
+                                        document.getElementById("add2-20").addEventListener("click", function() {
+                                          updateInputValue(increments[1],2);
+                                        });
+                                    
+                                        document.getElementById("add2-30").addEventListener("click", function() {
+                                          updateInputValue(increments[2],2);
+                                        });
+                                    
+                                        // Event listener to set custom increment values for the buttons
+                                        document.getElementById("set-custom-increments").addEventListener("click", function() {
+                                          let customIncrement1 = parseInt(document.getElementById("increment-1").value);
+                                          let customIncrement2 = parseInt(document.getElementById("increment-2").value);
+                                          let customIncrement3 = parseInt(document.getElementById("increment-3").value);
+                                          
+                                          if (!isNaN(customIncrement1) && !isNaN(customIncrement2) && !isNaN(customIncrement3)) {
+                                            increments = [customIncrement1, customIncrement2, customIncrement3];
+                                            // Update the button labels with new custom increments
+                                            document.getElementById("add-10").innerText = `+${customIncrement1}`;
+                                            document.getElementById("add-20").innerText = `+${customIncrement2}`;
+                                            document.getElementById("add-30").innerText = `+${customIncrement3}`;
+                                            alert(`Button increments updated: +${customIncrement1}, +${customIncrement2}, +${customIncrement3}`);
+                                          } else {
+                                            alert("Please enter valid numbers for all increments.");
+                                          }
+                                        });
+                                      </script>
+                
+                                              
+<!--                                         <div class="mb-2">
+                                                <label for="increment-1" class="form-label">Button 1 Increment (+)</label>
+                                                <input type="number" id="increment-1" class="form-control" placeholder="Enter value for +10" value="10">
+                                              </div>
+                                              
+                                              <div class="mb-2">
+                                                <label for="increment-2" class="form-label">Button 2 Increment (+)</label>
+                                                <input type="number" id="increment-2" class="form-control" placeholder="Enter value for +20" value="20">
+                                              </div>
+                                              
+                                              <div class="mb-2">
+                                                <label for="increment-3" class="form-label">Button 3 Increment (+)</label>
+                                                <input type="number" id="increment-3" class="form-control" placeholder="Enter value for +30" value="30">
+                                              </div>
+                                              
+                                              <button id="set-custom-increments" class="btn btn-outline-success mt-2">Set Custom Increments</button>
+                                            </div>-->
+                                          
+                                    
                                      
                                 
-                                        <!-- Instrument Field for Spot/Swap -->
-                                        <div class="col-12 col-md-6 mb-3">
-                                            <label for="instrument-input" class="form-label">Instrument:</label>
-                                            <select id="instrument-input" class="form-select" required onchange="updateCurrencyOptionsGeneral('instrument-input','manual-order-form-currency-input','contract-type-container')">
-                                                <option value="" disabled selected>Select Instrument</option>
-                                                <option value="spot">Spot</option>
-                                                <option value="swap" selected>Swap</option>
-                                                <option value="futures" >Futures</option>
-
-                                            </select>
-                                        </div>
-                                    
                                 
-                                        <!-- Order Type Tabs -->
-                                        <div class="col-12 col-md-6 mb-3">
-                                            <label for="order-type-input" class="form-label">Order Type:</label>
-                                            <select id="order-type-input" class="form-select" required onchange="handleOrderTypeChange()">
-                                                <option value="" disabled selected>Select Order Type</option>
-                                                <option value="market" >Market</option>
-                                                <option value="limit" selected>Limit</option>
-
-                                            </select>
-                                        </div>
+                                     
                                 
                                         <div class="col-12 col-md-6 mb-3">
                                             <label for="manual-order-form-currency-input" class="form-label">Currency Pair:</label>
@@ -1187,90 +1307,7 @@ body.dark-mode.force-black {
                                 </form>
                                     
                                     
-                                <script>
-
-
-                                    // Simulate condition for triggering warning
-                                    function checkCondition() {
-                                        console.log("Condition checked")
-                                        const formdata = new FormData();
-                                        formdata.append("username", localStorage.getItem('username'));
-                                        const check_alert_status = {
-                                            method: "POST",
-                                            body: formdata,
-                                        };
-                                        fetch(`http://${hostname}:9000/check_alert_status`, check_alert_status)
-                                        .then((response) => response.json())
-                                        .then((result) =>
-                                            {
-                                            console.log(result)
-                                            if (result.status == "INACTIVE"|result.status == "ACTIVE_ACKED"){
-                                                console.log(result.status)
-                                                document.getElementById('alertBox').style.display = "None"
-                                                // document.getElementById('alertBox').style.display = "block"
-
-                                            }else{
-                                                document.getElementById('alertBox').style.display = "block"
-                                            }
-
-                                            // if (result['answered'] || result['running']) {
-                                            //     // Do something here
-                                            //     console.log("Alert status triggered:", result);
-                                            // }
-                                        })
-                                        .catch((error) => console.error(error));
-                                    
-                                    }
-                                    document.addEventListener('DOMContentLoaded', checkCondition);
-
-                                    function handleOrderTypeChange() {
-
-                                        const orderType = document.getElementById('order-type-input').value;
-                                        const priceContainer = document.getElementById('price-container');
-                                        const spreadContainer = document.getElementById('spread-container');
-                                        const priceInputs = priceContainer.querySelectorAll('input');
-                                        const formBuySellContainer = document.getElementById('form-buy-sell-container');
-
-                                        // Show or hide fields based on selected order type
-                                        if (orderType === 'market') {
-                                            priceContainer.style.display = 'none';
-                                            spreadContainer.style.display = 'none';
-                                            formBuySellContainer.style.display = 'block';
-                                            priceInputs.forEach(input => input.removeAttribute('required'));
-
-                                        } else if (orderType === 'limit') {
-                                            priceContainer.style.display = 'block';
-                                            spreadContainer.style.display = 'none';
-                                            formBuySellContainer.style.display = 'block';
-
-                                        } else if (orderType === 'algo') {
-                                            formBuySellContainer.style.display = 'none';
-                                            priceContainer.style.display = 'block';
-                                            spreadContainer.style.display = 'block';
-
-                                        
-                                        } else {
-                                            formBuySellContainer.style.display = 'block';
-                                            priceContainer.style.display = 'none';
-                                            spreadContainer.style.display = 'none';
-                                        }
-                                    }
-
-                                    document.querySelectorAll('.form-check-input').forEach(toggle => {
-                                        toggle.addEventListener('change', (event) => {
-                                            const isChecked = event.target.checked;
-                                            console.log(`${event.target.id} is now ${isChecked ? 'ON' : 'OFF'}`);
-                                        });
-                                    });
                                 
-                                    // Initialize form on page load
-                                    
-                                    document.addEventListener('DOMContentLoaded', handleOrderTypeChange);
-
-                                    
-
-
-                                </script>
 
                                 
                             </div>
@@ -1930,6 +1967,9 @@ body.dark-mode.force-black {
 
 /* Numeric columns (right-aligned by default in DataTables) */
 
+.hidden {
+  visibility: hidden;  /* Hides the element but keeps its space */
+}
 
 /* Header alignment to match data */
 /* Table container */
