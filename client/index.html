@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Falconstead</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Suppressing the favicon error -->
     <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAA..." />
 </head>
 
 <script src="./websocket_client/js/htx_okx_spread_order.js"></script>
 <link href="./websocket_client/css/statusbadge.css" rel="stylesheet">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="websocket_client/css/arbButton.css">
 <!-- <link rel="stylesheet" href="websocket_client/css/util.css"> -->
@@ -137,8 +138,10 @@
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 fw-semibold text-muted">OKX</h6>
-                                <span id="fundingratets-okxperp" class="badge  bg-opacity-10 text-warning small">-</span>
+                                <!-- <h6 class="mb-0 fw-semibold text-muted">OKX</h6> -->
+                                <img src="./assets/okx.png" alt="OKX Logo" class="default-icon block  icon-color-mode" height="24" width="70">
+
+                                <span id="fundingratets-okxperp" class="badge  bg-opacity-10 text-warning small ">-</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
                                 <span id="currency-okxperp" class="text-muted small">--</span>
@@ -147,13 +150,18 @@
                         </div>
                     </div>
                 </div>
+
+             
         
                 <!-- HTX Card -->
                 <div class="col-md-3 col-sm-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 fw-semibold text-muted">HTX</h6>
+                                <!-- <h6 class="mb-0 fw-semibold text-muted">HTX</h6> -->
+                                <div class="d-flex justify-content-between align-items-center mb-2 ">
+                                    <img src="./assets/htx_white.svg" alt="HTX Logo" class="bn-svg default-icon block icon-color-mode  " height="24" width="70">
+                                  </div>
                                 <span id="fundingratets-htxperp" class="badge  bg-opacity-10 text-warning small">-</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
@@ -169,7 +177,10 @@
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 fw-semibold text-muted">BINANCE</h6>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <img src="./assets/binance.svg" alt="Binance Logo" class="bn-svg default-icon block " height="24" width="120">
+                                  </div>
+                                <!-- <h6 class="mb-0 fw-semibold text-muted">BINANCE</h6> -->
                                 <span id="fundingratets_bnb" class="badge  bg-opacity-10 text-warning small">-</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
@@ -185,7 +196,13 @@
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 fw-semibold text-muted">DERIBIT</h6>
+                                <!-- <h6 class="mb-0 fw-semibold text-muted">DERIBIT</h6>
+                                  -->
+                                  <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                    <img src="./assets/deribit.svg" alt="Deribit Logo" class="bn-svg default-icon block" height="24" width="30">
+                                    <div  class ='fw-bold header-text px-1' >DERIBIT</div>
+                                  </div>
                                 <span id="fundingratets-deribit" class="badge  bg-opacity-10 text-warning small">-</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
@@ -389,6 +406,19 @@ body.dark-mode.force-black {
 
 }
 
+.black-image {
+    filter: grayscale(100%) brightness(0) contrast(100%);
+}
+
+.invalid-select {
+    border: 1px solid #ccc; /* Normal border color */
+}
+
+/* For dark mode: when inside .dark-mode class */
+.dark-mode .invalid-select {
+    border: 1px solid red; /* Red border when inside dark mode */
+}
+
       </style>
       
       <script>
@@ -414,7 +444,25 @@ body.dark-mode.force-black {
                 // Add your filter logic here
                 });
             });
+            isDark = localStorage.getItem('darkMode') === 'true'; 
+
+            console.log('isdark?',isDark)
+             if (!isDark) {
+                    // Apply the 'dark-image' class to each .black-image element for dark mode
+                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                        logo.classList.add('black-image');
+                    });
+                } else {
+                    // Remove the 'dark-image' class when dark mode is disabled
+                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                        logo.classList.remove('black-image');
+                    });
+                }
+
+
+
         });
+            
 
         document.getElementById('darkModeSwitch').addEventListener('change', function() {
             const isDark = this.checked;
@@ -434,6 +482,22 @@ body.dark-mode.force-black {
                     void tab.offsetHeight;
                     tab.style.display = '';
                 });
+                
+                console.log(isDark)
+
+                if (!isDark) {
+                    // Apply the 'dark-image' class to each .black-image element for dark mode
+                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                        logo.classList.add('black-image');
+                    });
+                } else {
+                    // Remove the 'dark-image' class when dark mode is disabled
+                    document.querySelectorAll('.icon-color-mode').forEach(logo => {
+                        logo.classList.remove('black-image');
+                    });
+                }
+
+               
 
             });
           
@@ -456,13 +520,15 @@ body.dark-mode.force-black {
         <!-- this row is the entire display and ordering row-->
         <div class = "row justify-content-center m-4">
             <!-- DISPLAY TABLE -->
-            <div class="col-lg-6 shadow-sm rounded rounded-lg border p-4 m" id="orderbookdisplayContainer " style="margin-right: 12px;">
+            <!-- <div class="col-lg-7 shadow-sm rounded rounded-lg border p-4 " id="orderbookdisplayContainer " style="margin-right: 12px;"> -->
+            <div class="col shadow-sm rounded rounded-lg border p-4 " id="orderbookdisplayContainer " style="margin-right: 12px;">
+
 
                 <div class="row">
                 <!-- ORDERBOOK DISPLAY -->
                 <div class="py-1 my-2 text-center">
                     <span class="px-3 text-muted fw-medium small text-uppercase header-text">
-                      DISPLAY
+                      ORDERBOOK DISPLAY
                     </span>
                   </div>
                 
@@ -543,7 +609,7 @@ body.dark-mode.force-black {
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-gear"></i></span>
                                             <select id="htx-open-close-1" class="form-select" aria-label="Open/Close">
-                                                <option value="">SELECT OPEN/CLOSE</option>
+                                                <option value="">--Not Selected--</option>
                                                 <option value="open">OPEN</option>
                                                 <option value="close">CLOSE</option>
                                             </select>
@@ -569,7 +635,7 @@ body.dark-mode.force-black {
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-gear"></i></span>
                                             <select id="htx-open-close-2" class="form-select" aria-label="Open/Close">
-                                                <option value="">SELECT OPEN/CLOSE</option>
+                                                <option value="">--Not Selected--</option>
                                                 <option value="open">OPEN</option>
                                                 <option value="close">CLOSE</option>
                                             </select>
@@ -622,7 +688,7 @@ body.dark-mode.force-black {
                                                         <h5 id="orderbook-header-1" class="text-center">Order Book 1</h5>
                                                         
                                                         <div id="orderbook-timestamp-1" class="text-center">
-                                                            <strong></strong> <span>Not Selected</span>
+                                                            <strong></strong> <span>--Not Selected--</span>
 
                                                             <!-- Timestamp content here -->
 
@@ -662,7 +728,7 @@ body.dark-mode.force-black {
                                             
                                                     <!-- Timestamp -->
                                                     <div id="orderbook-timestamp-2" class="text-center">
-                                                        <strong></strong> <span>Not Selected</span>
+                                                        <strong></strong> <span>--Not Selected--</span>
                                                     </div>
                                                 </div>
                                                 </div>
@@ -773,7 +839,7 @@ body.dark-mode.force-black {
 
 
             <!-- FORM for ordering -->
-            <div class="col-lg-5 shadow-sm rounded rounded-lg border p-4 ">
+            <div class="col shadow-sm rounded rounded-lg border p-4  ">
 
                 <!-- This section will only be visible if the JWT is NOT present -->
                 <div id="loginPromptBtn" class="alert alert-warning text-center h-100">
@@ -1205,7 +1271,7 @@ body.dark-mode.force-black {
             </div>
 
             <!-- Order Management System Section -->
-            <div id="securedContentOMS" class="alert alert-dark" style="display: none;">
+            <div id="securedContentOMS" class="col alert alert-dark" style="display: none;">
                 <div class="card p-3">
                     <!-- <h2 class="text-center">Order Management System (Prototype)</h2> -->
 
@@ -1694,6 +1760,7 @@ body.dark-mode.force-black {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 
 /* Cell styling */
 .OMStable td {

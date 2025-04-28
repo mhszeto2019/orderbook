@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 216" height="22" width='30' class="dark">
+  <style>
+    .deribit-logo-text { fill:#fff }
+    .light .deribit-logo-text { fill:#040507 }
+  </style>
+  <path d="M36 180H0v-36h36V72H0V36h36V0h36v36h36V0h36v36c39.8 0 72 32.2 72 72s-32.2 72-72 72v36h-36v-36H72v36H36v-36zm36-36h72c19.9 0 36-16.1 36-36s-16.1-36-36-36H72v72z" 
+        style="fill: rgb(0, 207, 190);"></path>
+</svg>
