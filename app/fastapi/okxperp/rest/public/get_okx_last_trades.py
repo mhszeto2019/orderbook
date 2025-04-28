@@ -190,9 +190,12 @@ async def get_last_trades(
 
     except Exception as e:
         print(f"Error in get_funding_rate: {e}")
-        await exchange.close()
 
-        raise HTTPException(status_code=500, detail=str(e))
+        await exchange.close()
+        return {"error":f"{e}"}
+
+        # raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.on_event("shutdown")

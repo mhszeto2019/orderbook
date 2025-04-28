@@ -1,0 +1,25 @@
+
+source /var/www/html/config_folder/bashconfig.env
+venv="/home/brenn/environments/venv"
+okxenv="/home/brenn/environments/okx"
+
+[Unit]
+Description=Uvicorn instance for get_okx_last_trades
+After=network.target
+
+[Service]
+User=brenn
+Group=
+WorkingDirectory=/var/www/html/orderbook
+ExecStart=/home/brenn/environments/okx/bin/uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --host 0.0.0.0 --reload
+Environment="VIRTUAL_ENV=/home/brenn/environments/okx"
+Environment="PATH=$okxenv:$PATH"
+Environment="PYTHONPATH=/var/www/html/orderbook"
+Restart=always
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target

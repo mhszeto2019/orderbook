@@ -1,6 +1,7 @@
 import json
 import os
 import configparser
+import traceback
 # Define the config file path in a cleaner way
 
 project_root = "/var/www/html"
@@ -101,7 +102,7 @@ class PositionRequest(BaseModel):
    
 
 @app.post("/htxperp/get_all_positions")
-async def place_order(
+async def get_all_positions(
     payload: PositionRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
     ):
@@ -130,39 +131,41 @@ async def place_order(
     decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
     api_creds_dict = json.loads(decrypted_data)
 
-    exchange = ccxt.huobi({
-        'apiKey': api_creds_dict['htx_apikey'],
-        'secret': api_creds_dict['htx_secretkey'],
-        'options': {
-            'defaultType': 'swap',
-        },
-    })
+    try:
+        exchange = ccxt.huobi({
+            'apiKey': api_creds_dict['htx_apikey'],
+            'secret': api_creds_dict['htx_secretkey'],
+            'options': {
+                'defaultType': 'swap',
+            },
+        })
 
-   # # markets = exchange.load_markets()
-    # positions = exchange.fetch_positions(symbols=['BTC-USD'])
-    positions = exchange.fetch_positions(symbols=['BTC-USD','ETH-USD'])
-    print(positions[0])
-    json_data = positions[0]
+    # # markets = exchange.load_markets()
+        # positions = exchange.fetch_positions(symbols=['BTC-USD'])
+        positions = exchange.fetch_positions(symbols=['BTC-USD','ETH-USD'])
+        json_data = positions[0]
+        logger.info(json_data)
+        json_response = {}
+        json_response['adl'] = json_data['info']['open_adl']
+        json_response['exchange'] = 'htxperp'
+        json_response['instrument_id'] = json_data['info']['contract_code'] + '-SWAP'
+        json_response['leverage'] = json_data['info']['lever_rate']
+        json_response['margin_ratio'] = json_data['info']['position_margin']
+        json_response['position'] = json_data['info']['volume'] if json_data['side'] == 'long' else -float(json_data['info']['volume'])
+        json_response['price'] = json_data['entryPrice']
+        json_response['pnl'] = json_data['info']['profit_unreal']
+        json_response['liquidation_price'] = json_data['info']['liq_px']
 
-    json_response = {}
-    json_response['adl'] = json_data['info']['open_adl']
-    json_response['exchange'] = 'htxperp'
-    json_response['instrument_id'] = json_data['info']['contract_code'] + '-SWAP'
-    json_response['leverage'] = json_data['info']['lever_rate']
-    json_response['margin_ratio'] = json_data['info']['position_margin']
-    json_response['position'] = json_data['info']['volume'] if json_data['side'] == 'long' else -json_data['info']['volume']
-    json_response['price'] = json_data['entryPrice']
-    json_response['pnl'] = json_data['info']['profit_unreal']
-    json_response['liquidation_price'] = json_data['info']['liq_px']
-
-    json_response['ts'] = json_data['timestamp']
+        json_response['ts'] = json_data['timestamp']
 
 
-# {'info': {'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': '2.000000000000000000', 'available': '2.000000000000000000', 'frozen': '0E-18', 'cost_open': '93681.595133096920507000', 'cost_hold': '93681.595133096920507000', 'profit_unreal': '0.000002274286583800000000000000000000000000000000000000', 'profit_rate': '0.005326469874286480', 'lever_rate': '5', 'position_margin': '0.000426523354819447', 'direction': 'buy', 'profit': '0.000002274286583800000000000000000000000000000000000000', 'liq_px': '63619.175984357167389881', 'last_price': '93781.5', 'store_time': '2025-04-25 15:28:20', 'open_adl': '1', 'adl_risk_percent': '2', 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}, 'id': None, 'symbol': 'BTC/USD:BTC', 'contracts': 2.0, 'contractSize': 100.0, 'entryPrice': 93681.59513309693, 'collateral': None, 'side': 'long', 'unrealizedPnl': 2.2742865838e-06, 'leverage': 5.0, 'percentage': 0.532646987428648, 'marginMode': 'cross', 'notional': 0.002132616774097236, 'markPrice': None, 'lastPrice': None, 'liquidationPrice': None, 'initialMargin': 0.000426523354819447, 'initialMarginPercentage': 0.1999999999999999, 'maintenanceMargin': None, 'maintenanceMarginPercentage': None, 'marginRatio': None, 'timestamp': 1745568202981, 'datetime': '2025-04-25T08:03:22.981Z', 'hedged': None, 'lastUpdateTimestamp': None, 'stopLossPrice': None, 'takeProfitPrice': None}
+    # {'info': {'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': '2.000000000000000000', 'available': '2.000000000000000000', 'frozen': '0E-18', 'cost_open': '93681.595133096920507000', 'cost_hold': '93681.595133096920507000', 'profit_unreal': '0.000002274286583800000000000000000000000000000000000000', 'profit_rate': '0.005326469874286480', 'lever_rate': '5', 'position_margin': '0.000426523354819447', 'direction': 'buy', 'profit': '0.000002274286583800000000000000000000000000000000000000', 'liq_px': '63619.175984357167389881', 'last_price': '93781.5', 'store_time': '2025-04-25 15:28:20', 'open_adl': '1', 'adl_risk_percent': '2', 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}, 'id': None, 'symbol': 'BTC/USD:BTC', 'contracts': 2.0, 'contractSize': 100.0, 'entryPrice': 93681.59513309693, 'collateral': None, 'side': 'long', 'unrealizedPnl': 2.2742865838e-06, 'leverage': 5.0, 'percentage': 0.532646987428648, 'marginMode': 'cross', 'notional': 0.002132616774097236, 'markPrice': None, 'lastPrice': None, 'liquidationPrice': None, 'initialMargin': 0.000426523354819447, 'initialMarginPercentage': 0.1999999999999999, 'maintenanceMargin': None, 'maintenanceMarginPercentage': None, 'marginRatio': None, 'timestamp': 1745568202981, 'datetime': '2025-04-25T08:03:22.981Z', 'hedged': None, 'lastUpdateTimestamp': None, 'stopLossPrice': None, 'takeProfitPrice': None}
 
-    # [{'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'available': 1.0, 'frozen': 0.0, 'cost_open': 95827.20000000004, 'cost_hold': 95827.20000000004, 'profit_unreal': 0.0, 'profit_rate': -1.845e-15, 'lever_rate': 5, 'position_margin': 0.000208709009550524, 'direction': 'buy', 'profit': 0.0, 'liq_px': 33313.866877150256, 'last_price': 95827.2, 'store_time': '2024-11-28 15:21:38', 'open_adl': 1, 'adl_risk_percent': 1, 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}]
-    print(json_response)
-    return [json_response]
+        # [{'symbol': 'BTC', 'contract_code': 'BTC-USD', 'volume': 1.0, 'available': 1.0, 'frozen': 0.0, 'cost_open': 95827.20000000004, 'cost_hold': 95827.20000000004, 'profit_unreal': 0.0, 'profit_rate': -1.845e-15, 'lever_rate': 5, 'position_margin': 0.000208709009550524, 'direction': 'buy', 'profit': 0.0, 'liq_px': 33313.866877150256, 'last_price': 95827.2, 'store_time': '2024-11-28 15:21:38', 'open_adl': 1, 'adl_risk_percent': 1, 'tp_trigger_price': None, 'sl_trigger_price': None, 'tp_order_id': None, 'sl_order_id': None, 'tp_trigger_type': None, 'sl_trigger_type': None}]
+        logger.info(json_response)
+        return [json_response]
+    except:
+        logger.error(traceback.format_exc())
 
 
 

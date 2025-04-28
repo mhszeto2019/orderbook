@@ -33,19 +33,23 @@ function updateLastTrades(exchange, currency ,trades) {
     if (!lastTrades[exchange][currency]) {
         lastTrades[exchange][currency] = []
     }
+    if (trades){
+        trades.forEach(row=>{
+            // console.log(row)
+            newTrade = { "px": row['price'], "ts": row['timestamp'], "side": row['side'], "sz":row['amount'] }
+            lastTrades[exchange][currency].unshift(newTrade)
+            // console.log(lastTrades)
+         
+            if (lastTrades[exchange][currency].length > 10) {
+                lastTrades[exchange][currency].pop(); // Remove oldest trade if more than 10 trades
+            }
+    
+        })
+        populateLastTrades(1)
+    }
+   
 
-    trades.forEach(row=>{
-        // console.log(row)
-        newTrade = { "px": row['price'], "ts": row['timestamp'], "side": row['side'], "sz":row['amount'] }
-        lastTrades[exchange][currency].unshift(newTrade)
-        // console.log(lastTrades)
-     
-        if (lastTrades[exchange][currency].length > 10) {
-            lastTrades[exchange][currency].pop(); // Remove oldest trade if more than 10 trades
-        }
-
-    })
-    populateLastTrades(1)
+   
 }
 
 
@@ -79,10 +83,16 @@ async function getTradeHistory(){
     if (results[0].status === 'fulfilled') {
         const response = results[0].value;
         if (response.ok) {
-            
             const response_data = await response.json();
-            updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
-            populateLastTrades(1) 
+            if (response_data['error']){
+                // alert('ERROR')
+                populateLastTrades(1,error=true,errorMsg = response_data['error']) 
+            }
+            else{
+                updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
+                populateLastTrades(1) 
+            }
+        
             
         } else {
             console.error('Error fetching OKX orders:', response.statusText);
@@ -127,9 +137,18 @@ async function getTradeHistory2(){
         if (response.ok) {
             
             const response_data = await response.json();
-            updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
+            if (response_data['error']){
+                // alert('ERROR')
+                populateLastTrades(2,error=true,errorMsg = response_data['error']) 
+            }
+            else{
+                updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
+                populateLastTrades(2) 
+            }
+        
+            // updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
 
-            populateLastTrades(2) 
+            // populateLastTrades(2) 
             
         } else {
             console.error('Error fetching SECOND TABLE trades:', response.statusText);
@@ -169,7 +188,7 @@ function onLastTradeWsDataReceived(exchange,currency,instrument) {
 }
 
 
-function populateLastTrades(tableNo) {
+function populateLastTrades(tableNo,error=false,errorMsg = '') {
 
     let selectedExchange = document.getElementById(`exchange${tableNo}-input`).value
     const selectedCcy= document.getElementById(`currency-input-orderbook${tableNo}`).value;
@@ -188,23 +207,33 @@ function populateLastTrades(tableNo) {
     data = lastTrades[selectedExchange][selectedCcy]
     lastTradeHeader.innerHTML = `Last Trades: ${selectedExchange}`
         
-        const tableBody = document.getElementById(`lastprice-data-table-body-${tableNo}`);
+    const tableBody = document.getElementById(`lastprice-data-table-body-${tableNo}`);
+    tableBody.innerHTML = ''
+    if (error){
         tableBody.innerHTML = ''
-        // Populate table with new data
-        data.forEach(trade => {
-            const row = document.createElement('tr'); // Create a new table row
-            
-            // Create and append cells for price, time, direction, and amount
-            row.innerHTML = `
-                <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
 
-                <td class ='${trade.side}'>${Number(trade.px).toLocaleString(undefined, {minimumFractionDigits: 1,maximumFractionDigits: 1 })}</td>
-                <td class='${trade.side}'>${trade.sz}</td>
-            `;
+        const row = document.createElement('tr');
 
-            // Append the row to the table body
-            tableBody.appendChild(row);
-        });
+        row.innerHTML = `<td colspan="3">${errorMsg}</td>`;
+        tableBody.appendChild(row);
+        return
+    }
+
+    // Populate table with new data
+    data.forEach(trade => {
+        const row = document.createElement('tr'); // Create a new table row
+        
+        // Create and append cells for price, time, direction, and amount
+        row.innerHTML = `
+            <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
+
+            <td class ='${trade.side}'>${Number(trade.px).toLocaleString(undefined, {minimumFractionDigits: 1,maximumFractionDigits: 1 })}</td>
+            <td class='${trade.side}'>${trade.sz}</td>
+        `;
+
+        // Append the row to the table body
+        tableBody.appendChild(row);
+    });
 
     }
 

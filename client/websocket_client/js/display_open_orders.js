@@ -99,11 +99,15 @@ function populateOpenOpenOrdersTable(allOpenOrders) {
 
     if (allOpenOrders.length === 0) {
         // Manually add a row with `colspan`
-        const emptyMessage = `
-            <tr>
-                <td  class="text-center text-muted">No open orders available</td>
-            </tr>`;
-        $('#oms-open-orders-body').html(emptyMessage);
+        // const emptyMessage = 
+        // `
+        //     <tr>
+        //         <td  class="text-center text-muted">No open orders available</td>
+        //     </tr>`;
+            '<tr><td colspan="9" class="dataTables_empty">No open Orders available</td></tr>'
+
+            
+        $('#oms-open-orders-body').html('<tr><td colspan="9" class="dataTables_empty">No open Orders available</td></tr>');
     } else {
         // Add rows dynamically
         allOpenOrders.forEach(openOrder => {
@@ -126,11 +130,17 @@ function populateOpenOpenOrdersTable(allOpenOrders) {
                 // createButton('primary', openOrder.order_id,  openOrder.instrument_id, openOrder.exchange, 'Modify'),
                 createButton('danger', openOrder.order_id,  openOrder.instrument_id, openOrder.exchange, 'Delete')
             ]);
+        openordersTable.draw(false);
+
         });
+
+    openordersTable.columns.adjust().draw(false);
+
     }
 
+
     // Redraw the table to reflect changes
-    openordersTable.draw();
+    // openordersTable.draw();
 }
 
 // Function to process attachAlgoOrds

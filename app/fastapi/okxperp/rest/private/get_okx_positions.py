@@ -102,7 +102,7 @@ class PositionRequest(BaseModel):
    
 
 @app.post("/okxperp/get_all_positions")
-async def place_order(
+async def get_all_positions(
     payload: PositionRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
     ):
@@ -153,7 +153,7 @@ async def place_order(
         json_response['pnl'] = json_data['info']['pnl']
         json_response['liquidation_price'] = json_data['info']['liqPx']
 
-        json_response['ts'] = json_data['timestamp']
+        json_response['ts'] = json_data['info']['uTime']
         print(json_response)
         return [json_response]
 
