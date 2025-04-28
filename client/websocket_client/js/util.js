@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Select currency based on exchange and market type
-    function updateCurrencyOptions() {
+    function updatePriceField() {
         const orderType1 = document.getElementById('manual-order-form-order-type1')
         const orderType2 = document.getElementById('manual-order-form-order-type2')
         let priceField1 = document.getElementById('manual-order-form-price-field1')
@@ -161,35 +161,89 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
  
-    document.getElementById('manual-order-form-order-type1').addEventListener('change', updateCurrencyOptions);
-    document.getElementById('manual-order-form-order-type2').addEventListener('change', updateCurrencyOptions);
+    document.getElementById('manual-order-form-order-type1').addEventListener('change', updatePriceField);
+    document.getElementById('manual-order-form-order-type2').addEventListener('change', updatePriceField);
+
+  });
 
 
-    //   // Function to update currency dropdowns based on market type
-    //   function populateCurrencies(selectId, marketType) {
-    //     const currencySelect = document.getElementById(selectId);
-    //     currencySelect.innerHTML = '';  // Clear previous options
-    //     const options = marketType === 'spot' ? currenciesSpot : currenciesPerp;
 
-    //     options.forEach(currency => {
-    //       const option = document.createElement('option');
-    //       option.value = currency;
-    //       option.textContent = currency;
-    //       currencySelect.appendChild(option);
-    //     });
-    //   }
+// CHANGING OFFSET FIELD BASED ON EXCHANGE TYPE
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the tooltips
+    var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 
-    //   // Update currency options based on market type
-    //   populateCurrencies('manual-order-form-currency-input1', marketType1);
-    //   populateCurrencies('manual-order-form-currency-input2', marketType2);
-    // }
+    // Function to hide price fields
+    function hidePriceFields() {
+        document.getElementById('manual-order-form-price-field1').classList.add('hidden');
+        document.getElementById('manual-order-form-price-field2').classList.add('hidden');
+    }
+  
+    // Function to show price fields
+    function showPriceFields() {
+        document.getElementById('manual-order-form-price-field1').classList.remove('hidden');
+        document.getElementById('manual-order-form-price-field2').classList.remove('hidden');
+    }
 
-    // // Event listeners for changes in market type
-    // document.getElementById('manual-order-form-market-type1').addEventListener('change', updateCurrencyOptions);
-    // document.getElementById('manual-order-form-market-type2').addEventListener('change', updateCurrencyOptions);
+ 
+    const orderType1 = document.getElementById('manual-order-form-order-type1')
+    const orderType2 = document.getElementById('manual-order-form-order-type2')
+    let priceField1 = document.getElementById('manual-order-form-price-field1')
+    let priceField2 = document.getElementById('manual-order-form-price-field2')
+    if (orderType1.value == 'market'){
+        priceField1.classList.add('hidden');
 
-    // // Initial population of currency options
-    // updateCurrencyOptions();
+    }
+    else{
+        priceField1.classList.remove('hidden');
+
+    }
+
+    if (orderType2.value == 'market'){
+        priceField2.classList.add('hidden');
+
+    }
+    else{
+        priceField2.classList.remove('hidden');
+
+    }
+
+    // Select currency based on exchange and market type
+    function updateOffsetField() {
+
+        const exchange1 = document.getElementById('manual-order-form-exchange-input1')
+        const exchange2 = document.getElementById('manual-order-form-exchange-input2')
+        let offsetField1 = document.getElementById('manual-order-form-offset-field1')
+        let offsetField2 = document.getElementById('manual-order-form-offset-field2')
+
+        if (exchange1.value == 'htx'){
+            offsetField1.classList.add('hidden');
+
+        }
+        else{
+            offsetField1.classList.remove('hidden');
+
+        }
+
+        if (exchange1.value == 'htx'){
+            offsetField2.classList.add('hidden');
+
+        }
+        else{
+            offsetField2.classList.remove('hidden');
+
+        }
+        
+
+    }
+
+ 
+    document.getElementById('manual-order-form-exchange-input1').addEventListener('change', updateOffsetField);
+    document.getElementById('manual-order-form-exchange-input2').addEventListener('change', updateOffsetField);
+
   });
 
 
