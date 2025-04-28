@@ -182,11 +182,21 @@ function validateSelectInput(selectId) {
     if (select.value === "") {
         select.classList.add("invalid-select");
      
+        // Swal.fire({
+        //     title: "Missing Item!",
+        //     text: "Select Open/Close",
+        //     icon: "warning"
+        //   });
+
         Swal.fire({
             title: "Missing Item!",
             text: "Select Open/Close",
-            icon: "warning"
-          });
+            icon: "warning",
+            background: '#333', // Dark background color
+            color: '#fff', // White text color
+            confirmButtonColor: '#1e90ff', // Blue confirm button color
+        });
+
         return false;
     } else {
         select.classList.remove("invalid-select");

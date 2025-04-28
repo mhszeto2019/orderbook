@@ -17,7 +17,13 @@ SERVICE_DIR="/var/www/html/orderbook/systemd"
 # List of services with corresponding port variables
 declare -A SERVICES_PORTS
 SERVICES_PORTS=(
-  ["twilio_liquidation_notifier"]=$TWILIO_LIQUIDATION_NOTIFIER_PORT #REST
+  ["htx_positions"]=$HTX_DISPLAY_ASSET_AND_POSITION_PORT #REST
+  ["okx_positions"]=$OKX_DISPLAY_ASSET_AND_POSITION_PORT #REST
+  ["htx_open_orders"]=$HTX_DISPLAY_OPEN_ORDERS_PORT #REST
+  # ["okx_open_orders"]=$OKX_DISPLAY_OPEN_ORDERS_PORT #REST
+  ["get_htx_funding_rate"]=$HTX_DISPLAY_FUNDING_RATE_PORT #REST
+  ["get_okx_funding_rate"]=$OKX_DISPLAY_FUNDING_RATE_PORT #REST
+  ["get_okx_trade_history"]=$OKX_DISPLAY_LAST_TRADES_PORT #REST
 )
 
 # Loop through the services and create systemd files
@@ -62,8 +68,7 @@ After=network.target
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/uvicorn --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.fastapi.$SERVICE_NAME:app --port $PORT
-
+ExecStart=$ENV_PATH/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$PORT --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.display_engines_rest.$SERVICE_NAME:app
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

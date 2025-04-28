@@ -49,12 +49,14 @@ async function populatePositions() {
 
             if (pos.ok) {
                 let posData = await pos.json()
-                console.log(posData)
-                    posData.forEach(posRow => {
-                        // console.log(posRow)
-                        allPositions.push(posRow)
-                    }
-                )
+                if (posData){
+                    console.log(posData)
+                        posData.forEach(posRow => {
+                            // console.log(posRow)
+                            allPositions.push(posRow)
+                        }
+                    )
+                }
             }
 
            
@@ -67,13 +69,14 @@ async function populatePositions() {
 
             if (pos.ok) {
                 let posData = await pos.json()
-                console.log(posData)
-                    posData.forEach(posRow => {
-                        // console.log(posRow)
-                        allPositions.push(posRow)
-                        // console.log(allPositions)
-                    }
-                )
+                if (posData){
+                    console.log(posData)
+                        posData.forEach(posRow => {
+                            // console.log(posRow)
+                            allPositions.push(posRow)
+                        }
+                    )
+                }
             }
             
             
@@ -94,53 +97,31 @@ async function populatePositions() {
 
 
 function populateOpenPositionsTable(positions) {
-    // Get reference to the DataTable instance (or initialize if not already)
     const omsTable = $('.OMStable').DataTable();
-    // Clear existing rows from DataTable
     omsTable.clear();
-
+    
     if (positions.length === 0) {
-        // Add a "No open positions available" message
-        // omsTable.row.add([
-        //     { display: "No open positions available", colspan: 10 }
-            
-        // ]);
-        // omsTable.row.add([
-        //     'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'
-        // ]);
-           // Clear table
-        omsTable.clear();
-
-        // Manually add a row with `colspan`
-        const emptyMessage = `
-            <tr>
-                <td  class="text-muted">No open positions available</td>
-            </tr>`;
-        $('#oms-open-positions-body').html(emptyMessage);
+        omsTable.clear().draw();
+        $('#oms-open-positions-body').html(
+            '<tr><td colspan="9" class="dataTables_empty">No open positions available</td></tr>'
+        );
     } else {
-        // Add rows dynamically
         positions.forEach(position => {
-            console.log(position)
-            // {'adl': '1', 'exchange': 'htxperp', 'instrument_id': 'BTC-USD-SWAP', 'leverage': '5', 'margin_ratio': '0.000426913935217944', 'position': '2.000000000000000000', 'price': 93681.59513309693, 'pnl': '3.21384591400000000000000000000000000000000000000E-7', 'liquidation_price': '63619.175984357167389881', 'ts': 1745569604074}
-
             omsTable.row.add([
-                position.exchange || 'N/A',  // New exchange column
+                position.exchange || 'N/A',
                 position.instrument_id || 'N/A',
                 position.leverage || 'N/A',
-                // position.margin_ratio ? Number.parseFloat(position.margin_ratio).toFixed(2) : 'N/A',
-                position.position ? Number.parseFloat(position.position).toFixed(2) : 'N/A',
+                position.position ? Number(position.position).toFixed(2) : 'N/A',
                 position.adl || 'N/A',
-                position.liquidation_price ? Number.parseFloat(position.liquidation_price).toFixed(2) : 'N/A',
-                position.price  ? Number.parseFloat(position.price).toFixed(2) : 'N/A',
-                position.pnl ? Number.parseFloat(position.pnl).toFixed(10) : 'N/A',
-                position.ts ? new Date(parseInt(position.ts)).toLocaleString() : 'N/A',
-                // position.cTime ? new Date(parseInt(position.cTime)).toLocaleString() : 'N/A'
+                position.liquidation_price ? Number(position.liquidation_price).toFixed(2) : 'N/A',
+                position.price ? Number(position.price).toFixed(2) : 'N/A',
+                position.pnl ? Number(position.pnl).toFixed(10) : 'N/A',
+                position.ts ? new Date(parseInt(position.ts)).toLocaleString() : 'N/A'
             ]);
         });
+        omsTable.draw(false);
     }
-
-    // Redraw the table to reflect changes
-    omsTable.draw();
+    omsTable.columns.adjust().draw(false);
 }
 
 

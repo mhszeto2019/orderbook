@@ -63,6 +63,3 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Shadow on hover */
 }
 
-.invalid-select {
-    border: 2px solid red !important;
-}

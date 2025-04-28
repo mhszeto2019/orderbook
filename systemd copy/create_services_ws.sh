@@ -17,7 +17,18 @@ SERVICE_DIR="/var/www/html/orderbook/systemd"
 # List of services with corresponding port variables
 declare -A SERVICES_PORTS
 SERVICES_PORTS=(
-  ["twilio_liquidation_notifier"]=$TWILIO_LIQUIDATION_NOTIFIER_PORT #REST
+  ["htxbooks"]=$HTX_DISPLAY_ORDERBOOK_PORT
+  ["okxbooks"]=$OKX_DISPLAY_ORDERBOOK_PORT
+  # ["htx_display_engine_asset_and_position"]=$HTX_DISPLAY_ASSET_AND_POSITION_PORT #REST
+  # ["okx_display_engine_asset_and_position"]=$OKX_DISPLAY_ASSET_AND_POSITION_PORT #REST
+  # ["htx_display_engine_open_orders"]=$HTX_DISPLAY_OPEN_ORDERS_PORT #REST
+  # ["okx_display_engine_open_orders"]=$OKX_DISPLAY_OPEN_ORDERS_PORT #REST
+  # ["htx_display_engine_funding_rate"]=$HTX_DISPLAY_FUNDING_RATE_PORT #REST
+  # ["okx_display_engine_funding_rate"]=$OKX_DISPLAY_FUNDING_RATE_PORT #REST
+  ["htx_trade_history"]=$HTX_DISPLAY_LAST_TRADES_PORT 
+  # ["okx_display_engine_last_trades"]=$OKX_DISPLAY_LAST_TRADES_PORT #REST
+  # ["db_connection"]=$DB_PORT #REST
+
 )
 
 # Loop through the services and create systemd files
@@ -34,11 +45,8 @@ for SERVICE_NAME in "${!SERVICES_PORTS[@]}"; do
 
     ENV_PATH_STR="\$okxenv"  # Use the okxenv environment for okx services
   else
-  # can be changed if we dont want to use okx env in the future
-    ENV_PATH="$okxenv"
-    ENV_PATH_STR="\$okxenv"  # Use the okxenv environment for okx services
-    # echo "Unknown service type for $SERVICE_NAME, skipping."
-    # continue
+    echo "Unknown service type for $SERVICE_NAME, skipping."
+    continue
   fi
   
   # Check if the service file already exists in the systemd folder, and delete it if it does
@@ -62,8 +70,7 @@ After=network.target
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/uvicorn --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.fastapi.$SERVICE_NAME:app --port $PORT
-
+ExecStart=$ENV_PATH/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:$PORT --pid $PID_FOLDER/$SERVICE_NAME.pid --access-logfile $PID_FOLDER/$SERVICE_NAME_access.log --error-logfile $PID_FOLDER/$SERVICE_NAME.log app.display_engines_ws.$SERVICE_NAME:app
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"
