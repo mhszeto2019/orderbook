@@ -5,18 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return localStorage.getItem('jwt_token'); // You may use sessionStorage instead if preferred
     }
 
-    function showToast(message,  apiSource = 'API',timestamp=null,orderId=null,statusCode=200,errCode =1039) {
-        const toastMessage = {
-            id: Date.now(),
-            message,
-            apiSource,
-            timestamp,
-            orderId,
-            statusCode,
-            errCode
-        };
-        notifications.push(toastMessage);
-     
+    function showToast(message,apiSource = 'API',timestamp=null,orderId=null,statusCode=200,errCode =1039) {
+       
+        console.log(message,'intoast')
+        notifications.push(message);
+        console.log(notifications)
+
         updateNotificationHub();
         updateNotificationCount();
     }
@@ -108,23 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         };
 
-        
-        // leadingExchange:str
-        // laggingExchange:str
-        // instrument1:str
-        // instrument2:str
-        // instrument:str
-        // ordType:str
-        // px1:str
-        // px2:str
-        // px:str
-        // sz:int
-        // side:str
-        // username:str
-        // redis_key:str
-        // offset:str
-        // offset1:str
-        // offset2:str
+      
 
 
         // Check the value of the submit button to determine which button was clicked
@@ -151,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('SAME EXCHANGE')
                 }
                 else{
-
                     console.log("Sell button clicked. Handling sell action...");
                     let direction1 = 'sell'
                     let direction2 = 'buy'
@@ -188,6 +165,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(orderData)
             });
+            console.log(firstOrderPromise)
+            const results = await Promise.allSettled([firstOrderPromise]);
+
+            if (results[0].status === 'fulfilled') {
+               
+                
+                const firstResult = await results[0].value.json();
+                console.log(firstResult)
+
+                if (firstResult['error']) {
+                    showToast(firstResult['error'])
+                } else {
+                    firstResult.info['exchange'] = fastapi_folder1
+                    showToast(JSON.stringify(firstResult.info))
+                }
+            }
+
         }
         if (orderData.laggingExchange != 'none'){
             let orderData2 = orderData
@@ -207,6 +201,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(orderData2)
             });
+
+            const results = await Promise.allSettled([secondOrderPromise]);
+
+            if (results[0].status === 'fulfilled') {
+               
+                
+                const firstResult = await results[0].value.json();
+                console.log(firstResult)
+
+                if (firstResult['error']) {
+                    showToast(firstResult['error'])
+                } else {
+                    firstResult.info['exchange'] = fastapi_folder2
+                    showToast(JSON.stringify(firstResult.info))
+                }
+            }
+            
         }
         
 

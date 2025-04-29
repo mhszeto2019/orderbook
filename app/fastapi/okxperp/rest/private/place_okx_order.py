@@ -228,8 +228,10 @@ async def place_order(
       order = exchange.create_order(symbol, order_type, side, amount, price, params)
       logger.info(order)
       return order
-   except:
+   except Exception as e:
       logger.error(traceback.format_exc())
+      
+      return {'error':f'{e}'}
 
 
 class CancelByIdTradeRequest(BaseModel):

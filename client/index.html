@@ -1723,42 +1723,27 @@ body.dark-mode.force-black {
             
             function updateNotificationHub() {
                 const toastList = document.getElementById('toast-list');
-
                 toastList.innerHTML = ''; // Clear previous notifications
-            
-                let orderIdColor = 'bg-secondary'; // Grey by default
-                let statusColor = 'bg-secondary'; // Grey by default
-                let errColor = 'bg-secondary';   // Grey by default
+
                 notifications.forEach(notification => {
-                    // if (notification.statusCode == 200) statusColor = 'bg-success';
-                    let orderIdColor = notification.orderId != null ? 'bg-success' : 'bg-danger';
-                    let statusColor = notification.statusCode == 200? 'bg-success' : 'bg-danger';
-                    let errColor = notification.errCode == null | notification.errCode =='undefined' ? 'bg-success' : 'bg-danger';
+                    const toastItem = document.createElement('tr');
+                    toastItem.className = 'toast-item';
 
+                    // Generate current timestamp as a short string
+                    const timestamp = new Date().toLocaleTimeString();
 
-                    const toastItem = document.createElement('div');
-                    toastItem.className = `toast-item toast-${notification.type}`;
                     toastItem.innerHTML = `
-                    <div class="toast-item mb-2 p-3 rounded shadow text-start" style="background-color: #f9f9f9;">
-
-                        <div class="toast-header d-flex align-items-center">
-                            <strong class="me-2">[${notification.apiSource}]</strong> 
-                            <div class="ms-auto">
-                                <span class="badge ${orderIdColor}">Order ID: ${notification.orderId}</span>
-                                <span class="badge ms-1 ${statusColor}">Status: ${notification.statusCode}</span>
-                                <span class="badge ms-1 ${errColor}">Error: ${notification.errCode}</span>
-                            </div>
-                        </div>
-
-                        <div class="toast-body">
-                            <p class="mb-1">${notification.message}</p>
-                            <small class="text-muted">${notification.timestamp}</small>
-                        </div>
-                    </div>
+                        <td class="text-wrap" style="border-bottom: 1px solid #dee2e6; padding: 8px;">
+                            ${notification}
+                            <span class="badge bg-light text-muted float-end" style="font-size: 0.7rem;">${timestamp}</span>
+                        </td>
                     `;
+
                     toastList.prepend(toastItem);
                 });
             }
+
+
 
             // Toggle Notification Hub visibility
             function toggleNotificationHub() {
