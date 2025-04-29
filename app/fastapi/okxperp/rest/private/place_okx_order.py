@@ -130,10 +130,11 @@ class TradeRequest(BaseModel):
    offset:str
    offset1:str
    offset2:str
-   
 
+from fastapi.exceptions import RequestValidationError
 
 @app.post("/okxperp/place_order")
+@app.exception_handler(RequestValidationError)
 async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -174,6 +175,9 @@ async def place_order(
    # print(payload)
    symbol = payload.instrument
    order_type = payload.ordType
+   print(order_type)
+   if order_type 
+
    amount=payload.sz
    side = payload.side
    price = payload.px

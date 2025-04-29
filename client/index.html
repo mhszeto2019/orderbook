@@ -973,9 +973,9 @@ body.dark-mode.force-black {
                                             <div class="col form-floating">
                                                 <select class="form-select" id="manual-order-form-exchange-input2" aria-label="Exchange Select">
                                                 <option value="" disabled>Select Exchange</option>
-                                                <option value="none" >EMPTY LEG</option>
+                                                <option value="none" selected>EMPTY LEG</option>
                                                 <option value="htx">HTX</option>
-                                                <option value="okx" selected>OKX</option>
+                                                <option value="okx" >OKX</option>
                                                 </select>
                                                 <label for="manual-order-form-exchange-input2">Exchange</label>
                                             </div>
@@ -1031,7 +1031,8 @@ body.dark-mode.force-black {
                                             <select class="form-select" id="manual-order-form-order-type1" aria-label="Order Type Select" >
                                             <option value="none" disabled>NA</option>
                                             <option value="limit">LIMIT</option>
-                                            <option value="market" selected>MARKET</option>
+                                            <option value="counterparty1" selected>COUNTERPARTY1</option>
+                                            <option value="market" >MARKET</option>
                                             </select>
                                             <label for="manual-order-form-order-type1">Order Type</label>
                                         </div>
@@ -1040,6 +1041,7 @@ body.dark-mode.force-black {
                                             <select class="form-select" id="manual-order-form-order-type2" aria-label="Order Type Select">
                                             <option value="none" disabled>NA</option>
                                             <option value="limit" selected >LIMIT</option>
+                                            <option value="counterparty1">COUNTERPARTY1</option>
                                             <option value="market" >MARKET</option>
                                             </select>
                                             <label for="manual-order-form-order-type2">Order Type</label>
@@ -1060,6 +1062,7 @@ body.dark-mode.force-black {
                                                     <input type="number" id="manual-order-form-qty-input1" class="form-control" placeholder="Quantity" value="1" required>
                                                 </div>
 
+                                                
                                                 <div id="manual-order-form-price-field1" class="col form-label mx-3">
                                                     <label for="manual-order-form-price1" class="form-label">Price:</label>
 
@@ -1067,12 +1070,12 @@ body.dark-mode.force-black {
                                                     <input type="number" step=".01" id="manual-order-form-price1" class="form-control" placeholder="Price" value="0" required>
                                                     
                                                     <!-- Buttons for Price -->
-                                                    <div class="input-group-append">
+                                                    <!-- <div class="input-group-append">
                                                         <button id="add-1000" class="btn btn-sm ">+1000</button>
                                                         <button id="add-10000" class="btn btn-sm ">+10000</button>
                                                         <button id="add-30" class="btn btn-sm ">+30</button>
                                                         <button id="reset" class="btn btn-sm ">RESET</button>
-                                                    </div>
+                                                    </div> -->
                                                 </div>
                                               
                                                 <!-- Price Field 2 -->
@@ -1085,14 +1088,15 @@ body.dark-mode.force-black {
                                                     <label for="manual-order-form-price2" class="form-label">Price:</label>
 
                                                     <!-- Price Input Field -->
-                                                    <input type="number" step=".01" id="manual-order-form-price2" class="form-control" placeholder="Price" value="0" required>
-                                                    
+                                                    <input type="number" step=".01" id="manual-order-form-price2" class="form-control" placeholder="Price" value="0" onchange="formatNumber()" required>
+                                                    <!-- <input type="text" step=".01" id="manual-order-form-price2" class="form-control" placeholder="Price" value="0" onchange="formatNumber(this)" required> -->
+
                                                     <!-- Buttons for Price -->
-                                                    <div class="input-group-append">
+                                                    <!-- <div class="input-group-append">
                                                         <button id="add2-1000" class="btn btn-sm ">+1000</button>
                                                         <button id="add2-10000" class="btn btn-sm ">+10000</button>
                                                         <button id="add2-30" class="btn btn-sm ">+30</button>
-                                                    </div>
+                                                    </div> -->
                                                 </div>
 
                                             </div>
@@ -1104,9 +1108,13 @@ body.dark-mode.force-black {
                                    
                                       
 
-
+                                  
                                     <script>
                                        
+                                  
+
+
+
                                         // Default increment values
                                         let increments = [1000, 10000, 30];
                                     

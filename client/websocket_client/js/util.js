@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // POTENTIALLY ADD EXCHANGE TYPE AND MARKET TYPE TO DERIVE CURRENCIES PRESENT
 
       const currenciesSpot = ['BTC-USD', 'ETH-USD'];
-      const currenciesPerp = ['BTC-USDT-SWAP', 'ETH-USDT-SWAP'];
+      const currenciesPerp = ['BTC-USD-SWAP','BTC-USDT-SWAP', 'ETH-USDT-SWAP'];
 
       // Function to update currency dropdowns based on market type
       function populateCurrencies(selectId, marketType) {
@@ -113,7 +113,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderType2 = document.getElementById('manual-order-form-order-type2')
     let priceField1 = document.getElementById('manual-order-form-price-field1')
     let priceField2 = document.getElementById('manual-order-form-price-field2')
+
     if (orderType1.value == 'market'){
+        priceField1.classList.add('hidden');
+
+    }
+    else if (orderType1.value == 'counterparty1'){
         priceField1.classList.add('hidden');
 
     }
@@ -125,6 +130,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (orderType2.value == 'market'){
         priceField2.classList.add('hidden');
 
+    }
+    else if (orderType2.value == 'counterparty1'){
+      priceField2.classList.add('hidden');
     }
     else{
         priceField2.classList.remove('hidden');
@@ -143,6 +151,9 @@ document.addEventListener('DOMContentLoaded', function() {
             priceField1.classList.add('hidden');
 
         }
+        else if (orderType1.value == 'counterparty1'){
+          priceField1.classList.add('hidden');
+        }
         else{
             priceField1.classList.remove('hidden');
 
@@ -151,6 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (orderType2.value == 'market'){
             priceField2.classList.add('hidden');
 
+        }
+        else if (orderType2.value == 'counterparty1'){
+          priceField2.classList.add('hidden');
         }
         else{
             priceField2.classList.remove('hidden');
@@ -171,34 +185,34 @@ document.addEventListener('DOMContentLoaded', function() {
 // CHANGING OFFSET FIELD BASED ON EXCHANGE TYPE
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the tooltips
-    var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    // var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    //   return new bootstrap.Tooltip(tooltipTriggerEl);
+    // });
 
     
  
-    const orderType1 = document.getElementById('manual-order-form-order-type1')
-    const orderType2 = document.getElementById('manual-order-form-order-type2')
-    let priceField1 = document.getElementById('manual-order-form-price-field1')
-    let priceField2 = document.getElementById('manual-order-form-price-field2')
-    if (orderType1.value == 'market'){
-        priceField1.classList.add('hidden');
+    // const orderType1 = document.getElementById('manual-order-form-order-type1')
+    // const orderType2 = document.getElementById('manual-order-form-order-type2')
+    // let priceField1 = document.getElementById('manual-order-form-price-field1')
+    // let priceField2 = document.getElementById('manual-order-form-price-field2')
+    // if (orderType1.value == 'market'){
+    //     priceField1.classList.add('hidden');
 
-    }
-    else{
-        priceField1.classList.remove('hidden');
+    // }
+    // else{
+    //     priceField1.classList.remove('hidden');
 
-    }
+    // }
 
-    if (orderType2.value == 'market'){
-        priceField2.classList.add('hidden');
+    // if (orderType2.value == 'market'){
+    //     priceField2.classList.add('hidden');
 
-    }
-    else{
-        priceField2.classList.remove('hidden');
+    // }
+    // else{
+    //     priceField2.classList.remove('hidden');
 
-    }
+    // }
 
       // Select currency based on exchange and market type
       function updateOffsetField() {

@@ -80,13 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const px2 = document.getElementById('manual-order-form-price2').value
 
         const username = localStorage.getItem('username')
-        const redis_key = localStorage.getItem('key')
+        const redis_key = localStorage.getItem('key');
 
 
 
         // if (!offset1){
         // }
-        console.log(leadingExchange,laggingExchange,marketType1,marketType2,offset1,offset2,instrument1,instrument2,ordType1,ordType2,sz1,sz2,px1,px2)
+        // console.log(leadingExchange,laggingExchange,marketType1,marketType2,offset1,offset2,instrument1,instrument2,ordType1,ordType2,sz1,sz2,px1,px2)
 
         
         const orderData = {
@@ -96,15 +96,19 @@ document.addEventListener('DOMContentLoaded', () => {
             instrument2,
             px1,
             px2,
-            sz1,
-            sz2,
-            username,
             redis_key,
+            username,
             offset1,
             offset2,
-            
+
+            ordType1,
+            ordType2,
+            sz1,sz2,
+            marketType1,marketType2
+
         };
 
+        
         // leadingExchange:str
         // laggingExchange:str
         // instrument1:str
@@ -125,27 +129,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check the value of the submit button to determine which button was clicked
         if (submitButton) {
-            if (submitButton.value === "buy") {
-                console.log("Buy button clicked. Handling buy action...");
-                // dualOrders(orderData)
-                orderData.instrument = instrument1
-                orderData.ordType = ordType1
 
-                let fastapi_folder1 = orderData.leadingExchange + marketType1
-                const firstOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder1)}/${fastapi_folder1}/place_order`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(orderData)
-                });
+            if (submitButton.value === "buy") {
+                if (leadingExchange == laggingExchange){
+                    alert('SAME EXCHANGE')
+                }
+                else{
+                    console.log("Buy button clicked. Handling buy action...");
+                    let direction1 = 'buy'
+                    let direction2 = 'sell'
+                    dualOrders(orderData,token,direction1,direction2)
+                }
+               
+              
 
 
                 // Add your logic for the "Buy" action here
                 // Example: Perform AJAX or fetch for the buy action
             } else if (submitButton.value === "sell") {
-                console.log("Sell button clicked. Handling sell action...");
+                if (leadingExchange == laggingExchange){
+                    alert('SAME EXCHANGE')
+                }
+                else{
+
+                    console.log("Sell button clicked. Handling sell action...");
+                    let direction1 = 'sell'
+                    let direction2 = 'buy'
+                    dualOrders(orderData,token,direction1,direction2)
+                }
+
                 // Add your logic for the "Sell" action here
                 // Example: Perform AJAX or fetch for the sell action
             }
@@ -154,56 +166,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function dualOrders(orderData){
+    function dualOrders(orderData,token,direction1,direction2){
         console.log(orderData)
-        // required fields for order api
-        // leadingExchange:str
-        // laggingExchange:str
-        // instrument1:str
-        // instrument2:str
-        // instrument:str
-        // ordType:str
-        // px1:str
-        // px2:str
-        // px:str
-        // sz:int
-        // side:str
-        // username:str
-        // redis_key:str
-        // offset:str
-        // offset1:str
-        // offset2:str
-
-        console.log(orderData.leadingExchange)
-        fastapi_folder1 = orderData['leadingExchange'] + orderData['marketType1']
-        fastapi_folder2 =  orderData.laggingExchange +  orderData['marketType2']
-        const token = getAuthToken();
-    
-        // console.log(fastapi_folder1,fastapi_folder2)
-        // console.log(offset1,offset2)
-        // Set up first order request
         orderData.px = orderData.px1;
         orderData.instrument = orderData.instrument1;
         orderData.offset = orderData.offset1;
+        orderData.ordType = orderData.ordType1
+        orderData.sz = parseInt(orderData.sz1)
+        orderData.side = direction1
+
         console.log(orderData)
+        let fastapi_folder1 = orderData.leadingExchange + orderData.marketType1
+        let fastapi_folder2 = orderData.laggingExchange + orderData.marketType2
 
-        const firstOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder1)}/${fastapi_folder1}/place_order`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orderData)
-        });
+        if (orderData.leadingExchange != 'none'){
+            const firstOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder1)}/${fastapi_folder1}/place_order`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            });
+        }
+        if (orderData.laggingExchange != 'none'){
+            let orderData2 = orderData
+            orderData2.px = orderData.px2
+            orderData2.instrument = orderData.instrument2;
+            orderData2.offset = orderData.offset2;
+            orderData2.ordType = orderData.ordType2
+            console.log(orderData2)
+            orderData2.sz = parseInt(orderData.sz2)
+            orderData2.side = direction2
+            console.log(orderData2)
+            const secondOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder2)}/${fastapi_folder2}/place_order`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData2)
+            });
+        }
+        
 
-        // const secondOrderPromise = fetch(`http://${hostname}:${exchange_api_port_map.get(fastapi_folder1)}/${fastapi_folder1}/place_order`, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Authorization': `Bearer ${token}`,
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify(orderData)
-        // });
+        
 
 
     }
