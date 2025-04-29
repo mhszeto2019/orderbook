@@ -1068,9 +1068,10 @@ body.dark-mode.force-black {
                                                     
                                                     <!-- Buttons for Price -->
                                                     <div class="input-group-append">
-                                                        <button id="add-10" class="btn btn-sm ">+10</button>
-                                                        <button id="add-20" class="btn btn-sm ">+20</button>
+                                                        <button id="add-1000" class="btn btn-sm ">+1000</button>
+                                                        <button id="add-10000" class="btn btn-sm ">+10000</button>
                                                         <button id="add-30" class="btn btn-sm ">+30</button>
+                                                        <button id="reset" class="btn btn-sm ">RESET</button>
                                                     </div>
                                                 </div>
                                               
@@ -1088,8 +1089,8 @@ body.dark-mode.force-black {
                                                     
                                                     <!-- Buttons for Price -->
                                                     <div class="input-group-append">
-                                                        <button id="add2-10" class="btn btn-sm ">+10</button>
-                                                        <button id="add2-20" class="btn btn-sm ">+20</button>
+                                                        <button id="add2-1000" class="btn btn-sm ">+1000</button>
+                                                        <button id="add2-10000" class="btn btn-sm ">+10000</button>
                                                         <button id="add2-30" class="btn btn-sm ">+30</button>
                                                     </div>
                                                 </div>
@@ -1107,32 +1108,40 @@ body.dark-mode.force-black {
                                     <script>
                                        
                                         // Default increment values
-                                        let increments = [10, 20, 30];
+                                        let increments = [1000, 10000, 30];
                                     
                                         // Function to update the value in the input field
                                         function updateInputValue(increment,priceNumber) {
-                                          let inputField = document.getElementById(`manual-order-form-price${priceNumber}`);
-                                          inputField.value = parseFloat(inputField.value) + increment;
+                                            let inputField = document.getElementById(`manual-order-form-price${priceNumber}`);
+                                            inputField.value = parseFloat(inputField.value) + increment;
+                                        }
+                                        function resetInputValue(priceNumber) {
+                                            let inputField = document.getElementById(`manual-order-form-price${priceNumber}`);
+                                            inputField.value = 0
                                         }
                                     
                                         // Event listeners for the +10, +20, +30 buttons
-                                        document.getElementById("add-10").addEventListener("click", function() {
+                                        document.getElementById("add-1000").addEventListener("click", function() {
                                           updateInputValue(increments[0],1);
                                         });
                                     
-                                        document.getElementById("add-20").addEventListener("click", function() {
+                                        document.getElementById("add-10000").addEventListener("click", function() {
                                           updateInputValue(increments[1],1);
                                         });
                                     
                                         document.getElementById("add-30").addEventListener("click", function() {
                                           updateInputValue(increments[2],1);
                                         });
+                                        document.getElementById("reset").addEventListener("click", function() {
+                                            resetInputValue(1);
+                                        });
 
-                                        document.getElementById("add2-10").addEventListener("click", function() {
+
+                                        document.getElementById("add2-1000").addEventListener("click", function() {
                                           updateInputValue(increments[0],2);
                                         });
                                     
-                                        document.getElementById("add2-20").addEventListener("click", function() {
+                                        document.getElementById("add2-10000").addEventListener("click", function() {
                                           updateInputValue(increments[1],2);
                                         });
                                     
@@ -1141,22 +1150,22 @@ body.dark-mode.force-black {
                                         });
                                     
                                         // Event listener to set custom increment values for the buttons
-                                        document.getElementById("set-custom-increments").addEventListener("click", function() {
-                                          let customIncrement1 = parseInt(document.getElementById("increment-1").value);
-                                          let customIncrement2 = parseInt(document.getElementById("increment-2").value);
-                                          let customIncrement3 = parseInt(document.getElementById("increment-3").value);
+                                        // document.getElementById("set-custom-increments").addEventListener("click", function() {
+                                        //   let customIncrement1 = parseInt(document.getElementById("increment-1").value);
+                                        //   let customIncrement2 = parseInt(document.getElementById("increment-2").value);
+                                        //   let customIncrement3 = parseInt(document.getElementById("increment-3").value);
                                           
-                                          if (!isNaN(customIncrement1) && !isNaN(customIncrement2) && !isNaN(customIncrement3)) {
-                                            increments = [customIncrement1, customIncrement2, customIncrement3];
-                                            // Update the button labels with new custom increments
-                                            document.getElementById("add-10").innerText = `+${customIncrement1}`;
-                                            document.getElementById("add-20").innerText = `+${customIncrement2}`;
-                                            document.getElementById("add-30").innerText = `+${customIncrement3}`;
-                                            alert(`Button increments updated: +${customIncrement1}, +${customIncrement2}, +${customIncrement3}`);
-                                          } else {
-                                            alert("Please enter valid numbers for all increments.");
-                                          }
-                                        });
+                                        //   if (!isNaN(customIncrement1) && !isNaN(customIncrement2) && !isNaN(customIncrement3)) {
+                                        //     increments = [customIncrement1, customIncrement2, customIncrement3];
+                                        //     // Update the button labels with new custom increments
+                                        //     document.getElementById("add-1000").innerText = `+${customIncrement1}`;
+                                        //     document.getElementById("add-10000").innerText = `+${customIncrement2}`;
+                                        //     document.getElementById("add-30").innerText = `+${customIncrement3}`;
+                                        //     alert(`Button increments updated: +${customIncrement1}, +${customIncrement2}, +${customIncrement3}`);
+                                        //   } else {
+                                        //     alert("Please enter valid numbers for all increments.");
+                                        //   }
+                                        // });
 
                                       </script>
 
