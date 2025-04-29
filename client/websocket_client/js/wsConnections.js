@@ -149,12 +149,12 @@ let listenersAttached2 = false;
 function compareDataQueue(data){
     // console.log(data)
     json_data = JSON.parse(data)
-    console.log(json_data)
+    // console.log(json_data)
     symbol = json_data['symbol']
     exchange = json_data['exchange']
     // market_type = json
-    console.log(exchange)
-    console.log(lastData)
+    // console.log(exchange)
+    // console.log(lastData)
     if (!exchange){
         console.log("NO DATA FOUND")
     }
@@ -186,7 +186,7 @@ function connectToSocketIO1(socketUrl1) {
                      }
 
         socket1.send(JSON.stringify(input_data));
-        socket2.send("Client connected and ready");
+        // socket2.send("Client connected and ready");
     };
     
     socket1.onmessage = (event) => {
@@ -241,7 +241,6 @@ function connectToSocketIO1(socketUrl1) {
     }
 
     function sendMarketData1(forceReconnect = false) {
-    console.log('hello')
     const market_type_orderbook1 = document.getElementById('market-type-orderbook1').value;
     const currency_orderbook1 = document.getElementById('currency-input-orderbook1').value;
     const exchange_orderbook1 = document.getElementById('exchange1-input').value;

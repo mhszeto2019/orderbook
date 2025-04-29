@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNotificationCount();
     }
    
-    showToast('Refresh page','exchange','ts',null,400,'undefined')
+    // showToast('Refresh page','exchange','ts',null,400,'undefined')
     
     document.addEventListener('DOMContentLoaded', function () {
         
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function dualOrders(orderData,token,direction1,direction2){
+    async function dualOrders(orderData,token,direction1,direction2){
         console.log(orderData)
         orderData.px = orderData.px1;
         orderData.instrument = orderData.instrument1;

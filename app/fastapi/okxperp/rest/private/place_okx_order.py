@@ -2,6 +2,7 @@
 import json
 import os
 import configparser
+import traceback
 # Define the config file path in a cleaner way
 
 project_root = "/var/www/html"
@@ -139,6 +140,7 @@ async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
 ):
+
    json_dict = {}
 
    key_string = payload.redis_key
@@ -163,46 +165,71 @@ async def place_order(
    # Decrypt the credentials
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
- 
-   exchange = ccxt.okx({
-   'apiKey': api_creds_dict['okx_apikey'],
-   'secret': api_creds_dict['okx_secretkey'],
-   'password': api_creds_dict['okx_passphrase'],
-   })
-   
-   # # markets = exchange.load_markets()
-   # balance = exchange.fetch_positions(symbols=['BTC-USD'])
-   # print(payload)
-   symbol = payload.instrument
-   order_type = payload.ordType
-   print(order_type)
-   current_time= time.time()
-   if order_type == 'counterparty1':
-      # print('counterparty1')
-      # bbo = exchange.fetchOrderBook(symbol,1)
-      # print(bbo)
-      ticker = exchange.fetchTicker(symbol)
-      print(ticker)
-      bid = ticker['bid']
-      bid_sz = ticker['bidVolume']
-      ask = ticker['ask']
-      ask_sz = ticker['askVolume']
-
-      print(bid,bid_sz,ask,ask_sz)
-   print(time.time()- current_time)
-
-   
+   try:
+      exchange = ccxt.okx({
+      'apiKey': api_creds_dict['okx_apikey'],
+      'secret': api_creds_dict['okx_secretkey'],
+      'password': api_creds_dict['okx_passphrase'],
+      })
       
+      # # markets = exchange.load_markets()
+      # balance = exchange.fetch_positions(symbols=['BTC-USD'])
+      # print(payload)
+      symbol = payload.instrument
+      order_type = payload.ordType
+      side = payload.side
+      amount=payload.sz
+      price = payload.px
+      params = {'offset': payload.offset, 'lever_rate': 5}
 
-   amount=payload.sz
-   side = payload.side
-   price = payload.px
-   # order_type = 'limit'
-   # price = '98000'
-   params = {'offset': payload.offset, 'lever_rate': 5}
-   order = exchange.create_order(symbol, order_type, side, amount, price, params)
-   return order
+      if order_type == 'counterparty1':
+         
+         ticker = exchange.fetchTicker(symbol)
+         bid = ticker['bid']
+         # bid_sz = ticker['bidVolume']
+         ask = ticker['ask']
+         # ask_sz = ticker['askVolume']
+         order_type = 'limit'
 
+         # if buy , we buy ask price
+         if side == 'buy': 
+            price = ask
+         else:
+            price = bid
+      elif order_type == 'counterparty5':
+         ticker = exchange.fetchOrderBook(symbol,5)
+         bid = ticker['bids'][0][0]
+         # bid_sz = ticker['bidVolume']
+         ask = ticker['asks'][0][0]
+         # ask_sz = ticker['askVolume']
+         order_type = 'limit'
+
+         # if buy , we buy ask price
+         if side == 'buy': 
+            price = ask
+         else:
+            price = bid
+      elif order_type == 'queue1':
+         ticker = exchange.fetchTicker(symbol)
+         bid = ticker['bid']
+         # bid_sz = ticker['bidVolume']
+         ask = ticker['ask']
+         # ask_sz = ticker['askVolume']
+         order_type = 'post_only'
+
+         # if buy , we buy ask price
+         if side == 'buy': 
+            price = bid
+         else:
+            price = ask
+
+
+
+      order = exchange.create_order(symbol, order_type, side, amount, price, params)
+      logger.info(order)
+      return order
+   except:
+      logger.error(traceback.format_exc())
 
 
 class CancelByIdTradeRequest(BaseModel):

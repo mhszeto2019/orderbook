@@ -150,20 +150,43 @@ async def place_order(
       },
    })
 
-   # # markets = exchange.load_markets()
-   # balance = exchange.fetch_positions(symbols=['BTC-USD'])
-   print(payload)
-
    symbol = payload.instrument.replace('-SWAP','')
    order_type = payload.ordType
-   if order_type == 'market':
-      order_type = 'optimal_5'
+   
    amount=payload.sz
    side = payload.side
    price = payload.px
    # order_type = 'limit'
    # price = '80000'
    params = {'offset': payload.offset, 'lever_rate': 5}
+
+   if order_type == 'counterparty1':
+   
+      order_type = 'opponent'
+
+
+   elif order_type == 'counterparty5':
+     
+      order_type = 'optimal_5'
+
+   elif order_type == 'queue1':
+      print('queu1')
+      ticker = exchange.fetchTicker(symbol)
+      bid = ticker['bid']
+      # bid_sz = ticker['bidVolume']
+      ask = ticker['ask']
+      # ask_sz = ticker['askVolume']
+      order_type = 'post_only'
+
+      # if buy , we buy ask price
+      if side == 'buy': 
+         price = bid
+      else:
+         price = ask
+
+   elif order_type == 'market':
+      order_type = 'optimal_20'
+
    order = exchange.create_order(symbol, order_type, side, amount, price, params)
    # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
    return order

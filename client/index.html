@@ -11,7 +11,9 @@
     <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAA..." />
 </head>
 
-<script src="./websocket_client/js/htx_okx_spread_order.js"></script>
+<!-- <script src="./websocket_client/js/htx_okx_spread_order.js"></script> -->
+<script src="./websocket_client/js/manual_spread_order.js"></script>
+
 <link href="./websocket_client/css/statusbadge.css" rel="stylesheet">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -927,7 +929,7 @@ body.dark-mode.force-black {
                         <button class="btn nav-link active" id="pills-manual-order-tab" data-bs-toggle="tab" data-bs-target="#pills-manual-order" type="button" role="tab" >Manual Order</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                        <button class="btn nav-link" id="pills-algo-order-tab" data-bs-toggle="tab" data-bs-target="#pills-algo-order" type="button" role="tab" >Algo Order</button>
+                        <button class="btn nav-link" id="pills-algo-order-tab" data-bs-toggle="tab" data-bs-target="#pills-algo-order" type="button" role="tab" disabled>Algo Order</button>
                         </li>
                     </ul>
                     
@@ -1026,22 +1028,49 @@ body.dark-mode.force-black {
                                             
                                         </div>
                                     </div>
+
+                                    <div class="mb-2">
+                                        <a class="btn btn-link p-0" data-bs-toggle="collapse" href="#orderTypeInfo" role="button" aria-expanded="false" aria-controls="orderTypeInfo">
+                                          What do these order types mean?
+                                        </a>
+                                        <div class="collapse mt-2" id="orderTypeInfo">
+                                          <div class="card card-body "style=" font-family: 'Lucida Console', Courier, monospace;">
+                                            <strong>LIMIT:</strong> Places an order at a specific price or better. Executes only if the market reaches your price.<br>
+                                            <strong>MARKET:</strong> Fills immediately at the best current market price.<br>
+                                            <strong>COUNTERPARTY-1:</strong> Sets your order price at the best available opposite market price. For a buy order, this would be the lowest current ask price. For a sell order, it would be the highest bid price.<br>
+                                            <strong>COUNTERPARTY-5:</strong> Sets your order price at the fifth best available opposite market price. For a buy order, it would be the fifth lowest ask price. For a sell order, it would be the fifth highest bid price.<br>
+                                            <strong>QUEUE-1:</strong> Sets a post-only order with order price at the best price on the same side of the market as your order. For a buy order, this would be the highest current bid price. For a sell order, it would be the lowest ask price.
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      
+
                                     <div class="row g-2 mb-2 ">
+                                    
                                         <div class="col form-floating">
+                                            
                                             <select class="form-select" id="manual-order-form-order-type1" aria-label="Order Type Select" >
                                             <option value="none" disabled>NA</option>
                                             <option value="limit">LIMIT</option>
-                                            <option value="counterparty1" selected>COUNTERPARTY1</option>
+                                            <option value="counterparty1" >COUNTERPARTY-1</option>
+                                            <option value="counterparty5" >COUNTERPARTY-5</option>
+                                            <option value="queue1" selected>QUEUE-1</option>
+
                                             <option value="market" >MARKET</option>
                                             </select>
                                             <label for="manual-order-form-order-type1">Order Type</label>
+                                            
                                         </div>
 
                                         <div class="col form-floating mx-3">
                                             <select class="form-select" id="manual-order-form-order-type2" aria-label="Order Type Select">
                                             <option value="none" disabled>NA</option>
-                                            <option value="limit" selected >LIMIT</option>
-                                            <option value="counterparty1">COUNTERPARTY1</option>
+                                            <option value="limit"  >LIMIT</option>
+                                            <option value="counterparty1">COUNTERPARTY-1</option>
+                                            <option value="counterparty5" >COUNTERPARTY-5</option>
+                                            <option value="queue1" selected>QUEUE-1</option>
+
                                             <option value="market" >MARKET</option>
                                             </select>
                                             <label for="manual-order-form-order-type2">Order Type</label>

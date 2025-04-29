@@ -114,30 +114,32 @@ document.addEventListener('DOMContentLoaded', function() {
     let priceField1 = document.getElementById('manual-order-form-price-field1')
     let priceField2 = document.getElementById('manual-order-form-price-field2')
 
-    if (orderType1.value == 'market'){
-        priceField1.classList.add('hidden');
+    const hiddenOrderTypes = ['market', 'counterparty1', 'counterparty5','queue1'];
 
-    }
-    else if (orderType1.value == 'counterparty1'){
+    if (hiddenOrderTypes.includes(orderType1.value)) {
         priceField1.classList.add('hidden');
-
-    }
-    else{
+    } else {
         priceField1.classList.remove('hidden');
-
     }
 
-    if (orderType2.value == 'market'){
-        priceField2.classList.add('hidden');
-
-    }
-    else if (orderType2.value == 'counterparty1'){
+    if (hiddenOrderTypes.includes(orderType2.value)) {
       priceField2.classList.add('hidden');
-    }
-    else{
+    } else {
         priceField2.classList.remove('hidden');
-
     }
+
+
+    // if (orderType2.value == 'market'){
+    //     priceField2.classList.add('hidden');
+
+    // }
+    // else if (orderType2.value == 'counterparty1'){
+    //   priceField2.classList.add('hidden');
+    // }
+    // else{
+    //     priceField2.classList.remove('hidden');
+
+    // }
 
     // Select currency based on exchange and market type
     function updatePriceField() {
@@ -147,29 +149,30 @@ document.addEventListener('DOMContentLoaded', function() {
         let priceField2 = document.getElementById('manual-order-form-price-field2')
         console.log(orderType1.value)
 
-        if (orderType1.value == 'market'){
+        const hiddenOrderTypes = ['market', 'counterparty1', 'counterparty5','queue1'];
+
+        if (hiddenOrderTypes.includes(orderType1.value)) {
             priceField1.classList.add('hidden');
-
-        }
-        else if (orderType1.value == 'counterparty1'){
-          priceField1.classList.add('hidden');
-        }
-        else{
+        } else {
             priceField1.classList.remove('hidden');
-
         }
-
-        if (orderType2.value == 'market'){
-            priceField2.classList.add('hidden');
-
-        }
-        else if (orderType2.value == 'counterparty1'){
+        if (hiddenOrderTypes.includes(orderType2.value)) {
           priceField2.classList.add('hidden');
-        }
-        else{
+        } else {
             priceField2.classList.remove('hidden');
-
         }
+
+        // if (orderType2.value == 'market'){
+        //     priceField2.classList.add('hidden');
+
+        // }
+        // else if (orderType2.value == 'counterparty1'){
+        //   priceField2.classList.add('hidden');
+        // }
+        // else{
+        //     priceField2.classList.remove('hidden');
+
+        // }
         
 
     }
