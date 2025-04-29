@@ -132,7 +132,7 @@ class TradeRequest(BaseModel):
    offset2:str
 
 from fastapi.exceptions import RequestValidationError
-
+import time
 @app.post("/okxperp/place_order")
 @app.exception_handler(RequestValidationError)
 async def place_order(
@@ -176,7 +176,23 @@ async def place_order(
    symbol = payload.instrument
    order_type = payload.ordType
    print(order_type)
-   if order_type 
+   current_time= time.time()
+   if order_type == 'counterparty1':
+      # print('counterparty1')
+      # bbo = exchange.fetchOrderBook(symbol,1)
+      # print(bbo)
+      ticker = exchange.fetchTicker(symbol)
+      print(ticker)
+      bid = ticker['bid']
+      bid_sz = ticker['bidVolume']
+      ask = ticker['ask']
+      ask_sz = ticker['askVolume']
+
+      print(bid,bid_sz,ask,ask_sz)
+   print(time.time()- current_time)
+
+   
+      
 
    amount=payload.sz
    side = payload.side
