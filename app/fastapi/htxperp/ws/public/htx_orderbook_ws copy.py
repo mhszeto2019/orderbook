@@ -106,19 +106,12 @@ class OrderBookStreamer:
         self.running = False
         self.symbol = None
         self.websocket_client = websocket_client
-        self.contract_formatter = {
-            "deribit":100,
-            "okx":1,
-            "htx":1,
-            "binance":1
-        }
+    
 
     async def start(self, symbol="BTC-USD-SWAP"):
         exchange_class = self.exchange_class.lower()  # e.g., "okx", "binance", etc.
         # Get the exchange class dynamically
-
         exchange_class = getattr(ccxt.pro, exchange_class)
-        print(exchange_class)
         # Instantiate the exchange
         self.exchange = exchange_class({
             'options': {
@@ -133,24 +126,17 @@ class OrderBookStreamer:
         try:
             while self.running:
                 # Example fetch
-                if self.exchange_class == 'htx':
-                    conditional_symbol = symbol.replace("-SWAP", "")
-                elif self.exchange_class == 'deribit':
-                    conditional_symbol = symbol.replace("USD-SWAP", "PERPETUAL")
-                else:
-                    conditional_symbol = symbol
-
+                conditional_symbol = symbol.replace("-SWAP","") if self.exchange_class in ['htx'] else symbol
+                
                 orderbook = await self.exchange.watch_order_book(conditional_symbol)
-                # self.normalize_contract_size(self.exchange_class,orderbook["bids"][:10])
-                # print(orderbook)
                 # print(orderbook["bids"][0],orderbook['asks'][0])
                 await broadcast({
                     "symbol": self.symbol,
-                    "bids": self.normalize_contract_size(self.exchange_class,orderbook["bids"][:10]),
-                    "asks": self.normalize_contract_size(self.exchange_class,orderbook["asks"][:10]),
+                    "bids": orderbook["bids"][:10],
+                    "asks": orderbook["asks"][:10],
                     "timestamp": orderbook["timestamp"],
-                    "best_bid":self.normalize_contract_size(self.exchange_class,[orderbook['bids'][0]]),
-                    "best_ask":self.normalize_contract_size(self.exchange_class,[orderbook['asks'][0]]),
+                    "best_bid":orderbook['bids'][0],
+                    "best_ask":orderbook['asks'][0],
                     "exchange":self.exchange_name,
                     # 'market_type':self.market_type
                 },self.websocket_client)
@@ -175,17 +161,6 @@ class OrderBookStreamer:
         # await self.stop()
         # await self.start(new_symbol)
         self.symbol=new_symbol
-
-    def normalize_contract_size(self,exchange,book_arr):
-        if exchange == 'deribit':
-            new_arr = []
-            divisor = self.contract_formatter[exchange]
-            for px,sz,_ in book_arr:
-                new_arr.append([px,sz/divisor,_])
-            # print(new_arr)
-            return new_arr
-        else:
-            return book_arr
 
 
 @app.websocket("/ws")
@@ -327,8 +302,6 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         if streamer:
             await streamer.stop()
-
-
 
 
 

@@ -35,6 +35,14 @@ async function populateOpenOrders() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(request_data)
+        }),
+        fetch(`http://${hostname}:6062/deribitperp/get_all_open_orders`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
         })
     ]);
 
@@ -51,9 +59,6 @@ async function populateOpenOrders() {
                     allOpenOrders.push(openOrder)
                 }
             )
-
-            
-            
             
         } else {
             console.error('Error fetching OKX orders:', okxResponse.statusText);
@@ -70,10 +75,11 @@ async function populateOpenOrders() {
                 }
             )
             
-            
         } else {
             console.error('Error fetching OKX orders:', okxResponse.statusText);
         }
+
+        
 
         // After both responses are handled, populate the table with all orders
         populateOpenOpenOrdersTable(allOpenOrders);

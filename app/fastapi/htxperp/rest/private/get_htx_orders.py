@@ -1,6 +1,8 @@
 import json
 import os
 import configparser
+import traceback
+
 # Define the config file path in a cleaner way
 
 project_root = "/var/www/html"

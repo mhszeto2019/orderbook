@@ -34,6 +34,7 @@ uvicorn app.fastapi.htxperp.rest.public.get_htx_last_trades:app --port 6101 --ho
 uvicorn app.fastapi.okxperp.rest.public.get_okx_last_trades:app --port 6100 --host 0.0.0.0 --reload
 
 uvicorn app.fastapi.htxperp.ws.public.htx_orderbook_ws:app --port 5091 --host 0.0.0.0 --reload
+
 uvicorn app.fastapi.okxperp.rest.private.get_okx_positions:app --port 5070 --host 0.0.0.0 --reload
 uvicorn app.fastapi.htxperp.rest.private.get_htx_positions:app --port 5071 --host 0.0.0.0 --reload
 
@@ -47,5 +48,6 @@ uvicorn app.fastapi.htxperp.rest.private.place_htx_order:app --port 5081 --host 
 
 uvicorn app.fastapi.deribitperp.rest.public.get_deribit_funding_rate:app --port 5003
 uvicorn app.fastapi.deribitperp.rest.public.get_deribit_last_trades:app --port 6102
+
 uvicorn app.fastapi.deribitperp.rest.private.get_deribit_positions:app --port 5072 --host 0.0.0.0 --reload
 uvicorn app.fastapi.deribitperp.rest.private.get_deribit_orders:app --port 6062 --host 0.0.0.0 --reload

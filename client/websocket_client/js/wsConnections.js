@@ -7,7 +7,8 @@ const wsConnections = {};
 const lastData = {
     'okxperp': {},
     'htxperp': {},
-    'binanceperp': {}
+    'binanceperp': {},
+    'deribitperp':{}
 };
 
 
@@ -58,17 +59,7 @@ function compareData(newData) {
     // const currentData = newData;
     const previousDataEx1 = lastData[exchange1];
     const previousDataEx2 = lastData[exchange2];
-    // if (previousDataEx1[ccy1] && previousDataEx2[ccy2] ) {
-    //     console.log(previousDataEx1[ccy1]['best_bid'])
-    //     console.log(previousDataEx2[ccy2]['best_ask'])
-    // }
-    // console.log(ccy2)
-    // console.log(previousDataEx2[ccy2])
-    // console.log(previousDataEx1)
-    // console.log(ccy1,ccy2)
-    // console.log(lastData[exchange1][ccy1]['best_bid'][0])
 
-    // console.log(previousDataEx1)
     // If both previous data exist, compare them
     let bestBidEx1, bestBidSzEx1, bestAskEx1, bestAskSzEx1;
     let bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2;
@@ -122,6 +113,8 @@ function compareData(newData) {
 const wsServers = {
     'okx':{'perp':`ws://${hostname}:5091/ws`,'spot':''},
     'htx':{'perp':`ws://${hostname}:5091/ws2`,'spot':''},
+    'deribit':{'perp':`ws://${hostname}:5091/ws3`,'spot':''},
+
     
 
 };
@@ -273,9 +266,6 @@ function connectToSocketIO1(socketUrl1) {
         console.log("Socket manually disconnected");
     }
     }
-
-
-
 
 
 
