@@ -1,12 +1,14 @@
 import json
 import os
 import configparser
-import traceback
 # Define the config file path in a cleaner way
 
 project_root = "/var/www/html"
+print(project_root)
 base_directory = os.path.abspath(os.path.join(project_root,'./orderbook'))  # 2 levels up from script
+print(base_directory)
 config_directory = os.path.join(base_directory, 'config_folder') 
+print(config_directory)
 config_file_path = os.path.join(os.path.dirname(__file__), config_directory, 'credentials.ini')
 # Ensure the config file exists before trying to load it
 if not os.path.exists(config_file_path):
@@ -79,8 +81,24 @@ from cryptography.fernet import Fernet
 
 # Define the Redis connection
 r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+
 print('CCXT Version:', ccxt.__version__)
 
+exchange = ccxt.huobi({
+   'apiKey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746',
+   'secret': 'c5a5a686-b39d1d16-79864b22-f3e72',
+   'options': {
+       'defaultType': 'swap',
+   },
+})
+
+
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
 # FastAPI app instance
 app = FastAPI()
 app.add_middleware(
@@ -92,17 +110,35 @@ app.add_middleware(
 )
 
 
-class GetOrdersRequest(BaseModel):
+class TradeRequest(BaseModel):
    
- 
+   leadingExchange:str
+   laggingExchange:str
+   instrument1:str
+   instrument2:str
+   instrument:str
+   ordType:str
+   px1:str
+   px2:str
+   px:str
+   sz:int
+   side:str
    username:str
    redis_key:str
-  
+   offset:str
+   offset1:str
+   offset2:str
    
 
-@app.post("/okxperp/get_all_open_orders")
-async def get_all_open_orders(
-   payload: GetOrdersRequest,
+import ccxt.pro as ccxtpro
+from asyncio import run
+
+
+
+
+@app.post("/htxperp/place_order")
+async def place_order(
+   payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
 ):
    json_dict = {}
@@ -130,45 +166,65 @@ async def get_all_open_orders(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
 
-   try:
-      exchange = ccxt.okx({
-      'apiKey': api_creds_dict['okx_apikey'],
-      'secret': api_creds_dict['okx_secretkey'],
-      'password': api_creds_dict['okx_passphrase'],
-      })
+   exchange = ccxt.huobi({
+      'apiKey': api_creds_dict['htx_apikey'],
+      'secret': api_creds_dict['htx_secretkey'],
+      'options': {
+         'defaultType': 'swap',
+      },
+   })
 
 
-      # # markets = exchange.load_markets()
-      open_orders = exchange.fetchOpenOrders()
-      if len(open_orders) == 0:
-         return []
-      json_data = open_orders[0]
-      
-      json_response = {}
-      json_response['exchange'] = 'okxperp'
-      json_response['instrument_id'] = json_data['info']['instId']
-      json_response['leverage'] = json_data['info']['lever']
-      json_response['side'] = json_data['info']['side']
-      json_response['offset'] = 'hedged'
-      
-      json_response['price'] = json_data['price']
-      json_response['fill_size'] = json_data['info']['fillSz']
-      json_response['order_type'] = json_data['info']['ordType']
-      json_response['order_type_cancellation'] = ''
-
-      json_response['order_id'] = json_data['info']['ordId']
-      json_response['order_time'] = json_data['info']['uTime']
-      json_response['amount'] = json_data['amount']
-
-      json_response['ts'] = json_data['timestamp']
-      json_response['attachAlgoOrds'] = json_data['info']['attachAlgoOrds']
-
-      print(json_response)
-      
-      # [{'info': {'accFillSz': '0', 'algoClOrdId': '', 'algoId': '', 'attachAlgoClOrdId': '', 'attachAlgoOrds': [], 'avgPx': '', 'cTime': '1745572440071', 'cancelSource': '', 'cancelSourceReason': '', 'category': 'normal', 'ccy': '', 'clOrdId': '', 'fee': '0', 'feeCcy': 'BTC', 'fillPx': '', 'fillSz': '0', 'fillTime': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'isTpLimit': 'false', 'lever': '5', 'linkedAlgoOrd': {'algoId': ''}, 'ordId': '2451823690830405632', 'ordType': 'limit', 'pnl': '0', 'posSide': 'net', 'px': '80000', 'pxType': '', 'pxUsd': '', 'pxVol': '', 'quickMgnType': '', 'rebate': '0', 'rebateCcy': 'BTC', 'reduceOnly': 'false', 'side': 'buy', 'slOrdPx': '', 'slTriggerPx': '', 'slTriggerPxType': '', 'source': '', 'state': 'live', 'stpId': '', 'stpMode': 'cancel_maker', 'sz': '1', 'tag': '', 'tdMode': 'cross', 'tgtCcy': '', 'tpOrdPx': '', 'tpTriggerPx': '', 'tpTriggerPxType': '', 'tradeId': '', 'uTime': '1745572440071'}, 'id': '2451823690830405632', 'clientOrderId': None, 'timestamp': 1745572440071, 'datetime': '2025-04-25T09:14:00.071Z', 'lastTradeTimestamp': None, 'lastUpdateTimestamp': 1745572440071, 'symbol': 'BTC/USD:BTC', 'type': 'limit', 'timeInForce': None, 'postOnly': None, 'side': 'buy', 'price': 80000.0, 'stopLossPrice': None, 'takeProfitPrice': None, 'triggerPrice': None, 'average': None, 'cost': 0.0, 'amount': 1.0, 'filled': 0.0, 'remaining': 1.0, 'status': 'open', 'fee': {'cost': 0.0, 'currency': 'BTC'}, 'trades': [], 'reduceOnly': False, 'fees': [{'cost': 0.0, 'currency': 'BTC'}], 'stopPrice': None}]
 
 
-      return [json_response]
+   # # markets = exchange.load_markets()
+   # balance = exchange.fetch_positions(symbols=['BTC-USD'])
+   print(balance)
+   # print(payload)
 
-   except:
-      logger.info(traceback.format_exc())
+   # symbol = payload.instrument.replace('-SWAP','')
+   # order_type = payload.ordType
+   # if order_type == 'market':
+   #    order_type = 'optimal_5'
+   # amount=payload.sz
+   # side = payload.side
+   # price = payload.px
+   # order_type = 'limit'
+   # price = '80000'
+   # params = {'offset': payload.offset, 'lever_rate': 5}
+   # order = exchange.create_order(symbol, order_type, side, amount, price, params)
+   # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
+   return balance
+
+
+
+# symbol = 'BTC-USD'
+# order_type = 'limit'
+# side = 'buy'
+# offset = 'open'
+# leverage = 5
+# amount = 1
+# price = 80000
+
+# params = {'offset': offset, 'lever_rate': leverage}
+
+# try:
+#    # fetching current balance
+   
+#    # balance = exchange.fetch_positions(symbols=['BTC-USD'])
+#    # print(balance)
+#    for i in range(5):
+#          # placing an order
+#       order = exchange.create_order(symbol, order_type, side, amount, price, params)
+#       print(order)
+
+#    # # listing open orders
+#    # open_orders = exchange.fetch_open_orders(symbol)
+#    # print(open_orders)
+
+#       # canceling an order
+#       cancelOrder = exchange.cancel_order(order['id'], symbol)
+#       print(cancelOrder)
+
+# except Exception as e:
+#    print(type(e).__name__, str(e))

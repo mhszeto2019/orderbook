@@ -1,6 +1,7 @@
 import json
 import os
 import configparser
+import traceback
 # Define the config file path in a cleaner way
 
 project_root = "/var/www/html"
@@ -105,7 +106,7 @@ app.add_middleware(
 # Define a global exchange object to be used across multiple requests if needed
 exchange = None
 
-# # Define a function to fetch the order book continuously using ccxt.pro
+# Define a function to fetch the order book continuously using ccxt.pro
 # async def fetch_funding_rate():
 #     global exchange
 #     exchange = ccxtpro.okx({'newUpdates': False})
@@ -120,7 +121,7 @@ exchange = None
 #             break
 
 
-@app.get("/okxperp/")
+@app.get("/deribitperp/")
 async def read_root():
     return {"message": "Welcome to the FastAPI with ccxt integration!"}
 
@@ -130,7 +131,7 @@ class FundingRateRequest(BaseModel):
     redis_key: str
     ccy: str
 
-@app.post("/okxperp/funding_rate")
+@app.post("/deribitperp/funding_rate")
 async def get_funding_rate(
     payload: FundingRateRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -161,15 +162,16 @@ async def get_funding_rate(
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
 
-        exchange = ccxtpro.okx({'newUpdates': False})
-        print(payload.ccy)
-        result = await exchange.fetch_funding_rate(payload.ccy)
-        print(result)
+        exchange = ccxtpro.deribit({'newUpdates': False})
+        ccy = payload.ccy
+        ccy_str = ccy.replace('-SWAP','')
+        
+        result = await exchange.fetch_funding_rate(ccy_str)
         # {'info': {'formulaType': 'noRate', 'fundingRate': '0.0001033844565710', 'fundingTime': '1745222400000', 'impactValue': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'interestRate': '', 'maxFundingRate': '0.00375', 'method': 'current_period', 'minFundingRate': '-0.00375', 'nextFundingRate': '', 'nextFundingTime': '1745251200000', 'premium': '0.0002413359809591', 'settFundingRate': '0.0000278737528630', 'settState': 'settled', 'ts': '1745210420272'}, 'symbol': 'BTC/USD:BTC', 'markPrice': None, 'indexPrice': None, 'interestRate': 0.0, 'estimatedSettlePrice': None, 'timestamp': None, 'datetime': None, 'fundingRate': 0.000103384456571, 'fundingTimestamp': 1745222400000, 'fundingDatetime': '2025-04-21T08:00:00.000Z', 'nextFundingRate': None, 'nextFundingTimestamp': 1745251200000, 'nextFundingDatetime': '2025-04-21T16:00:00.000Z', 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': None}
-        json_dict['funding_rate'] =result['info']['fundingRate']
+        json_dict['funding_rate'] =result['info']['funding_rate']
         json_dict['ts'] = result['fundingTimestamp']
         json_dict['ccy'] = payload.ccy
-        json_dict['exchange'] = 'okxperp'
+        json_dict['exchange'] = 'deribitperp'
 
         logger.info(f"{payload.ccy}|{json_dict}")
         await exchange.close()
@@ -181,6 +183,7 @@ async def get_funding_rate(
 
     except Exception as e:
         print(f"Error in get_funding_rate: {e}")
+        logger.error(traceback.format_exc())
         await exchange.close()
 
         raise HTTPException(status_code=500, detail=str(e))

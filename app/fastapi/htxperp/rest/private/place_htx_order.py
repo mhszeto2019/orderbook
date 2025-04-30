@@ -198,7 +198,7 @@ async def place_order(
       # huobi {"status":"error","err_code":1047,"err_msg":"Insufficient margin available.","ts":1745917192657}
 
 # okx {"code":"1","data":[{"clOrdId":"e847386590ce4dBCcc699096ccdc169c","ordId":"","sCode":"51008","sMsg":"Order failed. Insufficient BTC margin in account ","tag":"e847386590ce4dBC","ts":"1745917206076"}],"inTime":"1745917206076432","msg":"All operations failed","outTime":"1745917206077022"}
-      return {'error':f'{e}'}
+      return {"error":f"{e}"}
 
 
 

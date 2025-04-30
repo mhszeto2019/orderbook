@@ -1,4 +1,3 @@
-
 import json
 import os
 import configparser
@@ -83,25 +82,6 @@ r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 print('CCXT Version:', ccxt.__version__)
 
-# exchange = ccxt.huobi({
-#    'apiKey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746',
-#    'secret': 'c5a5a686-b39d1d16-79864b22-f3e72',
-#    'options': {
-#        'defaultType': 'swap',
-#    },
-# })
-# exchange = ccxt.okx({
-#    'apiKey': 'a0de3940-5679-4939-957a-51c87a8502d9',
-#    'secret': 'FA44BCAAC3788C2AB4AFC77047930792',
-#    'password': 'falconstead@Trading2024',
-# })
-
-origins = [
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
-    "http://localhost",
-    "http://localhost:8080",
-]
 # FastAPI app instance
 app = FastAPI()
 app.add_middleware(
@@ -131,16 +111,13 @@ class TradeRequest(BaseModel):
    offset:str
    offset1:str
    offset2:str
+   
 
-from fastapi.exceptions import RequestValidationError
-import time
-@app.post("/okxperp/place_order")
-@app.exception_handler(RequestValidationError)
+@app.post("/htxperp/place_order")
 async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
 ):
-
    json_dict = {}
 
    key_string = payload.redis_key
@@ -166,50 +143,35 @@ async def place_order(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
    try:
-      exchange = ccxt.okx({
-      'apiKey': api_creds_dict['okx_apikey'],
-      'secret': api_creds_dict['okx_secretkey'],
-      'password': api_creds_dict['okx_passphrase'],
+      exchange = ccxt.huobi({
+         'apiKey': api_creds_dict['htx_apikey'],
+         'secret': api_creds_dict['htx_secretkey'],
+         'options': {
+            'defaultType': 'swap',
+         },
       })
-      
-      # # markets = exchange.load_markets()
-      # balance = exchange.fetch_positions(symbols=['BTC-USD'])
-      # print(payload)
-      symbol = payload.instrument
+
+      symbol = payload.instrument.replace('-SWAP','')
       order_type = payload.ordType
-      side = payload.side
+      
       amount=payload.sz
+      side = payload.side
       price = payload.px
+      # order_type = 'limit'
+      # price = '80000'
       params = {'offset': payload.offset, 'lever_rate': 5}
 
       if order_type == 'counterparty1':
-         
-         ticker = exchange.fetchTicker(symbol)
-         bid = ticker['bid']
-         # bid_sz = ticker['bidVolume']
-         ask = ticker['ask']
-         # ask_sz = ticker['askVolume']
-         order_type = 'limit'
+      
+         order_type = 'opponent'
 
-         # if buy , we buy ask price
-         if side == 'buy': 
-            price = ask
-         else:
-            price = bid
+
       elif order_type == 'counterparty5':
-         ticker = exchange.fetchOrderBook(symbol,5)
-         bid = ticker['bids'][0][0]
-         # bid_sz = ticker['bidVolume']
-         ask = ticker['asks'][0][0]
-         # ask_sz = ticker['askVolume']
-         order_type = 'limit'
+      
+         order_type = 'optimal_5'
 
-         # if buy , we buy ask price
-         if side == 'buy': 
-            price = ask
-         else:
-            price = bid
       elif order_type == 'queue1':
+         print('queu1')
          ticker = exchange.fetchTicker(symbol)
          bid = ticker['bid']
          # bid_sz = ticker['bidVolume']
@@ -223,15 +185,23 @@ async def place_order(
          else:
             price = ask
 
-
+      elif order_type == 'market':
+         order_type = 'optimal_20'
 
       order = exchange.create_order(symbol, order_type, side, amount, price, params)
-      logger.info(order)
+      # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
       return order
+
    except Exception as e:
       logger.error(traceback.format_exc())
-      
-      return {'error':f'{e}'}
+
+      # huobi {"status":"error","err_code":1047,"err_msg":"Insufficient margin available.","ts":1745917192657}
+
+# okx {"code":"1","data":[{"clOrdId":"e847386590ce4dBCcc699096ccdc169c","ordId":"","sCode":"51008","sMsg":"Order failed. Insufficient BTC margin in account ","tag":"e847386590ce4dBC","ts":"1745917206076"}],"inTime":"1745917206076432","msg":"All operations failed","outTime":"1745917206077022"}
+      return {"error":f"{e}"}
+
+
+
 
 
 class CancelByIdTradeRequest(BaseModel):
@@ -241,7 +211,7 @@ class CancelByIdTradeRequest(BaseModel):
    instrument_id:str
  
 
-@app.post("/okxperp/cancel_order_by_id")
+@app.post("/htxperp/cancel_order_by_id")
 async def cancel_order_by_id(
    payload: CancelByIdTradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -271,15 +241,51 @@ async def cancel_order_by_id(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
  
-   exchange = ccxt.okx({
-   'apiKey': api_creds_dict['okx_apikey'],
-   'secret': api_creds_dict['okx_secretkey'],
-   'password': api_creds_dict['okx_passphrase'],
+   exchange = ccxt.huobi({
+      'apiKey': api_creds_dict['htx_apikey'],
+      'secret': api_creds_dict['htx_secretkey'],
+      'options': {
+         'defaultType': 'swap',
+      },
    })
 
    print(payload.order_id)
-   canceled_order = exchange.cancelOrder(payload.order_id,payload.instrument_id)
+   instrument_id = payload.instrument_id
+   if "SWAP" in instrument_id:
+      instrument_id = instrument_id.replace('-SWAP','')
+   canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
 
    return canceled_order
 
 
+
+# symbol = 'BTC-USD'
+# order_type = 'limit'
+# side = 'buy'
+# offset = 'open'
+# leverage = 5
+# amount = 1
+# price = 80000
+
+# params = {'offset': offset, 'lever_rate': leverage}
+
+# try:
+#    # fetching current balance
+   
+#    # balance = exchange.fetch_positions(symbols=['BTC-USD'])
+#    # print(balance)
+#    for i in range(5):
+#          # placing an order
+#       order = exchange.create_order(symbol, order_type, side, amount, price, params)
+#       print(order)
+
+#    # # listing open orders
+#    # open_orders = exchange.fetch_open_orders(symbol)
+#    # print(open_orders)
+
+#       # canceling an order
+#       cancelOrder = exchange.cancel_order(order['id'], symbol)
+#       print(cancelOrder)
+
+# except Exception as e:
+#    print(type(e).__name__, str(e))

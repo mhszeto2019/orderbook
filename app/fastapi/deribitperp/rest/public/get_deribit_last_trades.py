@@ -39,7 +39,6 @@ redis_host ='localhost'
 redis_port = 6379
 redis_db = 0  # Default database
 
-# import okx.PublicData as PublicData
 # API initialization
 
 from cryptography.fernet import Fernet
@@ -107,22 +106,8 @@ app.add_middleware(
 # Define a global exchange object to be used across multiple requests if needed
 exchange = None
 
-# # Define a function to fetch the order book continuously using ccxt.pro
-# async def fetch_funding_rate():
-#     global exchange
-#     exchange = ccxtpro.okx({'newUpdates': False})
-#     while True:
-#         try:
-#             # Watch the order book of 'BTC/USD'
-#             funding_rate = await exchange.fetch_funding_rate('BTC-USD-SWAP')
-#             # print("Ask:", funding_rate['asks'][0], "Bid:", funding_rate['bids'][0])
-#             print(funding_rate)
-#         except Exception as e:
-#             print(f"Error in fetching funding_rate: {e}")
-#             break
 
-
-@app.get("/okxperp/")
+@app.get("/htxperp/")
 async def read_root():
     return {"message": "Welcome to the FastAPI with ccxt integration!"}
 
@@ -132,7 +117,7 @@ class FundingRateRequest(BaseModel):
     redis_key: str
     ccy: str
 
-@app.post("/okxperp/get_last_trades")
+@app.post("/htxperp/get_last_trades")
 async def get_last_trades(
     payload: FundingRateRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -163,13 +148,12 @@ async def get_last_trades(
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
 
-        exchange = ccxtpro.okx({'newUpdates': False})
+        exchange = ccxtpro.htx({'newUpdates': False})
         # print(payload.ccy)
-        result = await exchange.fetch_trades(payload.ccy)
-       
+        ccy = payload.ccy
+        ccy_str = ccy.replace('-SWAP','')
+        result = await exchange.fetch_trades(ccy_str)
 
-
-       
         row =  result[-10:]
 
         # print(row)
@@ -178,25 +162,25 @@ async def get_last_trades(
         json_dict['trades'] = result[-10:]
         # json_dict['ts'] = result['fundingTimestamp']
         json_dict['ccy'] = payload.ccy
-        json_dict['exchange'] = 'okxperp'
-
+        json_dict['exchange'] = 'htxperp'
         logger.info(f"{payload.ccy}|{json_dict}")
-        await exchange.close()
         # print(result)
         # if result.get('data'):
         #     print('success')
         # result['ccy'] = funding_rate
+        await exchange.close()
+
         return json_dict
 
-    except Exception as e:
-        print(f"Error in get_funding_rate: {e}")
 
+
+    except Exception as e:
+        print(f"Error in get_last_Trades: {e}")
         await exchange.close()
         return {"error":f"{e}"}
 
         # raise HTTPException(status_code=500, detail=str(e))
-
-
+  
 
 @app.on_event("shutdown")
 async def shutdown_event():
