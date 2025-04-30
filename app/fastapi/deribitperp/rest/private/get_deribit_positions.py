@@ -101,7 +101,7 @@ class PositionRequest(BaseModel):
   
    
 
-@app.post("/htxperp/get_all_positions")
+@app.post("/deribitperp/get_all_positions")
 async def get_all_positions(
     payload: PositionRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -130,24 +130,21 @@ async def get_all_positions(
     # Decrypt the credentials
     decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
     api_creds_dict = json.loads(decrypted_data)
-
     try:
-        exchange = ccxt.huobi({
-            'apiKey': api_creds_dict['htx_apikey'],
-            'secret': api_creds_dict['htx_secretkey'],
-            'options': {
-                'defaultType': 'swap',
-            },
+        exchange = ccxt.deribit({
+            'apiKey': api_creds_dict['deribit_apikey'],
+            'secret': api_creds_dict['deribit_secretkey'],
         })
+        # markets = exchange.load_markets()
 
-    # # markets = exchange.load_markets()
-        # positions = exchange.fetch_positions(symbols=['BTC-USD'])
-        positions = exchange.fetch_positions(symbols=['BTC-USD','ETH-USD'])
+        positions = exchange.fetch_positions(['BTC-PERPETUAL','ETH-PERPETUAL'])
+
+        
         json_data = positions[0]
         logger.info(json_data)
         json_response = {}
         json_response['adl'] = json_data['info']['open_adl']
-        json_response['exchange'] = 'htxperp'
+        json_response['exchange'] = 'deribitperp'
         json_response['instrument_id'] = json_data['info']['contract_code'] + '-SWAP'
         json_response['leverage'] = json_data['info']['lever_rate']
         json_response['margin_ratio'] = json_data['info']['position_margin']
@@ -165,6 +162,7 @@ async def get_all_positions(
         logger.info(json_response)
         return [json_response]
     except Exception as e:
+        print(e)
         logger.error(traceback.format_exc())
         return {"error":f"{e}"}
 

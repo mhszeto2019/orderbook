@@ -14,7 +14,7 @@ twilioInterval = setInterval(() => {
     checkCondition()
 
     console.log("🚨 Twilio is making another call...");
-}, 5000);
+}, 60000);
 
 // Stop Twilio Calls
 async function stopTwilioCall() {

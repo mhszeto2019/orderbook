@@ -7,6 +7,8 @@ async function populateFundingRate(){
     funding_rates_list = [
         { exchange: 'okxperp', port: 5001 },
         { exchange: 'htxperp', port: 5002 },
+        { exchange: 'deribitperp', port: 5003 },
+
 
     ]
 
@@ -40,9 +42,15 @@ async function populateFundingRate(){
             if (response.ok) {
             const response_data = await response.json();
             exchange = response_data.exchange
-            // console.log(response_data)
-            // Convert Unix timestamp
-            const ts = unixTsConversion(response_data.ts);
+         
+            let ts = ''
+            if (response_data.ts == 'NA'){
+                ts = 'NA'
+            }
+            else{
+                ts = unixTsConversion(response_data.ts);
+
+            }
             
             // Parse and process the funding rate
             let fundingRate = "Invalid value"; // Default value

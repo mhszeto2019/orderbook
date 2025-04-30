@@ -164,12 +164,16 @@ async def get_funding_rate(
 
         exchange = ccxtpro.deribit({'newUpdates': False})
         ccy = payload.ccy
-        ccy_str = ccy.replace('-SWAP','')
+        ccy_str = ccy.replace('USD-SWAP','PERPETUAL')
+
         
         result = await exchange.fetch_funding_rate(ccy_str)
-        # {'info': {'formulaType': 'noRate', 'fundingRate': '0.0001033844565710', 'fundingTime': '1745222400000', 'impactValue': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'interestRate': '', 'maxFundingRate': '0.00375', 'method': 'current_period', 'minFundingRate': '-0.00375', 'nextFundingRate': '', 'nextFundingTime': '1745251200000', 'premium': '0.0002413359809591', 'settFundingRate': '0.0000278737528630', 'settState': 'settled', 'ts': '1745210420272'}, 'symbol': 'BTC/USD:BTC', 'markPrice': None, 'indexPrice': None, 'interestRate': 0.0, 'estimatedSettlePrice': None, 'timestamp': None, 'datetime': None, 'fundingRate': 0.000103384456571, 'fundingTimestamp': 1745222400000, 'fundingDatetime': '2025-04-21T08:00:00.000Z', 'nextFundingRate': None, 'nextFundingTimestamp': 1745251200000, 'nextFundingDatetime': '2025-04-21T16:00:00.000Z', 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': None}
-        json_dict['funding_rate'] =result['info']['funding_rate']
-        json_dict['ts'] = result['fundingTimestamp']
+        # print(result)
+        # {'info': {'jsonrpc': '2.0', 'result': '6.126574098570054e-7', 'usIn': '1745982573767768', 'usOut': '1745982573770051', 'usDiff': '2283', 'testnet': False}, 'symbol': 'BTC/USD:BTC', 'markPrice': None, 'indexPrice': None, 'interestRate': None, 'estimatedSettlePrice': None, 'timestamp': None, 'datetime': None, 'fundingRate': 6.126574098570054e-07, 'fundingTimestamp': None, 'fundingDatetime': None, 'nextFundingRate': None, 'nextFundingTimestamp': None, 'nextFundingDatetime': None, 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': '8h'}
+
+
+        json_dict['funding_rate'] =result['fundingRate']
+        json_dict['ts'] = 'NA'
         json_dict['ccy'] = payload.ccy
         json_dict['exchange'] = 'deribitperp'
 

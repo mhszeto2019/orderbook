@@ -6,7 +6,8 @@ let lastTrades = {
     "htxperp": {}, // 
     "htxspot": {}, // 
     "okxperp": {},  // Another exchange
-    "okxspot": {}  // Another exchange
+    "okxspot": {},  // Another exchange
+    "deribitperp":{}
 
 };
 
@@ -27,7 +28,124 @@ function initializeCurrencyPair(exchange, instrument,currencyPair) {
     }
 }
 
-// Function to update the last trades
+const tradeSources = [
+    { id: 1, exchange: "okx", port: 6100, suffix: "1", type: "perp" },
+    { id: 2, exchange: "htx", port: 6101, suffix: "2", type: "perp" },
+    // { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" } // Add more as needed
+];
+
+
+
+async function fetchTradeHistory({ exchange, port, suffix, id, type }) {
+    const token = getAuthToken();
+    const username = localStorage.getItem("username");
+    const redis_key = localStorage.getItem("key");
+
+    if (!token || !username || !redis_key) return;
+
+    const ccyInput = document.getElementById(`currency-input-orderbook1`);
+    if (!ccyInput) return;
+
+    const ccy = ccyInput.value;
+    const request_data = { username, redis_key, ccy };
+    try {
+        const response = await fetch(`http://${hostname}:${port}/${exchange}${type}/get_last_trades`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
+        });
+
+        if (response.ok) {
+            const response_data = await response.json();
+            if (response_data.error) {
+                // populateLastTrades(id, true, response_data.error);
+                // console.error('ERROR updating last trades',)
+            } else {
+                updateLastTrades(response_data.exchange, response_data.ccy, response_data.trades);
+                // populateLastTrades(id);
+                // console.log(lastTrades)
+            }
+        } else {
+            console.error(`Error fetching trades for ${exchange}:`, response.statusText);
+        }
+    } catch (err) {
+        console.error(`Fetch failed for ${exchange}:`, err);
+    }
+}
+
+
+
+async function fetchTradeHistory2({ exchange, port, suffix, id, type }) {
+    const token = getAuthToken();
+    const username = localStorage.getItem("username");
+    const redis_key = localStorage.getItem("key");
+
+    if (!token || !username || !redis_key) return;
+
+    const ccyInput = document.getElementById(`currency-input-orderbook2`);
+    if (!ccyInput) return;
+
+    const ccy = ccyInput.value;
+    const request_data = { username, redis_key, ccy };
+    try {
+        const response = await fetch(`http://${hostname}:${port}/${exchange}${type}/get_last_trades`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request_data)
+        });
+
+        if (response.ok) {
+            const response_data = await response.json();
+            // console.log(response_data)
+            if (response_data.error) {
+                // console.error('ERROR updating last trades')
+            } else {
+                updateLastTrades(response_data.exchange, response_data.ccy, response_data.trades);
+                // console.log(lastTrades)
+            }
+        } else {
+            console.error(`Error fetching trades for ${exchange}:`, response.statusText);
+        }
+    } catch (err) {
+        console.error(`Fetch failed for ${exchange}:`, err);
+    }
+}
+
+
+
+function startLastTradeScheduler(interval = 5000) {
+    tradeSources.forEach(source => {
+        async function schedule() {
+            // console.log(source)
+            await fetchTradeHistory(source);
+            setTimeout(schedule, interval);
+            populateLastTrades(1)
+            await fetchTradeHistory2(source);
+            setTimeout(schedule, interval);
+            populateLastTrades(2)
+        }
+        schedule(); // Start each scheduler
+    });
+    // console.log(lastTrades)
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    startLastTradeScheduler();
+});
+
+
+
+
+
+
+// // Function to update the last trades
 function updateLastTrades(exchange, currency ,trades) {
     
     if (!lastTrades[exchange][currency]) {
@@ -43,121 +161,117 @@ function updateLastTrades(exchange, currency ,trades) {
             if (lastTrades[exchange][currency].length > 10) {
                 lastTrades[exchange][currency].pop(); // Remove oldest trade if more than 10 trades
             }
-    
         })
-        populateLastTrades(1)
+        // populateLastTrades(1)
+        // console.log(lastTrades)
     }
    
-
-   
 }
 
 
-async function getTradeHistory(){
-    const token = getAuthToken();
-    const username = localStorage.getItem('username');
-    const redis_key = localStorage.getItem('key');
+// async function getTradeHistory(){
+//     const token = getAuthToken();
+//     const username = localStorage.getItem('username');
+//     const redis_key = localStorage.getItem('key');
 
 
-    if (!token || !username || !redis_key) {
-        // alert("You must be logged in to access this.");
-        return;
-    }
-    ccy = document.getElementById('currency-input-orderbook1').value
+//     if (!token || !username || !redis_key) {
+//         // alert("You must be logged in to access this.");
+//         return;
+//     }
+//     ccy = document.getElementById('currency-input-orderbook1').value
 
-    const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
+//     const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
 
-    const firstLastTradePromise = fetch(`http://${hostname}:6100/okxperp/get_last_trades`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
+//     const firstLastTradePromise = fetch(`http://${hostname}:6100/okxperp/get_last_trades`, {
+//         method: 'POST',
+//         headers: {
+//             'Authorization': `Bearer ${token}`,
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(request_data)
+//     });
 
 
-    const results = await Promise.allSettled([firstLastTradePromise]);
+//     const results = await Promise.allSettled([firstLastTradePromise]);
 
-    // Handle OKX Response
-    if (results[0].status === 'fulfilled') {
-        const response = results[0].value;
-        if (response.ok) {
-            const response_data = await response.json();
-            if (response_data['error']){
-                // alert('ERROR')
-                populateLastTrades(1,error=true,errorMsg = response_data['error']) 
-            }
-            else{
-                updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
-                populateLastTrades(1) 
-            }
+//     // Handle OKX Response
+//     if (results[0].status === 'fulfilled') {
+//         const response = results[0].value;
+//         if (response.ok) {
+//             const response_data = await response.json();
+//             if (response_data['error']){
+//                 // alert('ERROR')
+//                 populateLastTrades(1,error=true,errorMsg = response_data['error']) 
+//             }
+//             else{
+//                 updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
+//                 populateLastTrades(1) 
+//             }
         
             
-        } else {
-            console.error('Error fetching OKX orders:', response.statusText);
-        }
-    } else {
-        console.error('OKX Request failed:', results[0].reason);
-    }
+//         } else {
+//             console.error('Error fetching OKX orders:', response.statusText);
+//         }
+//     } else {
+//         console.error('OKX Request failed:', results[0].reason);
+//     }
 
-}
-
-
-
-async function getTradeHistory2(){
-    const token = getAuthToken();
-    const username = localStorage.getItem('username');
-    const redis_key = localStorage.getItem('key');
+// }
 
 
-    if (!token || !username || !redis_key) {
-        // alert("You must be logged in to access this.");
-        return;
-    }
-    ccy = document.getElementById('currency-input-orderbook2').value
 
-    const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
-
-    const firstLastTradePromise2 = fetch(`http://${hostname}:6101/htxperp/get_last_trades`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
+// async function getTradeHistory2(){
+//     const token = getAuthToken();
+//     const username = localStorage.getItem('username');
+//     const redis_key = localStorage.getItem('key');
 
 
-    const results2 = await Promise.allSettled([firstLastTradePromise2]);
+//     if (!token || !username || !redis_key) {
+//         // alert("You must be logged in to access this.");
+//         return;
+//     }
+//     ccy = document.getElementById('currency-input-orderbook2').value
 
-    // Handle SECOND TABLE Response
-    if (results2[0].status === 'fulfilled') {
-        const response = results2[0].value;
-        if (response.ok) {
+//     const request_data = { "username": username, "redis_key": redis_key,'ccy':ccy };
+
+//     const firstLastTradePromise2 = fetch(`http://${hostname}:6101/htxperp/get_last_trades`, {
+//         method: 'POST',
+//         headers: {
+//             'Authorization': `Bearer ${token}`,
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(request_data)
+//     });
+
+
+//     const results2 = await Promise.allSettled([firstLastTradePromise2]);
+
+//     // Handle SECOND TABLE Response
+//     if (results2[0].status === 'fulfilled') {
+//         const response = results2[0].value;
+//         if (response.ok) {
             
-            const response_data = await response.json();
-            if (response_data['error']){
-                // alert('ERROR')
-                populateLastTrades(2,error=true,errorMsg = response_data['error']) 
-            }
-            else{
-                updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
-                populateLastTrades(2) 
-            }
+//             const response_data = await response.json();
+//             if (response_data['error']){
+//                 // alert('ERROR')
+//                 // populateLastTrades(2,error=true,errorMsg = response_data['error']) 
+//             }
+//             else{
+//                 updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
+//                 // populateLastTrades(2) 
+//             }
         
-            // updateLastTrades(response_data['exchange'], response_data['ccy'] ,response_data['trades'])
-
-            // populateLastTrades(2) 
+        
             
-        } else {
-            console.error('Error fetching SECOND TABLE trades:', response.statusText);
-        }
-    } else {
-        console.error('SECOND TABLE Request failed:', results2[0].reason);
-    }
+//         } else {
+//             console.error('Error fetching SECOND TABLE trades:', response.statusText);
+//         }
+//     } else {
+//         console.error('SECOND TABLE Request failed:', results2[0].reason);
+//     }
 
-}
+// }
 
 function unixTsConversionHoursMinutes(timestampString) {
     const timestamp = Number(timestampString);
@@ -178,14 +292,6 @@ function unixTsConversionHoursMinutes(timestampString) {
     return `${hours}:${minutes}:${seconds}:${milliseconds}`;
 }
 
-function onLastTradeWsDataReceived(exchange,currency,instrument) {
-    try {
-        populateLastTrades(exchange,currency,instrument)
-    
-    } catch (error) {
-        console.error("Error processing WebSocket data:", error);
-    }
-}
 
 
 function populateLastTrades(tableNo,error=false,errorMsg = '') {
@@ -202,8 +308,8 @@ function populateLastTrades(tableNo,error=false,errorMsg = '') {
         selectedExchange += 'spot'
     }
     
+    // console.log(selectedExchange,selectedCcy)
 
-    // Check if the value ends with '-SWAP' and remove it if true
     data = lastTrades[selectedExchange][selectedCcy]
     lastTradeHeader.innerHTML = `Last Trades: ${selectedExchange}`
         
@@ -218,45 +324,62 @@ function populateLastTrades(tableNo,error=false,errorMsg = '') {
         tableBody.appendChild(row);
         return
     }
-
     // Populate table with new data
-    data.forEach(trade => {
-        const row = document.createElement('tr'); // Create a new table row
-        
-        // Create and append cells for price, time, direction, and amount
-        row.innerHTML = `
-            <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
+    if (data){
+        data.forEach(trade => {
+            const row = document.createElement('tr'); // Create a new table row
+            
+            // Create and append cells for price, time, direction, and amount
+            row.innerHTML = `
+                <td>${unixTsConversionHoursMinutes(trade.ts)}</td>
 
-            <td class ='${trade.side}'>${Number(trade.px).toLocaleString(undefined, {minimumFractionDigits: 1,maximumFractionDigits: 1 })}</td>
-            <td class='${trade.side}'>${trade.sz}</td>
-        `;
+                <td class ='${trade.side}'>${Number(trade.px).toLocaleString(undefined, {minimumFractionDigits: 1,maximumFractionDigits: 1 })}</td>
+                <td class='${trade.side}'>${trade.sz}</td>
+            `;
 
-        // Append the row to the table body
-        tableBody.appendChild(row);
-    });
-
+            // Append the row to the table body
+            tableBody.appendChild(row);
+        });
+    }
     }
 
 
 
 
-// // // Set up the scheduler
-function startLastTradeScheduler(interval = 5000) {
-    // Call getTradeHistory immediately
-    getTradeHistory();
-    getTradeHistory2();
+// // // // Set up the scheduler
+// // function startLastTradeScheduler(interval = 5000) {
+// //     // Call getTradeHistory immediately
+// //     getTradeHistory();
+// //     getTradeHistory2();
 
-    // Schedule getTradeHistory to run every few seconds
-    setInterval(getTradeHistory, interval);
-    setInterval(getTradeHistory2, interval);
+// //     // Schedule getTradeHistory to run every few seconds
+// //     setInterval(getTradeHistory, interval);
+// //     setInterval(getTradeHistory2, interval);
+// //     console.log(lastTrades)
 
-}
+// // }
 
-// Start the scheduler when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    startLastTradeScheduler();
-});
+// async function scheduleGetTradeHistory2(interval) {
+//     await getTradeHistory2();
+//     setTimeout(() => scheduleGetTradeHistory2(interval), interval);
+// }
 
-getTradeHistory();
-getTradeHistory2();
+// async function scheduleGetTradeHistory(interval) {
+//     await getTradeHistory();
+//     setTimeout(() => scheduleGetTradeHistory(interval), interval);
+// }
+
+// function startLastTradeScheduler(interval = 5000) {
+//     scheduleGetTradeHistory(interval);
+//     scheduleGetTradeHistory2(interval);
+// }
+
+
+// // Start the scheduler when the page loads
+// document.addEventListener('DOMContentLoaded', () => {
+//     startLastTradeScheduler();
+// });
+
+// getTradeHistory();
+// getTradeHistory2();
 

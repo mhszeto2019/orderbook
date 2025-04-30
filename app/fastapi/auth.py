@@ -132,7 +132,10 @@ async def login(username: str = Form(...), password: str = Form(...), cursor=Dep
         'htx_apikey': api_creds_dict['htx']['apikey'],
         'okx_secretkey': api_creds_dict['okx']['secretkey'],
         'okx_apikey': api_creds_dict['okx']['apikey'],
-        'okx_passphrase': api_creds_dict['okx']['passphrase']
+        'okx_passphrase': api_creds_dict['okx']['passphrase'],
+        'deribit_secretkey': api_creds_dict['deribit']['secretkey'],
+        'deribit_apikey': api_creds_dict['deribit']['apikey'],
+
     }).encode())
 
     cache_key = f"user:{username}:api_credentials"

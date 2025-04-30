@@ -37,8 +37,18 @@ async function populatePositions() {
         body: JSON.stringify(request_data)
     });
 
+    const thirdOrderPromise = fetch(`http://${hostname}:5072/deribitperp/get_all_positions`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
+
+
     try {
-        const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise]);
+        const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise,thirdOrderPromise]);
 
         // Array to hold combined positions
         let allPositions = [];
@@ -126,75 +136,75 @@ function populateOpenPositionsTable(positions) {
 
 
 
-function Htx2OkxFormat(originalDataArray) {
-    console.log('ori',originalDataArray)
-    return originalDataArray.map(originalData => {
-      return {
-        "adl": String(originalData.open_adl || '0'),  // Convert to string, or default to 0
-        "availPos": "",  // Empty as per the target format
-        "avgPx": String(originalData.last_price.toFixed(1)),  // Rounded to 1 decimal place
-        "baseBal": "",
-        "baseBorrowed": "",
-        "baseInterest": "",
-        "bePx": originalData.liq_px === null ? null : String(originalData.liq_px.toFixed(10)),  // Displaying the value with 10 decimal points
-        "bizRefId": "",
-        "bizRefType": "",
-        "cTime": new Date(originalData.store_time).getTime().toString(),  // Convert to timestamp
-        "ccy": originalData.symbol,
-        "clSpotInUseAmt": "",
-        "closeOrderAlgo": [],
-        "deltaBS": "",
-        "deltaPA": "",
-        "fee": String(originalData.profit_rate.toFixed(10)),  // Rounding for consistency
-        "fundingFee": "0",
-        "gammaBS": "",
-        "gammaPA": "",
-        "idxPx": String(originalData.cost_open.toFixed(10)),  // Using cost_open for idxPx
-        "imr": "",
-        "instId": originalData.contract_code + "-SWAP",  // Assuming this is a swap contract
-        "instType": "SWAP",
-        "interest": "",
-        "last": String(originalData.last_price.toFixed(1)),
-        "lever": String(originalData.lever_rate),
-        "liab": "",
-        "liabCcy": "",
-        "liqPenalty": "0",
-        "liqPx": originalData.liq_px === null ? null : String(originalData.liq_px.toFixed(10)),
-        "margin": String(originalData.position_margin.toFixed(10)),
-        "markPx": String(originalData.last_price.toFixed(1)),
-        "maxSpotInUseAmt": "",
-        "mgnMode": "isolated",
-        "mgnRatio": "",  // Assumed fixed value for this example
-        "mmr": String((originalData.profit / originalData.cost_hold).toFixed(10)),  // Just an example calculation
-        "notionalUsd": "",  // Assumed fixed value
-        "optVal": "",
-        "pendingCloseOrdLiabVal": "",
-        "pnl": String(originalData.profit.toFixed(10)),  // Placeholder, may depend on further logic
-        "pos": originalData.direction === "sell" ? String(-Math.abs(originalData.volume)): String(originalData.volume),  // Placeholder for position status
-        "posCcy": "",
-        "posId": "2019681002234920961",  // Placeholder position ID
-        "posSide": String((originalData.direction)),  // Assumed position side
-        "quoteBal": "",
-        "quoteBorrowed": "",
-        "quoteInterest": "",
-        "realizedPnl": String(originalData.profit.toFixed(10)),
-        "spotInUseAmt": "",
-        "spotInUseCcy": "",
-        "thetaBS": "",
-        "thetaPA": "",
-        "tradeId": "333006380",  // Placeholder trade ID
-        "uTime": new Date(originalData.store_time).getTime().toString(),
-        "upl": String(originalData.profit.toFixed(10)),
-        "uplLastPx": String(originalData.profit.toFixed(10)),
-        "uplRatio": String((originalData.profit_rate).toFixed(10)),
-        "uplRatioLastPx": String((originalData.profit_rate).toFixed(10)),
-        "usdPx": "",
-        "vegaBS": "",
-        "vegaPA": "",
-        "exchange":'htx'
-      };
-    });
-  }
+// function Htx2OkxFormat(originalDataArray) {
+//     console.log('ori',originalDataArray)
+//     return originalDataArray.map(originalData => {
+//       return {
+//         "adl": String(originalData.open_adl || '0'),  // Convert to string, or default to 0
+//         "availPos": "",  // Empty as per the target format
+//         "avgPx": String(originalData.last_price.toFixed(1)),  // Rounded to 1 decimal place
+//         "baseBal": "",
+//         "baseBorrowed": "",
+//         "baseInterest": "",
+//         "bePx": originalData.liq_px === null ? null : String(originalData.liq_px.toFixed(10)),  // Displaying the value with 10 decimal points
+//         "bizRefId": "",
+//         "bizRefType": "",
+//         "cTime": new Date(originalData.store_time).getTime().toString(),  // Convert to timestamp
+//         "ccy": originalData.symbol,
+//         "clSpotInUseAmt": "",
+//         "closeOrderAlgo": [],
+//         "deltaBS": "",
+//         "deltaPA": "",
+//         "fee": String(originalData.profit_rate.toFixed(10)),  // Rounding for consistency
+//         "fundingFee": "0",
+//         "gammaBS": "",
+//         "gammaPA": "",
+//         "idxPx": String(originalData.cost_open.toFixed(10)),  // Using cost_open for idxPx
+//         "imr": "",
+//         "instId": originalData.contract_code + "-SWAP",  // Assuming this is a swap contract
+//         "instType": "SWAP",
+//         "interest": "",
+//         "last": String(originalData.last_price.toFixed(1)),
+//         "lever": String(originalData.lever_rate),
+//         "liab": "",
+//         "liabCcy": "",
+//         "liqPenalty": "0",
+//         "liqPx": originalData.liq_px === null ? null : String(originalData.liq_px.toFixed(10)),
+//         "margin": String(originalData.position_margin.toFixed(10)),
+//         "markPx": String(originalData.last_price.toFixed(1)),
+//         "maxSpotInUseAmt": "",
+//         "mgnMode": "isolated",
+//         "mgnRatio": "",  // Assumed fixed value for this example
+//         "mmr": String((originalData.profit / originalData.cost_hold).toFixed(10)),  // Just an example calculation
+//         "notionalUsd": "",  // Assumed fixed value
+//         "optVal": "",
+//         "pendingCloseOrdLiabVal": "",
+//         "pnl": String(originalData.profit.toFixed(10)),  // Placeholder, may depend on further logic
+//         "pos": originalData.direction === "sell" ? String(-Math.abs(originalData.volume)): String(originalData.volume),  // Placeholder for position status
+//         "posCcy": "",
+//         "posId": "2019681002234920961",  // Placeholder position ID
+//         "posSide": String((originalData.direction)),  // Assumed position side
+//         "quoteBal": "",
+//         "quoteBorrowed": "",
+//         "quoteInterest": "",
+//         "realizedPnl": String(originalData.profit.toFixed(10)),
+//         "spotInUseAmt": "",
+//         "spotInUseCcy": "",
+//         "thetaBS": "",
+//         "thetaPA": "",
+//         "tradeId": "333006380",  // Placeholder trade ID
+//         "uTime": new Date(originalData.store_time).getTime().toString(),
+//         "upl": String(originalData.profit.toFixed(10)),
+//         "uplLastPx": String(originalData.profit.toFixed(10)),
+//         "uplRatio": String((originalData.profit_rate).toFixed(10)),
+//         "uplRatioLastPx": String((originalData.profit_rate).toFixed(10)),
+//         "usdPx": "",
+//         "vegaBS": "",
+//         "vegaPA": "",
+//         "exchange":'htx'
+//       };
+//     });
+//   }
 
 
 function updateTime(selectedDOM) {

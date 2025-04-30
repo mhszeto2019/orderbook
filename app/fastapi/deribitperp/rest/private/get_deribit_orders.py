@@ -113,7 +113,7 @@ class GetOrdersRequest(BaseModel):
   
    
 
-@app.post("/htxperp/get_all_open_orders")
+@app.post("/deribitperp/get_all_open_orders")
 async def get_all_open_orders(
    payload: GetOrdersRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -144,23 +144,20 @@ async def get_all_open_orders(
    api_creds_dict = json.loads(decrypted_data)
    try:
 
-      exchange = ccxt.huobi({
-         'apiKey': api_creds_dict['htx_apikey'],
-         'secret': api_creds_dict['htx_secretkey'],
-         'options': {
-            'defaultType': 'swap',
-         },
+      exchange = ccxt.deribit({
+         'apiKey': api_creds_dict['deribit_apikey'],
+         'secret': api_creds_dict['deribit_secretkey'],
       })
 
       # # markets = exchange.load_markets()
       open_orders = exchange.fetchOpenOrders(symbol='BTC-USD')
-      
+      print(open_orders)
       if len(open_orders) == 0:
          return []
       json_data = open_orders[0]
       json_response = {}
-      json_response['exchange'] = 'htxperp'
-      json_response['instrument_id'] = json_data['info']['contract_code'] +'-SWAP'
+      json_response['exchange'] = 'deribitperp'
+      json_response['instrument_id'] = json_data['info']['contract_code'].replace('USD','PERPETUAL')
       json_response['leverage'] = json_data['info']['lever_rate']
       json_response['side'] = json_data['side']
       json_response['offset'] = json_data['info']['offset']
