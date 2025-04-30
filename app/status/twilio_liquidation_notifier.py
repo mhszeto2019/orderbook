@@ -255,21 +255,7 @@ class TraderNotifier:
             # {'BTC-USD': {'liq_px': 122838.4771710599, 'last_px': 77067.3, 'direction': 'sell', 'ts': '2025-04-07 14:01:02'}
 
             # Find the latest entry with ts
-            # for exchange, symbols in self.exchanges.items():
-            #     for symbol, info in symbols.items():
-            #         if symbol in self.latest_prices and isinstance(info, dict) and 'ts' in info:
-            #             # ts = datetime.strptime(info['ts'], "%Y-%m-%d %H:%M:%S")
-            #             ts = info['ts']
-
-            #             # print(ts,self.latest_prices[symbol]['ts'])
-            #             current = self.latest_prices[symbol]['ts']
-            #             if current is None or ts > current:
-            #                 self.latest_prices[symbol] = {
-            #                     'ts': ts,
-            #                     'last_px': float(info['last_px']),
-            #                     'exchange': exchange
-            #                 }
-
+           
             for exchange, symbols in self.exchanges.items():
                 for symbol, info in symbols.items():
                     if symbol in self.latest_prices and isinstance(info, dict) and 'ts' in info:
@@ -368,7 +354,7 @@ class TraderNotifier:
         """Calls once and retries only if there's no response."""
         call_sid = self.make_call(exchange,direction,liq_px,last_px)
         status = self.check_call_status(call_sid)
-        while status not in ["in-progress", "completed","busy"]:
+        while status not in ["in-progress", "completed","busy","no-answer"]:
             # while stats is in queue or ringing , we check the call status
             status = self.check_call_status(call_sid)
             logger.info(f"self.username|{status}")

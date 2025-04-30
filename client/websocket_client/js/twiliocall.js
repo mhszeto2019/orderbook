@@ -12,8 +12,9 @@ function triggerWarning(message) {
 // Simulating repeated calls every 20s
 twilioInterval = setInterval(() => {
     checkCondition()
+
     console.log("🚨 Twilio is making another call...");
-}, 60000);
+}, 5000);
 
 // Stop Twilio Calls
 async function stopTwilioCall() {
