@@ -152,7 +152,6 @@ async def get_all_open_orders(
 
       # # markets = exchange.load_markets()
       open_orders = exchange.fetchOpenOrders()
-      print(open_orders)
 
       if len(open_orders) == 0:
          return []
@@ -160,8 +159,8 @@ async def get_all_open_orders(
       json_data = open_orders[0]
       json_response = {}
       json_response['exchange'] = 'deribitperp'
-      json_response['instrument_id'] = json_data['info']['contract_code'].replace('PERPETUAL','USD-SWAP')
-      json_response['leverage'] = json_data['info']['lever_rate']
+      json_response['instrument_id'] = json_data['info']['instrument_name'].replace('PERPETUAL','USD-SWAP')
+      json_response['leverage'] = ''
       json_response['side'] = json_data['side']
       json_response['offset'] = ''
       json_response['price'] = json_data['price']

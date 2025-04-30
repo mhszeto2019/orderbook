@@ -19,7 +19,7 @@ async function populateOpenOrders() {
     const request_data = { "username": username, "redis_key": redis_key };
     
     // Set up both the OKX and HTX requests
-    const [okxResponse, htxResponse] = await Promise.all([
+    const [okxResponse, htxResponse,deribitResponse] = await Promise.all([
         fetch(`http://${hostname}:6060/okxperp/get_all_open_orders`, {
             method: 'POST',
             headers: {
@@ -72,6 +72,20 @@ async function populateOpenOrders() {
                 openOrder2=>{
                     console.log(openOrder2)
                     allOpenOrders.push(openOrder2)
+                }
+            )
+            
+        } else {
+            console.error('Error fetching OKX orders:', okxResponse.statusText);
+        }
+
+        if (deribitResponse.ok) {
+            const deribitData = await deribitResponse.json();
+            console.log(deribitData)
+            deribitData.forEach(
+                openOrder3=>{
+                    console.log(openOrder3)
+                    allOpenOrders.push(openOrder3)
                 }
             )
             
@@ -402,7 +416,8 @@ async function handleDelete(instId, ordId,exchange) {
     request_data = {"username":username,"redis_key":redis_key,'order_id':ordId,'instrument_id':instId}
     const exchange_map= {
         'okxperp':5080,
-        'htxperp':5081
+        'htxperp':5081,
+        'deribitperp':5082
     }
     // Call the API using fetch
     const firstOrderPromise = fetch(`http://${hostname}:${exchange_map[exchange]}/${exchange}/cancel_order_by_id`, {

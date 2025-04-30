@@ -91,7 +91,28 @@ async function populatePositions() {
             
             
         } else {
-            console.error('OKX Request failed:', positioinResults[0].reason);
+            console.error('HTX Request failed:', positioinResults[0].reason);
+        }
+
+        if (Promises[2].status === 'fulfilled') {
+            const pos = Promises[2].value;
+            // console.log(pos)
+
+            if (pos.ok) {
+                let posData = await pos.json()
+                if (posData){
+                    console.log(posData)
+                        posData.forEach(posRow => {
+                            // console.log(posRow)
+                            allPositions.push(posRow)
+                        }
+                    )
+                }
+            }
+            
+            
+        } else {
+            console.error('DERIBIT Request failed:', positioinResults[2].reason);
         }
 
        
