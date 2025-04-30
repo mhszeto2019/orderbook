@@ -51,3 +51,6 @@ uvicorn app.fastapi.deribitperp.rest.public.get_deribit_last_trades:app --port 6
 
 uvicorn app.fastapi.deribitperp.rest.private.get_deribit_positions:app --port 5072 --host 0.0.0.0 --reload
 uvicorn app.fastapi.deribitperp.rest.private.get_deribit_orders:app --port 6062 --host 0.0.0.0 --reload
+uvicorn app.fastapi.deribitperp.rest.private.place_deribit_order:app --port 5082 --host 0.0.0.0 --reload
+
+

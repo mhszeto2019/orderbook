@@ -209,6 +209,7 @@ async def place_order(
             price = ask
          else:
             price = bid
+            
       elif order_type == 'queue1':
          ticker = exchange.fetchTicker(symbol)
          bid = ticker['bid']

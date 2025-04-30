@@ -928,8 +928,12 @@ body.dark-mode.force-black {
                             </button>
                             <div id="notification-hub" class="notification-hub  shadow rounded" style="display: none;">
                                 <h5 class="p-2">Notifications</h5>
+                                
+                                
                                 <div id="toast-list" class="toast-list p-2" style="max-height: 300px; overflow-y: auto;">
                                     <!-- Dynamic Toast Messages Will Appear Here -->
+                                    
+
                                 </div>
                                 
                                 <button class="btn btn-secondary w-100" onclick="clearNotifications()">Clear All</button>
@@ -975,7 +979,9 @@ body.dark-mode.force-black {
                                                 <option value="" disabled>Select Exchange</option>
                                                 <option value="none" >EMPTY LEG</option>
                                                 <option value="htx">HTX</option>
-                                                <option value="okx" selected>OKX</option>
+                                                <option value="okx" >OKX</option>
+                                                <option value="deribit" selected>DERIBIT</option>
+
                                                 </select>
                                                 <label for="manual-order-form-exchange-input1">Exchange</label>
                                             </div>
@@ -993,6 +999,8 @@ body.dark-mode.force-black {
                                                 <option value="none" selected>EMPTY LEG</option>
                                                 <option value="htx">HTX</option>
                                                 <option value="okx" >OKX</option>
+                                                <option value="deribit" >DERIBIT</option>
+
                                                 </select>
                                                 <label for="manual-order-form-exchange-input2">Exchange</label>
                                             </div>
@@ -1737,26 +1745,25 @@ body.dark-mode.force-black {
             const notifications = [];
             
             function updateNotificationHub() {
-                const toastList = document.getElementById('toast-list');
-                toastList.innerHTML = ''; // Clear previous notifications
+    const toastList = document.getElementById('toast-list');
+    toastList.innerHTML = ''; // Clear previous notifications
 
-                notifications.forEach(notification => {
-                    const toastItem = document.createElement('tr');
-                    toastItem.className = 'toast-item';
+    notifications.forEach(notification => {
+        const toastItem = document.createElement('div');
+        toastItem.className = 'toast-item p-2 border-bottom';
 
-                    // Generate current timestamp as a short string
-                    const timestamp = new Date().toLocaleTimeString();
+        const timestamp = new Date().toLocaleTimeString();
 
-                    toastItem.innerHTML = `
-                        <td class="text-wrap" style="border-bottom: 1px solid #dee2e6; padding: 8px;">
-                            ${notification}
-                            <span class="badge bg-light text-muted float-end" style="font-size: 0.7rem;">${timestamp}</span>
-                        </td>
-                    `;
+        toastItem.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-wrap">${notification}</div>
+                <span class="badge bg-light text-muted" style="font-size: 0.7rem;">${timestamp}</span>
+            </div>
+        `;
 
-                    toastList.prepend(toastItem);
-                });
-            }
+        toastList.prepend(toastItem); // Add newest at top
+    });
+}
 
 
 

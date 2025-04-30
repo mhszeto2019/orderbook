@@ -11,6 +11,8 @@
 let exchange_api_port_map = new Map()
 exchange_api_port_map.set('okxperp','5080')
 exchange_api_port_map.set('htxperp','5081')
+exchange_api_port_map.set('deribitperp','5082')
+
 
 
 async function handleClick(type) {

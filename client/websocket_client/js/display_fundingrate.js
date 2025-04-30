@@ -7,7 +7,7 @@ async function populateFundingRate(){
     funding_rates_list = [
         { exchange: 'okxperp', port: 5001 },
         { exchange: 'htxperp', port: 5002 },
-        { exchange: 'deribitperp', port: 5003 },
+        // { exchange: 'deribitperp', port: 5003 },
 
 
     ]
