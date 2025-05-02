@@ -5,11 +5,8 @@ import traceback
 # Define the config file path in a cleaner way
 
 project_root = "/var/www/html"
-print(project_root)
 base_directory = os.path.abspath(os.path.join(project_root,'./orderbook'))  # 2 levels up from script
-print(base_directory)
 config_directory = os.path.join(base_directory, 'config_folder') 
-print(config_directory)
 config_file_path = os.path.join(os.path.dirname(__file__), config_directory, 'credentials.ini')
 # Ensure the config file exists before trying to load it
 if not os.path.exists(config_file_path):
@@ -18,9 +15,7 @@ if not os.path.exists(config_file_path):
 config = configparser.ConfigParser()
 config.read(config_file_path)
 
-config_source = 'htx_live_trade'
-secretKey = config[config_source]['secretKey']
-apiKey = config[config_source]['apiKey']
+
 
 from typing import Union
 from fastapi import FastAPI
@@ -121,7 +116,7 @@ exchange = None
 #             break
 
 
-@app.get("/deribitperp/")
+@app.get("/binanceperp/")
 async def read_root():
     return {"message": "Welcome to the FastAPI with ccxt integration!"}
 
@@ -131,7 +126,7 @@ class FundingRateRequest(BaseModel):
     redis_key: str
     ccy: str
 
-@app.post("/deribitperp/funding_rate")
+@app.post("/binanceperp/funding_rate")
 async def get_funding_rate(
     payload: FundingRateRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -162,20 +157,21 @@ async def get_funding_rate(
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
 
-        exchange = ccxtpro.deribit({'newUpdates': False})
+        exchange = ccxtpro.binance({'newUpdates': False})
         ccy = payload.ccy
-        ccy_str = ccy.replace('USD-SWAP','PERPETUAL')
+        ccy_str = ccy.replace('-USD-SWAP','USD_PERP')
+        # print(ccy_str)
 
-        
-        result = await exchange.fetch_funding_rate(ccy_str)
+        # ccy_str = "BTCUSD_PERP"
+        result = await exchange.fetch_funding_rate(symbol = ccy_str)
         # print(result)
-        # {'info': {'jsonrpc': '2.0', 'result': '6.126574098570054e-7', 'usIn': '1745982573767768', 'usOut': '1745982573770051', 'usDiff': '2283', 'testnet': False}, 'symbol': 'BTC/USD:BTC', 'markPrice': None, 'indexPrice': None, 'interestRate': None, 'estimatedSettlePrice': None, 'timestamp': None, 'datetime': None, 'fundingRate': 6.126574098570054e-07, 'fundingTimestamp': None, 'fundingDatetime': None, 'nextFundingRate': None, 'nextFundingTimestamp': None, 'nextFundingDatetime': None, 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': '8h'}
+        # {'info': {'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'markPrice': '96664.20000000', 'indexPrice': '96714.77327859', 'estimatedSettlePrice': '96660.53002393', 'lastFundingRate': '-0.00009924', 'interestRate': '0.00010000', 'nextFundingTime': '1746172800000', 'time': '1746170522003'}, 'symbol': 'BTC/USD:BTC', 'markPrice': 96664.2, 'indexPrice': 96714.77327859, 'interestRate': 0.0001, 'estimatedSettlePrice': 96660.53002393, 'timestamp': 1746170522003, 'datetime': '2025-05-02T07:22:02.003Z', 'fundingRate': -9.924e-05, 'fundingTimestamp': 1746172800000, 'fundingDatetime': '2025-05-02T08:00:00.000Z', 'nextFundingRate': None, 'nextFundingTimestamp': None, 'nextFundingDatetime': None, 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': None}
 
 
         json_dict['funding_rate'] =result['fundingRate']
-        json_dict['ts'] = 'NA'
+        json_dict['ts'] = result['fundingTimestamp']
         json_dict['ccy'] = payload.ccy
-        json_dict['exchange'] = 'deribitperp'
+        json_dict['exchange'] = 'binanceperp'
 
         logger.info(f"{payload.ccy}|{json_dict}")
         await exchange.close()

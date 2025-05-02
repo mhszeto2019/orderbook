@@ -113,7 +113,7 @@ class TradeRequest(BaseModel):
    offset2:str
    
 
-@app.post("/htxperp/place_order")
+@app.post("/deribitperp/place_order")
 async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -143,39 +143,50 @@ async def place_order(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
    try:
-      exchange = ccxt.huobi({
-         'apiKey': api_creds_dict['htx_apikey'],
-         'secret': api_creds_dict['htx_secretkey'],
-         'options': {
-            'defaultType': 'swap',
-         },
-      })
+      exchange = ccxt.deribit({
+            'apiKey': api_creds_dict['deribit_apikey'],
+            'secret': api_creds_dict['deribit_secretkey'],
+        })
 
-      symbol = payload.instrument.replace('-SWAP','')
+      symbol = payload.instrument.replace('USD-SWAP','PERPETUAL')
       order_type = payload.ordType
       
-      amount=payload.sz
+      amount= payload.sz * 100
       side = payload.side
       price = payload.px
       # order_type = 'limit'
       # price = '80000'
       params = {'offset': payload.offset, 'lever_rate': 5}
+     
 
       if order_type == 'counterparty1':
-         order_type = 'opponent'
+         order_type = 'market_limit'
+
 
       elif order_type == 'counterparty5':
+         ticker = exchange.fetchOrderBook(symbol,5)
+         bid = ticker['bids'][0][0]
+         # bid_sz = ticker['bidVolume']
+         ask = ticker['asks'][0][0]
+         # ask_sz = ticker['askVolume']
+         order_type = 'limit'
+
+         # if buy , we buy ask price
+         if side == 'buy': 
+            price = ask
+         else:
+            price = bid
       
-         order_type = 'optimal_5'
 
       elif order_type == 'queue1':
-         print('queue1')
+         # print('queue1')
+         params = {"post_only":True}
          ticker = exchange.fetchTicker(symbol)
          bid = ticker['bid']
          # bid_sz = ticker['bidVolume']
          ask = ticker['ask']
          # ask_sz = ticker['askVolume']
-         order_type = 'post_only'
+         order_type = 'limit'
 
          # if buy , we buy ask price
          if side == 'buy': 
@@ -183,8 +194,7 @@ async def place_order(
          else:
             price = ask
 
-      elif order_type == 'market':
-         order_type = 'optimal_20'
+    
 
       order = exchange.create_order(symbol, order_type, side, amount, price, params)
       # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
@@ -195,7 +205,7 @@ async def place_order(
 
       # huobi {"status":"error","err_code":1047,"err_msg":"Insufficient margin available.","ts":1745917192657}
 
-# okx {"code":"1","data":[{"clOrdId":"e847386590ce4dBCcc699096ccdc169c","ordId":"","sCode":"51008","sMsg":"Order failed. Insufficient BTC margin in account ","tag":"e847386590ce4dBC","ts":"1745917206076"}],"inTime":"1745917206076432","msg":"All operations failed","outTime":"1745917206077022"}
+   # okx {"code":"1","data":[{"clOrdId":"e847386590ce4dBCcc699096ccdc169c","ordId":"","sCode":"51008","sMsg":"Order failed. Insufficient BTC margin in account ","tag":"e847386590ce4dBC","ts":"1745917206076"}],"inTime":"1745917206076432","msg":"All operations failed","outTime":"1745917206077022"}
       return {"error":f"{e}"}
 
 
@@ -209,7 +219,7 @@ class CancelByIdTradeRequest(BaseModel):
    instrument_id:str
  
 
-@app.post("/htxperp/cancel_order_by_id")
+@app.post("/deribitperp/cancel_order_by_id")
 async def cancel_order_by_id(
    payload: CancelByIdTradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -239,18 +249,15 @@ async def cancel_order_by_id(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
  
-   exchange = ccxt.huobi({
-      'apiKey': api_creds_dict['htx_apikey'],
-      'secret': api_creds_dict['htx_secretkey'],
-      'options': {
-         'defaultType': 'swap',
-      },
-   })
+   exchange = ccxt.deribit({
+            'apiKey': api_creds_dict['deribit_apikey'],
+            'secret': api_creds_dict['deribit_secretkey'],
+        })
 
    print(payload.order_id)
    instrument_id = payload.instrument_id
-   if "SWAP" in instrument_id:
-      instrument_id = instrument_id.replace('-SWAP','')
+   if "USD-SWAP" in instrument_id:
+      instrument_id = instrument_id.replace('USD-SWAP','PERPETUAL')
    canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
 
    return canceled_order

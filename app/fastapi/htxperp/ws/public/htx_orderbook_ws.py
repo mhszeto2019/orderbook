@@ -137,6 +137,9 @@ class OrderBookStreamer:
                     conditional_symbol = symbol.replace("-SWAP", "")
                 elif self.exchange_class == 'deribit':
                     conditional_symbol = symbol.replace("USD-SWAP", "PERPETUAL")
+                elif self.exchange_class == 'binance':
+                    conditional_symbol = symbol.replace("-USD-SWAP", "USD_PERP")
+
                 else:
                     conditional_symbol = symbol
 
@@ -145,7 +148,7 @@ class OrderBookStreamer:
                 # print(orderbook)
                 # print(orderbook["bids"][0],orderbook['asks'][0])
                 await broadcast({
-                    "symbol": self.symbol,
+                    "symbol": f"{self.symbol}",
                     "bids": self.normalize_contract_size(self.exchange_class,orderbook["bids"][:10]),
                     "asks": self.normalize_contract_size(self.exchange_class,orderbook["asks"][:10]),
                     "timestamp": orderbook["timestamp"],
@@ -177,7 +180,8 @@ class OrderBookStreamer:
         self.symbol=new_symbol
 
     def normalize_contract_size(self,exchange,book_arr):
-        if exchange == 'deribit':
+        # exchange with 3 parameters px,sz
+        if exchange in ['deribit','okx']:
             new_arr = []
             divisor = self.contract_formatter[exchange]
             for px,sz,_ in book_arr:

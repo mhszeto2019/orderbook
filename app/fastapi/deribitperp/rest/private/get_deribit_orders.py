@@ -82,13 +82,7 @@ r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 print('CCXT Version:', ccxt.__version__)
 
-exchange = ccxt.huobi({
-   'apiKey': 'nbtycf4rw2-5475d1b1-fd22adf0-83746',
-   'secret': 'c5a5a686-b39d1d16-79864b22-f3e72',
-   'options': {
-       'defaultType': 'swap',
-   },
-})
+
 origins = [
     "http://localhost.tiangolo.com",
     "https://localhost.tiangolo.com",

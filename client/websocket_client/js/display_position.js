@@ -47,8 +47,18 @@ async function populatePositions() {
     });
 
 
+    const fourthOrderPromise = fetch(`http://${hostname}:5073/binanceperp/get_all_positions`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
+
+
     try {
-        const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise,thirdOrderPromise]);
+        const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise,thirdOrderPromise,fourthOrderPromise]);
 
         // Array to hold combined positions
         let allPositions = [];
@@ -111,6 +121,27 @@ async function populatePositions() {
             }
             else {
                 console.error('DERIBIT Request failed:', Promises[2].status);
+            }
+            
+        } 
+
+        if (Promises[3] && Promises[3].status === 'fulfilled') {
+            const pos = Promises[3].value;
+            // console.log(pos)
+
+            if (pos.ok) {
+                let posData = await pos.json()
+                if (posData){
+                    console.log(posData)
+                        posData.forEach(posRow => {
+                            // console.log(posRow)
+                            allPositions.push(posRow)
+                        }
+                    )
+                }
+            }
+            else {
+                console.error('BINANCE Request failed:', Promises[3].status);
             }
             
         } 

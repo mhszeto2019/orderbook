@@ -60,6 +60,10 @@ function populateOrderBook(i, exchange, data) {
     timestamp.innerHTML = readableTime;
     // timestamp.innerHTML = `${data.timestamp}`;
     // Process asks (reverse order)
+    if (!data || !data.asks || !data.bids){
+        return 
+    }
+
     data.asks.reverse().forEach(item => {
         tableBody.innerHTML += `<tr class="asks"><td>${item[0]}</td><td>${item[1]}</td></tr>`;
     });

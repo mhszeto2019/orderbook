@@ -7,7 +7,9 @@ let lastTrades = {
     "htxspot": {}, // 
     "okxperp": {},  // Another exchange
     "okxspot": {},  // Another exchange
-    "deribitperp":{}
+    "deribitperp":{},
+    "binanceperp":{}
+
 
 };
 
@@ -31,7 +33,9 @@ function initializeCurrencyPair(exchange, instrument,currencyPair) {
 const tradeSources = [
     { id: 1, exchange: "okx", port: 6100, suffix: "1", type: "perp" },
     { id: 2, exchange: "htx", port: 6101, suffix: "2", type: "perp" },
-    { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" } // Add more as needed
+    { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" }, // Add more as needed
+    { id: 4, exchange: "binance", port: 6103, suffix: "3", type: "perp" } // Add more as needed
+
 ];
 
 
@@ -61,6 +65,7 @@ async function fetchTradeHistory({ exchange, port, suffix, id, type }) {
         if (response.ok) {
             const response_data = await response.json();
             if (response_data.error) {
+                // console.log(lastTrades)
                 // populateLastTrades(id, true, response_data.error);
                 // console.error('ERROR updating last trades',)
             } else {
@@ -102,7 +107,6 @@ async function fetchTradeHistory2({ exchange, port, suffix, id, type }) {
 
         if (response.ok) {
             const response_data = await response.json();
-            // console.log(response_data)
             if (response_data.error) {
                 // console.error('ERROR updating last trades')
             } else {
@@ -311,7 +315,7 @@ function populateLastTrades(tableNo,error=false,errorMsg = '') {
     }
     
     // console.log(selectedExchange,selectedCcy)
-
+    
     data = lastTrades[selectedExchange][selectedCcy]
     lastTradeHeader.innerHTML = `Last Trades: ${selectedExchange}`
         

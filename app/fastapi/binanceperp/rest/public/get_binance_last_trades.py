@@ -107,7 +107,7 @@ app.add_middleware(
 exchange = None
 
 
-@app.get("/deribitperp/")
+@app.get("/binanceperp/")
 async def read_root():
     return {"message": "Welcome to the FastAPI with ccxt integration!"}
 
@@ -117,7 +117,16 @@ class FundingRateRequest(BaseModel):
     redis_key: str
     ccy: str
 
-@app.post("/deribitperp/get_last_trades")
+# def normalize_contract_size(book_arr):
+#     new_arr = []
+#     divisor = 100
+#     for px,sz,_ in book_arr:
+#         new_arr.append([px,sz/divisor,_])
+#     # print(new_arr)
+#     return new_arr
+ 
+
+@app.post("/binanceperp/get_last_trades")
 async def get_last_trades(
     payload: FundingRateRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -149,23 +158,23 @@ async def get_last_trades(
         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
         api_creds_dict = json.loads(decrypted_data)
 
-        exchange = ccxtpro.deribit({'newUpdates': False})
+        exchange = ccxtpro.binance({'newUpdates': False})
         # print(payload.ccy)
         ccy = payload.ccy
         # ccy = 'BTC-USD-SWAP'
-        ccy_str = ccy.replace('USD-SWAP','PERPETUAL')
+        ccy_str = ccy.replace('-USD-SWAP','USD_PERP')
         if ccy_str:
             result = await exchange.fetch_trades(symbol=ccy_str)
-            row =  result[-10:]
-
-            # print(row)
+            rows =  result[-10:]
+           
+            # print(rows)
 
             #    [{'id': '363916432', 'info': {'timestamp': '1745987111074', 'price': '94930.5', 'amount': '950.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167115', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '95.0', 'trade_id': '363916432'}, 'timestamp': 1745987111074, 'datetime': '2025-04-30T04:25:11.074Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 950.0, 'cost': 0.01000732114546958, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916433', 'info': {'timestamp': '1745987111074', 'price': '94930.5', 'amount': '19930.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167116', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '1993.0', 'trade_id': '363916433'}, 'timestamp': 1745987111074, 'datetime': '2025-04-30T04:25:11.074Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 19930.0, 'cost': 0.20994306360969342, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916434', 'info': {'timestamp': '1745987111077', 'price': '94930.5', 'amount': '12150.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167117', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '1215.0', 'trade_id': '363916434'}, 'timestamp': 1745987111077, 'datetime': '2025-04-30T04:25:11.077Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 12150.0, 'cost': 0.12798837043942674, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916435', 'info': {'timestamp': '1745987111078', 'price': '94930.5', 'amount': '6810.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167118', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '681.0', 'trade_id': '363916435'}, 'timestamp': 1745987111078, 'datetime': '2025-04-30T04:25:11.078Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 6810.0, 'cost': 0.07173669157962931, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916436', 'info': {'timestamp': '1745987111078', 'price': '94930.5', 'amount': '5110.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167119', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '511.0', 'trade_id': '363916436'}, 'timestamp': 1745987111078, 'datetime': '2025-04-30T04:25:11.078Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 5110.0, 'cost': 0.05382885374036795, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916437', 'info': {'timestamp': '1745987111082', 'price': '94930.5', 'amount': '12120.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167120', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '1212.0', 'trade_id': '363916437'}, 'timestamp': 1745987111082, 'datetime': '2025-04-30T04:25:11.082Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 12120.0, 'cost': 0.12767234977167508, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916438', 'info': {'timestamp': '1745987111084', 'price': '94930.5', 'amount': '11320.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167121', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '1132.0', 'trade_id': '363916438'}, 'timestamp': 1745987111084, 'datetime': '2025-04-30T04:25:11.084Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 11320.0, 'cost': 0.11924513196496384, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916439', 'info': {'timestamp': '1745987111084', 'price': '94930.5', 'amount': '70.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167122', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '7.0', 'trade_id': '363916439'}, 'timestamp': 1745987111084, 'datetime': '2025-04-30T04:25:11.084Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 70.0, 'cost': 0.000737381558087232, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916440', 'info': {'timestamp': '1745987111084', 'price': '94930.5', 'amount': '3260.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167123', 'mark_price': '94938.39', 'tick_direction': '1', 'contracts': '326.0', 'trade_id': '363916440'}, 'timestamp': 1745987111084, 'datetime': '2025-04-30T04:25:11.084Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94930.5, 'amount': 3260.0, 'cost': 0.034340912562348246, 'fee': {'cost': None, 'currency': None}, 'fees': []}, {'id': '363916441', 'info': {'timestamp': '1745987111084', 'price': '94931.0', 'amount': '3410.0', 'direction': 'buy', 'index_price': '94943.5', 'instrument_name': 'BTC-PERPETUAL', 'trade_seq': '247167124', 'mark_price': '94938.39', 'tick_direction': '0', 'contracts': '341.0', 'trade_id': '363916441'}, 'timestamp': 1745987111084, 'datetime': '2025-04-30T04:25:11.084Z', 'symbol': 'BTC/USD:BTC', 'order': None, 'type': None, 'side': 'buy', 'takerOrMaker': None, 'price': 94931.0, 'amount': 3410.0, 'cost': 0.03592082670571257, 'fee': {'cost': None, 'currency': None}, 'fees': []}]
             
-            json_dict['trades'] = result[-10:]
+            json_dict['trades'] = rows
             # json_dict['ts'] = result['fundingTimestamp']
             json_dict['ccy'] = payload.ccy
-            json_dict['exchange'] = 'deribitperp'
+            json_dict['exchange'] = 'binanceperp'
             logger.info(f"{payload.ccy}|{json_dict}")
             # print(result)
             # if result.get('data'):

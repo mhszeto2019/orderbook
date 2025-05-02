@@ -135,6 +135,8 @@ async def login(username: str = Form(...), password: str = Form(...), cursor=Dep
         'okx_passphrase': api_creds_dict['okx']['passphrase'],
         'deribit_secretkey': api_creds_dict['deribit']['secretkey'],
         'deribit_apikey': api_creds_dict['deribit']['apikey'],
+        'binance_secretkey': api_creds_dict['binance']['secretkey'],
+        'binance_apikey': api_creds_dict['binance']['apikey']
 
     }).encode())
 

@@ -7,7 +7,7 @@ const wsConnections = {};
 const lastData = {
     'okxperp': {},
     'htxperp': {},
-    'binanceperp': {},
+    'binanceperp':{},
     'deribitperp':{}
 };
 
@@ -38,7 +38,6 @@ function compareData(newData) {
     let ccy1 = document.getElementById('currency-input-orderbook1').value
     let ccy2 = document.getElementById('currency-input-orderbook2').value
     
-
     // // Get the previous data for the current exchange and the other exchange
     if (marketType1 == 'perp'){
         exchange1 = exchange1 + 'perp'
@@ -120,6 +119,9 @@ const wsServers = {
     'okx':{'perp':`ws://${hostname}:5091/ws`,'spot':''},
     'htx':{'perp':`ws://${hostname}:5091/ws2`,'spot':''},
     'deribit':{'perp':`ws://${hostname}:5091/ws3`,'spot':''},
+    'binance':{'perp':`ws://${hostname}:5091/ws4`,'spot':''},
+
+    
 
     
 
@@ -152,22 +154,26 @@ function compareDataQueue(data){
     symbol = json_data['symbol']
     exchange = json_data['exchange']
     // market_type = json
-    // console.log(exchange)
-    // console.log(lastData)
+    
+
     if (!exchange){
         console.log("NO DATA FOUND")
     }
 
     if (!lastData[exchange]) {
-        lastTrades[exchange] = {symbol:[]}
+        lastData[exchange] = {symbol:[]}
+        console.log(lastData)
     }
     if (!lastData[exchange][symbol]) {
-        lastTrades[exchange][symbol] = []
+        lastData[exchange][symbol] = []
     }
     lastData[exchange][symbol] =  json_data
     compareData(lastData)
 
 }
+// {"symbol": "BTC-USD-SWAP", "bids": [[96352.7, 6230.0], [96352.3, 3.0], [96352.1, 1.0], [96352.0, 73.0], [96351.6, 1.0], [96351.4, 123.0], [96351.2, 2.0], [96351.0, 1.0], [96350.7, 1.0], [96350.0, 74.0]], "asks": [[96352.8, 16242.0], [96352.9, 50.0], [96353.0, 1.0], [96353.1, 1.0], [96353.7, 843.0], [96354.0, 1.0], [96354.6, 300.0], [96354.8, 920.0], [96354.9, 1.0], [96355.1, 2.0]], "timestamp": 1746172780226, "best_bid": [[96352.7, 6230.0]], "best_ask": [[96352.8, 16242.0]], "exchange": "binanceperp"}
+
+// {"symbol": "BTC-USD-SWAP", "bids": [[96358.0, 1757.0, 0], [96357.6, 4.0, 0], [96357.4, 200.0, 0], [96356.0, 72.0, 0], [96353.2, 71.0, 0]], "asks": [[96358.1, 4584.0, 0], [96359.8, 349.0, 0], [96359.9, 662.0, 0], [96360.0, 72.0, 0], [96360.1, 1092.0, 0]], "timestamp": 1746172767605, "best_bid": [[96358.0, 1757.0, 0]], "best_ask": [[96358.1, 4584.0, 0]], "exchange": "okxperp"}
 
 
 
