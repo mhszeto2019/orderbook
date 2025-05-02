@@ -249,18 +249,15 @@ async def cancel_order_by_id(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
  
-   exchange = ccxt.huobi({
-      'apiKey': api_creds_dict['htx_apikey'],
-      'secret': api_creds_dict['htx_secretkey'],
-      'options': {
-         'defaultType': 'swap',
-      },
-   })
+   exchange = ccxt.deribit({
+            'apiKey': api_creds_dict['deribit_apikey'],
+            'secret': api_creds_dict['deribit_secretkey'],
+        })
 
    print(payload.order_id)
    instrument_id = payload.instrument_id
-   if "SWAP" in instrument_id:
-      instrument_id = instrument_id.replace('-SWAP','')
+   if "USD-SWAP" in instrument_id:
+      instrument_id = instrument_id.replace('USD-SWAP','PERPETUAL')
    canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
 
    return canceled_order

@@ -20,12 +20,9 @@ SERVICE_DIR="/var/www/html/orderbook/systemd"
 declare -A SERVICES_PORTS
 SERVICES_PORTS=(
 
-  # ["htx_positions"]=$HTX_DISPLAY_ASSET_AND_POSITION_PORT #REST
-  # ["htx_open_orders"]=$HTX_DISPLAY_OPEN_ORDERS_PORT #REST
 
-  ["get_deribit_positions"]=$DERIBIT_DISPLAY_ASSET_AND_POSITION_PORT #REST
-  ["get_deribit_orders"]=$DERIBIT_DISPLAY_OPEN_ORDERS_PORT #REST
-  ["place_deribit_order"]=$DERIBIT_TRADING_PORT
+  ["get_deribit_funding_rate"]=$DERIBIT_DISPLAY_FUNDING_RATE_PORT #REST
+  ["get_deribit_last_trades"]=$DERIBIT_DISPLAY_LAST_TRADES_PORT #REST
 
 
 )
@@ -59,7 +56,7 @@ After=network.target
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/uvicorn app.fastapi.deribitperp.rest.private.$SERVICE_NAME:app --port $PORT --host 0.0.0.0 --reload
+ExecStart=$ENV_PATH/bin/uvicorn app.fastapi.deribitperp.rest.public.$SERVICE_NAME:app --port $PORT --host 0.0.0.0 --reload
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

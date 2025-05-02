@@ -54,7 +54,7 @@ async function populatePositions() {
         let allPositions = [];
 
         // Handle OKX Response
-        if (Promises[0].status === 'fulfilled') {
+        if (Promises[0] && Promises[0].status === 'fulfilled') {
             const pos = Promises[0].value;
 
             if (pos.ok) {
@@ -69,11 +69,11 @@ async function populatePositions() {
                 }
             }
 
-           
-        } else {
-            console.error('OKX Request failed:', positioinResults[0].reason);
+            else {
+                console.error('OKX Request failed:',  Promises[0].status);
+        } 
         }
-        if (Promises[1].status === 'fulfilled') {
+        if (Promises[1] && Promises[1].status === 'fulfilled') {
             const pos = Promises[1].value;
             // console.log(pos)
 
@@ -89,12 +89,12 @@ async function populatePositions() {
                 }
             }
             
-            
-        } else {
-            console.error('HTX Request failed:', positioinResults[0].reason);
-        }
+            else {
+                console.error('HTX Request failed:', Promises[1].status);
+            }
+        } 
 
-        if (Promises[2].status === 'fulfilled') {
+        if (Promises[2] && Promises[2].status === 'fulfilled') {
             const pos = Promises[2].value;
             // console.log(pos)
 
@@ -109,11 +109,11 @@ async function populatePositions() {
                     )
                 }
             }
+            else {
+                console.error('DERIBIT Request failed:', Promises[2].status);
+            }
             
-            
-        } else {
-            console.error('DERIBIT Request failed:', positioinResults[2].reason);
-        }
+        } 
 
        
         // After both positioinResponses are handled, populate the table with all positions

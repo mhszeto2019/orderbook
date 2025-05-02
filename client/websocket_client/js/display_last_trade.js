@@ -31,7 +31,7 @@ function initializeCurrencyPair(exchange, instrument,currencyPair) {
 const tradeSources = [
     { id: 1, exchange: "okx", port: 6100, suffix: "1", type: "perp" },
     { id: 2, exchange: "htx", port: 6101, suffix: "2", type: "perp" },
-    // { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" } // Add more as needed
+    { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" } // Add more as needed
 ];
 
 
@@ -119,20 +119,22 @@ async function fetchTradeHistory2({ exchange, port, suffix, id, type }) {
 
 
 
-function startLastTradeScheduler(interval = 5000) {
+function startLastTradeScheduler(interval =5000) {
     tradeSources.forEach(source => {
+        console.log(source)
         async function schedule() {
             // console.log(source)
             await fetchTradeHistory(source);
-            setTimeout(schedule, interval);
             populateLastTrades(1)
             await fetchTradeHistory2(source);
-            setTimeout(schedule, interval);
             populateLastTrades(2)
+            setTimeout(schedule, interval);
+
         }
         schedule(); // Start each scheduler
+
     });
-    // console.log(lastTrades)
+
 }
 
 

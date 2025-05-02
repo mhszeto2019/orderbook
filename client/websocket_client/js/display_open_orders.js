@@ -17,81 +17,160 @@ async function populateOpenOrders() {
     }
 
     const request_data = { "username": username, "redis_key": redis_key };
+    const okxPromise = fetch(`http://${hostname}:6060/okxperp/get_all_open_orders`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    })
+    const htxPromise =fetch(`http://${hostname}:6061/htxperp/get_all_open_orders`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    })
+
+    const deribitPromise =fetch(`http://${hostname}:6062/deribitperp/get_all_open_orders`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    })
+
     
-    // Set up both the OKX and HTX requests
-    const [okxResponse, htxResponse,deribitResponse] = await Promise.all([
-        fetch(`http://${hostname}:6060/okxperp/get_all_open_orders`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(request_data)
-        }),
-        fetch(`http://${hostname}:6061/htxperp/get_all_open_orders`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(request_data)
-        }),
-        fetch(`http://${hostname}:6062/deribitperp/get_all_open_orders`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(request_data)
-        })
-    ]);
+    // // Set up both the OKX and HTX requests
+    // const [okxResponse, htxResponse,deribitResponse] = await Promise.all([
+        
+    //     fetch(`http://${hostname}:6061/htxperp/get_all_open_orders`, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Authorization': `Bearer ${token}`,
+    //             'Content-Type': 'application/json',
+    //         },
+    //         body: JSON.stringify(request_data)
+    //     }),
+    //     fetch(`http://${hostname}:6062/deribitperp/get_all_open_orders`, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Authorization': `Bearer ${token}`,
+    //             'Content-Type': 'application/json',
+    //         },
+    //         body: JSON.stringify(request_data)
+    //     })
+    // ]);
 
+    
     try {
+        const Promises = await Promise.allSettled([okxPromise, htxPromise,deribitPromise]);
+
         let allOpenOrders = [];
+        if (Promises[0] && Promises[0].status === 'fulfilled') {
+            const promise = Promises[0].value;
+            console.log(promise)
+            if (promise.ok) {
+                const okxData = await promise.json();
+                
+                console.log(okxData)
+                okxData.forEach(
+                    openOrder=>{
+                        console.log(openOrder)
+                        allOpenOrders.push(openOrder)
+                    }
+                )
+            }
 
-        // Handle OKX Response
-        if (okxResponse.ok) {
-            const okxData = await okxResponse.json();
-            console.log(okxData)
-            okxData.forEach(
-                openOrder=>{
-                    console.log(openOrder)
-                    allOpenOrders.push(openOrder)
-                }
-            )
-            
-        } else {
-            console.error('Error fetching OKX orders:', okxResponse.statusText);
+            else {
+                console.error('OKX Request failed:', Promises[0].status);
+            } 
+        }
+        if (Promises[1] && Promises[1].status === 'fulfilled') {
+            const promise = Promises[1].value;
+
+            if (promise.ok) {
+                const htxData = await promise.json();
+                console.log(htxData)
+                htxData.forEach(
+                    openOrder=>{
+                        console.log(openOrder)
+                        allOpenOrders.push(openOrder)
+                    }
+                )
+            }
+
+            else {
+                console.error('HTX Request failed:', Promises[1].status);
+            } 
+        }
+        if (Promises[2] && Promises[2].status === 'fulfilled') {
+            const promise = Promises[2].value;
+
+            if (promise.ok) {
+                const htxData = await promise.json();
+                console.log(htxData)
+                htxData.forEach(
+                    openOrder=>{
+                        console.log(openOrder)
+                        allOpenOrders.push(openOrder)
+                    }
+                )
+            }
+
+            else {
+                console.error('DERIBIT Request failed:', Promises[2].status);
+            } 
         }
 
-        // Handle OKX Response
-        if (htxResponse.ok) {
-            const htxData = await htxResponse.json();
-            console.log(htxData)
-            htxData.forEach(
-                openOrder2=>{
-                    console.log(openOrder2)
-                    allOpenOrders.push(openOrder2)
-                }
-            )
-            
-        } else {
-            console.error('Error fetching OKX orders:', okxResponse.statusText);
-        }
 
-        if (deribitResponse.ok) {
-            const deribitData = await deribitResponse.json();
-            console.log(deribitData)
-            deribitData.forEach(
-                openOrder3=>{
-                    console.log(openOrder3)
-                    allOpenOrders.push(openOrder3)
-                }
-            )
+        // // Handle OKX Response
+        // if (Promises[0].ok) {
+        //     const okxData = await okxResponse.json();
+        //     console.log(okxData)
+        //     okxData.forEach(
+        //         openOrder=>{
+        //             console.log(openOrder)
+        //             allOpenOrders.push(openOrder)
+        //         }
+        //     )
             
-        } else {
-            console.error('Error fetching OKX orders:', okxResponse.statusText);
-        }
+        // } else {
+        //     console.error('Error fetching OKX orders:', okxResponse.statusText);
+        // }
+
+        // // Handle OKX Response
+        // if (Promises[1].ok) {
+        //     const htxData = await htxResponse.json();
+        //     console.log(htxData)
+        //     htxData.forEach(
+        //         openOrder2=>{
+        //             console.log(openOrder2)
+        //             allOpenOrders.push(openOrder2)
+        //         }
+        //     )
+            
+        // } else {
+        //     console.error('Error fetching OKX orders:', okxResponse.statusText);
+        // }
+
+        // if (Promises[2].ok) {
+        //     const deribitData = await deribitResponse.json();
+        //     console.log(deribitData)
+        //     deribitData.forEach(
+        //         openOrder3=>{
+        //             console.log(openOrder3)
+        //             allOpenOrders.push(openOrder3)
+        //         }
+        //     )
+            
+        // } 
+        // else {
+        //     console.error('Error fetching OKX orders:', okxResponse.statusText);
+        // }
 
         
 
@@ -118,13 +197,8 @@ function populateOpenOpenOrdersTable(allOpenOrders) {
     openordersTable.clear();
 
     if (allOpenOrders.length === 0) {
-        // Manually add a row with `colspan`
-        // const emptyMessage = 
-        // `
-        //     <tr>
-        //         <td  class="text-center text-muted">No open orders available</td>
-        //     </tr>`;
-            '<tr><td colspan="9" class="dataTables_empty">No open Orders available</td></tr>'
+       
+            '<tr><td colspan="9" class="dataTables_empty">No Open Orders available</td></tr>'
 
             
         $('#oms-open-orders-body').html('<tr><td colspan="9" class="dataTables_empty">No open Orders available</td></tr>');

@@ -1,8 +1,6 @@
 let debounceTimeout = null;
 
-
 // function populateOrderBook(i,exchange, data) {
-
 //     const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
 //     // Get the selected exchange for the current table
 //     const selectedExchange = document.getElementById(`exchange${i}-input`).value;
@@ -44,45 +42,33 @@ let debounceTimeout = null;
 //                         <td>${item[1]}</td>`;
 //         tableBody.appendChild(row);
 //     });
-
-      
 // }
 
 
 function populateOrderBook(i, exchange, data) {
-    
     const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
-
     const container = document.getElementById(`scrollable-orderbook-${i}`);
     const tableBody = document.getElementById(`order-data-table-body-${i}`);
     // let shouldScroll = !container.dataset.hasScrolled;
     shouldScrollState[i] = !container.dataset.hasScrolled;
     // console.log(shouldScrollState[i])
     // Store previous scroll state
-
     // Clear existing content
     tableBody.innerHTML = '';
     data = JSON.parse(data);
-
-   
     const readableTime = new Date(data.timestamp).toLocaleString();
     timestamp.innerHTML = readableTime;
     // timestamp.innerHTML = `${data.timestamp}`;
-
     // Process asks (reverse order)
     data.asks.reverse().forEach(item => {
         tableBody.innerHTML += `<tr class="asks"><td>${item[0]}</td><td>${item[1]}</td></tr>`;
     });
-
     // Add separator
     tableBody.innerHTML += `<tr id="separator-row-${i}"><td colspan="2" style="border-top:2px solid #000;"></td></tr>`;
-
     // Process bids
     data.bids.forEach(item => {
         tableBody.innerHTML += `<tr class="bids"><td>${item[0]}</td><td>${item[1]}</td></tr>`;
     });
-  
-                
     // console.log(tableBody.getBoundingClientRect())
     
     // Only scroll on first load
@@ -93,9 +79,7 @@ function populateOrderBook(i, exchange, data) {
                 // Calculate scroll position accounting for sticky header
                 const headerHeight = container.querySelector('thead').offsetHeight;
                 const separatorPos = separator.offsetTop;
-                console.log(separatorPos,container.clientHeight,headerHeight)
                 const scrollPos = separatorPos - (container.clientHeight / 2) -headerHeight/2 ;
-                console.log(scrollPos)
                 container.scrollTo({
                     top: scrollPos,
                     behavior: 'smooth'
@@ -121,9 +105,7 @@ const debouncedPopulateOrderBook = debounce(populateOrderBook, 10);
 
 
 function clearOrderbookTable(tableNumber) {
-
     const orderbookTs1DOM = document.getElementById(`orderbook-timestamp-${tableNumber}`);
-
     const orderbookDisplay1DOM = document.getElementById(`order-data-table-body-${tableNumber}`);
 
     // Safely clear tables and timestamps
@@ -132,12 +114,8 @@ function clearOrderbookTable(tableNumber) {
             orderbookDisplay1DOM.firstChild.remove();
         }
     }
- 
-
     if (orderbookTs1DOM) orderbookTs1DOM.innerHTML = '';
 }
-
-
 
 
 
@@ -157,20 +135,17 @@ function clearlastPriceTable() {
             lastpriceDisplay2DOM.firstChild.remove();
         }
     }
- 
 }
 
 
 function updateCurrency() {
     clearOrderbookTable()
     clearlastPriceTable()
-
 }
 
 function updateExchange(){
     clearOrderbookTable()
     clearlastPriceTable()
-  
 }
 
 window.onload = function() {

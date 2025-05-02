@@ -59,21 +59,24 @@ function compareData(newData) {
     // const currentData = newData;
     const previousDataEx1 = lastData[exchange1];
     const previousDataEx2 = lastData[exchange2];
-
+    // console.log(previousDataEx1)
     // If both previous data exist, compare them
     let bestBidEx1, bestBidSzEx1, bestAskEx1, bestAskSzEx1;
     let bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2;
+    // console.log(bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2)
 
     if (previousDataEx1[ccy1] && previousDataEx2[ccy2]) {
-        bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0];
-        bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][1];
-        bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0];
-        bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][1];
 
-        bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0];
-        bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][1];
-        bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0];
-        bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][1];
+        bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
+        bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
+        bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
+        bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][0][1];
+
+        bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
+        bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];
+        bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
+        bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1];
+
     }
     // console.log(bestBidEx1)
     // You can now use them outside the if block
@@ -83,6 +86,7 @@ function compareData(newData) {
         // if user wants to buy, it will be buying from exchange1 and selling exchange2 so we take exchange2's bid - exchange1's ask
         // buySpread = Number(bestBidEx2.toFixed(2)) - Number(bestAskEx1.toFixed(2))
         buySpread = Math.round((bestBidEx2 - bestAskEx1) * 100)/100
+    
         // buySzSpread = Math.round((bestBidSzEx2 - bestAskSzEx1) * 100)/100
         // console.log(bestBidSzEx2,bestAskSzEx1)
 
@@ -97,6 +101,8 @@ function compareData(newData) {
         buysellgap = Math.round((buySpread - sellSpread) * 100)/100
         
         // console.log(bestBidEx2,bestAskEx1, bestBidEx1,bestAskEx2)
+
+
         // console.log("buySpread",buySpread, `(${buySzSpread})` ,"\nsellSpread",sellSpread,`(${sellSpread})`)
 
         updateArbOrder(buySpread,buySzSpread,sellSpread,sellSzSpread,buysellgap)
@@ -244,7 +250,7 @@ function connectToSocketIO1(socketUrl1) {
         exchange: exchange_orderbook1
     };
 
-
+    repopulateArbBtnData()
     const socketUrl1 = wsServers[exchange_orderbook1][market_type_orderbook1];
     
     if (forceReconnect ) {
@@ -325,14 +331,17 @@ function connectToSocketIO2(socketUrl2) {
     function attachListeners2() {
     document.getElementById('market-type-orderbook2').addEventListener('change', () => {
         sendMarketData2();
+
     });
 
     document.getElementById('currency-input-orderbook2').addEventListener('change', () => {
         sendMarketData2();
+
     });
 
     document.getElementById('exchange2-input').addEventListener('change', () => {
         sendMarketData2();  // force reconnect
+
     });
     }
 
@@ -346,8 +355,10 @@ function connectToSocketIO2(socketUrl2) {
         market_type: market_type_orderbook2,
         exchange: exchange_orderbook2
     };
+    repopulateArbBtnData()
 
-    console.log(json_dict);
+
+    // console.log(json_dict);
 
     const socketUrl2 = wsServers[exchange_orderbook2][market_type_orderbook2];
     
