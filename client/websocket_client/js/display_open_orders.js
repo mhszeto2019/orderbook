@@ -75,6 +75,17 @@ async function populateOpenOrders() {
 
     
     try {
+        document.getElementById('oms-open-orders-body').innerHTML = `
+        <tr>
+            <td colspan="9" class="text-center text-muted">
+            <div class="d-flex justify-content-center align-items-center gap-2">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true"></div>
+                <span>Loading...</span>
+            </div>
+            </td>
+        </tr>
+        `;
+
         const Promises = await Promise.allSettled([okxPromise, htxPromise,deribitPromise,binancePromise]);
 
         let allOpenOrders = [];

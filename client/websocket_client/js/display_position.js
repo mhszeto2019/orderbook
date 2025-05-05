@@ -58,10 +58,21 @@ async function populatePositions() {
 
 
     try {
+        document.getElementById('oms-open-positions-body').innerHTML = `
+           <tr>
+            <td colspan="9" class="text-center text-muted">
+            <div class="d-flex justify-content-center align-items-center gap-2">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true"></div>
+                <span>Loading...</span>
+            </div>
+            </td>
+        </tr>
+        `;
         const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise,thirdOrderPromise,fourthOrderPromise]);
 
         // Array to hold combined positions
         let allPositions = [];
+
 
         // Handle OKX Response
         if (Promises[0] && Promises[0].status === 'fulfilled') {

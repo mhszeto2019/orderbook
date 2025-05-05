@@ -138,12 +138,12 @@ async def get_all_positions(
         # markets = exchange.load_markets()
 
         positions = exchange.fetch_positions(['BTC-PERPETUAL','ETH-PERPETUAL'])
-        
-        json_data = positions[0]
-        logger.info(json_data)
         if not positions or positions[0]['info']['size']=='0.0':
             logger.info('no positions')
             return []
+        json_data = positions[0]
+        logger.info(json_data)
+      
             
         logger.info(json_data)
         json_response = {}
