@@ -141,6 +141,9 @@ async def get_all_positions(
         # # markets = exchange.load_markets()
         # positions = exchange.fetch_positions(symbols=['BTC-USD-SWAP'])
         positions = exchange.fetch_positions()
+        if not positions:
+            logger.info('no positions')
+            return []
         json_data = positions[0]
         json_response = {}
         json_response['adl'] = json_data['info']['adl']

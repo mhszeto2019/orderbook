@@ -42,6 +42,14 @@ async function populateOpenOrders() {
         },
         body: JSON.stringify(request_data)
     })
+    const binancePromise =fetch(`http://${hostname}:6063/binanceperp/get_all_open_orders`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    })
 
     
     // // Set up both the OKX and HTX requests
@@ -67,7 +75,7 @@ async function populateOpenOrders() {
 
     
     try {
-        const Promises = await Promise.allSettled([okxPromise, htxPromise,deribitPromise]);
+        const Promises = await Promise.allSettled([okxPromise, htxPromise,deribitPromise,binancePromise]);
 
         let allOpenOrders = [];
         if (Promises[0] && Promises[0].status === 'fulfilled') {
@@ -123,6 +131,24 @@ async function populateOpenOrders() {
 
             else {
                 console.error('DERIBIT Request failed:', Promises[2].status);
+            } 
+        }
+        if (Promises[3] && Promises[3].status === 'fulfilled') {
+            const promise = Promises[3].value;
+
+            if (promise.ok) {
+                const binanceData = await promise.json();
+                console.log(binanceData)
+                binanceData.forEach(
+                    openOrder=>{
+                        console.log(openOrder)
+                        allOpenOrders.push(openOrder)
+                    }
+                )
+            }
+
+            else {
+                console.error('DERIBIT Request failed:', Promises[3].status);
             } 
         }
 

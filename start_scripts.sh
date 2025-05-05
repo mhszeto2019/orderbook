@@ -59,4 +59,7 @@ uvicorn app.fastapi.binanceperp.rest.public.get_binance_funding_rate:app --port 
 uvicorn app.fastapi.binanceperp.rest.public.get_binance_last_trades:app --port 6103
 
 uvicorn app.fastapi.binanceperp.rest.private.get_binance_positions:app --port 5073 --host 0.0.0.0 --reload
+uvicorn app.fastapi.binanceperp.rest.private.get_binance_orders:app --port 6063 --host 0.0.0.0 --reload
+uvicorn app.fastapi.binanceperp.rest.private.place_binance_order:app --port 5083 --host 0.0.0.0 --reload
+
 

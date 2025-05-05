@@ -140,6 +140,9 @@ async def get_all_positions(
         positions = exchange.fetch_positions(['BTC-PERPETUAL','ETH-PERPETUAL'])
         
         json_data = positions[0]
+        if not positions:
+            logger.info('no positions')
+            return []
         logger.info(json_data)
         json_response = {}
         json_response['adl'] = ''

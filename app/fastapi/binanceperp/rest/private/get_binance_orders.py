@@ -138,21 +138,25 @@ async def get_all_open_orders(
    api_creds_dict = json.loads(decrypted_data)
    try:
 
-      exchange = ccxt.binance({
+      exchange = ccxt.binancecoinm({
          'apiKey': api_creds_dict['binance_apikey'],
          'secret': api_creds_dict['binance_secretkey'],
+         # 'verbose':True
       })
+      exchange.options['portfolioMargin'] = True
+      exchange.options["warnOnFetchOpenOrdersWithoutSymbol"] = False
+      
 
       # # markets = exchange.load_markets()
       open_orders = exchange.fetchOpenOrders()
 
       if len(open_orders) == 0:
          return []
-
+      print(open_orders)
       json_data = open_orders[0]
       json_response = {}
       json_response['exchange'] = 'binanceperp'
-      json_response['instrument_id'] = json_data['info']['instrument_name'].replace('PERPETUAL','USD-SWAP')
+      json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','USD-SWAP')
       json_response['leverage'] = ''
       json_response['side'] = json_data['side']
       json_response['offset'] = ''
@@ -160,9 +164,9 @@ async def get_all_open_orders(
       json_response['fill_size'] = json_data['filled']
       # 1. Quotation; 2. Cancelled order; 3. Forced liquidation; 4. Delivery Order；22.ADL
       json_response['order_type'] = json_data['type'] 
-      json_response['order_type_cancellation'] = json_data['info']['order_type'] 
-      json_response['order_id'] = json_data['info']['order_id']
-      json_response['order_time'] = json_data['info']['creation_timestamp']
+      json_response['order_type_cancellation'] = json_data['info']['type'] 
+      json_response['order_id'] = json_data['info']['orderId']
+      json_response['order_time'] = json_data['info']['time']
 
       json_response['amount'] = json_data['amount']
 
@@ -176,8 +180,7 @@ async def get_all_open_orders(
       print(e)
       return  {"error":f"{e}"}
 
-# [{'info': {'label': '', 'price': '9.0e4', 'amount': '10.0', 'direction': 'buy', 'time_in_force': 'good_til_cancelled', 'max_show': '10.0', 'instrument_name': 'BTC-PERPETUAL', 'api': False, 'web': True, 'order_id': '99128858233', 'creation_timestamp': '1746000975962', 'mmp': False, 'replaced': False, 'filled_amount': '0.0', 'last_update_timestamp': '1746000975962', 'post_only': False, 'reduce_only': False, 'average_price': '0.0', 'contracts': '1.0', 'order_state': 'open', 'order_type': 'limit', 'is_liquidation': False, 'risk_reducing': False}, 'id': '99128858233', 'clientOrderId': None, 'timestamp': 1746000975962, 'datetime': '2025-04-30T08:16:15.962Z', 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': 'limit', 'timeInForce': 'GTC', 'postOnly': False, 'side': 'buy', 'price': 90000.0, 'triggerPrice': None, 'amount': 10.0, 'cost': 0.0, 'average': None, 'filled': 0.0, 'remaining': 10.0, 'status': 'open', 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'reduceOnly': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}]
-
+# [{'info': {'orderId': '173355713189', 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'web_xktJGM2lqV2QEzOhTizP', 'price': '80000', 'avgPrice': '0', 'origQty': '1', 'executedQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'LIMIT', 'reduceOnly': False, 'side': 'BUY', 'positionSide': 'BOTH', 'origType': 'LIMIT', 'time': '1746419158089', 'updateTime': '1746419158089', 'selfTradePreventionMode': 'EXPIRE_MAKER', 'priceMatch': 'NONE'}, 'id': '173355713189', 'clientOrderId': 'web_xktJGM2lqV2QEzOhTizP', 'timestamp': 1746419158089, 'datetime': '2025-05-05T04:25:58.089Z', 'lastTradeTimestamp': None, 'lastUpdateTimestamp': 1746419158089, 'symbol': 'BTC/USD:BTC', 'type': 'limit', 'timeInForce': 'GTC', 'postOnly': False, 'reduceOnly': False, 'side': 'buy', 'price': 80000.0, 'triggerPrice': None, 'amount': 1.0, 'cost': 0.0, 'average': None, 'filled': 0.0, 'remaining': 1.0, 'status': 'open', 'fee': None, 'trades': [], 'fees': [], 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}]
 
 
    return orders

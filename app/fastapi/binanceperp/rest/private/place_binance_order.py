@@ -113,7 +113,7 @@ class TradeRequest(BaseModel):
    offset2:str
    
 
-@app.post("/deribitperp/place_order")
+@app.post("/binanceperp/place_order")
 async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -143,61 +143,51 @@ async def place_order(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
    try:
-      exchange = ccxt.deribit({
-            'apiKey': api_creds_dict['deribit_apikey'],
-            'secret': api_creds_dict['deribit_secretkey'],
-        })
 
-      symbol = payload.instrument.replace('USD-SWAP','PERPETUAL')
+      exchange = ccxt.binancecoinm({
+         'apiKey': api_creds_dict['binance_apikey'],
+         'secret': api_creds_dict['binance_secretkey'],
+         # 'verbose':True
+      })
+      exchange.options['portfolioMargin'] = True
+
+      symbol = payload.instrument.replace('-USD-SWAP','USD_PERP')
       order_type = payload.ordType
       
-      amount= payload.sz * 100
+      amount= payload.sz 
       side = payload.side
       price = payload.px
       # order_type = 'limit'
       # price = '80000'
       params = {'offset': payload.offset, 'lever_rate': 5}
+
      
 
       if order_type == 'counterparty1':
-         order_type = 'market_limit'
+         order_type = 'limit'
+         params['priceMatch']= 'OPPONENT'
 
 
       elif order_type == 'counterparty5':
-         ticker = exchange.fetchOrderBook(symbol,5)
-         bid = ticker['bids'][0][0]
-         # bid_sz = ticker['bidVolume']
-         ask = ticker['asks'][0][0]
-         # ask_sz = ticker['askVolume']
+        
          order_type = 'limit'
+         params['priceMatch']= 'OPPONENT_5'
 
-         # if buy , we buy ask price
-         if side == 'buy': 
-            price = ask
-         else:
-            price = bid
+
       
 
       elif order_type == 'queue1':
-         # print('queue1')
-         params = {"post_only":True}
-         ticker = exchange.fetchTicker(symbol)
-         bid = ticker['bid']
-         # bid_sz = ticker['bidVolume']
-         ask = ticker['ask']
-         # ask_sz = ticker['askVolume']
+     
          order_type = 'limit'
+         params['priceMatch']= 'QUEUE'
 
-         # if buy , we buy ask price
-         if side == 'buy': 
-            price = bid
-         else:
-            price = ask
+         
 
-    
+        
 
-      order = exchange.create_order(symbol, order_type, side, amount, price, params)
+      order = exchange.create_order(symbol, order_type, side, amount, price,params)
       # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
+
       return order
 
    except Exception as e:
@@ -219,7 +209,7 @@ class CancelByIdTradeRequest(BaseModel):
    instrument_id:str
  
 
-@app.post("/deribitperp/cancel_order_by_id")
+@app.post("/binanceperp/cancel_order_by_id")
 async def cancel_order_by_id(
    payload: CancelByIdTradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker

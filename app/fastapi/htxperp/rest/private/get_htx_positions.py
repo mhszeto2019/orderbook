@@ -143,6 +143,10 @@ async def get_all_positions(
     # # markets = exchange.load_markets()
         # positions = exchange.fetch_positions(symbols=['BTC-USD'])
         positions = exchange.fetch_positions(symbols=['BTC-USD','ETH-USD'])
+        logger.info(f"POSITIONS:{positions}")
+        if not positions:
+            logger.info('no positions')
+            return []
         json_data = positions[0]
         logger.info(json_data)
         json_response = {}
