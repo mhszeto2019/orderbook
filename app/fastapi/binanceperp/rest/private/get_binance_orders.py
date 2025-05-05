@@ -152,28 +152,30 @@ async def get_all_open_orders(
 
       if len(open_orders) == 0:
          return []
-      print(open_orders)
-      json_data = open_orders[0]
-      json_response = {}
-      json_response['exchange'] = 'binanceperp'
-      json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','USD-SWAP')
-      json_response['leverage'] = ''
-      json_response['side'] = json_data['side']
-      json_response['offset'] = ''
-      json_response['price'] = json_data['price']
-      json_response['fill_size'] = json_data['filled']
-      # 1. Quotation; 2. Cancelled order; 3. Forced liquidation; 4. Delivery Order；22.ADL
-      json_response['order_type'] = json_data['type'] 
-      json_response['order_type_cancellation'] = json_data['info']['type'] 
-      json_response['order_id'] = json_data['info']['orderId']
-      json_response['order_time'] = json_data['info']['time']
+      json_data_arr = []
+      for json_data in open_orders:
+        
+         json_response = {}
+         json_response['exchange'] = 'binanceperp'
+         json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','-USD-SWAP')
+         json_response['leverage'] = ''
+         json_response['side'] = json_data['side']
+         json_response['offset'] = ''
+         json_response['price'] = json_data['price']
+         json_response['fill_size'] = json_data['filled']
+         # 1. Quotation; 2. Cancelled order; 3. Forced liquidation; 4. Delivery Order；22.ADL
+         json_response['order_type'] = json_data['type'] 
+         json_response['order_type_cancellation'] = json_data['info']['type'] 
+         json_response['order_id'] = json_data['info']['orderId']
+         json_response['order_time'] = json_data['info']['time']
 
-      json_response['amount'] = json_data['amount']
+         json_response['amount'] = json_data['amount']
 
-      json_response['ts'] = json_data['timestamp']
+         json_response['ts'] = json_data['timestamp']
+         json_data_arr.append(json_response)
 
-      print(json_response)
-      return [json_response]
+      print(json_data_arr)
+      return json_data_arr
 
    except Exception as e:
       logger.info(traceback.format_exc())

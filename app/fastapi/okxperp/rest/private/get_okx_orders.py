@@ -142,33 +142,33 @@ async def get_all_open_orders(
       open_orders = exchange.fetchOpenOrders()
       if len(open_orders) == 0:
          return []
-      json_data = open_orders[0]
-      
-      json_response = {}
-      json_response['exchange'] = 'okxperp'
-      json_response['instrument_id'] = json_data['info']['instId']
-      json_response['leverage'] = json_data['info']['lever']
-      json_response['side'] = json_data['info']['side']
-      json_response['offset'] = 'hedged'
-      
-      json_response['price'] = json_data['price']
-      json_response['fill_size'] = json_data['info']['fillSz']
-      json_response['order_type'] = json_data['info']['ordType']
-      json_response['order_type_cancellation'] = ''
+      json_data_arr = []
+      for json_data in open_orders:
+         json_response = {}
+         json_response['exchange'] = 'okxperp'
+         json_response['instrument_id'] = json_data['info']['instId']
+         json_response['leverage'] = json_data['info']['lever']
+         json_response['side'] = json_data['info']['side']
+         json_response['offset'] = 'hedged'
+         
+         json_response['price'] = json_data['price']
+         json_response['fill_size'] = json_data['info']['fillSz']
+         json_response['order_type'] = json_data['info']['ordType']
+         json_response['order_type_cancellation'] = ''
 
-      json_response['order_id'] = json_data['info']['ordId']
-      json_response['order_time'] = json_data['info']['uTime']
-      json_response['amount'] = json_data['amount']
+         json_response['order_id'] = json_data['info']['ordId']
+         json_response['order_time'] = json_data['info']['uTime']
+         json_response['amount'] = json_data['amount']
 
-      json_response['ts'] = json_data['timestamp']
-      json_response['attachAlgoOrds'] = json_data['info']['attachAlgoOrds']
+         json_response['ts'] = json_data['timestamp']
+         json_response['attachAlgoOrds'] = json_data['info']['attachAlgoOrds']
 
-      print(json_response)
+         json_data_arr.append(json_response)
+      return json_data_arr
       
       # [{'info': {'accFillSz': '0', 'algoClOrdId': '', 'algoId': '', 'attachAlgoClOrdId': '', 'attachAlgoOrds': [], 'avgPx': '', 'cTime': '1745572440071', 'cancelSource': '', 'cancelSourceReason': '', 'category': 'normal', 'ccy': '', 'clOrdId': '', 'fee': '0', 'feeCcy': 'BTC', 'fillPx': '', 'fillSz': '0', 'fillTime': '', 'instId': 'BTC-USD-SWAP', 'instType': 'SWAP', 'isTpLimit': 'false', 'lever': '5', 'linkedAlgoOrd': {'algoId': ''}, 'ordId': '2451823690830405632', 'ordType': 'limit', 'pnl': '0', 'posSide': 'net', 'px': '80000', 'pxType': '', 'pxUsd': '', 'pxVol': '', 'quickMgnType': '', 'rebate': '0', 'rebateCcy': 'BTC', 'reduceOnly': 'false', 'side': 'buy', 'slOrdPx': '', 'slTriggerPx': '', 'slTriggerPxType': '', 'source': '', 'state': 'live', 'stpId': '', 'stpMode': 'cancel_maker', 'sz': '1', 'tag': '', 'tdMode': 'cross', 'tgtCcy': '', 'tpOrdPx': '', 'tpTriggerPx': '', 'tpTriggerPxType': '', 'tradeId': '', 'uTime': '1745572440071'}, 'id': '2451823690830405632', 'clientOrderId': None, 'timestamp': 1745572440071, 'datetime': '2025-04-25T09:14:00.071Z', 'lastTradeTimestamp': None, 'lastUpdateTimestamp': 1745572440071, 'symbol': 'BTC/USD:BTC', 'type': 'limit', 'timeInForce': None, 'postOnly': None, 'side': 'buy', 'price': 80000.0, 'stopLossPrice': None, 'takeProfitPrice': None, 'triggerPrice': None, 'average': None, 'cost': 0.0, 'amount': 1.0, 'filled': 0.0, 'remaining': 1.0, 'status': 'open', 'fee': {'cost': 0.0, 'currency': 'BTC'}, 'trades': [], 'reduceOnly': False, 'fees': [{'cost': 0.0, 'currency': 'BTC'}], 'stopPrice': None}]
 
 
-      return [json_response]
 
    except:
       logger.info(traceback.format_exc())

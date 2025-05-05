@@ -20,7 +20,12 @@ SERVICE_DIR="/var/www/html/orderbook/systemd"
 declare -A SERVICES_PORTS
 SERVICES_PORTS=(
 
-  ["okx_orderbook_ws"]=$OKX_DISPLAY_ORDERBOOK_PORT #WS
+  # ["htx_positions"]=$HTX_DISPLAY_ASSET_AND_POSITION_PORT #REST
+  # ["htx_open_orders"]=$HTX_DISPLAY_OPEN_ORDERS_PORT #REST
+
+  ["get_binance_positions"]=$BINANCE_DISPLAY_ASSET_AND_POSITION_PORT #REST
+  ["get_binance_orders"]=$BINANCE_DISPLAY_OPEN_ORDERS_PORT #REST
+  ["place_binance_order"]=$BINANCE_TRADING_PORT
 
 
 )
@@ -49,11 +54,12 @@ okxenv="$HOME/environments/okx"
 [Unit]
 Description=Uvicorn instance for $SERVICE_NAME
 After=network.target
+
 [Service]
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/uvicorn app.fastapi.okxperp.ws.public.$SERVICE_NAME:app --port $PORT --host 0.0.0.0 --reload
+ExecStart=$ENV_PATH/bin/uvicorn app.fastapi.binanceperp.rest.private.$SERVICE_NAME:app --port $PORT --host 0.0.0.0 --reload
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

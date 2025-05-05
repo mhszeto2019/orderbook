@@ -239,15 +239,17 @@ async def cancel_order_by_id(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
  
-   exchange = ccxt.deribit({
-            'apiKey': api_creds_dict['deribit_apikey'],
-            'secret': api_creds_dict['deribit_secretkey'],
-        })
+   exchange = ccxt.binancecoinm({
+      'apiKey': api_creds_dict['binance_apikey'],
+      'secret': api_creds_dict['binance_secretkey'],
+      # 'verbose':True
+   })
+   exchange.options['portfolioMargin'] = True
 
    print(payload.order_id)
    instrument_id = payload.instrument_id
    if "USD-SWAP" in instrument_id:
-      instrument_id = instrument_id.replace('USD-SWAP','PERPETUAL')
+      instrument_id = instrument_id.replace('-USD-SWAP','USD_PERP')
    canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
 
    return canceled_order

@@ -83,8 +83,9 @@ async function populateOpenOrders() {
             console.log(promise)
             if (promise.ok) {
                 const okxData = await promise.json();
-                
-                console.log(okxData)
+                if (!okxData){
+                    return []
+                }
                 okxData.forEach(
                     openOrder=>{
                         console.log(openOrder)
@@ -103,6 +104,9 @@ async function populateOpenOrders() {
             if (promise.ok) {
                 const htxData = await promise.json();
                 console.log(htxData)
+                if (!htxData){
+                    return []
+                }
                 htxData.forEach(
                     openOrder=>{
                         console.log(openOrder)
@@ -119,9 +123,12 @@ async function populateOpenOrders() {
             const promise = Promises[2].value;
 
             if (promise.ok) {
-                const htxData = await promise.json();
-                console.log(htxData)
-                htxData.forEach(
+                const deribitData = await promise.json();
+                console.log(deribitData)
+                if (!deribitData){
+                    return []
+                }
+                deribitData.forEach(
                     openOrder=>{
                         console.log(openOrder)
                         allOpenOrders.push(openOrder)
@@ -139,6 +146,9 @@ async function populateOpenOrders() {
             if (promise.ok) {
                 const binanceData = await promise.json();
                 console.log(binanceData)
+                if (!binanceData){
+                    return []
+                }
                 binanceData.forEach(
                     openOrder=>{
                         console.log(openOrder)
@@ -517,7 +527,9 @@ async function handleDelete(instId, ordId,exchange) {
     const exchange_map= {
         'okxperp':5080,
         'htxperp':5081,
-        'deribitperp':5082
+        'deribitperp':5082,
+        'binanceperp':5083
+
     }
     // Call the API using fetch
     const firstOrderPromise = fetch(`http://${hostname}:${exchange_map[exchange]}/${exchange}/cancel_order_by_id`, {

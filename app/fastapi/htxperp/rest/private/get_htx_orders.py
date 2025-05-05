@@ -159,27 +159,27 @@ async def get_all_open_orders(
       
       if len(open_orders) == 0:
          return []
-      json_data = open_orders[0]
-      json_response = {}
-      json_response['exchange'] = 'htxperp'
-      json_response['instrument_id'] = json_data['info']['contract_code'] +'-SWAP'
-      json_response['leverage'] = json_data['info']['lever_rate']
-      json_response['side'] = json_data['side']
-      json_response['offset'] = json_data['info']['offset']
-      json_response['price'] = json_data['price']
-      json_response['fill_size'] = json_data['filled']
-      # 1. Quotation; 2. Cancelled order; 3. Forced liquidation; 4. Delivery Order；22.ADL
-      json_response['order_type'] = json_data['type'] 
-      json_response['order_type_cancellation'] = json_data['info']['order_type'] 
-      json_response['order_id'] = json_data['info']['order_id']
-      json_response['order_time'] = json_data['info']['update_time']
+      json_data_arr = []
+      for json_data in open_orders:
+         json_response = {}
+         json_response['exchange'] = 'htxperp'
+         json_response['instrument_id'] = json_data['info']['contract_code'] +'-SWAP'
+         json_response['leverage'] = json_data['info']['lever_rate']
+         json_response['side'] = json_data['side']
+         json_response['offset'] = json_data['info']['offset']
+         json_response['price'] = json_data['price']
+         json_response['fill_size'] = json_data['filled']
+         # 1. Quotation; 2. Cancelled order; 3. Forced liquidation; 4. Delivery Order；22.ADL
+         json_response['order_type'] = json_data['type'] 
+         json_response['order_type_cancellation'] = json_data['info']['order_type'] 
+         json_response['order_id'] = json_data['info']['order_id']
+         json_response['order_time'] = json_data['info']['update_time']
 
-      json_response['amount'] = json_data['amount']
+         json_response['amount'] = json_data['amount']
 
-      json_response['ts'] = json_data['timestamp']
-
-      print(json_response)
-      return [json_response]
+         json_response['ts'] = json_data['timestamp']
+         json_data_arr.append(json_response)
+      return json_data_arr
 
    except Exception as e:
       logger.info(traceback.format_exc())

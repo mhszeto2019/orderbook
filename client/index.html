@@ -134,8 +134,6 @@
 
     <div class="container-fluid p-0 background">
 
-     
-
             
 
             <!-- WARNING ALERT -->
@@ -180,6 +178,11 @@
             </div>
 
            
+           
+    
+
+        <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;" id="toast-container"></div>
+
 
             
         <!-- Exchange Cards -->
@@ -271,7 +274,9 @@
         /* Dark mode select dropdowns */
 .dark-mode select,
 .dark-mode input,
-.dark-mode select.form-select {
+.dark-mode select.form-select ,
+.dark-mode .buy-sell-toast-container,
+.dark-mode .toast-header{
   background-color: #343a40 !important;
   color: white !important;
   border-color: #495057 !important;
@@ -468,6 +473,10 @@ body.dark-mode.force-black {
 /* For dark mode: when inside .dark-mode class */
 .dark-mode .invalid-select {
     border: 1px solid red; /* Red border when inside dark mode */
+}
+
+.toast-body.text-error {
+  color: #dc3545 !important; /* Bootstrap red */
 }
 
     </style>
@@ -908,6 +917,12 @@ body.dark-mode.force-black {
 
             <!-- FORM for ordering -->
             <div class="col shadow-sm rounded rounded-lg border p-4  ">
+
+    
+  
+
+
+  
 
                 <!-- This section will only be visible if the JWT is NOT present -->
                 <div id="loginPromptBtn" class="alert alert-warning text-center h-100">

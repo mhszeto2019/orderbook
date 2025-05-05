@@ -15,7 +15,40 @@ exchange_api_port_map.set('deribitperp','5082')
 exchange_api_port_map.set('binanceperp','5083')
 
 
+function showDone(message, error = false) {
+    const container = document.getElementById('toast-container');
 
+    const toastEl = document.createElement('div');
+    toastEl.className = 'toast fade';
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+
+    toastEl.innerHTML = `
+        <div class="toast-header buy-sell-toast-container">
+            <strong class="me-auto">${error ? 'Error' : 'Notice'}</strong>
+            <small>just now</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body buy-sell-toast-container ${error ? 'text-error' : ''}">
+            ${message}
+        </div>
+    `;
+
+    container.appendChild(toastEl);
+
+    const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 3000
+    });
+
+    toast.show();
+
+    // Optional: remove toast from DOM after it's hidden
+    toastEl.addEventListener('hidden.bs.toast', () => {
+        toastEl.remove();
+    });
+}
 
 async function handleClick(type) {
     const token = getAuthToken();
@@ -120,40 +153,81 @@ async function handleClick(type) {
         },
         body: JSON.stringify(secondOrderData)
     });
+    const results = await Promise.allSettled([firstOrderPromise, secondOrderPromise])
+    console.log("RESULTSSSSSSSSSSSSSSSSSSSSSSS",results)
+    if (results[0].status === 'fulfilled') {
+                
+        const firstResult = await results[0].value.json();
+
+        if (firstResult['error']) {
+            showToast(firstResult['error'])
+            showDone(`${firstResult['error']}`,true)
+
+        } else {
+            console.log("DONEE SUCCESSSSS")
+            firstResult.info['exchange'] = fastapi_folder2
+            showToast(JSON.stringify(firstResult.info))
+            showDone(`${fastapi_folder1}-PLACE ORDER SUCCESS`,false)
+
+        }
+    }
+
+    if (results[1].status === 'fulfilled') {
+               
+                
+        const secondResult = await results[1].value.json();
+
+        if (secondResult['error']) {
+            showToast(secondResult['error'])
+            showDone(`${secondResult['error']}`,true)
+
+        } else {
+            console.log("DONEE SUCCESSSSS")
+            secondResult.info['exchange'] = fastapi_folder2
+            showToast(JSON.stringify(secondResult.info))
+            showDone(`${fastapi_folder2}-PLACE ORDER SUCCESS`,false)
+
+        }
+    }
+
 
     // Run both requests concurrently without waiting for them to finish
-    Promise.allSettled([firstOrderPromise, secondOrderPromise]).then((results) => {
-        // Handle first order response
-        if (results[0].status === 'fulfilled') {
-            results[0].value.json().then(firstResult => {
-                if (firstResult.data[0]['errorCode'] || firstResult.data[0]['sCode'] === 400) {
-                    showToast(`Error with first order: ${firstResult.data[0]['sMsg']}`, `${firstResult.data[0]['exchange']}`, `${firstResult.data[0]['ts']}`, `${firstResult.data[0]['ordId']}`, `${firstResult.data[0]['sCode']}`, `${firstResult.data[0]['errorCode']}`);
-                } else {
-                    showToast(`Success with first order: ${firstResult.data[0]['sMsg']}`, `${firstResult.data[0]['exchange']}`, `${firstResult.data[0]['ts']}`, `${firstResult.data[0]['ordId']}`, `${firstResult.data[0]['sCode']}`, `${firstResult.data[0]['errorCode']}`);
-                }
-            }).catch(error => console.error("Error parsing first order response:", error));
-        } else {
-            console.error('Error with first order:', results[0].reason);
-            showToast(`Error with first order: ${results[0].reason}`, 4000);
-        }
+    // Promise.allSettled([firstOrderPromise, secondOrderPromise]).then((results) => {
+    //     // Handle first order response
+    //     console.log(results[0])
+    //     if (results.status === 'fulfilled') {
+    //         results.value.json().then(firstResult => {
+    //             if (firstResult.data[0]['errorCode'] || firstResult.data[0]['sCode'] === 400) {
+    //                 showToast(`Error with first order: ${firstResult.data[0]['sMsg']}`, `${firstResult.data[0]['exchange']}`, `${firstResult.data[0]['ts']}`, `${firstResult.data[0]['ordId']}`, `${firstResult.data[0]['sCode']}`, `${firstResult.data[0]['errorCode']}`);
+    //             } else {
+    //                 // showToast(`Success with first order: ${firstResult.data[0]['sMsg']}`, `${firstResult.data[0]['exchange']}`, `${firstResult.data[0]['ts']}`, `${firstResult.data[0]['ordId']}`, `${firstResult.data[0]['sCode']}`, `${firstResult.data[0]['errorCode']}`);
+    //                 // showDone('hello',true)
+    //                 showToast(JSON.stringify(firstResult.info))
+    //                 showDone(`${fastapi_folder1}-PLACE ORDER SUCCESS`,false)
+    //             }
+    //         }).catch(error => console.error("Error parsing first order response:", error));
+    //     } else {
+    //         console.error('Error with first order:', results[0].reason);
+    //         showToast(`Error with first order: ${results[0].reason}`, 4000);
+    //     }
 
-        // Handle second order response
-        if (results[1].status === 'fulfilled') {
-            results[1].value.json().then(secondResult => {
-                if (secondResult.data[0]['errorCode'] || secondResult.data[0]['sCode'] === 400) {
-                    showToast(`Error with second order: ${secondResult.data[0]['sMsg']}`, `${secondResult.data[0]['exchange']}`, `${secondResult.data[0]['ts']}`, `${secondResult.data[0]['ordId']}`, `${secondResult.data[0]['sCode']}`, `${secondResult.data[0]['errorCode']}`);
-                } else {
-                    showToast(`Success with second order: ${secondResult.data[0]['sMsg']}`, `${secondResult.data[0]['exchange']}`, `${secondResult.data[0]['ts']}`, `${secondResult.data[0]['ordId']}`, `${secondResult.data[0]['sCode']}`, `${secondResult.data[0]['errorCode']}`);
-                }
-            }).catch(error => console.error("Error parsing second order response:", error));
-        } else {
-            console.error('Error with second order:', results[1].reason);
-            showToast(`Error with second order: ${results[1].reason}`, 4000);
-        }
+    //     // Handle second order response
+    //     // if (results.status === 'fulfilled') {
+    //     //     results.value.json().then(secondResult => {
+    //     //         if (secondResult.data[0]['errorCode'] || secondResult.data[0]['sCode'] === 400) {
+    //     //             showToast(`Error with second order: ${secondResult.data[0]['sMsg']}`, `${secondResult.data[0]['exchange']}`, `${secondResult.data[0]['ts']}`, `${secondResult.data[0]['ordId']}`, `${secondResult.data[0]['sCode']}`, `${secondResult.data[0]['errorCode']}`);
+    //     //         } else {
+    //     //             showToast(`Success with second order: ${secondResult.data[0]['sMsg']}`, `${secondResult.data[0]['exchange']}`, `${secondResult.data[0]['ts']}`, `${secondResult.data[0]['ordId']}`, `${secondResult.data[0]['sCode']}`, `${secondResult.data[0]['errorCode']}`);
+    //     //         }
+    //     //     }).catch(error => console.error("Error parsing second order response:", error));
+    //     // } else {
+    //     //     console.error('Error with second order:', results[1].reason);
+    //     //     showToast(`Error with second order: ${results[1].reason}`, 4000);
+    //     // }
 
-        // Populate positions asynchronously
-        populatePositions();
-    }).catch(error => console.error("Error with Promise.allSettled:", error));
+    //     // Populate positions asynchronously
+    //     populatePositions();
+    // }).catch(error => console.error("Error with Promise.allSettled:", error));
 }
 
 

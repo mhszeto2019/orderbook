@@ -14,11 +14,45 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNotificationHub();
         updateNotificationCount();
     }
-   
+
+    function showDone(message, error = false) {
+        const container = document.getElementById('toast-container');
+    
+        const toastEl = document.createElement('div');
+        toastEl.className = 'toast fade';
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+    
+        toastEl.innerHTML = `
+            <div class="toast-header buy-sell-toast-container">
+                <strong class="me-auto">${error ? 'Error' : 'Notice'}</strong>
+                <small>just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body buy-sell-toast-container ${error ? 'text-error' : ''}">
+                ${message}
+            </div>
+        `;
+    
+        container.appendChild(toastEl);
+    
+        const toast = new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 3000
+        });
+    
+        toast.show();
+    
+        // Optional: remove toast from DOM after it's hidden
+        toastEl.addEventListener('hidden.bs.toast', () => {
+            toastEl.remove();
+        });
+    }
+    
     // showToast('Refresh page','exchange','ts',null,400,'undefined')
     
     document.addEventListener('DOMContentLoaded', function () {
-        
         const marketTab = document.getElementById('market-tab');
         const limitTab = document.getElementById('limit-tab');
         const ordTypeInput = document.getElementById('order-type-input');
@@ -109,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitButton) {
 
             if (submitButton.value === "buy") {
+                
+
                 if (leadingExchange == laggingExchange){
                     alert('SAME EXCHANGE')
                 }
@@ -176,9 +212,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (firstResult['error']) {
                     showToast(firstResult['error'])
+                    showDone(`${firstResult['error']}`,true)
+
                 } else {
                     firstResult.info['exchange'] = fastapi_folder1
                     showToast(JSON.stringify(firstResult.info))
+                    showDone(`${fastapi_folder1}-PLACE ORDER SUCCESS`,false)
+
                 }
             }
 
@@ -212,9 +252,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (firstResult['error']) {
                     showToast(firstResult['error'])
+                    showDone(`${firstResult['error']}`,true)
+
                 } else {
                     firstResult.info['exchange'] = fastapi_folder2
                     showToast(JSON.stringify(firstResult.info))
+                    showDone(`${fastapi_folder2}-PLACE ORDER SUCCESS`,false)
+
                 }
             }
             
