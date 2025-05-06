@@ -1,42 +1,4 @@
-# import ccxt.pro
-# from asyncio import run
 
-
-# print('CCXT Pro version', ccxt.pro.__version__)
-
-
-# async def main():
-#     exchange = ccxt.pro.okx({
-#         'options': {
-#             'watchOrderBook': {
-#                 # 'depth': 'bbo-tbt',  # tick-by-tick best bidask
-#                 'depth':'books5'
-#             },
-#         },
-#     })
-#     markets = await exchange.load_markets()
-#     # exchange.verbose = True  # uncomment for debugging purposes if necessary
-#     symbol = 'BTC-USD-SWAP'
-#     while True:
-#         try:
-#             # -----------------------------------------------------------------
-#             # use this:
-#             # orderbook = await exchange.watch_order_book(symbol)
-#             # print(orderbook['datetime'], symbol, orderbook['asks'][0], orderbook['bids'][0])
-#             # -----------------------------------------------------------------
-#             # or this:
-#             tick = await exchange.watchOrderBook(symbol)
-#             print(tick)
-#             # print(ticker['datetime'], symbol, [ticker['ask'], ticker['askVolume']], [ticker['bid'], ticker['bidVolume']])
-#             # -----------------------------------------------------------------
-#         except Exception as e:
-#             print(type(e).__name__, str(e))
-#             break
-#     await exchange.close()
-
-
-# run(main())
-# # main()
 
 
 import json, asyncio, os, traceback
@@ -55,7 +17,6 @@ redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=Tr
 from app.util import token_required,get_logger
 
 logger = logging.getLogger()
-logger.info("HELLO")
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,9 +32,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Store connected WebSocket clients
-# clients: List[WebSocket] = []
-# clients: List[WebSocket] = []
+
 
 
 import ccxt.pro

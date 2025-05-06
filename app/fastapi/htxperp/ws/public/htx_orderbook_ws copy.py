@@ -106,12 +106,19 @@ class OrderBookStreamer:
         self.running = False
         self.symbol = None
         self.websocket_client = websocket_client
-    
+        self.contract_formatter = {
+            "deribit":100,
+            "okx":1,
+            "htx":1,
+            "binance":1
+        }
 
     async def start(self, symbol="BTC-USD-SWAP"):
         exchange_class = self.exchange_class.lower()  # e.g., "okx", "binance", etc.
         # Get the exchange class dynamically
+
         exchange_class = getattr(ccxt.pro, exchange_class)
+        # print(exchange_class)
         # Instantiate the exchange
         self.exchange = exchange_class({
             'options': {
@@ -126,26 +133,36 @@ class OrderBookStreamer:
         try:
             while self.running:
                 # Example fetch
-                conditional_symbol = symbol.replace("-SWAP","") if self.exchange_class in ['htx'] else symbol
-                
+                if self.exchange_class == 'htx':
+                    conditional_symbol = symbol.replace("-SWAP", "")
+                elif self.exchange_class == 'deribit':
+                    conditional_symbol = symbol.replace("USD-SWAP", "PERPETUAL")
+                elif self.exchange_class == 'binance':
+                    conditional_symbol = symbol.replace("-USD-SWAP", "USD_PERP")
+
+                else:
+                    conditional_symbol = symbol
+
                 orderbook = await self.exchange.watch_order_book(conditional_symbol)
+                # self.normalize_contract_size(self.exchange_class,orderbook["bids"][:10])
+                # print(orderbook)
                 # print(orderbook["bids"][0],orderbook['asks'][0])
                 await broadcast({
-                    "symbol": self.symbol,
-                    "bids": orderbook["bids"][:10],
-                    "asks": orderbook["asks"][:10],
+                    "symbol": f"{self.symbol}",
+                    "bids": self.normalize_contract_size(self.exchange_class,orderbook["bids"][:10]),
+                    "asks": self.normalize_contract_size(self.exchange_class,orderbook["asks"][:10]),
                     "timestamp": orderbook["timestamp"],
-                    "best_bid":orderbook['bids'][0],
-                    "best_ask":orderbook['asks'][0],
+                    "best_bid":self.normalize_contract_size(self.exchange_class,[orderbook['bids'][0]]),
+                    "best_ask":self.normalize_contract_size(self.exchange_class,[orderbook['asks'][0]]),
                     "exchange":self.exchange_name,
                     # 'market_type':self.market_type
                 },self.websocket_client)
                 # await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"Streamer error: {e}")
+            logger.error(f"Streamer error: {e}")
         finally:
             # await self.exchange.close()
-            print("STOP ENSURED")
+            # print("STOP ENSURED")
             await self.stop()
 
     async def stop(self):
@@ -157,10 +174,22 @@ class OrderBookStreamer:
             await self.exchange.close()  # this closes aiohttp connector
 
     async def change_symbol(self, new_symbol):
-        print('change symbol')
+        # print('change symbol')
         # await self.stop()
         # await self.start(new_symbol)
         self.symbol=new_symbol
+
+    def normalize_contract_size(self,exchange,book_arr):
+        # exchange with 3 parameters px,sz
+        if exchange in ['deribit','okx']:
+            new_arr = []
+            divisor = self.contract_formatter[exchange]
+            for px,sz,_ in book_arr:
+                new_arr.append([px,sz/divisor,_])
+            # print(new_arr)
+            return new_arr
+        else:
+            return book_arr
 
 
 @app.websocket("/ws")
@@ -175,7 +204,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             try:
                 msg_from_client = await websocket.receive_text()
-                print(msg_from_client)
+                # print(msg_from_client)
                 json_data = json.loads(msg_from_client)
                 action = json_data['action']
                 ccy = json_data['ccy']
@@ -188,7 +217,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
             if action == 'start':
-                print('start',ccy)
+                # print('start',ccy)
                 if streamer_task and not streamer_task.done():
                     streamer_task.cancel()
                 streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_class=exchange,market_type=market_type,websocket_client=websocket)
@@ -196,7 +225,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(json.dumps({"pong":True}))
 
             elif action == 'stop':
-                print('stop')
+                # print('stop')
                 await streamer.stop()
                 await websocket.send_text(json.dumps({"pong":True}))
 
@@ -247,7 +276,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             try:
                 msg_from_client = await websocket.receive_text()
-                print(msg_from_client)
+                # print(msg_from_client)
                 json_data = json.loads(msg_from_client)
                 action = json_data['action']
                 ccy = json_data['ccy']
@@ -264,7 +293,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if action == 'start':
                 if streamer_task and not streamer_task.done():
                     streamer_task.cancel()
-                print('start',ccy)
+                # print('start',ccy)
                 streamer = OrderBookStreamer(sio=sio, depth=depth,exchange_class=exchange,market_type=market_type,websocket_client=websocket)
                 streamer_task = asyncio.create_task(streamer.start(ccy))
                 await websocket.send_text(json.dumps({"pong":True}))
@@ -302,6 +331,8 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         if streamer:
             await streamer.stop()
+
+
 
 
 
