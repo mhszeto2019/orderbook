@@ -59,8 +59,8 @@ class OrderBookStreamer:
         self.sio = sio
         self.depth = depth
         self.market_type = market_type
-        self.exchange_name = exchange_class + market_type
-        self.exchange_class = exchange_class
+        self.exchange_name = exchange_class + market_type #binanceperp , deribitperp ...
+        self.exchange_class = exchange_class #binance, deribit,okx ...
         self.exchange = None
         self.running = False
         self.symbol = None
@@ -75,9 +75,7 @@ class OrderBookStreamer:
     async def start(self, symbol="BTC-USD-SWAP"):
         exchange_class = self.exchange_class.lower()  # e.g., "okx", "binance", etc.
         # Get the exchange class dynamically
-
         exchange_class = getattr(ccxt.pro, exchange_class)
-        # print(exchange_class)
         # Instantiate the exchange
         self.exchange = exchange_class({
             'options': {
@@ -92,16 +90,28 @@ class OrderBookStreamer:
         try:
             while self.running:
                 # Example fetch
-                if self.exchange_class == 'htx':
+                # if self.exchange_class == 'htx':
+                #     conditional_symbol = symbol.replace("-SWAP", "")
+                # elif self.exchange_class == 'deribit':
+                #     conditional_symbol = symbol.replace("USD-SWAP", "PERPETUAL")
+                # elif self.exchange_class == 'binance':
+                #     conditional_symbol = symbol.replace("-USD-SWAP", "USD_PERP")
+
+                if self.exchange_name == 'htxperp':
                     conditional_symbol = symbol.replace("-SWAP", "")
-                elif self.exchange_class == 'deribit':
+                elif self.exchange_name == 'deribitperp':
                     conditional_symbol = symbol.replace("USD-SWAP", "PERPETUAL")
-                elif self.exchange_class == 'binance':
+                elif self.exchange_name == 'binanceperp':
                     conditional_symbol = symbol.replace("-USD-SWAP", "USD_PERP")
+                elif self.exchange_name == 'binancespot':
+                    conditional_symbol = symbol.replace("-", "")
+                elif self.exchange_name == 'deribitspot':
+                    conditional_symbol = symbol.replace("-", "_")
+                elif self.exchange_name == 'htxspot':
+                    conditional_symbol = symbol.replace("-", "/")
 
                 else:
                     conditional_symbol = symbol
-
                 orderbook = await self.exchange.watch_order_book(conditional_symbol)
                 # self.normalize_contract_size(self.exchange_class,orderbook["bids"][:10])
                 # print(orderbook)

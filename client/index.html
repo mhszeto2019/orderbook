@@ -155,9 +155,9 @@
                     <!-- Market Selector -->
                     <div class="d-flex align-items-center me-3 flex-shrink-0 px-3">
                         <select id="market-type" class="form-select form-select-sm border-0 shadow-none  rounded-pill" onchange="updateCurrencyOptions()">
-                        <option value="">Market</option>
+                        <option value="" disabled>--Market Type--</option>
                         <option value="perp" selected>PERP/FUTURES</option>
-                        <option value="spot">Spot</option>
+                        <!-- <option value="spot">Spot</option> -->
                         </select>
                     </div>
                     <!-- Currency Selector -->
@@ -609,8 +609,9 @@ body.dark-mode.force-black {
                                             </span>
                                             <select id="market-type-orderbook1" class="form-select" onchange="updateCurrencyOptionsOrderbook1()">
                                                 <option value="">Select Market</option>
-                                                <!-- <option value="spot" selected>SPOT</option> -->
                                                 <option value="perp" selected>PERP/FUTURES</option>
+                                                <option value="spot" >SPOT</option>
+                                                
                                                 <!-- <option value="futures">FUTURES</option> -->
                                             </select>
                                         </div>
@@ -635,8 +636,8 @@ body.dark-mode.force-black {
                                             </span>
                                             <select id="market-type-orderbook2" class="form-select" onchange="updateCurrencyOptionsOrderbook2()">
                                                 <option value="">Select Market</option>
-                                                <!-- <option value="spot" selected>SPOT</option> -->
                                                 <option value="perp" selected>PERP/FUTURES</option>
+                                                <option value="spot" >SPOT</option>
                                                 <!-- <option value="futures">FUTURES</option> -->
                                             </select>
                                         </div>
@@ -767,7 +768,9 @@ body.dark-mode.force-black {
                                                         <thead class="">
                                                             <tr class="text-secondary small">
                                                                 <th style="position: sticky; top: 0; z-index: 2; text-align: center;">Price(USD)</th>
-                                                                <th style="position: sticky; top: 0; z-index: 2; text-align: center;">Size</th>
+                                                                <th style="position: sticky; top: 0; z-index: 2; text-align: center;">Size
+                                                                    <tag id = 'sizeType'></tag>
+                                                                </th>
                                                             </tr>
                                                         </thead>
                                                         <tbody id="order-data-table-body-1">
@@ -803,7 +806,9 @@ body.dark-mode.force-black {
                                                         <thead class="">
                                                             <tr class="text-secondary small">
                                                                 <th style="position: sticky; top: 0; ; z-index: 2; text-align: center;">Price(USD)</th>
-                                                                <th style="position: sticky; top: 0; ; z-index: 2; text-align: center;">Size</th>
+                                                                <th style="position: sticky; top: 0; ; z-index: 2; text-align: center;">Size
+                                                                    <tag id = 'sizeType'></tag>
+                                                                </th>
                                                             </tr>
                                                         </thead>
 

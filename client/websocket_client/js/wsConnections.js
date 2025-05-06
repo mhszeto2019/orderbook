@@ -6,8 +6,10 @@ const wsConnections = {};
 // Store the exchange data for each exchange
 const lastData = {
     'okxperp': {},
+    'okxspot':{},
     'htxperp': {},
     'binanceperp':{},
+    'binancespot':{},
     'deribitperp':{}
 };
 
@@ -55,30 +57,67 @@ function compareData(newData) {
 
     }
     // console.log(exchange1,exchange2)
-    // const currentData = newData;
     const previousDataEx1 = lastData[exchange1];
     const previousDataEx2 = lastData[exchange2];
-    // console.log(previousDataEx1)
+
+    
     // If both previous data exist, compare them
     let bestBidEx1, bestBidSzEx1, bestAskEx1, bestAskSzEx1;
     let bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2;
     // console.log(bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2)
 
-    if (previousDataEx1[ccy1] && previousDataEx2[ccy2]) {
+    // if (previousDataEx1[ccy1] && previousDataEx2[ccy2]) {
 
-        bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
-        bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
-        bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
-        bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][0][1];
+    //     bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
+    //     bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
+    //     bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
+    //     bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][0][1];
 
-        bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
-        bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];
-        bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
-        bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1];
+    //     bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
+    //     bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];
+    //     bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
+    //     bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1];
 
+    // }
+    if (previousDataEx1[ccy1] ) {
+        if (marketType1 == 'perp'){
+            bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
+            bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
+            bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
+            bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][0][1];
+    
+        }
+        else if(marketType1 =='spot'){
+            bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
+            bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1]*bestBidEx1/100;
+            bestBidSzEx1 = Number((previousDataEx1[ccy1]['best_bid'][0][1] * bestBidEx1 / 100).toFixed(2));
+            bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
+            // bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][0][1]*bestAskEx1/100;
+            bestAskSzEx1 = Number((previousDataEx1[ccy1]['best_ask'][0][1] * bestAskEx1 / 100).toFixed(2));
+            // console.log(bestBidSzEx1,bestAskSzEx1)
+        }
+     
     }
-    // console.log(bestBidEx1)
-    // You can now use them outside the if block
+    if (previousDataEx2[ccy2]){
+        if (marketType2 == 'perp'){
+            bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
+            bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];
+            bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
+            bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1];
+        }
+        else if (marketType2 =='spot'){
+            bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
+            // bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1]*bestBidEx2/100;
+            bestBidSzEx2 = Number((previousDataEx2[ccy2]['best_bid'][0][1]*bestBidEx2/100).toFixed(2));
+
+            bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
+            // bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1]*bestAskEx2/100;
+            bestAskSzEx2 = Number((previousDataEx2[ccy2]['best_ask'][0][1]*bestAskEx2/100).toFixed(2));
+
+        }
+
+      
+    }
 
   
         
@@ -119,11 +158,7 @@ const wsServers = {
     'okx':{'perp':`ws://${hostname}:5091/ws`,'spot':''},
     'htx':{'perp':`ws://${hostname}:5091/ws2`,'spot':''},
     'deribit':{'perp':`ws://${hostname}:5091/ws3`,'spot':''},
-    'binance':{'perp':`ws://${hostname}:5091/ws4`,'spot':''},
-
-    
-
-    
+    'binance':{'perp':`ws://${hostname}:5091/ws4`,'spot':`ws://${hostname}:5091/ws5`},
 
 };
 

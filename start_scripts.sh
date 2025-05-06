@@ -63,3 +63,18 @@ uvicorn app.fastapi.binanceperp.rest.private.get_binance_orders:app --port 6063 
 uvicorn app.fastapi.binanceperp.rest.private.place_binance_order:app --port 5083 --host 0.0.0.0 --reload
 
 
+
+
+
+# binance
+BTCUSD_PERP
+BTC_USDT
+BTC_USD
+BTC_USDC
+
+# deribit
+BTC-PERPETUAL
+# okx 
+BTC-USD-SWAP
+# htx
+BTC-USD

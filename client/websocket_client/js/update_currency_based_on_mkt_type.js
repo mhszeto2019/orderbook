@@ -1,8 +1,8 @@
 const currencyOptions = {
     spot: [
-        { value: 'BTC-USD', text: 'BTC-USD' },
         { value: 'BTC-USDT', text: 'BTC-USDT' },
-        { value: 'BTC-USDC', text: 'BTC-USDC' }
+        { value: 'BTC-USDC', text: 'BTC-USDC' },
+        { value: 'BTC-USD', text: 'BTC-USD' }
     ],
     perp: [
         { value: '', text: '--Not Selected--' },
@@ -65,7 +65,10 @@ function updateCurrencyOptionsOrderbook1() {
     
 }
 
+
 function updateCurrencyOptionsOrderbook2() {
+
+
     const marketType = document.getElementById('market-type-orderbook2').value;
     const currencySelect = document.getElementById('currency-input-orderbook2');
     currencySelect.innerHTML = ''; // Clear old options
