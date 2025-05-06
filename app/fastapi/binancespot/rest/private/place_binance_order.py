@@ -149,6 +149,7 @@ async def place_order(
          'secret': api_creds_dict['binance_secretkey'],
          # 'verbose':True
       })
+
       if 'USD-SWAP' in payload.instrument:
          symbol = payload.instrument.replace('-USD-SWAP','USD_PERP')
       else:
@@ -156,39 +157,21 @@ async def place_order(
    
       order_type = payload.ordType
       
-      amount= payload.sz 
+      amount= payload.sz * 100
       side = payload.side
       price = payload.px
       # order_type = 'limit'
       # price = '80000'
-      params = {'quoteOrderQty':True}
-
-      # amount = float(amount) / float(price) * 100
-      
-      amount = float(amount) / float(price) * 1
+      params = {"quoteOrderQty":amount}
 
 
-      if order_type == 'counterparty1':
-         order_type = 'limit'
-         params['priceMatch']= 'OPPONENT'
-
-
-      elif order_type == 'counterparty5':
-        
-         order_type = 'limit'
-         params['priceMatch']= 'OPPONENT_5'
-
-
-      
-
-      elif order_type == 'queue1':
-     
-         order_type = 'limit'
-         params['priceMatch']= 'QUEUE'
-
+   
          
-
-        
+      if order_type =='limit':
+         print("LIMIT ORDER")
+         print(amount,price)
+         amount = float(amount) / float(price) 
+     
 
       order = exchange.create_order(symbol, order_type, side, amount, price,params)
       # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}

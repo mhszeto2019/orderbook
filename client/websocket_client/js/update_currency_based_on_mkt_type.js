@@ -28,13 +28,8 @@ function updateCurrencyOptions() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        // if (opt.value === "BTC-USD") {
-        //     option.selected = true;
-        // }
         if (opt.value == "BTC-USD-SWAP") {
             option.selected = true;
-            console.log("SELECTIONEDD")
-            console.log(currencySelect.value)
         }
     });
     
@@ -53,16 +48,10 @@ function updateCurrencyOptionsOrderbook1() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        // if (opt.value == "BTC-USD") {
-        //     option.selected = true;
-        // }
-        // if (opt.value == "BTC-USD-SWAP") {
-        //     option.selected = true;
-        //     console.log("SELECTIONEDD")
-        //     console.log(currencySelect.value)
-        // }
     });
-    
+
+   
+
 }
 
 

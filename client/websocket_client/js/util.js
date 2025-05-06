@@ -54,6 +54,21 @@ document.addEventListener('DOMContentLoaded', function() {
       const marketType1 = document.getElementById('manual-order-form-market-type1').value;
       const marketType2 = document.getElementById('manual-order-form-market-type2').value;
 
+
+      const orderTypeOptions = {
+        spot:[
+            {value: 'limit' , text:'LIMIT'},
+            {value: 'market' , text:'MARKET'}
+        ],
+        perp:[
+            {value: 'limit' , text:'LIMIT'},
+            {value: 'counterparty1' , text:'COUNTERPARTY-1'},
+            {value: 'counterparty5' , text:'COUNTERPARTY-5'},
+            {value: 'queue1' , text:'QUEUE-1'},
+            {value: 'market' , text:'MARKET'}
+        ]
+    }
+    
     // POTENTIALLY ADD EXCHANGE TYPE AND MARKET TYPE TO DERIVE CURRENCIES PRESENT
 
       const currenciesSpot = ['BTC-USDT', 'BTC-USDC','ETH-USD'];
@@ -71,11 +86,38 @@ document.addEventListener('DOMContentLoaded', function() {
           option.textContent = currency;
           currencySelect.appendChild(option);
         });
+
+
       }
+      function populateOrderType(selectId,marketType){
+        const orderTypeSelect = document.getElementById(selectId)
+
+        orderTypeSelect.innerHTML=''
+        console.log(marketType)
+        const orderTypeOptionsArr = orderTypeOptions[marketType] || [];
+        orderTypeOptionsArr.forEach(opt => {
+            const optionField = document.createElement('option');
+            optionField.value = opt.value;
+            optionField.textContent = opt.text;
+            orderTypeSelect.appendChild(optionField);
+        });
+      }
+       
+
+
+
+    
+
+    
+
+
 
       // Update currency options based on market type
       populateCurrencies('manual-order-form-currency-input1', marketType1);
       populateCurrencies('manual-order-form-currency-input2', marketType2);
+      populateOrderType('manual-order-form-order-type1', marketType1);
+      populateOrderType('manual-order-form-order-type2', marketType2);
+      
     }
 
     // Event listeners for changes in market type
