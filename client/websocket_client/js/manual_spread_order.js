@@ -266,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
 
         
+            populatePositions()
 
 
     }

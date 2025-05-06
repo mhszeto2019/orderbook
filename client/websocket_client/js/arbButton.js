@@ -192,7 +192,7 @@ async function handleClick(type) {
 
         }
     }
-
+    populatePositions()
 
     // Run both requests concurrently without waiting for them to finish
     // Promise.allSettled([firstOrderPromise, secondOrderPromise]).then((results) => {

@@ -42,4 +42,5 @@ function handlePriceUpdate(event,message){
 
     // Update the content of the "open-orders-body" (this will not affect the table headers)
     document.getElementById('oms-assets-positions-body').innerHTML = assetsPositionsRow;
+
 }
