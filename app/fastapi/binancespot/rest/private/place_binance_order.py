@@ -113,7 +113,7 @@ class TradeRequest(BaseModel):
    offset2:str
    
 
-@app.post("/binanceperp/place_order")
+@app.post("/binancespot/place_order")
 async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -144,14 +144,16 @@ async def place_order(
    api_creds_dict = json.loads(decrypted_data)
    try:
 
-      exchange = ccxt.binancecoinm({
+      exchange = ccxt.binance({
          'apiKey': api_creds_dict['binance_apikey'],
          'secret': api_creds_dict['binance_secretkey'],
          # 'verbose':True
       })
-      exchange.options['portfolioMargin'] = True
-
-      symbol = payload.instrument.replace('-USD-SWAP','USD_PERP')
+      if 'USD-SWAP' in payload.instrument:
+         symbol = payload.instrument.replace('-USD-SWAP','USD_PERP')
+      else:
+         symbol = payload.instrument.replace('-','')
+   
       order_type = payload.ordType
       
       amount= payload.sz 
@@ -159,9 +161,12 @@ async def place_order(
       price = payload.px
       # order_type = 'limit'
       # price = '80000'
-      params = {'offset': payload.offset, 'lever_rate': 5}
+      params = {'quoteOrderQty':True}
 
-     
+      # amount = float(amount) / float(price) * 100
+      
+      amount = float(amount) / float(price) * 1
+
 
       if order_type == 'counterparty1':
          order_type = 'limit'
@@ -209,7 +214,7 @@ class CancelByIdTradeRequest(BaseModel):
    instrument_id:str
  
 
-@app.post("/binanceperp/cancel_order_by_id")
+@app.post("/binancespot/cancel_order_by_id")
 async def cancel_order_by_id(
    payload: CancelByIdTradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -239,17 +244,18 @@ async def cancel_order_by_id(
    decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
    api_creds_dict = json.loads(decrypted_data)
  
-   exchange = ccxt.binancecoinm({
+   exchange = ccxt.binance({
       'apiKey': api_creds_dict['binance_apikey'],
       'secret': api_creds_dict['binance_secretkey'],
       # 'verbose':True
    })
-   exchange.options['portfolioMargin'] = True
 
    print(payload.order_id)
    instrument_id = payload.instrument_id
    if "USD-SWAP" in instrument_id:
       instrument_id = instrument_id.replace('-USD-SWAP','USD_PERP')
+   else:
+      instrument_id = instrument_id.replace('-','')
    canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
 
    return canceled_order

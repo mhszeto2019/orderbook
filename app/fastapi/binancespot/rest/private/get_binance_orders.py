@@ -107,7 +107,7 @@ class GetOrdersRequest(BaseModel):
   
    
 
-@app.post("/binanceperp/get_all_open_orders")
+@app.post("/binancespot/get_all_open_orders")
 async def get_all_open_orders(
    payload: GetOrdersRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -138,25 +138,25 @@ async def get_all_open_orders(
    api_creds_dict = json.loads(decrypted_data)
    try:
 
-      exchange = ccxt.binancecoinm({
+      exchange = ccxt.binance({
          'apiKey': api_creds_dict['binance_apikey'],
          'secret': api_creds_dict['binance_secretkey'],
          # 'verbose':True
       })
-      exchange.options['portfolioMargin'] = True
+      # exchange.options['portfolioMargin'] = True
       exchange.options["warnOnFetchOpenOrdersWithoutSymbol"] = False
       
 
       # # markets = exchange.load_markets()
       open_orders = exchange.fetchOpenOrders()
-
+      print(open_orders)
       if len(open_orders) == 0:
          return []
       json_data_arr = []
       for json_data in open_orders:
         
          json_response = {}
-         json_response['exchange'] = 'binanceperp'
+         json_response['exchange'] = 'binancespot'
          json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','-USD-SWAP')
          json_response['leverage'] = ''
          json_response['side'] = json_data['side']

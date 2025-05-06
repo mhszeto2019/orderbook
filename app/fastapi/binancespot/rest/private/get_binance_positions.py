@@ -101,7 +101,7 @@ class PositionRequest(BaseModel):
   
    
 
-@app.post("/binanceperp/get_all_positions")
+@app.post("/binancespot/get_all_positions")
 async def get_all_positions(
     payload: PositionRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -133,7 +133,7 @@ async def get_all_positions(
     print(api_creds_dict)
     try:
 
-        exchange = ccxt.binancecoinm({
+        exchange = ccxt.binance({
             'apiKey': api_creds_dict['binance_apikey'],
             'secret': api_creds_dict['binance_secretkey'],
             # 'verbose':True
@@ -143,7 +143,7 @@ async def get_all_positions(
         print(exchange)
         # exchange.load_markets()
   
-        positions = exchange.fetch_positions(['BTCUSD_PERP'])
+        positions = exchange.fetch_positions(['BTCUSDT'])
         print(positions)
         if not positions:
             logger.info('no positions')
@@ -152,7 +152,7 @@ async def get_all_positions(
         logger.info(json_data)
         json_response = {}
         json_response['adl'] = ''
-        json_response['exchange'] = 'binanceperp'
+        json_response['exchange'] = 'binancespot'
         json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','USD-SWAP')
         json_response['leverage'] = json_data['leverage']
         json_response['margin_ratio'] = json_data['maintenanceMarginPercentage']

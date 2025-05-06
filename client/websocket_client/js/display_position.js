@@ -56,6 +56,15 @@ async function populatePositions() {
         body: JSON.stringify(request_data)
     });
 
+    const fifthOrderPromise = fetch(`http://${hostname}:5074/binancespot/get_all_positions`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    });
+
 
     try {
         document.getElementById('oms-open-positions-body').innerHTML = `
@@ -68,7 +77,9 @@ async function populatePositions() {
             </td>
         </tr>
         `;
+        // const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise,thirdOrderPromise,fourthOrderPromise,fifthOrderPromise]);
         const Promises = await Promise.allSettled([firstOrderPromise, secondOrderPromise,thirdOrderPromise,fourthOrderPromise]);
+
 
         // Array to hold combined positions
         let allPositions = [];
@@ -156,7 +167,27 @@ async function populatePositions() {
             }
             
         } 
+        
+        if (Promises[4] && Promises[4].status === 'fulfilled') {
+            const pos = Promises[4].value;
+            // console.log(pos)
 
+            if (pos.ok) {
+                let posData = await pos.json()
+                if (posData){
+                    console.log(posData)
+                        posData.forEach(posRow => {
+                            // console.log(posRow)
+                            allPositions.push(posRow)
+                        }
+                    )
+                }
+            }
+            else {
+                console.error('BINANCESPOT Request failed:', Promises[4].status);
+            }
+            
+        } 
        
         // After both positioinResponses are handled, populate the table with all positions
         populateOpenPositionsTable(allPositions);

@@ -13,6 +13,8 @@ exchange_api_port_map.set('okxperp','5080')
 exchange_api_port_map.set('htxperp','5081')
 exchange_api_port_map.set('deribitperp','5082')
 exchange_api_port_map.set('binanceperp','5083')
+exchange_api_port_map.set('binancespot','5084')
+
 
 
 function showDone(message, error = false) {

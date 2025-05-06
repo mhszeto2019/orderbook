@@ -8,7 +8,10 @@ let lastTrades = {
     "okxperp": {},  // Another exchange
     "okxspot": {},  // Another exchange
     "deribitperp":{},
-    "binanceperp":{}
+    "binanceperp":{},
+    "binancespot":{}
+
+
 
 
 };
@@ -33,8 +36,10 @@ function initializeCurrencyPair(exchange, instrument,currencyPair) {
 const tradeSources = [
     { id: 1, exchange: "okx", port: 6100, suffix: "1", type: "perp" },
     { id: 2, exchange: "htx", port: 6101, suffix: "2", type: "perp" },
-    { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" }, // Add more as needed
-    { id: 4, exchange: "binance", port: 6103, suffix: "3", type: "perp" } // Add more as needed
+    { id: 3, exchange: "deribit", port: 6102, suffix: "3", type: "perp" }, 
+    { id: 4, exchange: "binance", port: 6103, suffix: "3", type: "perp" }, 
+    { id: 5, exchange: "binance", port: 6104, suffix: "3", type: "spot" } 
+
 
 ];
 

@@ -105,7 +105,7 @@ app.add_middleware(
 exchange = None
 
 
-@app.get("/binanceperp/")
+@app.get("/binancespot/")
 async def read_root():
     return {"message": "Welcome to the FastAPI with ccxt integration!"}
 
@@ -124,7 +124,7 @@ class FundingRateRequest(BaseModel):
 #     return new_arr
  
 
-@app.post("/binanceperp/get_last_trades")
+@app.post("/binancespot/get_last_trades")
 async def get_last_trades(
     payload: FundingRateRequest,
     token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
@@ -160,7 +160,7 @@ async def get_last_trades(
         # print(payload.ccy)
         ccy = payload.ccy
         # ccy = 'BTC-USD-SWAP'
-        ccy_str = ccy.replace('-USD-SWAP','USD_PERP')
+        ccy_str = ccy.replace('-','')
         if ccy_str:
             result = await exchange.fetch_trades(symbol=ccy_str)
             rows =  result[-10:]
@@ -172,7 +172,7 @@ async def get_last_trades(
             json_dict['trades'] = rows
             # json_dict['ts'] = result['fundingTimestamp']
             json_dict['ccy'] = payload.ccy
-            json_dict['exchange'] = 'binanceperp'
+            json_dict['exchange'] = 'binancespot'
             logger.info(f"{payload.ccy}|{json_dict}")
             # print(result)
             # if result.get('data'):

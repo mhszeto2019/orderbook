@@ -50,28 +50,16 @@ async function populateOpenOrders() {
         },
         body: JSON.stringify(request_data)
     })
+    const binanceSpotPromise =fetch(`http://${hostname}:6064/binancespot/get_all_open_orders`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request_data)
+    })
 
     
-    // // Set up both the OKX and HTX requests
-    // const [okxResponse, htxResponse,deribitResponse] = await Promise.all([
-        
-    //     fetch(`http://${hostname}:6061/htxperp/get_all_open_orders`, {
-    //         method: 'POST',
-    //         headers: {
-    //             'Authorization': `Bearer ${token}`,
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify(request_data)
-    //     }),
-    //     fetch(`http://${hostname}:6062/deribitperp/get_all_open_orders`, {
-    //         method: 'POST',
-    //         headers: {
-    //             'Authorization': `Bearer ${token}`,
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify(request_data)
-    //     })
-    // ]);
 
     
     try {
@@ -86,7 +74,7 @@ async function populateOpenOrders() {
         </tr>
         `;
 
-        const Promises = await Promise.allSettled([okxPromise, htxPromise,deribitPromise,binancePromise]);
+        const Promises = await Promise.allSettled([okxPromise, htxPromise,deribitPromise,binancePromise,binanceSpotPromise]);
 
         let allOpenOrders = [];
         if (Promises[0] && Promises[0].status === 'fulfilled') {
@@ -170,6 +158,27 @@ async function populateOpenOrders() {
 
             else {
                 console.error('DERIBIT Request failed:', Promises[3].status);
+            } 
+        }
+        if (Promises[4] && Promises[4].status === 'fulfilled') {
+            const promise = Promises[4].value;
+
+            if (promise.ok) {
+                const binanceData = await promise.json();
+                console.log(binanceData)
+                if (!binanceData){
+                    return []
+                }
+                binanceData.forEach(
+                    openOrder=>{
+                        console.log(openOrder)
+                        allOpenOrders.push(openOrder)
+                    }
+                )
+            }
+
+            else {
+                console.error('DERIBIT Request failed:', Promises[4].status);
             } 
         }
 
@@ -539,7 +548,9 @@ async function handleDelete(instId, ordId,exchange) {
         'okxperp':5080,
         'htxperp':5081,
         'deribitperp':5082,
-        'binanceperp':5083
+        'binanceperp':5083,
+        'binancespot':5084
+
 
     }
     // Call the API using fetch
