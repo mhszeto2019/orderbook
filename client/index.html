@@ -96,7 +96,6 @@
 
             // Simulate condition for triggering warning
             function checkCondition() {
-                console.log("Condition checked")
                 const formdata = new FormData();
                 formdata.append("username", localStorage.getItem('username'));
                 const check_alert_status = {
@@ -107,9 +106,7 @@
                 .then((response) => response.json())
                 .then((result) =>
                     {
-                    console.log(result)
                     if (result.status == "INACTIVE"|result.status == "ACTIVE_ACKED"|result.status == "RESOLVED"){
-                        console.log(result.status)
                         document.getElementById('alertBox').style.display = "None"
                         // document.getElementById('alertBox').style.display = "block"
 
@@ -507,8 +504,6 @@ body.dark-mode.force-black {
             });
         });
         isDark = localStorage.getItem('darkMode') === 'true'; 
-
-        console.log('isdark?',isDark)
             if (!isDark) {
                 // Apply the 'dark-image' class to each .black-image element for dark mode
                 document.querySelectorAll('.icon-color-mode').forEach(logo => {
@@ -1192,33 +1187,33 @@ body.dark-mode.force-black {
                                         }
                                     
                                         // Event listeners for the +10, +20, +30 buttons
-                                        document.getElementById("add-1000").addEventListener("click", function() {
-                                          updateInputValue(increments[0],1);
-                                        });
+                                        // document.getElementById("add-1000").addEventListener("click", function() {
+                                        //   updateInputValue(increments[0],1);
+                                        // });
                                     
-                                        document.getElementById("add-10000").addEventListener("click", function() {
-                                          updateInputValue(increments[1],1);
-                                        });
+                                        // document.getElementById("add-10000").addEventListener("click", function() {
+                                        //   updateInputValue(increments[1],1);
+                                        // });
                                     
-                                        document.getElementById("add-30").addEventListener("click", function() {
-                                          updateInputValue(increments[2],1);
-                                        });
-                                        document.getElementById("reset").addEventListener("click", function() {
-                                            resetInputValue(1);
-                                        });
+                                        // document.getElementById("add-30").addEventListener("click", function() {
+                                        //   updateInputValue(increments[2],1);
+                                        // });
+                                        // document.getElementById("reset").addEventListener("click", function() {
+                                        //     resetInputValue(1);
+                                        // });
 
 
-                                        document.getElementById("add2-1000").addEventListener("click", function() {
-                                          updateInputValue(increments[0],2);
-                                        });
+                                        // document.getElementById("add2-1000").addEventListener("click", function() {
+                                        //   updateInputValue(increments[0],2);
+                                        // });
                                     
-                                        document.getElementById("add2-10000").addEventListener("click", function() {
-                                          updateInputValue(increments[1],2);
-                                        });
+                                        // document.getElementById("add2-10000").addEventListener("click", function() {
+                                        //   updateInputValue(increments[1],2);
+                                        // });
                                     
-                                        document.getElementById("add2-30").addEventListener("click", function() {
-                                          updateInputValue(increments[2],2);
-                                        });
+                                        // document.getElementById("add2-30").addEventListener("click", function() {
+                                        //   updateInputValue(increments[2],2);
+                                        // });
                                     
                                         // Event listener to set custom increment values for the buttons
                                         // document.getElementById("set-custom-increments").addEventListener("click", function() {

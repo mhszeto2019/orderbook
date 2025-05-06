@@ -166,9 +166,9 @@ async function handleClick(type) {
             showDone(`${firstResult['error']}`,true)
 
         } else {
-            console.log("DONEE SUCCESSSSS")
-            firstResult.info['exchange'] = fastapi_folder2
-            showToast(JSON.stringify(firstResult.info))
+            console.log(firstResult.info.exchange)
+            firstResult.info['exchange'] = fastapi_folder1
+            showToast(JSON.stringify({"exchange":firstResult.info.exchange,"message":firstResult.info}))
             showDone(`${fastapi_folder1}-PLACE ORDER SUCCESS`,false)
 
         }
@@ -184,9 +184,10 @@ async function handleClick(type) {
             showDone(`${secondResult['error']}`,true)
 
         } else {
-            console.log("DONEE SUCCESSSSS")
             secondResult.info['exchange'] = fastapi_folder2
-            showToast(JSON.stringify(secondResult.info))
+            console.log(secondResult)
+            showToast(JSON.stringify({"exchange":secondResult.info.exchange,"message":secondResult.info}))
+
             showDone(`${fastapi_folder2}-PLACE ORDER SUCCESS`,false)
 
         }
@@ -243,17 +244,17 @@ function repopulateArbBtnData(){
 }
 
 
-function showToast(message,  apiSource = 'API',timestamp=null,orderId=null,statusCode=200,errCode =1039) {
-    const toastMessage = {
-        id: Date.now(),
-        message,
-        apiSource,
-        timestamp,
-        orderId,
-        statusCode,
-        errCode
-    };
-    notifications.push(toastMessage);
+function showToast(message) {
+    // const toastMessage = {
+    //     id: Date.now(),
+    //     message,
+    //     apiSource,
+    //     timestamp,
+    //     orderId,
+    //     statusCode,
+    //     errCode
+    // };
+    notifications.push(message);
  
     updateNotificationHub();
     updateNotificationCount();

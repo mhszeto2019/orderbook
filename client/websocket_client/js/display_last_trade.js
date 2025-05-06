@@ -130,7 +130,6 @@ async function fetchTradeHistory2({ exchange, port, suffix, id, type }) {
 
 function startLastTradeScheduler(interval =5000) {
     tradeSources.forEach(source => {
-        console.log(source)
         async function schedule() {
             // console.log(source)
             await fetchTradeHistory(source);

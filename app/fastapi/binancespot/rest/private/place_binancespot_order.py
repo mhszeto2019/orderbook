@@ -157,7 +157,7 @@ async def place_order(
    
       order_type = payload.ordType
       
-      amount= payload.sz * 10
+      amount= payload.sz * 100
       side = payload.side
       price = payload.px
   

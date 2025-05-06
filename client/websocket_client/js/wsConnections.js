@@ -192,12 +192,12 @@ function compareDataQueue(data){
     
 
     if (!exchange){
-        console.log("NO DATA FOUND")
+        // console.log("NO DATA FOUND")
     }
 
     if (!lastData[exchange]) {
         lastData[exchange] = {symbol:[]}
-        console.log(lastData)
+        // console.log(lastData)
     }
     if (!lastData[exchange][symbol]) {
         lastData[exchange][symbol] = []

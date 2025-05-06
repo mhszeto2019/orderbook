@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Add your logic for the "Buy" action here
                 // Example: Perform AJAX or fetch for the buy action
             } else if (submitButton.value === "sell") {
-                if (leadingExchange == laggingExchange){
+                if (leadingExchange == laggingExchange && marketType1 == marketType2){
                     alert('SAME EXCHANGE')
                 }
                 else{

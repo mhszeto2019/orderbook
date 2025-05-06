@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const orderTypeSelect = document.getElementById(selectId)
 
         orderTypeSelect.innerHTML=''
-        console.log(marketType)
         const orderTypeOptionsArr = orderTypeOptions[marketType] || [];
         orderTypeOptionsArr.forEach(opt => {
             const optionField = document.createElement('option');
