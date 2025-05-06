@@ -152,7 +152,7 @@ async def get_all_positions(
         json_response['instrument_id'] = json_data['info']['instrument_name'].replace('PERPETUAL','USD-SWAP')
         json_response['leverage'] = json_data['info']['leverage']
         json_response['margin_ratio'] = json_data['maintenanceMarginPercentage']
-        json_response['position'] = float(json_data['info']['size'])/100 if json_data['info']['direction'] == 'buy' else -float(json_data['info']['size'])/100
+        json_response['position'] = float(json_data['info']['size'])/100 
         json_response['price'] = json_data['info']['average_price']
         json_response['pnl'] = json_data['info']['realized_profit_loss']
         json_response['liquidation_price'] = json_data['info']['estimated_liquidation_price']

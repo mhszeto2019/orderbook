@@ -157,22 +157,15 @@ async def place_order(
    
       order_type = payload.ordType
       
-      amount= payload.sz * 100
+      amount= payload.sz * 10
       side = payload.side
       price = payload.px
-      # order_type = 'limit'
-      # price = '80000'
+  
       params = {"quoteOrderQty":amount}
-
-
-   
          
       if order_type =='limit':
-         print("LIMIT ORDER")
-         print(amount,price)
          amount = float(amount) / float(price) 
-     
-
+         
       order = exchange.create_order(symbol, order_type, side, amount, price,params)
       # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
 
@@ -183,7 +176,7 @@ async def place_order(
 
       # huobi {"status":"error","err_code":1047,"err_msg":"Insufficient margin available.","ts":1745917192657}
 
-   # okx {"code":"1","data":[{"clOrdId":"e847386590ce4dBCcc699096ccdc169c","ordId":"","sCode":"51008","sMsg":"Order failed. Insufficient BTC margin in account ","tag":"e847386590ce4dBC","ts":"1745917206076"}],"inTime":"1745917206076432","msg":"All operations failed","outTime":"1745917206077022"}
+      # okx {"code":"1","data":[{"clOrdId":"e847386590ce4dBCcc699096ccdc169c","ordId":"","sCode":"51008","sMsg":"Order failed. Insufficient BTC margin in account ","tag":"e847386590ce4dBC","ts":"1745917206076"}],"inTime":"1745917206076432","msg":"All operations failed","outTime":"1745917206077022"}
       return {"error":f"{e}"}
 
 

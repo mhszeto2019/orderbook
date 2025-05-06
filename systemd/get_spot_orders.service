@@ -4,14 +4,14 @@ venv="/home/brenn/environments/venv"
 okxenv="/home/brenn/environments/okx"
 
 [Unit]
-Description=Uvicorn instance for place_binance_order
+Description=Uvicorn instance for get_spot_orders
 After=network.target
 
 [Service]
 User=brenn
 Group=
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=/home/brenn/environments/okx/bin/uvicorn app.fastapi.binancespot.rest.private.place_binance_order:app --port 5084 --host 0.0.0.0 --reload
+ExecStart=/home/brenn/environments/okx/bin/uvicorn app.fastapi.binancespot.rest.private.get_spot_orders:app --port 6064 --host 0.0.0.0 --reload
 Environment="VIRTUAL_ENV=/home/brenn/environments/okx"
 Environment="PATH=$okxenv:$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"
