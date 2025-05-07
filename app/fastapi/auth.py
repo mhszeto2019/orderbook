@@ -75,6 +75,8 @@ def with_db_connection():
         con.close()
 
 # --- ROUTES ---
+import httpx
+import asyncio
 
 @app.post("/register")
 async def register(username: str = Form(...), password: str = Form(...), cursor=Depends(with_db_connection)):
@@ -88,6 +90,20 @@ async def register(username: str = Form(...), password: str = Form(...), cursor=
 
     logger.info(f"User:{username} registration successful.")
     return {"message": "Registration successful!"}
+
+async def trigger_exchange_init(username,key):
+    async with httpx.AsyncClient() as client:
+        try:
+            await client.post(
+                "http://localhost:5080/okxperp/init_exchange",
+                json={"username": username, "redis_key":key},
+                timeout=2
+            )
+        except httpx.HTTPError as e:
+            logger.error(f"Exchange pre-warm failed: {e}")
+
+
+
 
 @app.post("/login")
 async def login(username: str = Form(...), password: str = Form(...), cursor=Depends(with_db_connection)):
@@ -151,12 +167,19 @@ async def login(username: str = Form(...), password: str = Form(...), cursor=Dep
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     logger.info(f"User:{username} login successful.")
 
+    asyncio.create_task(trigger_exchange_init(username,key.decode()))
+
+
+
     return {
         'message': 'Login successful',
         'token': token,
         'key': key.decode(),
         'username': username
     }
+
+
+
 
 @app.get("/logout")
 async def logout(request: Request):

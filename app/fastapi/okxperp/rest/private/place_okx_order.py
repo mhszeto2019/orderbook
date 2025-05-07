@@ -147,7 +147,6 @@ async def get_exchange(username: str,key_string) -> ccxt.okx:
     async with pool_lock:
          if username in exchange_pool:
             return exchange_pool[username]
-        
          if key_string.startswith("b'") and key_string.endswith("'"):
              cleaned_key_string = key_string[2:-1]
          else:
@@ -184,6 +183,20 @@ async def get_exchange(username: str,key_string) -> ccxt.okx:
 
 from fastapi.exceptions import RequestValidationError
 import time
+
+@app.post("/okxperp/init_exchange")
+async def init_exchange(request:Request):
+   data = await request.json()
+   print(data)
+   username = data.get("username")
+   key_string = data.get('redis_key')
+   if not username:
+      return {"error": "username required"}
+   
+   await get_exchange(username,key_string)
+   return {"status": "exchange initialized"}
+
+
 @app.post("/okxperp/place_order")
 @app.exception_handler(RequestValidationError)
 async def place_order(

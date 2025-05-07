@@ -99,6 +99,48 @@ app.add_middleware(
 )
 
 
+exchange_pool = {}
+pool_lock = asyncio.Lock()
+
+async def get_exchange(username: str,key_string) -> ccxt.okx:
+    async with pool_lock:
+         if username in exchange_pool:
+            return exchange_pool[username]
+         if key_string.startswith("b'") and key_string.endswith("'"):
+             cleaned_key_string = key_string[2:-1]
+         else:
+            cleaned_key_string = key_string
+
+         # Decode and prepare the key
+         key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+         key_bytes = cleaned_key_string.encode('utf-8')
+         cipher_suite = Fernet(key_bytes)
+
+         # Fetch encrypted credentials from Redis
+         cache_key = f"user:{username}:api_credentials"
+         encrypted_data = r.get(cache_key)
+
+         
+         if not encrypted_data:
+            raise HTTPException(status_code=404, detail="Credentials not found")
+
+         # Decrypt the credentials
+         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+         api_creds_dict = json.loads(decrypted_data)
+
+         # Initialize ccxt.okx and store in the pool
+
+         exchange = ccxt.binancecoinm({
+            'apiKey': api_creds_dict['binance_apikey'],
+            'secret': api_creds_dict['binance_secretkey'],
+            # 'verbose':True
+         })
+         exchange.options['portfolioMargin'] = True
+         exchange.options["warnOnFetchOpenOrdersWithoutSymbol"] = False
+         exchange_pool[username] = exchange
+         return exchange
+
+
 class GetOrdersRequest(BaseModel):
    
  
@@ -115,37 +157,9 @@ async def get_all_open_orders(
    json_dict = {}
 
    key_string = payload.redis_key
-   if key_string.startswith("b'") and key_string.endswith("'"):
-      cleaned_key_string = key_string[2:-1]
-   else:
-      cleaned_key_string = key_string
-
-   # Decode and prepare the key
-   key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-   key_bytes = cleaned_key_string.encode('utf-8')
-   cipher_suite = Fernet(key_bytes)
-
-   # Fetch encrypted credentials from Redis
-   cache_key = f"user:{payload.username}:api_credentials"
-   encrypted_data = r.get(cache_key)
-
+   exchange = await get_exchange(payload.username,key_string)
    
-   if not encrypted_data:
-      raise HTTPException(status_code=404, detail="Credentials not found")
-
-   # Decrypt the credentials
-   decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-   api_creds_dict = json.loads(decrypted_data)
    try:
-
-      exchange = ccxt.binancecoinm({
-         'apiKey': api_creds_dict['binance_apikey'],
-         'secret': api_creds_dict['binance_secretkey'],
-         # 'verbose':True
-      })
-      exchange.options['portfolioMargin'] = True
-      exchange.options["warnOnFetchOpenOrdersWithoutSymbol"] = False
-      
 
       # # markets = exchange.load_markets()
       open_orders = exchange.fetchOpenOrders()
