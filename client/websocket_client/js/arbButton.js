@@ -93,8 +93,8 @@ async function handleClick(type) {
     }
     if (leadingExchange == 'htx'){
         validateSelectInput('htx-open-close-1')
-        if (!offset2){
-      
+        if (!offset1){
+            console.log("RETURNING")
           
             return
         }
@@ -129,7 +129,7 @@ async function handleClick(type) {
     fastapi_folder1 = leadingExchange + marketType1
     fastapi_folder2 = laggingExchange + marketType2
 
-    // console.log(fastapi_folder1,fastapi_folder2)
+    console.log(fastapi_folder1,fastapi_folder2)
     // console.log(offset1,offset2)
     // Set up first order request
     orderData.px = orderData.px1;
@@ -268,6 +268,7 @@ function showToast(message) {
 
 function validateSelectInput(selectId) {
     const select = document.getElementById(selectId);
+    console.log(selectId)
     if (select.value === "") {
         select.classList.add("invalid-select");
      
