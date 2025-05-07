@@ -200,6 +200,7 @@ async def place_order(
          
 
         
+   
 
       order = exchange.create_order(symbol, order_type, side, amount, price,params)
       logger.info(f"[{payload.username}]{order}")
@@ -242,6 +243,7 @@ async def cancel_order_by_id(
    instrument_id = payload.instrument_id
    if "USD-SWAP" in instrument_id:
       instrument_id = instrument_id.replace('-USD-SWAP','USD_PERP')
+   instrument_id = 'BTC/USD:BTC'
    canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
    logger.info(f"[{payload.username}]{canceled_order}")
 

@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // POTENTIALLY ADD EXCHANGE TYPE AND MARKET TYPE TO DERIVE CURRENCIES PRESENT
 
       const currenciesSpot = ['BTC-USDT', 'BTC-USDC','ETH-USD'];
-      const currenciesPerp = ['BTC-USD-SWAP','BTC-USDT-SWAP', 'ETH-USDT-SWAP'];
+      const currenciesPerp = ['BTC-USD-SWAP','BTC-USDT-SWAP', 'ETH-USDT-SWAP','BTC/USD:BTC'];
 
       // Function to update currency dropdowns based on market type
       function populateCurrencies(selectId, marketType) {
