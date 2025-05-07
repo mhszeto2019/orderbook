@@ -11,7 +11,7 @@ After=network.target
 User=brenn
 Group=
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=/home/brenn/environments/okx/bin/uvicorn app.fastapi.htxperp.rest.private.get_htx_positions:app --port 5071 --host 0.0.0.0 --reload
+ExecStart=/home/brenn/environments/okx/bin/uvicorn app.fastapi.htxperp.rest.private.get_htx_positions:app --port 5071 --host 0.0.0.0 
 Environment="VIRTUAL_ENV=/home/brenn/environments/okx"
 Environment="PATH=$okxenv:$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

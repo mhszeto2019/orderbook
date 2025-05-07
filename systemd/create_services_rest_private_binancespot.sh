@@ -58,7 +58,7 @@ After=network.target
 User=$USER
 Group=$GROUP
 WorkingDirectory=/var/www/html/orderbook
-ExecStart=$ENV_PATH/bin/uvicorn app.fastapi.binancespot.rest.private.$SERVICE_NAME:app --port $PORT --host 0.0.0.0 --reload
+ExecStart=$ENV_PATH/bin/uvicorn app.fastapi.binancespot.rest.private.$SERVICE_NAME:app --port $PORT --host 0.0.0.0 
 Environment="VIRTUAL_ENV=$ENV_PATH"
 Environment="PATH=$ENV_PATH_STR:\$PATH"
 Environment="PYTHONPATH=/var/www/html/orderbook"

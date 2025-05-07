@@ -1,0 +1,25 @@
+
+source /var/www/html/config_folder/bashconfig.env
+venv="/home/brenn/environments/venv"
+okxenv="/home/brenn/environments/okx"
+
+[Unit]
+Description=Gunicorn instance for htx_positions
+After=network.target
+
+[Service]
+User=brenn
+Group=
+WorkingDirectory=/var/www/html/orderbook
+ExecStart=/home/brenn/environments/venv/bin/gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:5071 --pid /home/brenn/gunicorn_folder/htx_positions.pid --access-logfile /home/brenn/gunicorn_folder/.log --error-logfile /home/brenn/gunicorn_folder/htx_positions.log app.display_engines_rest.htx_positions:app
+Environment="VIRTUAL_ENV=/home/brenn/environments/venv"
+Environment="PATH=$venv:$PATH"
+Environment="PYTHONPATH=/var/www/html/orderbook"
+Restart=always
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target
