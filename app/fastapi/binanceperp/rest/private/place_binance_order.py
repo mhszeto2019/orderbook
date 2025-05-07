@@ -113,6 +113,47 @@ class TradeRequest(BaseModel):
    offset2:str
    
 
+exchange_pool = {}
+pool_lock = asyncio.Lock()
+
+async def get_exchange(username: str,key_string) -> ccxt.htx:
+    async with pool_lock:
+         if username in exchange_pool:
+            return exchange_pool[username]
+        
+         if key_string.startswith("b'") and key_string.endswith("'"):
+             cleaned_key_string = key_string[2:-1]
+         else:
+            cleaned_key_string = key_string
+
+         # Decode and prepare the key
+         key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+         key_bytes = cleaned_key_string.encode('utf-8')
+         cipher_suite = Fernet(key_bytes)
+
+         # Fetch encrypted credentials from Redis
+         cache_key = f"user:{username}:api_credentials"
+         encrypted_data = r.get(cache_key)
+
+         
+         if not encrypted_data:
+            raise HTTPException(status_code=404, detail="Credentials not found")
+
+         # Decrypt the credentials
+         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+         api_creds_dict = json.loads(decrypted_data)
+
+         # Initialize ccxt.okx and store in the pool
+         exchange = ccxt.binancecoinm({
+         'apiKey': api_creds_dict['binance_apikey'],
+         'secret': api_creds_dict['binance_secretkey'],
+         # 'verbose':True
+         })
+         exchange.options['portfolioMargin'] = True
+
+         exchange_pool[username] = exchange
+         return exchange
+
 @app.post("/binanceperp/place_order")
 async def place_order(
    payload: TradeRequest,
@@ -121,35 +162,10 @@ async def place_order(
    json_dict = {}
 
    key_string = payload.redis_key
-   if key_string.startswith("b'") and key_string.endswith("'"):
-      cleaned_key_string = key_string[2:-1]
-   else:
-      cleaned_key_string = key_string
-
-   # Decode and prepare the key
-   key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-   key_bytes = cleaned_key_string.encode('utf-8')
-   cipher_suite = Fernet(key_bytes)
-
-   # Fetch encrypted credentials from Redis
-   cache_key = f"user:{payload.username}:api_credentials"
-   encrypted_data = r.get(cache_key)
-
-   
-   if not encrypted_data:
-      raise HTTPException(status_code=404, detail="Credentials not found")
-
-   # Decrypt the credentials
-   decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-   api_creds_dict = json.loads(decrypted_data)
+   exchange = await get_exchange(payload.username,key_string)
    try:
 
-      exchange = ccxt.binancecoinm({
-         'apiKey': api_creds_dict['binance_apikey'],
-         'secret': api_creds_dict['binance_secretkey'],
-         # 'verbose':True
-      })
-      exchange.options['portfolioMargin'] = True
+      
 
       symbol = payload.instrument.replace('-USD-SWAP','USD_PERP')
       order_type = payload.ordType
@@ -186,6 +202,8 @@ async def place_order(
         
 
       order = exchange.create_order(symbol, order_type, side, amount, price,params)
+      logger.info(f"[{payload.username}]{order}")
+
       # {'info': {'order_id': '1365014534415097856', 'order_id_str': '1365014534415097856'}, 'id': '1365014534415097856', 'clientOrderId': None, 'timestamp': None, 'datetime': None, 'lastTradeTimestamp': None, 'symbol': 'BTC/USD:BTC', 'type': None, 'timeInForce': None, 'postOnly': None, 'side': None, 'price': None, 'triggerPrice': None, 'average': None, 'cost': None, 'amount': None, 'filled': None, 'remaining': None, 'status': None, 'reduceOnly': None, 'fee': None, 'trades': [], 'fees': [], 'lastUpdateTimestamp': None, 'stopPrice': None, 'takeProfitPrice': None, 'stopLossPrice': None}
 
       return order
@@ -217,40 +235,15 @@ async def cancel_order_by_id(
    json_dict = {}
 
    key_string = payload.redis_key
-   if key_string.startswith("b'") and key_string.endswith("'"):
-      cleaned_key_string = key_string[2:-1]
-   else:
-      cleaned_key_string = key_string
+   exchange = await get_exchange(payload.username,key_string)
 
-   # Decode and prepare the key
-   key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-   key_bytes = cleaned_key_string.encode('utf-8')
-   cipher_suite = Fernet(key_bytes)
 
-   # Fetch encrypted credentials from Redis
-   cache_key = f"user:{payload.username}:api_credentials"
-   encrypted_data = r.get(cache_key)
-
-   
-   if not encrypted_data:
-      raise HTTPException(status_code=404, detail="Credentials not found")
-
-   # Decrypt the credentials
-   decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-   api_creds_dict = json.loads(decrypted_data)
  
-   exchange = ccxt.binancecoinm({
-      'apiKey': api_creds_dict['binance_apikey'],
-      'secret': api_creds_dict['binance_secretkey'],
-      # 'verbose':True
-   })
-   exchange.options['portfolioMargin'] = True
-
-   print(payload.order_id)
    instrument_id = payload.instrument_id
    if "USD-SWAP" in instrument_id:
       instrument_id = instrument_id.replace('-USD-SWAP','USD_PERP')
    canceled_order = exchange.cancelOrder(payload.order_id,instrument_id)
+   logger.info(f"[{payload.username}]{canceled_order}")
 
    return canceled_order
 

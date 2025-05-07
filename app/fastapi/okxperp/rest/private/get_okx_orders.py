@@ -138,7 +138,7 @@ async def get_all_open_orders(
       })
 
 
-      # # markets = exchange.load_markets()
+      markets = exchange.load_markets()
       open_orders = exchange.fetchOpenOrders()
       if len(open_orders) == 0:
          return []

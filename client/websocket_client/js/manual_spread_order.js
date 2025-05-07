@@ -71,8 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
         
-    // Handle order form submission
+   
 
+
+    // Handle order form submission
     document.getElementById('order-form').onsubmit = async (event) => {
         const token = getAuthToken();
 
@@ -81,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Get the button that triggered the submit event
         const submitButton = event.submitter;
+
         if (!token) {
             alert("You must be logged in to access this.");
             return;

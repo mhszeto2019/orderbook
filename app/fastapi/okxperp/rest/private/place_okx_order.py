@@ -112,6 +112,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from okx import Trade,SpreadTrading
 
 class TradeRequest(BaseModel):
    
@@ -132,6 +133,55 @@ class TradeRequest(BaseModel):
    offset1:str
    offset2:str
 
+# exchange = ccxt.okx({
+#    'apiKey': 'a0de3940-5679-4939-957a-51c87a8502d9',
+#    'secret': 'FA44BCAAC3788C2AB4AFC77047930792',
+#    'password': 'falconstead@Trading2024',
+#    })
+# exchange.load_markets()
+
+exchange_pool = {}
+pool_lock = asyncio.Lock()
+
+async def get_exchange(username: str,key_string) -> ccxt.okx:
+    async with pool_lock:
+         if username in exchange_pool:
+            return exchange_pool[username]
+        
+         if key_string.startswith("b'") and key_string.endswith("'"):
+             cleaned_key_string = key_string[2:-1]
+         else:
+            cleaned_key_string = key_string
+
+         # Decode and prepare the key
+         key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
+         key_bytes = cleaned_key_string.encode('utf-8')
+         cipher_suite = Fernet(key_bytes)
+
+         # Fetch encrypted credentials from Redis
+         cache_key = f"user:{username}:api_credentials"
+         encrypted_data = r.get(cache_key)
+
+         
+         if not encrypted_data:
+            raise HTTPException(status_code=404, detail="Credentials not found")
+
+         # Decrypt the credentials
+         decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
+         api_creds_dict = json.loads(decrypted_data)
+
+         # Initialize ccxt.okx and store in the pool
+         exchange = ccxt.okx({
+            'apiKey': api_creds_dict['okx_apikey'],
+            'secret': api_creds_dict['okx_secretkey'],
+            'password': api_creds_dict['okx_passphrase'],
+            'enableRateLimit': True
+         })
+
+         exchange_pool[username] = exchange
+         return exchange
+
+
 from fastapi.exceptions import RequestValidationError
 import time
 @app.post("/okxperp/place_order")
@@ -140,41 +190,14 @@ async def place_order(
    payload: TradeRequest,
    token_ok: bool = Depends(token_required)  # your FastAPI-compatible token checker
 ):
-
+   current_ts = time.time()
    json_dict = {}
 
    key_string = payload.redis_key
-   if key_string.startswith("b'") and key_string.endswith("'"):
-      cleaned_key_string = key_string[2:-1]
-   else:
-      cleaned_key_string = key_string
-
-   # Decode and prepare the key
-   key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-   key_bytes = cleaned_key_string.encode('utf-8')
-   cipher_suite = Fernet(key_bytes)
-
-   # Fetch encrypted credentials from Redis
-   cache_key = f"user:{payload.username}:api_credentials"
-   encrypted_data = r.get(cache_key)
-
-   
-   if not encrypted_data:
-      raise HTTPException(status_code=404, detail="Credentials not found")
-
-   # Decrypt the credentials
-   decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-   api_creds_dict = json.loads(decrypted_data)
+   exchange = await get_exchange(payload.username,key_string)
+  
    try:
-      exchange = ccxt.okx({
-      'apiKey': api_creds_dict['okx_apikey'],
-      'secret': api_creds_dict['okx_secretkey'],
-      'password': api_creds_dict['okx_passphrase'],
-      })
-      
-      # # markets = exchange.load_markets()
-      # balance = exchange.fetch_positions(symbols=['BTC-USD'])
-      # print(payload)
+   
       symbol = payload.instrument
       order_type = payload.ordType
       side = payload.side
@@ -227,7 +250,8 @@ async def place_order(
 
 
       order = exchange.create_order(symbol, order_type, side, amount, price, params)
-      logger.info(order)
+      logger.info(f"[{payload.username}]{order}")
+      logger.info(time.time() - current_ts)
       return order
    except Exception as e:
       logger.error(traceback.format_exc())
@@ -250,37 +274,14 @@ async def cancel_order_by_id(
    json_dict = {}
 
    key_string = payload.redis_key
-   if key_string.startswith("b'") and key_string.endswith("'"):
-      cleaned_key_string = key_string[2:-1]
-   else:
-      cleaned_key_string = key_string
-
-   # Decode and prepare the key
-   key_bytes = base64.urlsafe_b64decode(cleaned_key_string)
-   key_bytes = cleaned_key_string.encode('utf-8')
-   cipher_suite = Fernet(key_bytes)
-
-   # Fetch encrypted credentials from Redis
-   cache_key = f"user:{payload.username}:api_credentials"
-   encrypted_data = r.get(cache_key)
+   exchange = await get_exchange(payload.username,key_string)
 
    
-   if not encrypted_data:
-      raise HTTPException(status_code=404, detail="Credentials not found")
-
-   # Decrypt the credentials
-   decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
-   api_creds_dict = json.loads(decrypted_data)
- 
-   exchange = ccxt.okx({
-   'apiKey': api_creds_dict['okx_apikey'],
-   'secret': api_creds_dict['okx_secretkey'],
-   'password': api_creds_dict['okx_passphrase'],
-   })
-
-   print(payload.order_id)
    canceled_order = exchange.cancelOrder(payload.order_id,payload.instrument_id)
+   logger.info(f"[{payload.username}]{canceled_order}")
 
    return canceled_order
+
+   
 
 

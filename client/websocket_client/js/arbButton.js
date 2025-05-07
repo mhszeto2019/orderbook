@@ -53,7 +53,13 @@ function showDone(message, error = false) {
 }
 
 async function handleClick(type) {
+
     const token = getAuthToken();
+    console.log(Date.now())
+    const myDate = new Date(Date.now() * 1000); // convert timestamp to milliseconds and construct Date object
+
+    console.log(myDate); // will print "Thu Aug 10 2023 01:13:20" followed by the local timezone on browser console
+
     if (!token) {
         alert("You must be logged in to access this.");
         return;
