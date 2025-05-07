@@ -87,24 +87,56 @@ config_source = 'deribit'
 secretKey = config[config_source]['secretKey']
 apiKey = config[config_source]['apiKey']
 
-# [deribit]
-# apikey=rVyAaZHU
-# secretkey=UgtckPSUKpLgGmS2GxHudnW06oylGDV8KhXW9vlf9kc
+
 
 
 import ccxt 
-exchange = ccxt.deribit({
-    # 'apiKey':apiKey,
-    # 'secret': secretKey,
-})
+exchange_deribit = ccxt.deribit({})
 
-currencies = exchange.fetch_markets({"kind":"future"})
-# print(currencies)
-for ccy in currencies:
-    print(ccy['symbol'])
+currencies_dict = {'deribit': {'futures': [], 'spot': []},
+                    'okx': {'futures': [], 'spot': []},
+                    'htx': {'futures': [], 'spot': []},
+                    'binance': {'futures': [], 'spot': []}
+                }   
 
-# import ccxt
-# for id in ccxt.exchanges:
-#     exchange = getattr(ccxt, id)()
-#     if exchange.has['future']:
-#         print(id)
+for market_type in ['future', 'spot']:
+    markets = exchange_deribit.fetch_markets({"kind": market_type})
+    symbols = [m['symbol'] for m in markets]
+    currencies_dict['deribit'][f'{market_type}s'] = symbols  # 'future' -> 'futures'
+
+
+exchange_binancecoinm= ccxt.binancecoinm({})
+
+for market_type in ['futures']:
+    markets = exchange_binancecoinm.fetch_markets()
+    symbols = [m['symbol'] for m in markets]
+    currencies_dict['binance'][f'{market_type}'] = symbols  # 'future' -> 'futures'
+
+exchange_binance= ccxt.binance({})
+
+for market_type in ['spot']:
+    markets = exchange_binance.fetch_markets()
+    symbols = []
+    for m in markets:
+        if 'BTC/' in m['symbol']:
+            symbols.append(m['symbol'])
+        else:
+            continue
+    # symbols = [m['symbol'] if 'BTC' in m['symbol'] else continue for m in markets]
+    currencies_dict['binance'][f'{market_type}'] = symbols  
+
+exchange_htx= ccxt.htx({})
+
+for market_type in ['spot']:
+    markets = exchange_htx.fetch_markets({"symbol":"BTC"})
+    symbols = []
+    for m in markets:
+        if 'BTC/' in m['symbol']:
+            symbols.append(m['symbol'])
+        else:
+            continue
+    # symbols = [m['symbol'] if 'BTC' in m['symbol'] else continue for m in markets]
+    currencies_dict['htx'][f'{market_type}'] = symbols  
+
+
+print(currencies_dict['htx'])
