@@ -124,7 +124,7 @@ async def get_currencies_for_funding_rate():
     deribit_spot = exchange_deribit.fetch_markets({"kind": 'spot'})
     symbols = [m['symbol'] for m in deribit_spot]
     btc_usd_spot =  [item for item in symbols if item.startswith('BTC')]
-    currencies_dict['deribit']['spot'] = sorted(btc_usd_spot   )
+    currencies_dict['deribit']['spot'] = btc_usd_spot   
     print(currencies_dict['deribit']['spot'])
 
     # OKX 
@@ -133,7 +133,7 @@ async def get_currencies_for_funding_rate():
     btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
     btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
     btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
-    currencies_dict['okx']['spot'] = sorted(btc_usd_spot) 
+    currencies_dict['okx']['spot'] = btc_usd_spot 
     currencies_dict['okx']['futures'] = sorted(btc_usd_futures )
 
     # HTX 
