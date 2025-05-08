@@ -58,7 +58,6 @@ from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 from typing import Optional
 
-# Assuming you're already running FastAPI
 app = FastAPI()
 
 # Redis setup (update with your actual config)
@@ -164,10 +163,9 @@ async def get_funding_rate(
 
         exchange = ccxtpro.deribit({'newUpdates': False})
         ccy = payload.ccy
-        ccy_str = ccy.replace('USD-SWAP','PERPETUAL')
 
         
-        result = await exchange.fetch_funding_rate(ccy_str)
+        result = await exchange.fetchFundingRate(payload.ccy)
         # print(result)
         # {'info': {'jsonrpc': '2.0', 'result': '6.126574098570054e-7', 'usIn': '1745982573767768', 'usOut': '1745982573770051', 'usDiff': '2283', 'testnet': False}, 'symbol': 'BTC/USD:BTC', 'markPrice': None, 'indexPrice': None, 'interestRate': None, 'estimatedSettlePrice': None, 'timestamp': None, 'datetime': None, 'fundingRate': 6.126574098570054e-07, 'fundingTimestamp': None, 'fundingDatetime': None, 'nextFundingRate': None, 'nextFundingTimestamp': None, 'nextFundingDatetime': None, 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': '8h'}
 

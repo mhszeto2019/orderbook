@@ -1,49 +1,5 @@
 let debounceTimeout = null;
 
-// function populateOrderBook(i,exchange, data) {
-//     const timestamp = document.getElementById(`orderbook-timestamp-${i}`);
-//     // Get the selected exchange for the current table
-//     const selectedExchange = document.getElementById(`exchange${i}-input`).value;
-//     const orderbookHeader = document.getElementById(`orderbook-header-${i}`)
-//     const scrollableOrderbook =  document.getElementById(`orderBookTable${i}`)
-//     // If the selected exchange matches the current exchange from WebSocket
-   
-//     const tableBody = document.getElementById(`order-data-table-body-${i}`);
-//     // Clear the previous data in the table
-//     tableBody.innerHTML = '';
-//     data = JSON.parse(data)
-
-//     const bid_list = data.bids;
-//     const ask_list = data.asks.reverse();
-//     const readableTime = new Date(data.timestamp).toLocaleString();
-//     timestamp.innerHTML = readableTime;
-//     // timestamp.innerHTML = `${data.timestamp}`;
-    
-//     orderbookHeader.innerHTML = `Orderbook: ${selectedExchange.toUpperCase()}` 
-//     // // Populate asks
-//     ask_list.forEach(item => {
-//         const row = document.createElement('tr');  // Create a new row
-//         row.classList.add('asks');  // Add class 'ask' for styling purposes
-//         row.innerHTML = `<td>${item[0]}</td>
-//         <td>${item[1]}</td>`;
-//         tableBody.appendChild(row);
-//     });
-
-//     // Add a separator row between asks and bids
-//     const separatorRow = document.createElement('tr');
-//     separatorRow.innerHTML = `<td colspan="2" style="border-top: 2px solid #000; text-align: center;"></td>`;
-
-//     tableBody.appendChild(separatorRow);
-//     // Populate bids
-//     bid_list.forEach(item => {
-//         const row = document.createElement('tr');  // Create a new row
-//         row.classList.add('bids');  // Add class 'bid' for styling purposes
-//         row.innerHTML = `<td>${item[0]}</td>
-//                         <td>${item[1]}</td>`;
-//         tableBody.appendChild(row);
-//     });
-// }
-
 
 function populateOrderBook(i, exchange, data) {
     const timestamp = document.getElementById(`orderbook-timestamp-${i}`);

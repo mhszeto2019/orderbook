@@ -55,8 +55,6 @@ from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 from typing import Optional
 
-# Assuming you're already running FastAPI
-app = FastAPI()
 
 # Redis setup (update with your actual config)
 r = redis.Redis(host='localhost', port=6379, db=0)
@@ -82,61 +80,88 @@ r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 print('CCXT Version:', ccxt.__version__)
 
+app = FastAPI()
 
-config_source = 'deribit'
-secretKey = config[config_source]['secretKey']
-apiKey = config[config_source]['apiKey']
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 import ccxt 
+import re
 exchange_deribit = ccxt.deribit({})
-
-currencies_dict = {'deribit': {'futures': [], 'spot': []},
-                    'okx': {'futures': [], 'spot': []},
-                    'htx': {'futures': [], 'spot': []},
-                    'binance': {'futures': [], 'spot': []}
-                }   
-
-for market_type in ['future', 'spot']:
-    markets = exchange_deribit.fetch_markets({"kind": market_type})
-    symbols = [m['symbol'] for m in markets]
-    currencies_dict['deribit'][f'{market_type}s'] = symbols  # 'future' -> 'futures'
-
-
 exchange_binancecoinm= ccxt.binancecoinm({})
-
-for market_type in ['futures']:
-    markets = exchange_binancecoinm.fetch_markets()
-    symbols = [m['symbol'] for m in markets]
-    currencies_dict['binance'][f'{market_type}'] = symbols  # 'future' -> 'futures'
-
 exchange_binance= ccxt.binance({})
-
-for market_type in ['spot']:
-    markets = exchange_binance.fetch_markets()
-    symbols = []
-    for m in markets:
-        if 'BTC/' in m['symbol']:
-            symbols.append(m['symbol'])
-        else:
-            continue
-    # symbols = [m['symbol'] if 'BTC' in m['symbol'] else continue for m in markets]
-    currencies_dict['binance'][f'{market_type}'] = symbols  
-
 exchange_htx= ccxt.htx({})
-
-for market_type in ['spot']:
-    markets = exchange_htx.fetch_markets({"symbol":"BTC"})
-    symbols = []
-    for m in markets:
-        if 'BTC/' in m['symbol']:
-            symbols.append(m['symbol'])
-        else:
-            continue
-    # symbols = [m['symbol'] if 'BTC' in m['symbol'] else continue for m in markets]
-    currencies_dict['htx'][f'{market_type}'] = symbols  
+exchange_okx= ccxt.okx({})
 
 
-print(currencies_dict['htx'])
+@app.get("/deribitperp/get_currencies_for_funding_rate")
+async def get_currencies_for_funding_rate():
+        
+    currencies_dict = {'deribit': {'futures': [], 'spot': []},
+                        'okx': {'futures': [], 'spot': []},
+                        'htx': {'futures': [], 'spot': []},
+                        'binance': {'futures': [], 'spot': []}
+                    }   
+    # DERIBIT
+    deriibit_fut = exchange_deribit.fetch_markets({"kind": 'future'})
+    symbols = [m['symbol'] for m in deriibit_fut]
+    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    currencies_dict['deribit']['futures'] = sorted(btc_usd_futures )
+
+    deribit_spot = exchange_deribit.fetch_markets({"kind": 'spot'})
+    symbols = [m['symbol'] for m in deribit_spot]
+    btc_usd_spot =  [item for item in symbols if item.startswith('BTC')]
+    currencies_dict['deribit']['spot'] = sorted(btc_usd_spot   )
+    print(currencies_dict['deribit']['spot'])
+
+    # OKX 
+    okx_fut = exchange_okx.fetch_markets()
+    symbols = [m['symbol'] for m in okx_fut]
+    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+    btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
+    currencies_dict['okx']['spot'] = sorted(btc_usd_spot) 
+    currencies_dict['okx']['futures'] = sorted(btc_usd_futures )
+
+    # HTX 
+    htx_fut = exchange_htx.fetch_markets()
+    symbols = [m['symbol'] for m in htx_fut]
+    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+    btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') ) and ':' in item]
+    currencies_dict['htx']['spot'] = sorted(btc_usd_spot )
+    currencies_dict['htx']['futures'] = sorted(btc_usd_futures )
+    print(currencies_dict['htx']['futures'])
+    # print(currencies_dict['deribit']['spot'])
+    # print(currencies_dict['deribit']['futures'])
+    # print(currencies_dict['okx']['futures'])
+
+    # binance
+    binance_fut = exchange_binance.fetch_markets()
+    symbols = [m['symbol'] for m in binance_fut]
+    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+    btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
+    currencies_dict['binance']['spot'] = sorted(btc_usd_spot )
+    currencies_dict['binance']['futures'] = sorted(btc_usd_futures )
+
+    # print(currencies_dict['binance']['spot'])
+    # print(currencies_dict['binance']['futures'])
+
+    return currencies_dict
+
+if __name__ == "__main__":
+    asyncio.run(get_currencies_for_funding_rate())

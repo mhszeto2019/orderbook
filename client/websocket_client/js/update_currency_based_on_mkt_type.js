@@ -6,9 +6,10 @@ const currencyOptions = {
     ],
     perp: [
         { value: '', text: '--Not Selected--' },
-        { value: 'BTC-USD-SWAP', text: 'BTC-USD-SWAP' },
-        { value: 'BTC-USDT-SWAP', text: 'BTC-USDT-SWAP' },
-        { value: 'ETH-USD-SWAP', text: 'ETH-USD-SWAP' }
+        { value: 'BTC/USD:BTC', text: 'BTC-USD-SWAP' },
+        { value: 'BTC/USDT:USDT', text: 'BTC-USDT-SWAP' },
+        { value: 'ETH/USD:ETH', text: 'ETH-USD-SWAP' },
+
 
     ],
     futures: [
@@ -28,7 +29,7 @@ function updateCurrencyOptions() {
         option.value = opt.value;
         option.textContent = opt.text;
         currencySelect.appendChild(option);
-        if (opt.value == "BTC-USD-SWAP") {
+        if (opt.value == "BTC/USD:BTC") {
             option.selected = true;
         }
     });
@@ -87,11 +88,6 @@ function populateFundingRate() {
     const marketType = document.getElementById('market-type').value;
     const selectedCurrency = document.getElementById('fundingrate-currency-input').value;
 
-    // console.log('Market Type:', marketType);
-    // console.log('Selected Currency:', selectedCurrency);
-
-    // You can now call your fetch function or manipulate the DOM
-    // e.g., fetchFundingRate(marketType, selectedCurrency);
 }
 
 document.addEventListener('DOMContentLoaded', function () {

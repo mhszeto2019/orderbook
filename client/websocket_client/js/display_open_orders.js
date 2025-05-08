@@ -183,51 +183,6 @@ async function populateOpenOrders() {
         }
 
 
-        // // Handle OKX Response
-        // if (Promises[0].ok) {
-        //     const okxData = await okxResponse.json();
-        //     console.log(okxData)
-        //     okxData.forEach(
-        //         openOrder=>{
-        //             console.log(openOrder)
-        //             allOpenOrders.push(openOrder)
-        //         }
-        //     )
-            
-        // } else {
-        //     console.error('Error fetching OKX orders:', okxResponse.statusText);
-        // }
-
-        // // Handle OKX Response
-        // if (Promises[1].ok) {
-        //     const htxData = await htxResponse.json();
-        //     console.log(htxData)
-        //     htxData.forEach(
-        //         openOrder2=>{
-        //             console.log(openOrder2)
-        //             allOpenOrders.push(openOrder2)
-        //         }
-        //     )
-            
-        // } else {
-        //     console.error('Error fetching OKX orders:', okxResponse.statusText);
-        // }
-
-        // if (Promises[2].ok) {
-        //     const deribitData = await deribitResponse.json();
-        //     console.log(deribitData)
-        //     deribitData.forEach(
-        //         openOrder3=>{
-        //             console.log(openOrder3)
-        //             allOpenOrders.push(openOrder3)
-        //         }
-        //     )
-            
-        // } 
-        // else {
-        //     console.error('Error fetching OKX orders:', okxResponse.statusText);
-        // }
-
         
 
         // After both responses are handled, populate the table with all orders

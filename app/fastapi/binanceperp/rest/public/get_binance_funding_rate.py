@@ -159,11 +159,11 @@ async def get_funding_rate(
 
         exchange = ccxtpro.binance({'newUpdates': False})
         ccy = payload.ccy
-        ccy_str = ccy.replace('-USD-SWAP','USD_PERP')
-        # print(ccy_str)
+      
+
 
         # ccy_str = "BTCUSD_PERP"
-        result = await exchange.fetch_funding_rate(symbol = ccy_str)
+        result = await exchange.fetch_funding_rate(payload.ccy)
         # print(result)
         # {'info': {'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'markPrice': '96664.20000000', 'indexPrice': '96714.77327859', 'estimatedSettlePrice': '96660.53002393', 'lastFundingRate': '-0.00009924', 'interestRate': '0.00010000', 'nextFundingTime': '1746172800000', 'time': '1746170522003'}, 'symbol': 'BTC/USD:BTC', 'markPrice': 96664.2, 'indexPrice': 96714.77327859, 'interestRate': 0.0001, 'estimatedSettlePrice': 96660.53002393, 'timestamp': 1746170522003, 'datetime': '2025-05-02T07:22:02.003Z', 'fundingRate': -9.924e-05, 'fundingTimestamp': 1746172800000, 'fundingDatetime': '2025-05-02T08:00:00.000Z', 'nextFundingRate': None, 'nextFundingTimestamp': None, 'nextFundingDatetime': None, 'previousFundingRate': None, 'previousFundingTimestamp': None, 'previousFundingDatetime': None, 'interval': None}
 
