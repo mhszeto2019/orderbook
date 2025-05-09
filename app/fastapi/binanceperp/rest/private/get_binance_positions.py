@@ -159,31 +159,33 @@ async def get_all_positions(
         print(exchange)
         # exchange.load_markets()
   
-        positions = exchange.fetch_positions(['BTCUSD_PERP'])
-        print(positions)
+        positions = exchange.fetchPositions([])
+
         if not positions:
             logger.info('no positions')
             return []
-        json_data = positions[0]
-        logger.info(json_data)
-        json_response = {}
-        json_response['adl'] = ''
-        json_response['exchange'] = 'binanceperp'
-        json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','USD-SWAP')
-        json_response['leverage'] = json_data['leverage']
-        json_response['margin_ratio'] = json_data['maintenanceMarginPercentage']
-        json_response['position'] = float(json_data['info']['positionAmt'])
-        json_response['price'] = json_data['info']['entryPrice']
-        json_response['pnl'] = json_data['info']['unRealizedProfit']
-        json_response['liquidation_price'] = json_data['info']['liquidationPrice']
-# 
-        json_response['ts'] = json_data['timestamp']
+        json_data_arr = []
+        for json_data in positions:
+            
+            json_response = {}
+            json_response['adl'] = ''
+            json_response['exchange'] = 'binanceperp'
+            json_response['instrument_id'] = json_data['info']['symbol'].replace('USD_PERP','USD-SWAP')
+            json_response['leverage'] = json_data['leverage']
+            json_response['margin_ratio'] = json_data['maintenanceMarginPercentage']
+            json_response['position'] = float(json_data['info']['positionAmt'])
+            json_response['price'] = json_data['info']['entryPrice']
+            json_response['pnl'] = json_data['info']['unRealizedProfit']
+            json_response['liquidation_price'] = json_data['info']['liquidationPrice']
+            json_response['ts'] = json_data['timestamp']
 
-# [{'info': {'symbol': 'BTCUSD_PERP', 'positionAmt': '2', 'entryPrice': '94105.34783971', 'markPrice': '94147.7', 'unRealizedProfit': '0.00000096', 'liquidationPrice': '64292.4579285', 'leverage': '5', 'positionSide': 'BOTH', 'updateTime': '1746416698478', 'maxQty': '950', 'notionalValue': '0.00212432', 'breakEvenPrice': '94138.28755126'}, 'id': None, 'symbol': 'BTC/USD:BTC', 'contracts': 2.0, 'contractSize': 100.0, 'unrealizedPnl': 9.6e-07, 'leverage': 5.0, 'liquidationPrice': 64292.4579285, 'collateral': 0.0, 'notional': 0.00212432, 'markPrice': 94147.7, 'entryPrice': 94105.34783971, 'timestamp': 1746416698478, 'initialMargin': 0.00042486, 'initialMarginPercentage': 0.2, 'maintenanceMargin': 8.49728e-06, 'maintenanceMarginPercentage': 0.004, 'marginRatio': None, 'datetime': '2025-05-05T03:44:58.478Z', 'marginMode': None, 'marginType': None, 'side': 'long', 'hedged': False, 'percentage': None, 'stopLossPrice': None, 'takeProfitPrice': None}]
+            json_data_arr.append(json_response)
 
-    #     print(json_response)
-    #     logger.info(json_response)
-        return [json_response]
+        
+
+    # [{'info': {'symbol': 'BTCUSD_PERP', 'positionAmt': '2', 'entryPrice': '94105.34783971', 'markPrice': '94147.7', 'unRealizedProfit': '0.00000096', 'liquidationPrice': '64292.4579285', 'leverage': '5', 'positionSide': 'BOTH', 'updateTime': '1746416698478', 'maxQty': '950', 'notionalValue': '0.00212432', 'breakEvenPrice': '94138.28755126'}, 'id': None, 'symbol': 'BTC/USD:BTC', 'contracts': 2.0, 'contractSize': 100.0, 'unrealizedPnl': 9.6e-07, 'leverage': 5.0, 'liquidationPrice': 64292.4579285, 'collateral': 0.0, 'notional': 0.00212432, 'markPrice': 94147.7, 'entryPrice': 94105.34783971, 'timestamp': 1746416698478, 'initialMargin': 0.00042486, 'initialMarginPercentage': 0.2, 'maintenanceMargin': 8.49728e-06, 'maintenanceMarginPercentage': 0.004, 'marginRatio': None, 'datetime': '2025-05-05T03:44:58.478Z', 'marginMode': None, 'marginType': None, 'side': 'long', 'hedged': False, 'percentage': None, 'stopLossPrice': None, 'takeProfitPrice': None}]
+
+        return json_data_arr
     except Exception as e:
         print(e)
         logger.error(traceback.format_exc())

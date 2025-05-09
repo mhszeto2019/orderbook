@@ -159,25 +159,41 @@ async def get_all_positions(
 
         # # markets = exchange.load_markets()
         # positions = exchange.fetch_positions(symbols=['BTC-USD-SWAP'])
-        positions = exchange.fetch_positions()
+        # positions = exchange.fetch_positions()
+        positions1 = exchange.fetchPositions([],{'instType':'SWAP'})
+        positions2 = exchange.fetchPositions([],{'instType':'FUTURES'})
+
+        positions = positions1 + positions2
+
         if not positions:
             logger.info('no positions')
             return []
-        json_data = positions[0]
-        json_response = {}
-        json_response['adl'] = json_data['info']['adl']
-        json_response['exchange'] = 'okxperp'
-        json_response['instrument_id'] = json_data['info']['instId']
-        json_response['leverage'] = json_data['info']['lever']
-        json_response['margin_ratio'] = json_data['info']['mgnRatio']
-        json_response['position'] = json_data['info']['pos']
-        json_response['price'] = json_data['info']['avgPx']
-        json_response['pnl'] = json_data['info']['pnl']
-        json_response['liquidation_price'] = json_data['info']['liqPx']
 
-        json_response['ts'] = json_data['info']['uTime']
-        print(json_response)
-        return [json_response]
+      
+        
+        logger.info(f"POSITIONS:{positions}")
+        if not positions:
+            logger.info('no positions')
+            return []
+
+        json_data_arr = []
+        for json_data in positions :
+
+            json_response = {}
+            json_response['adl'] = json_data['info']['adl']
+            json_response['exchange'] = 'okxperp'
+            json_response['instrument_id'] = json_data['info']['instId']
+            json_response['leverage'] = json_data['info']['lever']
+            json_response['margin_ratio'] = json_data['info']['mgnRatio']
+            json_response['position'] = json_data['info']['pos']
+            json_response['price'] = json_data['info']['avgPx']
+            json_response['pnl'] = json_data['info']['pnl']
+            json_response['liquidation_price'] = json_data['info']['liqPx']
+
+            json_response['ts'] = json_data['info']['uTime']
+            json_data_arr.append(json_response)
+
+        return json_data_arr
 
     except:
         logger.info(traceback.format_exc())

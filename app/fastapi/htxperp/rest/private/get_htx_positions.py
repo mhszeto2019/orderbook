@@ -15,9 +15,9 @@ if not os.path.exists(config_file_path):
 config = configparser.ConfigParser()
 config.read(config_file_path)
 
-config_source = 'htx_live_trade'
-secretKey = config[config_source]['secretKey']
-apiKey = config[config_source]['apiKey']
+# config_source = 'htx_live_trade'
+# secretKey = config[config_source]['secretKey']
+# apiKey = config[config_source]['apiKey']
 
 from typing import Union
 from fastapi import FastAPI
@@ -157,8 +157,10 @@ async def get_all_positions(
 
     # # markets = exchange.load_markets()
         # positions = exchange.fetch_positions(symbols=['BTC-USD'])
-        positions = exchange.fetchPositions(['BTC-USD','ETH-USD'],{'type':'swap'})
-
+        positions1 = exchange.fetchPositions(['BTC-USD','ETH-USD'],{'type':'swap'})
+        positions2 = exchange.fetchPositions(['BTC-USD','ETH-USD'],{'type':'future'})
+        positions = positions1 + positions2  
+        
         logger.info(f"POSITIONS:{positions}")
         if not positions:
             logger.info('no positions')

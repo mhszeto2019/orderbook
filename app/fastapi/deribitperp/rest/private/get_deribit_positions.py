@@ -157,15 +157,12 @@ async def get_all_positions(
 
         # positions = exchange.fetch_positions(['BTC-PERPETUAL','ETH-PERPETUAL'])
         positions = exchange.fetchPositions([],{"currency":"BTC","kind":'future'})
-        print(positions)
         if not positions or positions[0]['info']['size']=='0.0':
             logger.info('no positions')
             return []
         json_data_arr = []
         for json_data in positions :
-        
-            # json_data = positions[0]
-            # logger.info(json_data)
+      
             if json_data['info']['size']=='0.0':
                 continue
                 
