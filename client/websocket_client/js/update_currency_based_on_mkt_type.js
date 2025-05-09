@@ -9,8 +9,6 @@ const currencyOptions = {
         { value: 'BTC/USD:BTC', text: 'BTC-USD-SWAP' },
         { value: 'BTC/USDT:USDT', text: 'BTC-USDT-SWAP' },
         { value: 'ETH/USD:ETH', text: 'ETH-USD-SWAP' },
-        
-
 
     ],
     future1s: [
@@ -19,11 +17,9 @@ const currencyOptions = {
     ]
 };
 
-
 async function getCurrencies() {
   const response = await fetch(`http://${hostname}:9001/deribitperp/get_currencies_for_funding_rate`);
   const currencies = await response.json();
-  //console.log(currencies);
   return currencies
 }
 
@@ -46,7 +42,6 @@ function updateCurrencyOptions() {
     });
     
 }
-
 
 
 async function updateCurrencyOptionsOrderbook1() {

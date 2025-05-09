@@ -1,8 +1,4 @@
 
-
-
-
-
 // async function getCurrencies() {
 //   const response = await fetch(`http://${hostname}:9001/deribitperp/get_currencies_for_funding_rate`);
 //   const currencies = await response.json();
@@ -227,13 +223,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function populateCurrency(selectId,exchangeType,exchangeNumber){
             let marketType = document.getElementById(`manual-order-form-market-type${exchangeNumber}`).value
-            
+
             ccyField = document.getElementById(selectId)
             ccyField.innerHTML = ''
             if (marketType == 'perp'){
               marketType = 'futures'
             }
             //console.log(exchangeNumber,exchangeType,marketType)
+
             const ccyOptions = currencies[exchangeType][marketType]
             ccyOptions.forEach(ccy =>{
               const ccyOption = document.createElement('option');

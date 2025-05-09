@@ -155,33 +155,40 @@ async def get_all_positions(
        
         # markets = exchange.load_markets()
 
-        positions = exchange.fetch_positions(['BTC-PERPETUAL','ETH-PERPETUAL'])
+        # positions = exchange.fetch_positions(['BTC-PERPETUAL','ETH-PERPETUAL'])
+        positions = exchange.fetchPositions([],{"currency":"BTC","kind":'future'})
+        print(positions)
         if not positions or positions[0]['info']['size']=='0.0':
             logger.info('no positions')
             return []
-        json_data = positions[0]
-        logger.info(json_data)
-      
-            
-        logger.info(json_data)
-        json_response = {}
-        json_response['adl'] = ''
-        json_response['exchange'] = 'deribitperp'
-        json_response['instrument_id'] = json_data['info']['instrument_name'].replace('PERPETUAL','USD-SWAP')
-        json_response['leverage'] = json_data['info']['leverage']
-        json_response['margin_ratio'] = json_data['maintenanceMarginPercentage']
-        json_response['position'] = float(json_data['info']['size'])/100 
-        json_response['price'] = json_data['info']['average_price']
-        json_response['pnl'] = json_data['info']['realized_profit_loss']
-        json_response['liquidation_price'] = json_data['info']['estimated_liquidation_price']
+        json_data_arr = []
+        for json_data in positions :
+        
+            # json_data = positions[0]
+            # logger.info(json_data)
+            if json_data['info']['size']=='0.0':
+                continue
+                
+            logger.info(json_data)
+            json_response = {}
+            json_response['adl'] = ''
+            json_response['exchange'] = 'deribitfutures'
+            json_response['instrument_id'] = json_data['info']['instrument_name'].replace('PERPETUAL','USD-SWAP')
+            json_response['leverage'] = json_data['info']['leverage']
+            json_response['margin_ratio'] = json_data['maintenanceMarginPercentage']
+            json_response['position'] = float(json_data['info']['size'])/100 
+            json_response['price'] = json_data['info']['average_price']
+            json_response['pnl'] = json_data['info']['realized_profit_loss']
+            json_response['liquidation_price'] = json_data['info']['estimated_liquidation_price']
 
-        json_response['ts'] = json_data['timestamp']
-
+            json_response['ts'] = json_data['timestamp']
+            json_data_arr.append(json_response)
      # [{'info': {'size': '10.0', 'kind': 'future', 'maintenance_margin': '1.057e-6', 'initial_margin': '2.113e-6', 'open_orders_margin': '7.781e-6', 'direction': 'buy', 'index_price': '94641.25', 'instrument_name': 'BTC-PERPETUAL', 'settlement_price': '94644.45', 'mark_price': '94642.17', 'interest_value': '-5.989412344071121e-6', 'delta': '1.05661e-4', 'average_price': '94640.0', 'leverage': '50', 'floating_profit_loss': '3.0e-9', 'realized_profit_loss': '0.0', 'total_profit_loss': '3.0e-9', 'realized_funding': '0.0', 'size_currency': '1.05661e-4', 'estimated_liquidation_price': '9135.11'}, 'id': None, 'symbol': 'BTC/USD:BTC', 'timestamp': 1746002391829, 'datetime': '2025-04-30T08:39:51.829Z', 'lastUpdateTimestamp': None, 'initialMargin': 2.113e-06, 'initialMarginPercentage': 1.9997917869412556, 'maintenanceMargin': 1.057e-06, 'maintenanceMarginPercentage': 1.000369104967774, 'entryPrice': 94640.0, 'notional': 0.000105661, 'leverage': 50, 'unrealizedPnl': 3e-09, 'contracts': None, 'contractSize': 10.0, 'marginRatio': None, 'liquidationPrice': 9135.11, 'markPrice': 94642.17, 'lastPrice': None, 'collateral': None, 'marginMode': None, 'side': 'long', 'percentage': None, 'hedged': None, 'stopLossPrice': None, 'takeProfitPrice': None}]
 
-        print(json_response)
-        logger.info(json_response)
-        return [json_response]
+      
+        return json_data_arr
+
+
     except Exception as e:
         print(e)
         logger.error(traceback.format_exc())

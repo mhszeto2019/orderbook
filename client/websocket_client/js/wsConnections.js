@@ -42,6 +42,11 @@ function compareData(newData) {
     let ccy1 = document.getElementById('currency-input-orderbook1').value
     let ccy2 = document.getElementById('currency-input-orderbook2').value
     
+    if (!exchange1 || !exchange2 || !marketType1 || !marketType2 || !ccy1 || !ccy2) {
+        console.warn("Missing input values");
+        return;
+    }
+
     // // Get the previous data for the current exchange and the other exchange
     if (marketType1 == 'futures'){
         exchange1 = exchange1 + 'futures'
@@ -68,20 +73,11 @@ function compareData(newData) {
     let bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2;
     // console.log(bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2)
 
-    // if (previousDataEx1[ccy1] && previousDataEx2[ccy2]) {
+    if (ccy1 == '--Not Selected--' | ccy2 == '--Not Selected--'){
+        return
+    }
 
-    //     bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
-    //     bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
-    //     bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
-    //     bestAskSzEx1 = previousDataEx1[ccy1]['best_ask'][0][1];
-
-    //     bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
-    //     bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];
-    //     bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
-    //     bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1];
-
-    // }
-    if (ccy1 && previousDataEx1[ccy1]) {
+    if (previousDataEx1?.[ccy1]) {
         if (marketType1 == 'futures'){
             bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
             bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
@@ -100,7 +96,9 @@ function compareData(newData) {
         }
      
     }
-    if (ccy2 && previousDataEx2[ccy2]){
+    // if (ccy2 != '--Not Selected--' && previousDataEx2[ccy2]){
+    if (previousDataEx2?.[ccy2]){
+    
         if (marketType2 == 'futures'){
             bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
             bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];

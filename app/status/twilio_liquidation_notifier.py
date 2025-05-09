@@ -274,7 +274,9 @@ class TraderNotifier:
             # if self.username in ['brennan12']:
             if self.username in ['SHWfalconstead']:
 
-                self.exchanges['deribit'] = {'BTC-USD': {'liq_px':66000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'buy', 'ts': '2025-04-08 11:03:02'}}
+                self.exchanges['deribit'] = {'BTC-USD': {'liq_px':65000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'buy', 'ts': '2025-04-08 11:03:02'}}
+
+                self.exchanges['binance'] = {'BTC-USD': {'liq_px':60000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'buy', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'buy', 'ts': '2025-04-08 11:03:02'}}
 
                 # self.exchanges['htx2'] = {'BTC-USD': {'liq_px':112000, 'last_px': self.latest_prices['BTC-USD']['last_px'], 'direction': 'sell', 'ts': current},'ETH-USD': {'liq_px': 122838.1600, 'last_px': 0, 'direction': 'sell', 'ts': '2025-04-08 11:03:02'}}
 
