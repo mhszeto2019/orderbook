@@ -56,14 +56,14 @@ async function populatePositions() {
         body: JSON.stringify(request_data)
     });
 
-    const fifthOrderPromise = fetch(`http://${hostname}:5074/binancespot/get_all_positions`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request_data)
-    });
+    // const fifthOrderPromise = fetch(`http://${hostname}:5074/binancespot/get_all_positions`, {
+    //     method: 'POST',
+    //     headers: {
+    //         'Authorization': `Bearer ${token}`,
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(request_data)
+    // });
 
 
     try {
@@ -92,7 +92,7 @@ async function populatePositions() {
             if (pos.ok) {
                 let posData = await pos.json()
                 if (posData){
-                    console.log(posData)
+                    // console.log(posData)
                         posData.forEach(posRow => {
                             // console.log(posRow)
                             allPositions.push(posRow)
@@ -112,7 +112,7 @@ async function populatePositions() {
             if (pos.ok) {
                 let posData = await pos.json()
                 if (posData){
-                    console.log(posData)
+                    // console.log(posData)
                         posData.forEach(posRow => {
                             // console.log(posRow)
                             allPositions.push(posRow)
@@ -133,7 +133,7 @@ async function populatePositions() {
             if (pos.ok) {
                 let posData = await pos.json()
                 if (posData){
-                    console.log(posData)
+                    // console.log(posData)
                         posData.forEach(posRow => {
                             // console.log(posRow)
                             allPositions.push(posRow)
@@ -154,7 +154,7 @@ async function populatePositions() {
             if (pos.ok) {
                 let posData = await pos.json()
                 if (posData){
-                    console.log(posData)
+                    // console.log(posData)
                         posData.forEach(posRow => {
                             // console.log(posRow)
                             allPositions.push(posRow)
@@ -175,7 +175,7 @@ async function populatePositions() {
             if (pos.ok) {
                 let posData = await pos.json()
                 if (posData){
-                    console.log(posData)
+                    // console.log(posData)
                         posData.forEach(posRow => {
                             // console.log(posRow)
                             allPositions.push(posRow)

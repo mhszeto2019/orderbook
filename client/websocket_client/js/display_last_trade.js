@@ -311,9 +311,17 @@ function populateLastTrades(tableNo,error=false,errorMsg = '') {
     const lastTradeHeader = document.getElementById(`lastTrade-header-${tableNo}`)
     const market_type = document.getElementById(`market-type-orderbook${tableNo}`).value
 
-    if (market_type == 'perp'){
-        selectedExchange += 'perp'
+    // if (market_type == 'perp'){
+    //     selectedExchange += 'perp'
+    // }
+    // else{
+    //     selectedExchange += 'spot'
+    // }
+
+    if (['perp', 'futures'].includes(market_type.toLowerCase())) {
+        selectedExchange += 'perp';
     }
+    
     else{
         selectedExchange += 'spot'
     }

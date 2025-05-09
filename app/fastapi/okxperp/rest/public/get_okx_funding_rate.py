@@ -158,7 +158,6 @@ async def get_funding_rate(
         api_creds_dict = json.loads(decrypted_data)
 
         exchange = ccxtpro.okx({'newUpdates': False})
-        print(payload.ccy)
 
         result = await exchange.fetchFundingRate(payload.ccy)
     

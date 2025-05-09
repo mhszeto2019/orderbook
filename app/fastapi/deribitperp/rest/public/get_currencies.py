@@ -107,59 +107,111 @@ exchange_htx= ccxt.htx({})
 exchange_okx= ccxt.okx({})
 
 
+currencies_dict = {'deribit': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']},
+                    'okx': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']},
+                    'htx': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']},
+                    'binance': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']}
+                }   
+# DERIBIT
+deriibit_fut = exchange_deribit.fetch_markets({"kind": 'future'})
+symbols = [m['symbol'] for m in deriibit_fut]
+btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+currencies_dict['deribit']['futures']+=sorted(btc_usd_futures )
+
+deribit_spot = exchange_deribit.fetch_markets({"kind": 'spot'})
+symbols = [m['symbol'] for m in deribit_spot]
+btc_usd_spot =  [item for item in symbols if item.startswith('BTC')]
+currencies_dict['deribit']['spot']+=(btc_usd_spot   )
+print(currencies_dict['deribit']['spot'])
+
+# OKX 
+okx_fut = exchange_okx.fetch_markets()
+symbols = [m['symbol'] for m in okx_fut]
+btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
+currencies_dict['okx']['spot'] +=btc_usd_spot 
+currencies_dict['okx']['futures']+=sorted(btc_usd_futures)
+
+# HTX 
+htx_fut = exchange_htx.fetch_markets()
+symbols = [m['symbol'] for m in htx_fut]
+btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') ) and ':' in item]
+currencies_dict['htx']['spot'] +=sorted(btc_usd_spot )
+currencies_dict['htx']['futures']+=sorted(btc_usd_futures )
+print(currencies_dict['htx']['futures'])
+# print(currencies_dict['deribit']['spot'])
+# print(currencies_dict['deribit']['futures'])
+# print(currencies_dict['okx']['futures'])
+
+# binance
+binance_fut = exchange_binance.fetch_markets()
+symbols = [m['symbol'] for m in binance_fut]
+btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
+currencies_dict['binance']['spot']+=sorted(btc_usd_spot )
+currencies_dict['binance']['futures']+=sorted(btc_usd_futures )
+
+# print(currencies_dict['binance']['spot'])
+# print(currencies_dict['binance']['futures'])
+
+
 @app.get("/deribitperp/get_currencies_for_funding_rate")
 async def get_currencies_for_funding_rate():
         
-    currencies_dict = {'deribit': {'futures': [], 'spot': []},
-                        'okx': {'futures': [], 'spot': []},
-                        'htx': {'futures': [], 'spot': []},
-                        'binance': {'futures': [], 'spot': []}
-                    }   
-    # DERIBIT
-    deriibit_fut = exchange_deribit.fetch_markets({"kind": 'future'})
-    symbols = [m['symbol'] for m in deriibit_fut]
-    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
-    currencies_dict['deribit']['futures'] = sorted(btc_usd_futures )
+    # currencies_dict = {'deribit': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']},
+    #                     'okx': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']},
+    #                     'htx': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']},
+    #                     'binance': {'futures': ['--Not Selected--'], 'spot': ['--Not Selected--']}
+    #                 }   
+    # # DERIBIT
+    # deriibit_fut = exchange_deribit.fetch_markets({"kind": 'future'})
+    # symbols = [m['symbol'] for m in deriibit_fut]
+    # btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    # currencies_dict['deribit']['futures']+=sorted(btc_usd_futures )
 
-    deribit_spot = exchange_deribit.fetch_markets({"kind": 'spot'})
-    symbols = [m['symbol'] for m in deribit_spot]
-    btc_usd_spot =  [item for item in symbols if item.startswith('BTC')]
-    currencies_dict['deribit']['spot'] = btc_usd_spot   
-    print(currencies_dict['deribit']['spot'])
-
-    # OKX 
-    okx_fut = exchange_okx.fetch_markets()
-    symbols = [m['symbol'] for m in okx_fut]
-    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
-    btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
-    btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
-    currencies_dict['okx']['spot'] = btc_usd_spot 
-    currencies_dict['okx']['futures'] = sorted(btc_usd_futures )
-
-    # HTX 
-    htx_fut = exchange_htx.fetch_markets()
-    symbols = [m['symbol'] for m in htx_fut]
-    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
-    btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
-    btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') ) and ':' in item]
-    currencies_dict['htx']['spot'] = sorted(btc_usd_spot )
-    currencies_dict['htx']['futures'] = sorted(btc_usd_futures )
-    print(currencies_dict['htx']['futures'])
+    # deribit_spot = exchange_deribit.fetch_markets({"kind": 'spot'})
+    # symbols = [m['symbol'] for m in deribit_spot]
+    # btc_usd_spot =  [item for item in symbols if item.startswith('BTC')]
+    # currencies_dict['deribit']['spot']+=(btc_usd_spot   )
     # print(currencies_dict['deribit']['spot'])
-    # print(currencies_dict['deribit']['futures'])
-    # print(currencies_dict['okx']['futures'])
 
-    # binance
-    binance_fut = exchange_binance.fetch_markets()
-    symbols = [m['symbol'] for m in binance_fut]
-    btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
-    btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
-    btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
-    currencies_dict['binance']['spot'] = sorted(btc_usd_spot )
-    currencies_dict['binance']['futures'] = sorted(btc_usd_futures )
+    # # OKX 
+    # okx_fut = exchange_okx.fetch_markets()
+    # symbols = [m['symbol'] for m in okx_fut]
+    # btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    # btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+    # btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
+    # currencies_dict['okx']['spot'] +=btc_usd_spot 
+    # currencies_dict['okx']['futures']+=sorted(btc_usd_futures)
 
-    # print(currencies_dict['binance']['spot'])
-    # print(currencies_dict['binance']['futures'])
+    # # HTX 
+    # htx_fut = exchange_htx.fetch_markets()
+    # symbols = [m['symbol'] for m in htx_fut]
+    # btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    # btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+    # btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') ) and ':' in item]
+    # currencies_dict['htx']['spot'] +=sorted(btc_usd_spot )
+    # currencies_dict['htx']['futures']+=sorted(btc_usd_futures )
+    # print(currencies_dict['htx']['futures'])
+    # # print(currencies_dict['deribit']['spot'])
+    # # print(currencies_dict['deribit']['futures'])
+    # # print(currencies_dict['okx']['futures'])
+
+    # # binance
+    # binance_fut = exchange_binance.fetch_markets()
+    # symbols = [m['symbol'] for m in binance_fut]
+    # btc_usd_futures= [item for item in symbols if item.startswith('BTC/USD')]
+    # btc_usd_spot = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P') or  ':' in item)]
+    # btc_usd_futures = [item for item in btc_usd_futures if not (item.endswith('-C') or item.endswith('-P')) and ':' in item]
+    # currencies_dict['binance']['spot']+=sorted(btc_usd_spot )
+    # currencies_dict['binance']['futures']+=sorted(btc_usd_futures )
+
+    # # print(currencies_dict['binance']['spot'])
+    # # print(currencies_dict['binance']['futures'])
 
     return currencies_dict
 

@@ -1,52 +1,18 @@
 
 
 
-// function updateCurrencyOptionsGeneral(instrumentInputId, currencyInputId, contractTypeContainerId) {
-//     const instrumentInput = document.getElementById(instrumentInputId);
-//     const currencyInput = document.getElementById(currencyInputId);
-//     const contractTypeContainer = document.getElementById(contractTypeContainerId);
 
-//     // Clear existing options
-//     currencyInput.innerHTML = '<option value="">Select Currency Pair</option>';
-    
-//     // Add options based on the selected instrument
-//     if (instrumentInput.value === 'futures') {
-//         const futuresOptions = [
-//             { value: 'BTC', text: 'BTC' },
-//         ];
-//         futuresOptions.forEach(option => {
-//             const opt = document.createElement('option');
-//             opt.value = option.value;
-//             opt.textContent = option.text;
-//             currencyInput.appendChild(opt);
-//         });
 
-//         // Show Contract Type field
-//         contractTypeContainer.style.display = 'block';
-//     } else if (instrumentInput.value === 'swap') {
-//         const defaultOptions = [
-//             { value: 'BTC-USD-SWAP', text: 'BTC-USD-SWAP' },
-//         ];
-//         defaultOptions.forEach(option => {
-//             const opt = document.createElement('option');
-//             opt.value = option.value;
-//             opt.textContent = option.text;
-//             currencyInput.appendChild(opt);
-//         });
-
-//         // Hide Contract Type field
-//         contractTypeContainer.style.display = 'none';
-//     }
+// async function getCurrencies() {
+//   const response = await fetch(`http://${hostname}:9001/deribitperp/get_currencies_for_funding_rate`);
+//   const currencies = await response.json();
+//   console.log(currencies);
+//   return currencies
 // }
 
-async function getCurrencies() {
-  const response = await fetch(`http://${hostname}:9001/deribitperp/get_currencies_for_funding_rate`);
-  const currencies = await response.json();
-  console.log(currencies);
-  return currencies
-}
+// let currencies = 'GLOBAL CURRENCIES EMPTY'
 
-let currencies = 'GLOBAL CURRENCIES EMPTY'
+
 document.addEventListener('DOMContentLoaded', function () {
   (async () => {
     // Wait for currencies to be fetched before continuing
@@ -93,18 +59,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // const currenciesSpot = currencies[exchange]['spot'];
       const exchange = document.getElementById(`manual-order-form-exchange-input${exchangeNumber}`).value
-      console.log(marketType)
+      //console.log(marketType)
       if (marketType == 'perp'){
         marketType = 'futures'
       }
       const currenciesSpot = currencies[exchange][marketType];
       const currenciesPerp = currencies[exchange][marketType];
 
-      console.log(exchange)
+      //console.log(exchange)
       const currencySelect = document.getElementById(selectId);
       currencySelect.innerHTML = '';  // Clear previous options
       const options = marketType === 'spot' ? currenciesSpot : currenciesPerp;
-      console.log(options)
+      //console.log(options)
       options.forEach(currency => {
         const option = document.createElement('option');
         option.value = currency;
@@ -200,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const orderType2 = document.getElementById('manual-order-form-order-type2')
         let priceField1 = document.getElementById('manual-order-form-price-field1')
         let priceField2 = document.getElementById('manual-order-form-price-field2')
-        console.log(orderType1.value)
+        //console.log(orderType1.value)
 
         const hiddenOrderTypes = ['market', 'counterparty1', 'counterparty5','queue1'];
 
@@ -267,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (marketType == 'perp'){
               marketType = 'futures'
             }
-            console.log(exchangeNumber,exchangeType,marketType)
+            //console.log(exchangeNumber,exchangeType,marketType)
             const ccyOptions = currencies[exchangeType][marketType]
             ccyOptions.forEach(ccy =>{
               const ccyOption = document.createElement('option');

@@ -79,7 +79,7 @@ async function populateOpenOrders() {
         let allOpenOrders = [];
         if (Promises[0] && Promises[0].status === 'fulfilled') {
             const promise = Promises[0].value;
-            console.log(promise)
+            // console.log(promise)
             if (promise.ok) {
                 const okxData = await promise.json();
                 if (!okxData){
@@ -87,7 +87,7 @@ async function populateOpenOrders() {
                 }
                 okxData.forEach(
                     openOrder=>{
-                        console.log(openOrder)
+                        // console.log(openOrder)
                         allOpenOrders.push(openOrder)
                     }
                 )
@@ -102,13 +102,13 @@ async function populateOpenOrders() {
 
             if (promise.ok) {
                 const htxData = await promise.json();
-                console.log(htxData)
+                // console.log(htxData)
                 if (!htxData){
                     return []
                 }
                 htxData.forEach(
                     openOrder=>{
-                        console.log(openOrder)
+                        // console.log(openOrder)
                         allOpenOrders.push(openOrder)
                     }
                 )
@@ -123,13 +123,13 @@ async function populateOpenOrders() {
 
             if (promise.ok) {
                 const deribitData = await promise.json();
-                console.log(deribitData)
+                //console.log(deribitData)
                 if (!deribitData){
                     return []
                 }
                 deribitData.forEach(
                     openOrder=>{
-                        console.log(openOrder)
+                        //console.log(openOrder)
                         allOpenOrders.push(openOrder)
                     }
                 )
@@ -144,13 +144,13 @@ async function populateOpenOrders() {
 
             if (promise.ok) {
                 const binanceData = await promise.json();
-                console.log(binanceData)
+                //console.log(binanceData)
                 if (!binanceData){
                     return []
                 }
                 binanceData.forEach(
                     openOrder=>{
-                        console.log(openOrder)
+                        //console.log(openOrder)
                         allOpenOrders.push(openOrder)
                     }
                 )
@@ -165,13 +165,13 @@ async function populateOpenOrders() {
 
             if (promise.ok) {
                 const binanceData = await promise.json();
-                console.log(binanceData)
+                //console.log(binanceData)
                 if (!binanceData){
                     return []
                 }
                 binanceData.forEach(
                     openOrder=>{
-                        console.log(openOrder)
+                        //console.log(openOrder)
                         allOpenOrders.push(openOrder)
                     }
                 )
@@ -490,7 +490,7 @@ function createButton(type, orderId, instId, exchange, action) {
 
 
 async function handleDelete(instId, ordId,exchange) {
-    console.log(instId,ordId,exchange)
+    //console.log(instId,ordId,exchange)
     const token = getAuthToken();
     const username = localStorage.getItem('username')
     const redis_key = localStorage.getItem('key')
@@ -696,7 +696,7 @@ async function clearPositions(exchange) {
         }
     } 
     else {
-        console.log('Action canceled.');
+        //console.log('Action canceled.');
     }
 }
 
@@ -761,7 +761,7 @@ async function get_tpsl_info(ordId,instId) {
 async function Htx2OkxFormatOrders(responseData) {
     // Extract orders from the response
     const { orders } = responseData;
-    console.log(responseData)
+    // console.log(responseData)
     const transformedOrders = []
     for (const row of responseData.orders) {
         try {

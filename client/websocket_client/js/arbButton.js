@@ -68,8 +68,8 @@ async function handleClick(type) {
     const leadingExchange = document.getElementById('exchange1-input').value;
     const laggingExchange = document.getElementById('exchange2-input').value;
 
-    const marketType1 = document.getElementById('market-type-orderbook1').value;
-    const marketType2 = document.getElementById('market-type-orderbook2').value;
+    let marketType1 = document.getElementById('market-type-orderbook1').value;
+    let marketType2 = document.getElementById('market-type-orderbook2').value;
 
     const instrument1 = document.getElementById('currency-input-orderbook1').value;
     const instrument2 = document.getElementById('currency-input-orderbook2').value;
@@ -125,7 +125,14 @@ async function handleClick(type) {
         offset1,
         offset2
     };
-
+    if (['perp', 'futures'].includes(marketType1.toLowerCase())) {
+        marketType1 = 'perp';
+    }
+    
+    if (['perp', 'futures'].includes(marketType2.toLowerCase())) {
+        marketType2 = 'perp';
+    }
+    
     fastapi_folder1 = leadingExchange + marketType1
     fastapi_folder2 = laggingExchange + marketType2
 
@@ -162,7 +169,6 @@ async function handleClick(type) {
         body: JSON.stringify(secondOrderData)
     });
     const results = await Promise.allSettled([firstOrderPromise, secondOrderPromise])
-    console.log("RESULTSSSSSSSSSSSSSSSSSSSSSSS",results)
     if (results[0].status === 'fulfilled') {
                 
         const firstResult = await results[0].value.json();

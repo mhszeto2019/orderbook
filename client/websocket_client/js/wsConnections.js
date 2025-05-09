@@ -15,6 +15,7 @@ const lastData = {
 
 
 function updateArbOrder(buySpreadpx,buysz,sellSpreadpx,sellsz,buysellgap){
+    // console.log(buySpreadpx,buysz,sellSpreadpx,sellsz,buysellgap)
     buySpreadDOM = document.getElementById('buySpread')
     sellSpreadDOM = document.getElementById('sellSpread')
     buySpreadSzDOM = document.getElementById('buySpreadSz')
@@ -31,6 +32,7 @@ function updateArbOrder(buySpreadpx,buysz,sellSpreadpx,sellsz,buysellgap){
 }
 
 function compareData(newData) {
+    // console.log('comparingdata')
     // const exchange = newData.exchange;
     // // const otherExchange = exchange === 'htx' ? 'okx' : 'htx';
     let exchange1 = document.getElementById('exchange1-input').value
@@ -41,22 +43,22 @@ function compareData(newData) {
     let ccy2 = document.getElementById('currency-input-orderbook2').value
     
     // // Get the previous data for the current exchange and the other exchange
-    if (marketType1 == 'perp'){
-        exchange1 = exchange1 + 'perp'
+    if (marketType1 == 'futures'){
+        exchange1 = exchange1 + 'futures'
     }
     else{
         exchange1 = exchange1 + 'spot'
 
     }
 
-    if (marketType2 == 'perp'){
-        exchange2 = exchange2 + 'perp'
+    if (marketType2 == 'futures'){
+        exchange2 = exchange2 + 'futures'
     }
     else{
         exchange2 = exchange2 + 'spot'
 
     }
-    // console.log(exchange1,exchange2)
+
     const previousDataEx1 = lastData[exchange1];
     const previousDataEx2 = lastData[exchange2];
 
@@ -79,8 +81,8 @@ function compareData(newData) {
     //     bestAskSzEx2 = previousDataEx2[ccy2]['best_ask'][0][1];
 
     // }
-    if (previousDataEx1[ccy1] ) {
-        if (marketType1 == 'perp'){
+    if (ccy1 && previousDataEx1[ccy1]) {
+        if (marketType1 == 'futures'){
             bestBidEx1 = previousDataEx1[ccy1]['best_bid'][0][0];
             bestBidSzEx1 = previousDataEx1[ccy1]['best_bid'][0][1];
             bestAskEx1 = previousDataEx1[ccy1]['best_ask'][0][0];
@@ -98,8 +100,8 @@ function compareData(newData) {
         }
      
     }
-    if (previousDataEx2[ccy2]){
-        if (marketType2 == 'perp'){
+    if (ccy2 && previousDataEx2[ccy2]){
+        if (marketType2 == 'futures'){
             bestBidEx2 = previousDataEx2[ccy2]['best_bid'][0][0];
             bestBidSzEx2 = previousDataEx2[ccy2]['best_bid'][0][1];
             bestAskEx2 = previousDataEx2[ccy2]['best_ask'][0][0];
@@ -119,7 +121,8 @@ function compareData(newData) {
       
     }
 
-  
+
+        // console.log(bestBidEx2, bestBidSzEx2, bestAskEx2, bestAskSzEx2)
         
         // if user wants to buy, it will be buying from exchange1 and selling exchange2 so we take exchange2's bid - exchange1's ask
         // buySpread = Number(bestBidEx2.toFixed(2)) - Number(bestAskEx1.toFixed(2))
@@ -129,7 +132,6 @@ function compareData(newData) {
         // console.log(bestBidSzEx2,bestAskSzEx1)
 
         buySzSpread = Math.min(bestBidSzEx2,bestAskSzEx1)
-
 
         sellSpread = Math.round((bestBidEx1 - bestAskEx2) * 100)/100
         // sellSzSpread = Math.round((bestBidSzEx1 - bestAskSzEx2) * 100)/100
@@ -155,10 +157,10 @@ function compareData(newData) {
   }
 
 const wsServers = {
-    'okx':{'perp':`ws://${hostname}:5091/ws`,'spot':''},
-    'htx':{'perp':`ws://${hostname}:5091/ws2`,'spot':''},
-    'deribit':{'perp':`ws://${hostname}:5091/ws3`,'spot':''},
-    'binance':{'perp':`ws://${hostname}:5091/ws4`,'spot':`ws://${hostname}:5091/ws5`},
+    'okx':{'futures':`ws://${hostname}:5091/ws`,'spot':''},
+    'htx':{'futures':`ws://${hostname}:5091/ws2`,'spot':''},
+    'deribit':{'futures':`ws://${hostname}:5091/ws3`,'spot':''},
+    'binance':{'futures':`ws://${hostname}:5091/ws4`,'spot':`ws://${hostname}:5091/ws5`},
 
 };
 
@@ -188,8 +190,6 @@ function compareDataQueue(data){
     // console.log(json_data)
     symbol = json_data['symbol']
     exchange = json_data['exchange']
-    // market_type = json
-    
 
     if (!exchange){
         // console.log("NO DATA FOUND")

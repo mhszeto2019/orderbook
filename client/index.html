@@ -9,6 +9,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Suppressing the favicon error -->
     <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAA..." />
+    <script defer>
+        document.addEventListener('DOMContentLoaded', () => {
+          (async () => {
+            try {
+              window.currencies = await getCurrencies();
+              console.log("Currencies loaded early:", window.currencies);
+            } catch (e) {
+              console.error("Currency fetch failed:", e);
+            }
+            // Other setup can follow here, or in separate listeners
+          })();
+        });
+    
+        async function getCurrencies() {
+          const response = await fetch(`http://${hostname}:9001/deribitperp/get_currencies_for_funding_rate`);
+          return await response.json();
+        }
+      </script>
 </head>
 
 <!-- <script src="./websocket_client/js/htx_okx_spread_order.js"></script> -->
@@ -153,7 +171,7 @@
                     <div class="d-flex align-items-center me-3 flex-shrink-0 px-3">
                         <select id="market-type" class="form-select form-select-sm border-0 shadow-none  rounded-pill" onchange="updateCurrencyOptions()">
                         <option value="" disabled>--Market Type--</option>
-                        <option value="perp" selected>PERP/FUTURES</option>
+                        <option value="futures" selected>PERP/FUTURES</option>
                         <!-- <option value="spot">Spot</option> -->
                         </select>
                     </div>
@@ -604,7 +622,7 @@ body.dark-mode.force-black {
                                             </span>
                                             <select id="market-type-orderbook1" class="form-select" onchange="updateCurrencyOptionsOrderbook1()">
                                                 <option value="">Select Market</option>
-                                                <option value="perp" selected>PERP/FUTURES</option>
+                                                <option value="futures" selected>PERP/FUTURES</option>
                                                 <option value="spot" >SPOT</option>
                                                 
                                                 <!-- <option value="futures">FUTURES</option> -->
@@ -631,7 +649,7 @@ body.dark-mode.force-black {
                                             </span>
                                             <select id="market-type-orderbook2" class="form-select" onchange="updateCurrencyOptionsOrderbook2()">
                                                 <option value="">Select Market</option>
-                                                <option value="perp" selected>PERP/FUTURES</option>
+                                                <option value="futures" selected>PERP/FUTURES</option>
                                                 <option value="spot" >SPOT</option>
                                                 <!-- <option value="futures">FUTURES</option> -->
                                             </select>
@@ -995,7 +1013,7 @@ body.dark-mode.force-black {
                                                 <select class="form-select" id="manual-order-form-market-type1" aria-label="Market Type Select">
                                                 <option value="" disabled>Select Market Type</option>
                                                 <option value="spot">SPOT</option>
-                                                <option value="perp" selected>PERP/FUTURES</option>
+                                                <option value="futures" selected>PERP/FUTURES</option>
                                                 </select>
                                                 <label for="manual-order-form-market-type1">Market Type</label>
                                             </div>
@@ -1016,7 +1034,7 @@ body.dark-mode.force-black {
                                                 <select class="form-select" id="manual-order-form-market-type2" aria-label="Market Type Select">
                                                 <option value="" disabled>Select Market Type</option>
                                                 <option value="spot">SPOT</option>
-                                                <option value="perp" selected>PERP/FUTURES</option>
+                                                <option value="futures" selected>PERP/FUTURES</option>
                                                 </select>
                                                 <label for="manual-order-form-market-type2">Market Type</label>
                                             </div>
@@ -1681,6 +1699,8 @@ body.dark-mode.force-black {
 
                     // Send WebSocket message or whatever async operation here
                     if (which === 1 && typeof socket1 !== 'undefined') {
+                        updateCurrencyOptionsOrderbook1()
+
                         const input_data = {
                             action: "change",
                             ccy: document.getElementById('currency-input-orderbook1').value,
@@ -1691,6 +1711,8 @@ body.dark-mode.force-black {
                     }
 
                     if (which === 2 && typeof socket2 !== 'undefined') {
+                        updateCurrencyOptionsOrderbook2()
+
                         const input_data = {
                             action: "change",
                             ccy: document.getElementById('currency-input-orderbook2').value,
@@ -1699,6 +1721,7 @@ body.dark-mode.force-black {
                         };
                         socket2.send(JSON.stringify(input_data));
                     }
+
 
                     // Re-enable after delay (adjust time as needed)
                     setTimeout(() => {

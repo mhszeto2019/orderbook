@@ -105,19 +105,7 @@ app.add_middleware(
 # Define a global exchange object to be used across multiple requests if needed
 exchange = None
 
-# Define a function to fetch the order book continuously using ccxt.pro
-# async def fetch_funding_rate():
-#     global exchange
-#     exchange = ccxtpro.okx({'newUpdates': False})
-#     while True:
-#         try:
-#             # Watch the order book of 'BTC/USD'
-#             funding_rate = await exchange.fetch_funding_rate('BTC-USD-SWAP')
-#             # print("Ask:", funding_rate['asks'][0], "Bid:", funding_rate['bids'][0])
-#             print(funding_rate)
-#         except Exception as e:
-#             print(f"Error in fetching funding_rate: {e}")
-#             break
+
 
 
 @app.get("/deribitperp/")

@@ -93,8 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // declaring variables
         const leadingExchange = document.getElementById('manual-order-form-exchange-input1').value
         const laggingExchange = document.getElementById('manual-order-form-exchange-input2').value
-        const marketType1 = document.getElementById('manual-order-form-market-type1').value
-        const marketType2 = document.getElementById('manual-order-form-market-type2').value
+        let marketType1 = document.getElementById('manual-order-form-market-type1').value
+        let marketType2 = document.getElementById('manual-order-form-market-type2').value
         const offset1 = document.getElementById('manual-order-form-offset-input1').value
         const offset2 = document.getElementById('manual-order-form-offset-input2').value
 
@@ -113,7 +113,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = localStorage.getItem('username')
         const redis_key = localStorage.getItem('key');
 
-
+        if (['perp', 'futures'].includes(marketType1.toLowerCase())) {
+            marketType1 = 'perp';
+        }
+        
+        if (['perp', 'futures'].includes(marketType2.toLowerCase())) {
+            marketType2 = 'perp';
+        }
 
         // if (!offset1){
         // }

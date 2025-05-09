@@ -4,19 +4,30 @@ const currencyOptions = {
         { value: 'BTC-USDC', text: 'BTC-USDC' },
         { value: 'BTC-USD', text: 'BTC-USD' }
     ],
-    perp: [
+    futures: [
         { value: '', text: '--Not Selected--' },
         { value: 'BTC/USD:BTC', text: 'BTC-USD-SWAP' },
         { value: 'BTC/USDT:USDT', text: 'BTC-USDT-SWAP' },
         { value: 'ETH/USD:ETH', text: 'ETH-USD-SWAP' },
+        
 
 
     ],
-    futures: [
+    future1s: [
         { value: 'BTC-USD-FUT', text: 'BTC-USD-FUT' },
         { value: 'BTC-USDT-FUT', text: 'BTC-USDT-FUT' }
     ]
 };
+
+
+async function getCurrencies() {
+  const response = await fetch(`http://${hostname}:9001/deribitperp/get_currencies_for_funding_rate`);
+  const currencies = await response.json();
+  //console.log(currencies);
+  return currencies
+}
+
+let currencies = "GLOBAL CURRENCIES NOT DEFINED YET"
 
 function updateCurrencyOptions() {
     const marketType = document.getElementById('market-type').value;
@@ -38,17 +49,23 @@ function updateCurrencyOptions() {
 
 
 
-function updateCurrencyOptionsOrderbook1() {
+async function updateCurrencyOptionsOrderbook1() {
     const marketType = document.getElementById('market-type-orderbook1').value;
     const currencySelect = document.getElementById('currency-input-orderbook1');
+    const exchangeType = document.getElementById('exchange1-input').value
+
     currencySelect.innerHTML = ''; // Clear old options
 
-    const options = currencyOptions[marketType] || [];
+    currencies = await getCurrencies()
+    //console.log(currencies)
+
+    const options = currencies[exchangeType][marketType] || [];
     options.forEach(opt => {
         const option = document.createElement('option');
-        option.value = opt.value;
-        option.textContent = opt.text;
+        option.value = opt
+        option.textContent = opt;
         currencySelect.appendChild(option);
+        
     });
 
    
@@ -56,26 +73,85 @@ function updateCurrencyOptionsOrderbook1() {
 }
 
 
-function updateCurrencyOptionsOrderbook2() {
+async function updateCurrencyOptionsOrderbook2() {
 
 
     const marketType = document.getElementById('market-type-orderbook2').value;
     const currencySelect = document.getElementById('currency-input-orderbook2');
+    const exchangeType = document.getElementById('exchange2-input').value
     currencySelect.innerHTML = ''; // Clear old options
-    const options = currencyOptions[marketType] || [];
+
+    currencies = await getCurrencies()
+    const options = currencies[exchangeType][marketType] || [];
     options.forEach(opt => {
         const option = document.createElement('option');
-        option.value = opt.value;
-        option.textContent = opt.text;
+        option.value = opt
+        option.textContent = opt;
         currencySelect.appendChild(option);
-        // if (opt.value == "BTC-USD-SWAP") {
-        //     option.selected = true;
-        //     console.log("SELECTIONEDD")
-        //     console.log(currencySelect.value)
-        // }
+        
     });
+
     
 }
+
+// function updateCurrencyOptions() {
+//     const marketType = document.getElementById('market-type').value;
+//     const currencySelect = document.getElementById('fundingrate-currency-input');
+//     currencySelect.innerHTML = ''; // Clear old options
+
+//     const options = currencyOptions[marketType] || [];
+//     options.forEach(opt => {
+//         const option = document.createElement('option');
+//         option.value = opt.value;
+//         option.textContent = opt.text;
+//         currencySelect.appendChild(option);
+//         if (opt.value == "BTC/USD:BTC") {
+//             option.selected = true;
+//         }
+//     });
+    
+// }
+
+
+
+// function updateCurrencyOptionsOrderbook1() {
+//     const marketType = document.getElementById('market-type-orderbook1').value;
+//     const currencySelect = document.getElementById('currency-input-orderbook1');
+//     currencySelect.innerHTML = ''; // Clear old options
+
+//     const options = currencyOptions[marketType] || [];
+//     options.forEach(opt => {
+//         const option = document.createElement('option');
+//         option.value = opt.value;
+//         option.textContent = opt.text;
+//         currencySelect.appendChild(option);
+//     });
+
+   
+
+// }
+
+
+// function updateCurrencyOptionsOrderbook2() {
+
+
+//     const marketType = document.getElementById('market-type-orderbook2').value;
+//     const currencySelect = document.getElementById('currency-input-orderbook2');
+//     currencySelect.innerHTML = ''; // Clear old options
+//     const options = currencyOptions[marketType] || [];
+//     options.forEach(opt => {
+//         const option = document.createElement('option');
+//         option.value = opt.value;
+//         option.textContent = opt.text;
+//         currencySelect.appendChild(option);
+//         // if (opt.value == "BTC-USD-SWAP") {
+//         //     option.selected = true;
+//         //     //console.log("SELECTIONEDD")
+//         //     //console.log(currencySelect.value)
+//         // }
+//     });
+    
+// }
 
 // Initialize with default market type (spot)
 document.addEventListener('DOMContentLoaded', updateCurrencyOptions);
@@ -87,6 +163,7 @@ document.addEventListener('DOMContentLoaded', updateCurrencyOptionsOrderbook2);
 function populateFundingRate() {
     const marketType = document.getElementById('market-type').value;
     const selectedCurrency = document.getElementById('fundingrate-currency-input').value;
+
 
 }
 
